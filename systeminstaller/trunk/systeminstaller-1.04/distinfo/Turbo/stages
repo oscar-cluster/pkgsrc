@@ -1,0 +1,17 @@
+# Stages for TurboLinux
+SISstage --noorder --nodeps --noscripts
+setup
+filesystem
+glibc
+ncurses
+bash
+# Stage 2
+SISstage --noorder --nodeps
+mktemp
+info
+gzip
+fileutils
+chkconfig
+shadow-utils
+grep
+initscripts

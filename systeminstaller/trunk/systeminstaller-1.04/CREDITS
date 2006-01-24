@@ -1,0 +1,26 @@
+SystemInstaller Credits - Copyright 2001 International Business Machines
+
+SystemInstaller is Free Software, and is supported by a number of 
+individual contributors.
+
+The following people have contributed code, documentation or time 
+to SystemInstaller to make it what it is today (alphabetic order):
+
+* Michael Chase-Salerno <mchasal@users.sf.net>
+* Paul Bildzok <bildzok@us.ibm.com>             
+* Sean Dague <japh@us.ibm.com>               
+* Dann Frazier <dann@dannf.org>             
+* Greg Geiselhart <geiselha@us.ibm.com>    
+* Igor Grobman <ilgrobma@us.ibm.com>      
+* Vasilios Hoffman <greekboy@users.sf.net>
+* Renier Morales <renier@us.ibm.com>     
+* Amit Pabalkar <amit.p@californiadigital.com> 
+* Stacy Woods <spwoods@us.ibm.com>            
+
+
+We would also like to thank the following for additional assistance in
+several areas including design, inspiration, dope slaps and various 
+forms of verbal punishment.
+
+* Rich Ferri <rcferri@us.ibm.com>
+* Brian Finley <brian@systemimager.org>

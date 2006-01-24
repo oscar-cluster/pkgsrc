@@ -1,0 +1,11 @@
+--- lib/SystemInstaller/Tk/Help.pm.orig	2005-09-12 20:49:48.000000000 -0700
++++ lib/SystemInstaller/Tk/Help.pm	2005-09-12 20:50:43.000000000 -0700
+@@ -73,7 +73,7 @@
+     $helpwindow->withdraw;
+     $helpwindow->title("Help About: $tag");
+     my $ro = $helpwindow->Message(-text => $Help{$tag});
+-    $ro->pack(-fill => "both", expand => 1);
++    $ro->pack(-fill => "both", -expand => 1);
+     quit_button($helpwindow)->pack(-fill => "x");
+     center_window( $helpwindow );
+ }

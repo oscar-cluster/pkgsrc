@@ -1,0 +1,11 @@
+# Default Redhat stage file
+# basesystem and its prereqs
+SISstage 
+filesystem
+setup
+basesystem
+glibc-common
+glibc
+libtermcap
+termcap
+

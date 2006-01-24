@@ -1,0 +1,5 @@
+# RedHat 7.1 minimal package list
+# Not really usable except for testing
+filesystem-2.0.7-1
+setup-2.4.7-1
+basesystem-7.0-2

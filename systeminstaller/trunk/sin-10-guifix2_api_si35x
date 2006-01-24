@@ -1,0 +1,55 @@
+--- lib/SystemInstaller/Tk/GetImage.pm.orig	2005-07-13 17:30:19.000000000 +0200
++++ lib/SystemInstaller/Tk/GetImage.pm	2005-07-13 17:32:15.000000000 +0200
+@@ -147,7 +147,7 @@
+                       $window->Unbusy(),
+                       return undef);
+ 
+-    my $mkaiscmd = "mkautoinstallscript -quiet -image $$vars{imgname} -force -ip-assignment $$vars{ipmeth} -post-install $$vars{piaction}";
++    my $mkaiscmd = $main::config->mkaiscript . " -quiet -image $$vars{imgname} -force -ip-assignment $$vars{ipmeth} -post-install $$vars{piaction}";
+     !system($mkaiscmd) or (carp("Couldn't run $mkaiscmd"), $window->Unbusy(), return undef);
+ 
+     print "Ran mkautoinstallscript\n";
+ 
+--- lib/SystemInstaller/Tk/Image.pm.old	2005-07-13 17:35:06.000000000 +0200
++++ lib/SystemInstaller/Tk/Image.pm	2005-07-13 17:47:49.000000000 +0200
+@@ -134,7 +134,7 @@
+     #  What is the architecture?
+     #
+     
+-    my @archoptions = qw( i386 i486 i586 i686 ia64 ppc );
++    my @archoptions = qw( i386 i486 i586 i686 ia64 ppc x86_64 );
+ 
+     my $archoption = label_option_line($image_window, "Target Architecture",
+                                        \$vars{arch},\@archoptions, "x",
+@@ -313,14 +314,11 @@
+        $progress->value(94);
+        $progress->update();
+ 
+-       # add entry for boot-i386-standard module
+-       if ($$vars{arch} eq "i686" or $$vars{arch} eq "i586"  or $$vars{arch} eq "i486" or $$vars{arch} eq "i386"){
+-           $entryArg = "[boot-i386-standard]";
+-       }
+-       else{
+-           $entryArg = "[boot-$$vars{arch}-standard]";
+-       }
+-       $cmd = "/usr/lib/systemimager/perl/confedit --file /etc/systemimager/flamethrower.conf --entry $entryArg --data \"$entryArg \n DIR=/usr/share/systemimager/boot/i386/standard/\"";
++       # add entry for boot-$arch-standard module
++       my $march = $$vars{arch};
++       $march =~ s/i.86/i386/;
++       $entryArg = "[boot-$march-standard]";
++       $cmd = "/usr/lib/systemimager/perl/confedit --file /etc/systemimager/flamethrower.conf --entry $entryArg --data \"$entryArg \n DIR=/usr/share/systemimager/boot/$march/standard/\"";
+        open(OUTPUT,"$cmd |") or (carp("Couldn't run command $cmd"), 
+                $window->Unbusy(), return undef);
+        $progress->value(95);
+@@ -345,9 +343,9 @@
+     
+         my $mkaiscmd;
+         if ( $$vars{vdiskdev} =~ (/\/dev\/[a-zA-Z]*/) ) {
+-                $mkaiscmd = "mkautoinstallscript -quiet -image $$vars{imgname} -force -ip-assignment $$vars{ipmeth} -post-install $$vars{piaction} -iseries-vdisk=$$vars{vdiskdev}" ;
++                $mkaiscmd = $main::config->mkaiscript . " -quiet -image $$vars{imgname} -force -ip-assignment $$vars{ipmeth} -post-install $$vars{piaction} -iseries-vdisk=$$vars{vdiskdev}" ;
+         } else {
+-                $mkaiscmd = "mkautoinstallscript -quiet -image $$vars{imgname} -force -ip-assignment $$vars{ipmeth} -post-install $$vars{piaction}"; 
++                $mkaiscmd = $main::config->mkaiscript . " -quiet -image $$vars{imgname} -force -ip-assignment $$vars{ipmeth} -post-install $$vars{piaction}"; 
+         }
+ 
+         !system($mkaiscmd) or (carp("Couldn't run $mkaiscmd"), 

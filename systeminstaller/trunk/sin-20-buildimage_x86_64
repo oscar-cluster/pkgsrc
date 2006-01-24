@@ -1,0 +1,10 @@
+--- bin/buildimage.old	2003-04-11 22:44:27.000000000 +0200
++++ bin/buildimage	2004-02-20 13:07:32.000000000 +0100
+@@ -53,6 +53,7 @@ my %KNOWNARCH;
+ 	$KNOWNARCH{ppc}=1;
+ 	$KNOWNARCH{alpha}=1;
+ 	$KNOWNARCH{ia64}=1;
++	$KNOWNARCH{x64_64}=1;
+ 
+ # The default architecture, grokked from uname
+ my $ARCH = (uname)[4];
