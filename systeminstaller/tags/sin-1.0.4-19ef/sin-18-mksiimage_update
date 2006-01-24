@@ -1,0 +1,50 @@
+--- bin/mksiimage.old	2003-04-11 22:44:28.000000000 +0200
++++ bin/mksiimage	2004-02-20 12:58:33.000000000 +0100
+@@ -58,6 +58,8 @@ $config->define(
+                 ALIAS => "c"},
+         List=>{ ARGCOUNT=> ARGCOUNT_NONE,
+                 ALIAS => "l"},
++        Update=>{ ARGCOUNT=> ARGCOUNT_NONE,
++                ALIAS => "u"},
+         Help=>{ ARGCOUNT=> ARGCOUNT_NONE,
+                 ALIAS => "h"},
+         name=>{ARGCOUNT=> ARGCOUNT_ONE},
+@@ -225,6 +227,38 @@ if ($config->Copy) {
+ 
+         exit 0;
+ }
++if ($config->Update) {
++	my $iname = $config->name;
++	&verbose("Checking for existing target image");
++	if (!exists_image($iname)) {
++		croak("Image $iname does not exist!\n");
++	}
++	unless($config->arch || $config->path) {
++	    croak("You should call --Update only if you want to change the path or the arch!\n");
++	}	    
++
++	&verbose("Getting old image data.");
++        my @oldimage=list_image(name => $iname);
++    	&verbose("Deleting image $iname from database.");
++        &SIS::DB::del_image($iname);
++
++        $image = new SIS::Image($iname);
++
++	if ($config->path && -d $config->path) {
++	    $image->location($config->path);
++	} else {
++	    $image->location($oldimage[0]->location);
++	}
++	if ($config->arch) {
++	    $image->arch($config->arch);
++	} else {
++	    $image->arch($oldimage[0]->arch);
++	}
++    	&verbose("Inserting image $iname into database.");
++        set_image($image);
++
++        exit 0;
++}
+ if ($config->Delete) {
+     my @images;
+     if ($config->all) {

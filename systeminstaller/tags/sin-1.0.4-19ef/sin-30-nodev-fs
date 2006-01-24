@@ -1,0 +1,23 @@
+--- lib/SystemInstaller/Partition.pm.orig	2006-01-13 16:29:38.458799839 +0100
++++ lib/SystemInstaller/Partition.pm	2006-01-13 16:33:48.926012334 +0100
+@@ -383,6 +383,11 @@
+ # Returns:      return filesystem id
+     my $fstype = shift;
+     $fstype =~ tr/A-Z/a-z/;
++    my @nodev = qw(sysfs rootfs bdev proc sockfs debugfs securityfs
++		   pipefs futexfs tmpfs inotifyfs eventpollfs devpts
++		   ramfs hugetlbfs nfs nfs4 mqueue rpc_pipefs subdomainfs
++		   usbfs auto);
++    my $nodevmatch = join("|",@nodev);
+     if ($fstype =~ /^(ext2|ext3|xfs|jfs|reiserfs)$/) {
+         return 83;
+     } elsif ($fstype =~ /^(swap)$/) {
+@@ -398,7 +403,7 @@
+     } elsif ($fstype =~ /^[0-9a-f][0-9a-f]*$/) {
+         # when the id given as input just return the same value.
+         return $fstype;
+-    } elsif ($fstype =~ /^(nfs|proc|devpts|auto)$/) {
++    } elsif ($fstype =~ /^($nodevmatch)$/) {
+             # remote and special fs's don't get a fs type
+         return 0;
+     } else {

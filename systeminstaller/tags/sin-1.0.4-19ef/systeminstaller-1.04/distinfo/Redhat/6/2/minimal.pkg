@@ -1,0 +1,5 @@
+# RedHat 6.2 minimal package list. 
+# Not really usable except for testing.
+filesystem-1.3.5-1
+setup-2.1.8-1
+basesystem-6.0-4

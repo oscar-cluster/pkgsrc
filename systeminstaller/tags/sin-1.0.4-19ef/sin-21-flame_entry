@@ -1,0 +1,28 @@
+--- lib/SystemInstaller/Tk/Image.pm.orig	2005-07-27 19:11:28.000000000 +0200
++++ lib/SystemInstaller/Tk/Image.pm	2005-07-27 19:19:32.000000000 +0200
+@@ -306,8 +306,10 @@
+        $progress->update();
+ 
+        # add entry in flamethrower for the image
+-       my $entryArg = "[$$vars{imgname}]";
+-       $cmd = "/usr/lib/systemimager/perl/confedit --file /etc/systemimager/flamethrower.conf --entry $entryArg --data \"$entryArg \n DIR=/var/lib/systemimager/scripts/\"";
++       $cmd = "/usr/lib/systemimager/perl/confedit" .
++	   " --file /etc/systemimager/flamethrower.conf" .
++	   " --entry $$vars{imgname}" .
++	   " --data \"  DIR = /var/lib/systemimager/images/$$vars{imgname}/\"";
+        open(OUTPUT,"$cmd |") or (carp("Couldn't run command $cmd"), 
+                $window->Unbusy(), return undef);
+        $progress->value(94);
+@@ -316,8 +318,10 @@
+        # add entry for boot-$arch-standard module
+        my $march = $$vars{arch};
+        $march =~ s/i.86/i386/;
+-       $entryArg = "[boot-$march-standard]";
+-       $cmd = "/usr/lib/systemimager/perl/confedit --file /etc/systemimager/flamethrower.conf --entry $entryArg --data \"$entryArg \n DIR=/usr/share/systemimager/boot/$march/standard/\"";
++       $cmd = "/usr/lib/systemimager/perl/confedit" .
++	   " --file /etc/systemimager/flamethrower.conf" .
++	   " --entry boot-$march-standard" .
++	   " --data \"  DIR = /usr/share/systemimager/boot/$march/standard/\"";
+        open(OUTPUT,"$cmd |") or (carp("Couldn't run command $cmd"), 
+                $window->Unbusy(), return undef);
+        $progress->value(95);
