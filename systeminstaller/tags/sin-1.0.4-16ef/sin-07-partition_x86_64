@@ -1,0 +1,11 @@
+--- lib/SystemInstaller/Partition.pm.orig	2005-07-13 16:42:20.000000000 +0200
++++ lib/SystemInstaller/Partition.pm	2005-07-13 16:42:56.000000000 +0200
+@@ -269,7 +269,7 @@
+         }
+ 
+ 	&verbose("Determining which routine to call based on architecture.");
+-	if ($image->arch =~ /^(i.86|ia64)$/) {
++	if ($image->arch =~ /^(i.86|ia64|x86_64)$/) {
+         	if (&SystemInstaller::Partition::IA::create_partition_file($image->location,%DISKS)) {
+ 			return 1;
+ 		}

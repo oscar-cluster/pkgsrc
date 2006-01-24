@@ -1,0 +1,55 @@
+--- bin/mksiimage.orig	2005-07-29 11:50:25.000000000 +0200
++++ bin/mksiimage	2005-07-29 12:10:38.000000000 +0200
+@@ -115,7 +115,8 @@
+     if ($config->user) {
+             $user="-ssh-user ". $config->user;
+     }
+-    my $CMD="/usr/sbin/getimage -quiet -golden-client ".$config->client." -image ".$config->name." $user -update-script YES";
++    my $CMD="/usr/sbin/si_getimage -quiet -golden-client " .
++	 $config->client." -image ".$config->name." $user -update-script YES";
+ 
+     &verbose("Getting image from $config->client.");
+     &verbose("$CMD");
+@@ -148,6 +149,23 @@
+ 	SystemImager::Server->gen_rsyncd_conf($config->rsync_stub_dir, $config->rsyncd_conf) or
+     		croak("Cannot generate rsyncd.conf file.");
+ 
++        &verbose("Updating flamethrower.conf");
++	# Add image entry to flamethrower.conf file
++	my $flamethrower_conf = "/etc/systemimager/flamethrower.conf";
++	if(-e $flamethrower_conf) {
++	    my $entry_name = $config->name;
++	    my $new_entry_data = "[$entry_name]\n  DIR = ".$config->path."\n";
++	    SystemImager::Common->add_or_delete_conf_file_entry($flamethrower_conf, $entry_name, $new_entry_data) or
++		croak "Cannot create entry in $flamethrower_conf";
++	      
++	    # Add override entry to flamethrower.conf file
++	    $entry_name = "override_" . $config->name;
++	    $new_entry_data = "[$entry_name]\n  DIR = ".
++		"/var/lib/systemimager/overrides/".$config->name."\n";
++	    SystemImager::Common->add_or_delete_conf_file_entry($flamethrower_conf, $entry_name, $new_entry_data) or 
++		croak "Cannot create entry in $flamethrower_conf";
++	}
++
+         &verbose("Initializing image directories.");
+         if (&init_image($config->path)) {
+ 	        &del_image($config->name);
+--- lib/SystemInstaller/Tk/Image.pm.orig	2005-07-29 12:11:26.000000000 +0200
++++ lib/SystemInstaller/Tk/Image.pm	2005-07-29 12:14:32.000000000 +0200
+@@ -305,16 +305,6 @@
+        $progress->value(93);
+        $progress->update();
+ 
+-       # add entry in flamethrower for the image
+-       $cmd = "/usr/lib/systemimager/perl/confedit" .
+-	   " --file /etc/systemimager/flamethrower.conf" .
+-	   " --entry $$vars{imgname}" .
+-	   " --data \"  DIR = /var/lib/systemimager/images/$$vars{imgname}/\"";
+-       open(OUTPUT,"$cmd |") or (carp("Couldn't run command $cmd"), 
+-               $window->Unbusy(), return undef);
+-       $progress->value(94);
+-       $progress->update();
+-
+        # add entry for boot-$arch-standard module
+        my $march = $$vars{arch};
+        $march =~ s/i.86/i386/;
