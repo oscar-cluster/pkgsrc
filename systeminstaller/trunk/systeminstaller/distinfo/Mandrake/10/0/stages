@@ -1,0 +1,9 @@
+# Mandrake 10.0 stage file
+# basesystem and its prereqs
+SISstage
+termcap
+ldconfig
+common-licenses
+sash
+mandrake-release
+pwdb-conf

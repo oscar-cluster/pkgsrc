@@ -54,11 +54,19 @@ sub get_machine_listing {
     return %results;
 }
 
+# Use Schwartzian transform to sort clients by node names alphabetically and numerically.
+# Names w/o numeric suffix precede those with numeric suffix.
+sub sortclients(@) {
+	return map { $_->[0] }
+	       sort { $a->[1] cmp $b->[1] || ($a->[2]||-1) <=> ($b->[2]||-1) }
+	       map { [$_, $_->name =~ /^([\D]+)([\d]*)$/] }
+	       @_;
+}
 
 sub synchosts {
 	my @delhosts=@_;
 	my @machinelist = list_client();
-	my @adapterlist = list_adapter();
+	my @adapterlist = list_adapter(devname=>"eth0");
         my %ADAPTERS;
         &verbose("Parsing adapters");
         foreach my $adap (@adapterlist) {
@@ -97,7 +105,7 @@ sub synchosts {
 	&verbose("Re-adding currently defined machines.");
 
 	print TMP "\n# These entries are managed by SIS, please don't modify them.\n";
-	foreach my $mach (@machinelist) {
+	foreach my $mach (sortclients @machinelist) {
                 my $name=$mach->name;
                 if ($ADAPTERS{$name}) {
 	                printf TMP "%-20.20s %s\t%s\n", $ADAPTERS{$name},$mach->hostname,$name;

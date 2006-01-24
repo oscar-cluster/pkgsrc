@@ -43,7 +43,7 @@ $config->define(
         interface=>{ ARGCOUNT=> ARGCOUNT_ONE,
                 DEFAULT=> "eth0"},
         bootfile=> {ARGCOUNT=> ARGCOUNT_ONE,
-                DEFAULT=> "/pxelinux.bin"},
+                DEFAULT=> "pxelinux.0:i686,pxelinux.0:i586,pxelinux.0:x86_64,elilo.efi:ia64"},
         gateway=>{ARGCOUNT=> ARGCOUNT_ONE},
         domain=>{ARGCOUNT=> ARGCOUNT_ONE},
         nameservers=>{ARGCOUNT=> ARGCOUNT_ONE},
@@ -85,6 +85,19 @@ if ($config->domain) {
 	($junk,$HINFO{domain})  = split(/\./,$HINFO{host},2);
 }
 
+# parse new bootfile options
+my %bootfile;
+if ($config->bootfile) {
+    foreach (split(/,/,$config->bootfile)) {
+	my ($bname,$arch) = split(/:/);
+	if (!$arch) {
+	    $arch = `uname -m`;
+            chomp $arch;
+	}
+	$bootfile{$arch} = $bname;
+    }
+}
+
 &verbose("Getting dhcpd version");
 my $dhcpdver=&dhcpd_version;
 
@@ -110,6 +123,7 @@ my @INTS=&find_ints;
 foreach my $int (@INTS) {
 	unless (($int eq "lo")||($int eq $config->interface)){
 		my ($ip,$bcast,$mask)=&find_internal_ip($int);
+		$mask ||= "255.255.255.0"; # ensure non-null mask
 		my $block=new Net::Netmask ($ip,$mask);
 		my $net=$block->base();
 		print OUTFILE "\n# This entry ignores requests on $int...\n";
@@ -194,13 +208,25 @@ sub write_entry {
 	print OUTFILE "\t\thost ".$adapter->client."{\n";
 	print OUTFILE "\t\t\thardware ethernet ".$adapter->mac.";\n";
 	print OUTFILE "\t\t\tfixed-address ".$adapter->ip.";\n";
-        print OUTFILE "\t\t\tfilename \"".$config->bootfile."\";\n";    
+        # print OUTFILE "\t\t\tfilename \"".$config->bootfile."\";\n";    
+        print OUTFILE "\t\t\tfilename \"".
+	    $bootfile{arch_of_machine($mach->name)}."\";\n";    
         print OUTFILE "\t\t\toption routers ". $mach->route .";\n" if $mach->route;
         print OUTFILE "\t\t\toption domain-name \"". $mach->domainname . "\";\n" if $mach->domainname;
         print OUTFILE "\t\t}\n";
 } #write_entry
 
-
+sub arch_of_machine {
+    my $mname = shift;
+    my @machine = list_client(name => $mname);
+    if (scalar @machine == 0) {
+	return `uname -m`;
+    }
+    my @image = list_image(name => $machine[0]->imagename);
+    my $arch = $image[0]->arch;
+    return $arch;
+}
+    
 sub check_args {
 
 	# Get verbose option

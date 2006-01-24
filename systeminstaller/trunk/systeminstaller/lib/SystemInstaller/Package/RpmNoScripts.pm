@@ -47,22 +47,19 @@ sub footprint {
 # Look at a directory and determine if it looks like rpms.
 # Input:        Directory name
 # Returns:      Boolean of match
-	my $class=shift;
+        my $class=shift;
         my $mode=shift;
         my $path=shift;
-	my $rpmcmd=$main::config->rpm;
+        my $rpmcmd=$main::config->rpm;
         if ($mode eq "install") {
                 if (glob "$path/*.rpm")  {
-                        open(RPMCMD, "$rpmcmd --version |");
-                        while (<RPMCMD>) {
-                                chomp;
-                                my ($R,$V,$rpmver)=split;
-                                my ($V1,$V2,$V3)=split(/\./,$rpmver);
-                                if (( $V1 >= 4) && ($V2 >= 0) && ($V3 >= 3)) {
-                                        return 1;
-                                }
-                        }
-                        close(RPMCMD);
+                        my $line = `$rpmcmd --version 2>/dev/null`;
+                        chomp $line;
+                        my $rpmver = (split /\s+/, $line)[2];
+                        my ($V1,$V2,$V3)=split(/\./,$rpmver);
+                        return $V1 >= 4 if $V1 <=> 4;
+                        return $V2 >= 0 if $V2;
+                        return $V3 >= 3;
                 }
         }
 
@@ -116,12 +113,7 @@ sub files_install {
 		        return 0;
 	        }
                 &pre_run_scriptlets($imgpath);
-                my @forder;
-                foreach my $pkg (@order) {
-                        $pkg=~s/-[^-]*-[^-]*$//;
-                        push(@forder,$stages[$stage]{PACKAGES}{$pkg});
-                }
-                &run_scriptlets($imgpath,$pkgpath,@forder);
+                &run_scriptlets($imgpath,$pkgpath,@order);
         }
 
 	return 1;
@@ -146,39 +138,36 @@ sub run_scriptlets {
         verbose("Extracting and running scriptlets from rpms.");
         foreach my $pkg (@order) {
                 my $piprog=undef;
-                print "$pkg\n" if &get_verbose;
-                my $cmd="$rpmcmd -q --scripts -p $pkgpath/$pkg";
+                print "$pkg:" if &get_verbose;
+                my $cmd="$rpmcmd -q --scripts --root $imgpath $pkg";
                 open (SCRIPTQ,"$cmd |");
                 while (<SCRIPTQ>) {
+                        chomp;
                         if (/^postinstall script/) {
+                                my $shell = $_;
+                                $shell =~ s/^[^\/]*//;
+                                $shell =~ s/\).*$//;
+                                print " $shell" if &get_verbose;
                                 open (POST,">$imgpath$postfile");
-                                my ($j1,$shell)=split(/\(through /,$_);
-                                $shell=~s/\).*$//;
                                 print POST "#!$shell\n";
                                 print POST "# Post scriptlet for $pkg\n\n";
                                 $post_writing=1;
-                                next;
                         } elsif (/^postinstall program/) {
                                 $piprog=$_;
                                 $piprog=~s/^.*://;
                                 $piprog=~s/^ *//;
-                                $piprog=~s/ *\n$//;
-                                if ($piprog eq "/bin/sh") {
-                                        $piprog=undef;
-                                }
-
+                                $piprog=~s/ *$//;
+                                $piprog=undef if $piprog eq "/bin/sh";
+                                print " $piprog" if $piprog && &get_verbose;
                         } elsif (/^(post|pre)(un)?install/) {
                                 $post_writing=0;
-                        }
-                        if ($post_writing) {
-                                print POST "$_";
+                        } elsif( $post_writing ) {
+                                print POST "$_\n";
                         }
                 }
+                print "\n" if &get_verbose;
                 close (POST);
-	        unless (close(SCRIPTQ)) {
-                        carp("Failed to extract scripts from $pkg.");
-		        return 0;
-	        }
+                close SCRIPTQ;
                 if ($piprog) {
                         if (system("chroot $imgpath $piprog")) {
                                 carp("Post program for $pkg, failed.");

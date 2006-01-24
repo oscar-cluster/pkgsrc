@@ -36,6 +36,7 @@ sub addclients_window {
 
     my $window = shift;
     my %vars = (
+                title => "Add Clients to an SIS Image",
                 imgname => "",
                 basename => "",
                 domainname => "",
@@ -51,16 +52,6 @@ sub addclients_window {
                 @_,
                );
 
-    my %defaults = %vars;
-    my %noshow = %{$vars{noshow}};
-
-    my $addclient_window = $window->Toplevel();
-    $addclient_window->title("Add Clients to a SIS Image");
-
-    #
-    #  First line:  What is your image name?
-    # 
-
     # Get the list of images and remove the default selection
     my @allimages= list_image();
     my @mostimages;
@@ -74,9 +65,25 @@ sub addclients_window {
     }
     # If the default selection wasn't found, just use 
     # the first defined image.
-    unless ($defimage) {
-        $defimage=shift(@mostimages);
-    }
+    $defimage = shift(@mostimages) unless $defimage;
+
+    unless( $defimage ) {
+        error_window($window,"You must build at least one image!");
+        $window->Unbusy();
+        return;
+	}
+
+
+    my %defaults = %vars;
+    my %noshow = %{$vars{noshow}};
+
+    my $addclient_window = $window->Toplevel();
+    $addclient_window->withdraw;
+    $addclient_window->title($vars{title});
+
+    #
+    #  First line:  What is your image name?
+    # 
 
     my $imagebox=label_listbox_line($addclient_window, "Image Name", $defimage, \@mostimages,
                      helpbutton($addclient_window, 'Image Name Addclients')) unless $noshow{imgname};
@@ -94,9 +101,10 @@ sub addclients_window {
     label_entry_line($addclient_window, "Base Name", \$vars{basename},"",
                      helpbutton($addclient_window, 'Base Name')) unless $noshow{basename};
 
-    label_entry_line($addclient_window, "Number of Hosts", \$vars{numhosts},"",
+    my $numentry=label_entry_line($addclient_window, "Number of Hosts", \$vars{numhosts},"",
                      helpbutton($addclient_window, 'Number of Hosts')) unless $noshow{numhosts};
 
+    $vars{startinghostnum} = nexthostnum( $vars{basename} ) || $vars{startinghostnum};
     label_entry_line($addclient_window, "Starting Number", \$vars{startinghostnum},"",
                      helpbutton($addclient_window,'Starting Number')) unless $noshow{startinghostnum};
     # Number padding
@@ -109,7 +117,7 @@ sub addclients_window {
     #
 
 
-
+    $vars{startip} = nextip() || $vars{startip};
     label_entry_line($addclient_window, "Starting IP", \$vars{startip},"",
                      helpbutton($addclient_window, 'Starting IP')) unless $noshow{startip};
     label_entry_line($addclient_window, "Subnet Mask", \$vars{netmask},"",
@@ -131,12 +139,13 @@ sub addclients_window {
 
     my $activate_button = $addclient_window->Button(
                                                 -text => "Addclients",
-                                                -command => [\&run_addclients, $addclient_window, $imagebox, \%vars],
+                                                -command => [\&run_addclients, $addclient_window, $imagebox, $numentry, \%vars],
                                                 -pady => 8,
                                                 -padx => 8,
                                                );
 
     $reset_button->grid($activate_button, quit_button($addclient_window) , -sticky => "nesw");
+    center_window( $addclient_window );
 
 }
 
@@ -164,7 +173,7 @@ sub reset_window {
 }
 
 sub run_addclients {
-    my ($window, $imagebox, $vars) = @_;
+    my ($window, $imagebox, $numentry, $vars) = @_;
     $window->Busy(-recurse => 1);
     my %hashkeys = (
                     numhosts => 'count',
@@ -176,6 +185,14 @@ sub run_addclients {
                     domainname => 'domain',
                     padding => 'pad',
                    );
+
+    unless( $$vars{numhosts} > 0 ) {
+        error_window($window,"You must add at least one host!");
+        $window->Unbusy();
+        $numentry->focus;
+        $numentry->selectionRange( 0, "end" );
+        return undef;
+    }
 
     my @imagesel=$imagebox->curselection;
     my $imagename=$imagebox->get($imagesel[0]);
@@ -207,8 +224,35 @@ sub run_addclients {
     }
 
     done_window($window, "Successfully created clients for image $$vars{imgname}");
+
+    $$vars{startinghostnum} = nexthostnum( $$vars{basename} ) || $$vars{startinghostnum};
+    $$vars{startip} = nextip() || $$vars{startip};
+    $window->update();
+
     $window->Unbusy();
     return 1;
+}
+
+sub nexthostnum($)
+{
+    my $bn = quotemeta shift;
+
+    my @hosts = grep { /^$bn\d/ } map { $_->name } list_client();
+    return 1 + (sort { $a <=> $b } map { /(\d+)$/ } @hosts)[-1] if @hosts;
+}
+
+sub nextip()
+{
+    my @allip = map { $_->ip } list_adapter();
+    if( @allip ) {
+        my $lastip = hex( (sort map { sprintf "%.2x%.2x%.2x%.2x", split /\./, $_ } @allip)[-1] );
+        my $x;
+        do {
+            $lastip++;
+            $x = sprintf "%8.8x", $lastip;
+        } while $x =~ /00$/ || $x =~ /ff$/;
+        return join( ".", map { (sprintf "%d", hex $_) } ($x =~ /../g));
+    }
 }
 
 1;

@@ -58,6 +58,8 @@ $config->define(
                 ALIAS => "c"},
         List=>{ ARGCOUNT=> ARGCOUNT_NONE,
                 ALIAS => "l"},
+        Update=>{ ARGCOUNT=> ARGCOUNT_NONE,
+                ALIAS => "u"},
         Help=>{ ARGCOUNT=> ARGCOUNT_NONE,
                 ALIAS => "h"},
         name=>{ARGCOUNT=> ARGCOUNT_ONE},
@@ -113,7 +115,8 @@ if ($config->Get) {
     if ($config->user) {
             $user="-ssh-user ". $config->user;
     }
-    my $CMD="/usr/sbin/getimage -quiet -golden-client ".$config->client." -image ".$config->name." $user -update-script YES";
+    my $CMD="/usr/sbin/si_getimage -quiet -golden-client " .
+	 $config->client." -image ".$config->name." $user -update-script YES";
 
     &verbose("Getting image from $config->client.");
     &verbose("$CMD");
@@ -145,6 +148,23 @@ if ($config->Add) {
 
 	SystemImager::Server->gen_rsyncd_conf($config->rsync_stub_dir, $config->rsyncd_conf) or
     		croak("Cannot generate rsyncd.conf file.");
+
+        &verbose("Updating flamethrower.conf");
+	# Add image entry to flamethrower.conf file
+	my $flamethrower_conf = "/etc/systemimager/flamethrower.conf";
+	if(-e $flamethrower_conf) {
+	    my $entry_name = $config->name;
+	    my $new_entry_data = "[$entry_name]\n  DIR = ".$config->path."\n";
+	    SystemImager::Common->add_or_delete_conf_file_entry($flamethrower_conf, $entry_name, $new_entry_data) or
+		croak "Cannot create entry in $flamethrower_conf";
+	      
+	    # Add override entry to flamethrower.conf file
+	    $entry_name = "override_" . $config->name;
+	    $new_entry_data = "[$entry_name]\n  DIR = ".
+		"/var/lib/systemimager/overrides/".$config->name."\n";
+	    SystemImager::Common->add_or_delete_conf_file_entry($flamethrower_conf, $entry_name, $new_entry_data) or 
+		croak "Cannot create entry in $flamethrower_conf";
+	}
 
         &verbose("Initializing image directories.");
         if (&init_image($config->path)) {
@@ -221,6 +241,38 @@ if ($config->Copy) {
         $image = new SIS::Image($config->name);
         $image->location($config->path);
         $image->arch($oldimage[0]->arch);
+        set_image($image);
+
+        exit 0;
+}
+if ($config->Update) {
+	my $iname = $config->name;
+	&verbose("Checking for existing target image");
+	if (!exists_image($iname)) {
+		croak("Image $iname does not exist!\n");
+	}
+	unless($config->arch || $config->path) {
+	    croak("You should call --Update only if you want to change the path or the arch!\n");
+	}	    
+
+	&verbose("Getting old image data.");
+        my @oldimage=list_image(name => $iname);
+    	&verbose("Deleting image $iname from database.");
+        &SIS::DB::del_image($iname);
+
+        $image = new SIS::Image($iname);
+
+	if ($config->path && -d $config->path) {
+	    $image->location($config->path);
+	} else {
+	    $image->location($oldimage[0]->location);
+	}
+	if ($config->arch) {
+	    $image->arch($config->arch);
+	} else {
+	    $image->arch($oldimage[0]->arch);
+	}
+    	&verbose("Inserting image $iname into database.");
         set_image($image);
 
         exit 0;

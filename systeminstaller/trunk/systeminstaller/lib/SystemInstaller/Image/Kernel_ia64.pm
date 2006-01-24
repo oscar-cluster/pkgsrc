@@ -19,9 +19,11 @@ package SystemInstaller::Image::Kernel_ia64;
 #   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  
 #   Michael Chase-Salerno <mchasal@users.sf.net>
+#   Copyright (c) 2004, Revolution Linux Inc., Benoit des Ligneris
+#   Copyright (c) 2005, Erich Focht
 use strict;
 
-use  File::Basename;
+use File::Basename;
 use SystemInstaller::Log qw(verbose get_verbose);
 use Carp;
 
@@ -53,7 +55,13 @@ sub find_kernels {
         my $class=shift;
         my $imagedir = shift;
         &verbose("Finding all kernels");
-        my @files= glob("$imagedir/boot/efi/*vmlinuz*");
+        my @files;
+        my @kernelplaces = qw(/boot/efi/efi/redhat /boot/efi/EFI/redhat
+                              /boot/efi/efi/SuSE   /boot/efi/EFI/SuSE
+                              /boot/efi);
+        for my $dir (@kernelplaces) {
+        	push @files, glob("$imagedir$dir/*vmlinuz*");
+        }
         my @kernels;
 
         foreach (@files) {

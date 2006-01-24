@@ -19,6 +19,8 @@ package SystemInstaller::Partition;
  
 #   Stacy Woods <spwoods@us.ibm.com>             
 
+#   Erich Focht <efocht@hpce.nec.com>: Added RAID1 support. (c) 2005 NEC HPCE
+
 
 use strict;
 use vars qw($VERSION @EXPORT @EXPORT_OK);
@@ -54,18 +56,39 @@ sub read_partition_info {
                         next;
                 }
                 # Not sure if this is the best way to handle this.
-                if (/=/) {
+                if (/^\s*[^(=|\s)]+\s*=\s*[^(=|\s)]+\s*$/) {
                         my($tag,$val)=split(/=/,$_);
                         $tag=uc($tag);
                         $DISKS{$tag}=$val;
                         next;
                 }
-                my ($part,$size,$type,$mnt,$opt,$boot) = split /\s+/,$_,6;
+
+		# RAID1 software raid definitions
+		if (/^\s*raid1\s+/) {
+		    my @parts = split /\s+/, $_;
+		    shift @parts;
+		    my $rdev = shift @parts;    # raid1 device name
+		    @{$DISKS{RAID1}{$rdev}} = @parts;
+		    next;
+		}
+
+                my ($pdev,$size,$type,$mnt,$opt,$boot) = split /\s+/,$_,6;
                 my $fstype=get_id($type);
                 if ($boot) {
                         $boot="*";
                 }
                 unless ($fstype == 0) {
+
+		    my @partitions = ();
+		    my $raid = "";
+		    # is it a software raid1 partition?
+		    if (defined($DISKS{RAID1}{$pdev})) {
+			@partitions = @{$DISKS{RAID1}{$pdev}};
+			$raid = "*";
+		    } else {
+			push @partitions, $pdev;
+		    }
+		    foreach my $part (@partitions) {
                         my %DEV=parse_dev($part);
                         my $drive="/dev/".$DEV{DRIVE};
                         push(@{$DISKS{DRIVES}{$drive}},$part);
@@ -73,15 +96,17 @@ sub read_partition_info {
                                 TYPE            =>$fstype,
                                 SIZE            =>$size,
                                 BOOTABLE        =>$boot,
+                                RAID            =>$raid,
                                 DEVICE          =>$part,
                                 DRIVE           =>$drive,
                                 PNUM            =>$DEV{PARTNUM},
                         );
+		    }
                 }
-                %{$DISKS{FILESYSTEMS}{$part}} = (
+                %{$DISKS{FILESYSTEMS}{$pdev}} = (
                         TYPE            =>$type,
                         MOUNT           =>$mnt,
-                        DEVICE          =>$part,
+                        DEVICE          =>$pdev,
                         OPTIONS         =>$opt,
                 );
 
@@ -269,7 +294,7 @@ sub partition_setup {
         }
 
 	&verbose("Determining which routine to call based on architecture.");
-	if ($image->arch =~ /^(i.86|ia64)$/) {
+	if ($image->arch =~ /^(i.86|ia64|x86_64)$/) {
         	if (&SystemInstaller::Partition::IA::create_partition_file($image->location,%DISKS)) {
 			return 1;
 		}
@@ -358,6 +383,11 @@ sub get_id {
 # Returns:      return filesystem id
     my $fstype = shift;
     $fstype =~ tr/A-Z/a-z/;
+    my @nodev = qw(sysfs rootfs bdev proc sockfs debugfs securityfs
+		   pipefs futexfs tmpfs inotifyfs eventpollfs devpts
+		   ramfs hugetlbfs nfs nfs4 mqueue rpc_pipefs subdomainfs
+		   usbfs auto);
+    my $nodevmatch = join("|",@nodev);
     if ($fstype =~ /^(ext2|ext3|xfs|jfs|reiserfs)$/) {
         return 83;
     } elsif ($fstype =~ /^(swap)$/) {
@@ -373,7 +403,7 @@ sub get_id {
     } elsif ($fstype =~ /^[0-9a-f][0-9a-f]*$/) {
         # when the id given as input just return the same value.
         return $fstype;
-    } elsif ($fstype =~ /^(nfs|proc|devpts|auto)$/) {
+    } elsif ($fstype =~ /^($nodevmatch)$/) {
             # remote and special fs's don't get a fs type
         return 0;
     } else {

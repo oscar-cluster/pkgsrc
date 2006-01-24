@@ -107,6 +107,7 @@ WriteMakefile(
               'VERSION' => $version,
               'NAME' => 'systeminstaller',
               'EXE_FILES' => [qw(
+				bin/mksiadapter
 				bin/mksidisk
 				bin/mksiimage 
 				bin/buildimage

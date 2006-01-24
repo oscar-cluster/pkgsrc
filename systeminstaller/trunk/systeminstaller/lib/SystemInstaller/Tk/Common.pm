@@ -21,16 +21,18 @@ use File::Basename;
 use strict;
 
 @EXPORT = qw(selector2entry
-             quit_button
-             label_entry_line 
-             label_option_line 
-             label_listbox_line 
-             resethash
-             imageexists
-             init_si_config
-             done_window
-             error_window
-            );
+			 quit_button
+			 label_entry_line 
+			 label_option_line 
+			 label_listbox_line 
+			 resethash
+			 imageexists
+			 init_si_config
+			 center_window
+			 yn_window
+			 done_window
+			 error_window
+			);
 
 %Labels = ();
 
@@ -40,91 +42,125 @@ use strict;
 #  
 
 sub selector2entry {
-    my ($var, $selector) = @_;
+	my ($var, $title, $filter, $widget) = @_;
 
-    # now we attempt to do some reasonable directory setting
-    my $dir = $$var;
-    if(-d $dir) {
-        $selector->configure(-directory => $dir);
-    } else {
-        my $dir2 = dirname($dir);
-        if(-d $dir2) {
-            $selector->configure(-directory => $dir2);
-        }
-    }
-    $$var = $selector->Show();
+	# now we attempt to do some reasonable directory setting
+	my $dir = $$var;
+	$dir = dirname( $dir ) unless -d $dir;
+	my $t = $widget->getOpenFile(
+		-title => $title,
+		-initialdir => $dir,
+		-filetypes => $filter,
+	);
+	$$var = $t if $t && -e $t;
 }
 
 sub reset_window {
-    my ($window, $curvars, $defvars, $optiondefaults) = @_;
-    resethash($curvars, $defvars);
-    foreach my $key (keys %$optiondefaults) {
-        if($$optiondefaults{$key}) {
-            $$optiondefaults{$key}->setOption($$curvars{$key});
-        }
-    }
+	my ($window, $curvars, $defvars, $optiondefaults) = @_;
+	resethash($curvars, $defvars);
+	foreach my $key (keys %$optiondefaults) {
+		$$optiondefaults{$key}->setOption($$curvars{$key}) if($$optiondefaults{$key});
+	}
 }
 
 sub close_after {
-    my ($window, $onclose, @args) = @_;
-    if(ref($onclose) eq "CODE") {
-        &$onclose(@args);
-    }
-    $window->destroy;
+	my ($window, $onclose, @args) = @_;
+	&$onclose(@args) if(ref($onclose) eq "CODE");
+	$window->destroy;
+}
+
+# Just the standard Tk window centering code...
+#
+sub center_window {
+	my $w = shift;
+	my $p = $w->parent();
+
+	$w->withdraw() if $w->viewable();
+
+	$w->idletasks;
+	my $x = int( ($w->screenwidth - $w->reqwidth)/2 );
+	my $y = int( ($w->screenheight - $w->reqheight)/2 );
+	if( $p ) {
+		$x -= int( $p->vrootx/2 ) if $p->vrootx;
+		$y -= int( $p->vrooty/2 ) if $p->vrooty;
+	}
+	$w->geometry( "+$x+$y" );
+
+	$w->deiconify();
+
+}
+
+sub yn_window {
+	my ($w, $message, $onclose, @args) = @_;
+
+	my $dialog = $w->Dialog(
+		-title => 'A Question',
+		-bitmap => 'question',
+		-text => $message,
+		-default_button => 'No',
+		-buttons => [ 'Yes', 'No' ],
+	);
+	my $ans = $dialog->Show();
+
+	&$onclose( @args ) if ref( $onclose ) eq 'CODE';
+
+	return $ans eq "Yes";
 }
 
 sub done_window {
-    my ($window, $message, $onclose, @args) = @_;
-    my $done = $window->Toplevel();
-    $done->title("Done!");
-    my $label = $done->Message(-text => $message, 
-                               -foreground => "blue",
-                              );
-    $label->grid();
-    my $button = $done->Button(
-                               -text=>"Close",
-                               -command=> [\&close_after, $done, $onclose, @args],
-                               -pady => 8,
-                               -padx => 8,
-                              );
-    $button->grid();
+	my ($w, $message, $onclose, @args) = @_;
+
+	my $dialog = $w->Dialog(
+		-title => 'Done!',
+		-bitmap => 'info',
+		-text => $message,
+		-default_button => 'OK',
+		-buttons => [ 'OK' ],
+	);
+	$dialog->Show();
+
+	&$onclose( @args ) if ref( $onclose ) eq 'CODE';
+
+	1;
 }
 
 sub error_window {
-    my ($window, $message, $onclose, @args) = @_;
-    my $done = $window->Toplevel();
-    $done->title("ERROR!");
-    my $label = $done->Message(-text => $message, 
-                               -foreground => "red",
-                              );
-    $label->grid();
-    my $button = $done->Button(
-                               -text=>"Close",
-                               -command=> [\&close_after, $done, $onclose, @args],
-                               -pady => 8,
-                               -padx => 8,
-                              );
-    $button->grid();
+	my ($w, $message, $onclose, @args) = @_;
+
+	my $dialog = $w->Dialog(
+		-title => 'ERROR!',
+		-bitmap => 'error',
+		-text => $message,
+		-default_button => 'OK',
+		-buttons => [ 'OK' ],
+		);
+	$dialog->Subwidget( 'bitmap' )->configure( -foreground => 'red' );
+	$dialog->Subwidget( 'message' )->configure( -foreground => 'red' );
+	$dialog->Show();
+
+	&$onclose( @args ) if ref( $onclose ) eq 'CODE';
+
+	1;
 }
 
 sub init_si_config {
-    my $config = new AppConfig(
-                               DEFAULT_IMAGE_DIR => { ARGCOUNT => 1},
-                               AUTOINSTALL_SCRIPT_DIR => { ARGCOUNT => 1},
-                               AUTOINSTALL_BOOT_DIR => { ARGCOUNT => 1},
-                               RSYNCD_CONF => { ARGCOUNT => 1},
-                               RSYNC_STUB_DIR => { ARGCOUNT => 1},
-                               CONFIG_DIR => { ARGCOUNT => 1},
-                               TFTP_DIR => { ARGCOUNT => 1},
-                               NET_BOOT_DEFAULT => { ARGCOUNT => 1},
-                               # now for tksis configuration parameters
-                               ICON_DIR => { ARGCOUNT => 1, DEFAULT => "/usr/share/systeminstaller/images"},
-                               XTERM_CMD => { ARGCOUNT => 1, 
-                                              DEFAULT => "xterm -bg black -fg magenta",
-                                            },
-                              );
-    $config->file("/etc/systemimager/systemimager.conf", "/etc/systeminstaller/tksis.conf");
-    return $config;
+	my $config = new AppConfig(
+		DEFAULT_IMAGE_DIR => { ARGCOUNT => 1},
+		AUTOINSTALL_SCRIPT_DIR => { ARGCOUNT => 1},
+		AUTOINSTALL_BOOT_DIR => { ARGCOUNT => 1},
+		RSYNCD_CONF => { ARGCOUNT => 1},
+		RSYNC_STUB_DIR => { ARGCOUNT => 1},
+		CONFIG_DIR => { ARGCOUNT => 1},
+		TFTP_DIR => { ARGCOUNT => 1},
+		NET_BOOT_DEFAULT => { ARGCOUNT => 1},
+		# now for tksis configuration parameters
+		ICON_DIR => { ARGCOUNT => 1, DEFAULT => "/usr/share/systeminstaller/images"},
+		XTERM_CMD => { ARGCOUNT => 1, 
+			DEFAULT => "xterm -bg black -fg magenta",
+		},
+	);
+	$config->file("/etc/systemimager/systemimager.conf", "/etc/systeminstaller/tksis.conf");
+	return $config;
 }
 
 #
@@ -132,10 +168,10 @@ sub init_si_config {
 #
 
 sub resethash {
-    my ($hash1, $hash2) = @_;
-    foreach my $key (keys %$hash2) {
-        $$hash1{$key} = $$hash2{$key};
-    }
+	my ($hash1, $hash2) = @_;
+	foreach my $key (keys %$hash2) {
+		$$hash1{$key} = $$hash2{$key};
+	}
 }
 
 #
@@ -143,73 +179,69 @@ sub resethash {
 #
 
 sub label_entry_line {
-    my ($window, $labeltext, $variable, $validate, @morewidgets) = @_;
-    my @options;
-    if($validate) {
-        @options = (
-                    -validatecommand => $validate,
-                    -validate => "focusout",
-                   );
-    }
-    my $label = $window->Label(-text => "$labeltext: ",
-                               -anchor => "w");
-    my $entry = $window->Entry(-textvariable => $variable, @options);
-    $label->grid($entry,@morewidgets);
+	my ($window, $labeltext, $variable, $validate, @morewidgets) = @_;
+	my @options;
+	if($validate) {
+		@options = (
+			-validatecommand => $validate,
+			-validate => "focusout",
+		);
+	}
+	my $label = $window->Label(-text => "$labeltext: ", -anchor => "w");
+	my $entry = $window->Entry(-textvariable => $variable, @options);
+	$label->grid($entry,@morewidgets, -sticky => "nesw");
 }
 
 # This creates a small list box with 1 item ($selection) selected.
 sub label_listbox_line {
-    my ($window, $labeltext, $selection, $listitems , @morewidgets) = @_;
-    my $label = $window->Label(-text => "$labeltext: ",
-                               -anchor => "w");
-    my $listbox = $window->Scrolled("Listbox",-scrollbars => 'e', -height => 2, 
-                 -width => 17, -selectmode => "single", -exportselection=>0);
-    $listbox->insert(0,$selection);
-    $listbox->insert('end',@$listitems);
-    $listbox->selectionSet(0);
+	my ($window, $labeltext, $selection, $listitems , @morewidgets) = @_;
+	my $label = $window->Label(-text => "$labeltext: ", -anchor => "w");
+	my $listbox = $window->Scrolled("Listbox",-scrollbars => 'e', -height => 2, 
+		-width => 17, -selectmode => "single", -exportselection=>0);
+	$listbox->insert(0,$selection);
+	$listbox->insert('end',@$listitems);
+	$listbox->selectionSet(0);
 
-    $label->grid($listbox,@morewidgets);
-    return $listbox;
+	$label->grid($listbox,@morewidgets);
+	return $listbox;
 }
 
 sub label_entry_file_line {
-    
+	
 }
 
 sub quit_button {
-    my $window = shift;
-    my $quit_button = $window->Button(
-                                      -text=>"Close",
-                                      -command=> [sub { shift->destroy }, $window],
-                                      -pady => 8,
-                                      -padx => 8,
-                                     );
-    return $quit_button;
+	my $window = shift;
+	my $quit_button = $window->Button(
+		-text=>"Close",
+		-command=> [sub { shift->destroy }, $window],
+		-pady => 8,
+		-padx => 8,
+	);
+	return $quit_button;
 }
 
 sub label_option_line {
-    my ($window, $labeltext, $variable, $options, @morewidgets) = @_;
-    my $label = $window->Label(-text => "$labeltext: ",
-                               -anchor => "w");
+	my ($window, $labeltext, $variable, $options, @morewidgets) = @_;
+	my $label = $window->Label(-text => "$labeltext: ", -anchor => "w");
 
-    my $default = $$variable;
-    my $optionmenu = $window->Optionmenu(-options => $options,
-                                      -variable => $variable);
-    $optionmenu->setOption($default) if $default;
+	my $default = $$variable;
+	my $optionmenu = $window->Optionmenu(-options => $options, -variable => $variable);
+	$optionmenu->setOption($default) if $default;
 
-    $label->grid($optionmenu, @morewidgets, -sticky => "nesw");
-    return $optionmenu;
+	$label->grid($optionmenu, @morewidgets, -sticky => "nesw");
+	return $optionmenu;
 }
 
 sub imageexists {
-    my ($rsyncconf, $imagename) = @_;
-    open(IN,"<$rsyncconf") or return undef;
-    if(grep(/\[$imagename\]/, <IN>)) {
-        close(IN);
-        return 1;
-    }
-    close(IN);
-    return undef;
+	my ($rsyncconf, $imagename) = @_;
+	open(IN,"<$rsyncconf") or return undef;
+	if(grep(/\[$imagename\]/, <IN>)) {
+		close(IN);
+		return 1;
+	}
+	close(IN);
+	return undef;
 }
 
 

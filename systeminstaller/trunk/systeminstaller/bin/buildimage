@@ -53,6 +53,7 @@ my %KNOWNARCH;
 	$KNOWNARCH{ppc}=1;
 	$KNOWNARCH{alpha}=1;
 	$KNOWNARCH{ia64}=1;
+	$KNOWNARCH{x64_64}=1;
 
 # The default architecture, grokked from uname
 my $ARCH = (uname)[4];

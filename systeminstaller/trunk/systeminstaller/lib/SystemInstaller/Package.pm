@@ -34,12 +34,13 @@ use Cwd;
 $VERSION = sprintf("%d.%02d", q$Revision: 1.57 $ =~ /(\d+)\.(\d+)/);
 
 use SystemInstaller::Package::RpmNoScripts;
+use SystemInstaller::Package::UpdateRpms;
 use SystemInstaller::Package::Rpm;
 use SystemInstaller::Package::Suse;
 use SystemInstaller::Package::Deb;
 use SystemInstaller::Package::Deboot;
 
-my @PKGMODS=qw(Deboot Deb Suse RpmNoScripts Rpm);
+my @PKGMODS=qw(Deboot Deb Suse RpmNoScripts UpdateRpms Rpm);
 
 sub pkg_install {
 # Head sub to do all the steps, use this or the individual subs below.
