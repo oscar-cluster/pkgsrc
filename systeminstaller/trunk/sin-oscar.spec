@@ -4,42 +4,12 @@
 
 Summary: System Installer
 Name: systeminstaller
-Version: 1.04
-Release: 19ef
+Version: 2.0
+Release: 1
 License: GPL
 URL: http://systeminstaller.sourceforge.net
 Group: Applications/System
-Source: %{name}-%{version}.tar.gz
-Patch1: sin-01-nodesort
-Patch2: sin-02-rhel_support
-Patch3: sin-03-updaterpms
-Patch4: sin-04-rpmnoscripts
-Patch5: sin-05-devfs_devstyle
-Patch6: sin-06-api_si35x
-Patch7: sin-07-partition_x86_64
-Patch8: sin-08-forcearch
-Patch9: sin-09-guifix
-Patch10: sin-10-guifix2_api_si35x
-Patch11: sin-11-fedora
-Patch12: sin-12-mandrake
-Patch13: sin-13-rhel_stage1
-Patch14: sin-14-efi_kernel
-Patch15: sin-15-mdraid1
-Patch16: sin-16-sl_centos
-Patch17: sin-17-mandriva
-Patch18: sin-18-mksiimage_update
-Patch19: sin-19-dhcpd_multiarch
-Patch20: sin-20-buildimage_x86_64
-Patch21: sin-21-flame_entry
-Patch22: sin-22-flame_mksiimage
-Patch23: sin-23-progress
-Patch24: sin-24-yn_window
-Patch25: sin-25-mkdhcpconf
-Patch26: sin-26-getOpenFile
-Patch27: sin-27-Help-expand
-Patch28: sin-28-mksiadapter
-Patch29: sin-29-mdadmconf
-Patch30: sin-30-nodev-fs
+Source: %{name}.tar.gz
 
 BuildArchitectures: noarch
 BuildRequires: /usr/bin/perl, perl(AppConfig), systemimager-server >= 3.5.0, systemconfigurator, perl(MLDBM)
@@ -73,37 +43,7 @@ System Configurator.
 System Installer Perl Tk User Interface
 
 %prep
-%setup -q
-%patch1 -p0
-%patch2 -p0
-%patch3 -p0
-%patch4 -p0
-%patch5 -p0
-%patch6 -p0
-%patch7 -p0
-%patch8 -p0
-%patch9 -p0
-%patch10 -p0
-%patch11 -p0
-%patch12 -p0
-%patch13 -p0
-%patch14 -p0
-%patch15 -p0
-%patch16 -p0
-%patch17 -p0
-%patch18 -p0
-%patch19 -p0
-%patch20 -p0
-%patch21 -p0
-%patch22 -p0
-%patch23 -p0
-%patch24 -p0
-%patch25 -p0
-%patch26 -p0
-%patch27 -p0
-%patch28 -p0
-%patch29 -p0
-%patch30 -p0
+%setup -q -n %{name}
 
 # No configure, no make, just copy files to the output dir.
 %build
