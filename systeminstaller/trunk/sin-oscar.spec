@@ -5,7 +5,7 @@
 Summary: System Installer
 Name: systeminstaller
 Version: 2.0
-Release: 1
+Release: 2
 License: GPL
 URL: http://systeminstaller.sourceforge.net
 Group: Applications/System
@@ -43,11 +43,10 @@ System Configurator.
 System Installer Perl Tk User Interface
 
 %prep
-%setup -q -n %{name}
+%setup -n %{name}
 
 # No configure, no make, just copy files to the output dir.
 %build
-cd $RPM_BUILD_DIR/%{name}-%{version}
 mkdir -p /var/tmp/%{name}-%{version}-root/usr/share/man/man5
 mkdir -p /var/tmp/%{name}-%{version}-root/usr/share/man/man1
 perl Makefile.PL PREFIX=/var/tmp/%{name}-%{version}-root%{prefix} INSTALLSITELIB=/var/tmp/%{name}-%{version}-root/usr/lib/systeminstaller INSTALLMAN1DIR=/var/tmp/%{name}-%{version}-root/usr/share/man/man1 INSTALLMAN3DIR=/var/tmp/%{name}-%{version}-root/usr/share/man/man3
