@@ -33,6 +33,7 @@ use Cwd;
  
 $VERSION = sprintf("%d.%02d", q$Revision: 1.57 $ =~ /(\d+)\.(\d+)/);
 
+use SystemInstaller::Package::PackManSmart;
 use SystemInstaller::Package::RpmNoScripts;
 use SystemInstaller::Package::UpdateRpms;
 use SystemInstaller::Package::Rpm;
@@ -40,7 +41,7 @@ use SystemInstaller::Package::Suse;
 use SystemInstaller::Package::Deb;
 use SystemInstaller::Package::Deboot;
 
-my @PKGMODS=qw(Deboot Deb Suse RpmNoScripts UpdateRpms Rpm);
+my @PKGMODS=qw(PackManSmart Deboot Deb Suse RpmNoScripts UpdateRpms Rpm);
 
 sub pkg_install {
 # Head sub to do all the steps, use this or the individual subs below.
@@ -53,11 +54,15 @@ sub pkg_install {
         my @pkglist; my @pkgfiles;
         my $outlines=13; #Extra lines of output for GUI count below.
 
-        &verbose("Checking package path.");
-        unless (-e $pkgpath) {
-                carp("Package location $pkgpath not found!");
-                return 0;
-        }
+	#
+	# skipping check for package path because of yume pools,
+	# they can be URLs and concatenated by ","
+	#
+        #&verbose("Checking package path.");
+        #unless (-e $pkgpath) {
+        #        carp("Package location $pkgpath not found!");
+        #        return 0;
+        #}
         &verbose("Reading package list files.");
         unless (@pkglist=&pkglist_read(@pkglistfiles)) {
                 carp("Failed to read package files.");
@@ -210,6 +215,7 @@ sub files_install {
         my $imgpath=shift;
         my @file=@_;
 
+	print "!!! Files for files_install = ".join(" ",@file)."\n";
         foreach my $mod (@PKGMODS){
 		my $class="SystemInstaller::Package::$mod";
                 if ($class->footprint("install",$path)) {
