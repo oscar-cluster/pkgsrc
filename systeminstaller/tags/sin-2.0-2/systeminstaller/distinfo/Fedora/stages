@@ -1,0 +1,13 @@
+# Default fedora stage file
+# basesystem and its prereqs
+# Copyright (c) 2004, Revolution Linux Inc., Benoit des Ligneris
+SISstage
+filesystem
+setup
+basesystem
+glibc-common
+glibc
+tzdata
+libgcc
+libtermcap
+termcap

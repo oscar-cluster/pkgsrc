@@ -1,0 +1,508 @@
+#!/usr/bin/perl
+
+
+#   $Header: /cvsroot/systeminstaller/systeminstaller/bin/buildimage,v 1.48 2003/04/11 20:44:27 mchasal Exp $
+
+#   Copyright (c) 2001 International Business Machines
+
+#   This program is free software; you can redistribute it and/or modify
+#   it under the terms of the GNU General Public License as published by
+#   the Free Software Foundation; either version 2 of the License, or
+#   (at your option) any later version.
+
+#   This program is distributed in the hope that it will be useful,
+#   but WITHOUT ANY WARRANTY; without even the implied warranty of
+#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#   GNU General Public License for more details.
+
+#   You should have received a copy of the GNU General Public License
+#   along with this program; if not, write to the Free Software
+#   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+#   Michael Chase-Salerno (mchasal@users.sourceforge.net)
+
+use strict;
+use POSIX;
+use Carp;
+use vars qw($VERSION $config);
+use lib "/usr/lib/systeminstaller", "/usr/local/lib/systemimager/perl", "/usr/lib/systemimager/perl";
+use SystemInstaller::Env;
+use SystemInstaller::Passwd qw(update_user);
+use SystemInstaller::Image qw(find_distro split_version);
+ 
+$VERSION = sprintf("%d.%02d", q$Revision: 1.48 $ =~ /(\d+)\.(\d+)/); 
+
+#Set the path
+$ENV{PATH}=$config->binpath .":" . $ENV{PATH};
+
+# Image building options
+my %imgopts = ();
+
+# Addclients options
+my %cliopts = ();
+
+my $distro;
+my $version;
+
+# All known architectures
+my %KNOWNARCH;
+	$KNOWNARCH{i386}=1;
+	$KNOWNARCH{i486}=1;
+	$KNOWNARCH{i586}=1;
+	$KNOWNARCH{i686}=1;
+	$KNOWNARCH{ppc}=1;
+	$KNOWNARCH{alpha}=1;
+	$KNOWNARCH{ia64}=1;
+	$KNOWNARCH{x64_64}=1;
+
+# The default architecture, grokked from uname
+my $ARCH = (uname)[4];
+my $HOST = (uname)[1];
+my ($junk,$DOM)  = split(/\./,$HOST,2);
+
+my %IPMETH;
+	$IPMETH{dhcp}="IP addresses assigned by DHCP, a different address may be assigned each boot.\n";
+	$IPMETH{static}="IP addresses manually set.\n";
+	$IPMETH{replicant}="Don't set network address, used for backup.\n";
+
+my %PIACTION;
+	$PIACTION{beep}="Beep incessantly after completion of an install.\n";
+	$PIACTION{reboot}="Reboot after completion of an install.\n";
+	$PIACTION{shutdown}="Halt after completion of an install.\n";
+
+my %DISKTYPE;
+	$DISKTYPE{scsi}="SCSI disks(/dev/sdx).\n";
+	$DISKTYPE{ide}="IDE disks(/dev/hdx).\n";
+
+my $INPUTNOK=1;
+
+#
+#Gather image information
+#
+
+# Get the image name
+while ($INPUTNOK) {
+	print "\nEnter a name for the image, this will be used in the path for the image.\n";
+	$imgopts{name} = promptedRead("name");
+	# Check for bad input
+	if ($imgopts{name} =~ /\//) {
+		print "Error, image name cannot contain '/' characters.\n\n";
+	} elsif (&image_exists($imgopts{name})) {
+		print "Error, image named $imgopts{name} already exists.\n\n";
+	} else {
+		$INPUTNOK=0;
+	}
+}
+$INPUTNOK=1;
+
+#Get the path to the image
+while ($INPUTNOK) {
+	print "\nEnter a path for the image, the image name will be appended to this path.\n";
+	$imgopts{imgpath} = promptedRead("path", 0, $config->DEFAULT_IMAGE_DIR);
+	$imgopts{imgpath} = $imgopts{imgpath} . "/" . $imgopts{name};
+	# Not sure what to check here, permissions,mkdir?
+		$INPUTNOK=0;
+}
+$INPUTNOK=1;
+
+#Get the architecture
+while ($INPUTNOK) {
+	print "\nEnter the architecture that the image will be used for,\n";
+	$imgopts{arch} = promptedRead("architecture", 0, $ARCH);
+	if (! defined $KNOWNARCH{$imgopts{arch}} ) {
+		print "Error, architecture $imgopts{arch} is not known.\n\n";
+	} else {
+		$INPUTNOK=0;
+	}
+}
+$INPUTNOK=1;
+
+# Get the location of the packages
+while ($INPUTNOK) {
+	print "\nEnter the path where the installation packages are stored,\n";
+	$imgopts{pkgpath} = promptedRead("package path",0,$config->pkgpath);
+	if (! -d $imgopts{pkgpath}  ) {
+		print "Error, path $imgopts{pkgpath} does not exist.\n\n";
+	} else {
+		$INPUTNOK=0;
+	}
+}
+$INPUTNOK=1;
+
+# Try to determine the distro from the directory
+print "\n";
+($distro,$version)=&find_distro($imgopts{pkgpath});
+my ($maj,$min)=&split_version($version);
+if ($distro eq "") {
+	print "Unable to determine distribution from package directory.\n";
+	print "Please enter a file name for the package list.\n";
+	while ($INPUTNOK) {
+		$imgopts{pkgfile} = promptedRead("package file name");
+		if (! -e $imgopts{pkgfile}  ) {
+			print "Error, file $imgopts{pkgfile} does not exist.\n\n";
+		} else {
+			$INPUTNOK=0;
+		}
+	}
+} else {
+	print "The path $imgopts{pkgpath} appears to contain $distro version $version.\n";
+	print "The following predefined package lists are available:\n";
+	print "-----------------------------------------------------\n";
+	my $pkgpath= $config->distinfo . "/" . $distro . "/" . $maj . "/" . $min;
+	my @pkgfiles=glob("$pkgpath/*.pkg");
+	my @pkgfilenames=@pkgfiles;
+	my $file;
+	my $i=1;
+	foreach $file (@pkgfiles) {
+		$file=~s/.*\///;
+		$file=~s/\.pkg$//;
+		print "\t$i.\t$file\n";
+		$i++;
+	}
+	print "\nEnter the number of the desired package file\n";
+	print "\tor enter a full filename for a different file,\n";
+	my $imgselect=0;
+	while ($INPUTNOK) {
+		$imgopts{pkgfile} = promptedRead("package file number or name");
+		if ($imgopts{pkgfile} =~ /^[1-9][0-9]*$/ ) {
+			$imgopts{pkgfile}=@pkgfilenames[$imgopts{pkgfile}-1];
+			$imgselect=1;
+		}
+		if (($imgselect ) && ($imgopts{pkgfile} eq "")){
+			print "Error, selection not valid.\n\n";
+		} elsif (! -e $imgopts{pkgfile}  ) {
+			print "Error, file $imgopts{pkgfile} does not exist.\n\n";
+		} else {
+			$INPUTNOK=0;
+		}
+	}
+}
+$INPUTNOK=1;
+
+# Get IP assignment method
+print "\nEnter the ip assignment method of the image. Valid methods are:\n";
+my $meth;
+foreach $meth (keys(%IPMETH)){
+	print "\t$meth\t$IPMETH{$meth}";
+}
+while ($INPUTNOK) {
+	$imgopts{ipmeth} = promptedRead("method", 0, $config->ipmeth);
+	if (! defined $IPMETH{$imgopts{ipmeth}}) {
+		print "Valid IP assignment methods are ", join(",",keys(%IPMETH)),".\n";
+	} else {
+		$INPUTNOK=0;
+	}
+}
+$INPUTNOK=1;
+
+# Get the post install action.
+my $act;
+print "\nEnter the post install action of the image. Valid actions are:\n";
+foreach $act (keys(%PIACTION)){
+	print "\t$act\t$PIACTION{$act}";
+}
+while ($INPUTNOK) {
+	$imgopts{piact} = promptedRead("action", 0, $config->piaction);
+	if (! defined $PIACTION{$imgopts{piact}}) {
+		print "Valid post install actions are ", join(",",keys(%PIACTION)),".\n";
+	} else {
+		$INPUTNOK=0;
+	}
+}
+$INPUTNOK=1;
+
+#Set image root password
+print "\nEnter a root password for the image,\n";
+my ($rootpw,$rootpwv) = (undef,1);
+my $sttyset=`stty -g`;
+system("stty -echo");
+while ($INPUTNOK) {
+    $rootpw = promptedRead("password",1);
+    print "\n";
+    $rootpwv =  promptedRead("password again to verify",1);
+    print "\n";
+    if($rootpw ne $rootpwv) {
+		 print "Error, your passwords don't match, please try again...\n";
+    } else {
+		$INPUTNOK=0;
+    }
+}
+system("stty $sttyset");
+$INPUTNOK=1;
+
+#Gather partition info
+print "\nDefining disk partitioning...\n";
+
+my $partitionfile;
+print "\nEnter the disk partition file name \n";
+$INPUTNOK = 1;
+while ($INPUTNOK) { 
+        $partitionfile = promptedRead("file name",0,"/usr/share/doc/systeminstaller-".&get_version()."/disktable"); 
+	if (! -e $partitionfile) {
+		print "Error, file $partitionfile does not exist.\n\n";
+	} else {
+		$INPUTNOK=0;
+	}
+}
+
+my $disktype;
+print "\nEnter the disk type if you wish to override the type in the file. \n";
+$INPUTNOK = 1;
+while ($INPUTNOK) { 
+        $disktype = promptedRead("disk type",1); 
+        if ($disktype && (! defined $DISKTYPE{$disktype})) {
+                print "Valid disk types are ", join(",",keys(%DISKTYPE)),".\n";
+        } else {
+                $INPUTNOK=0;
+        }
+}
+if ($disktype) {
+        $disktype="--type ".$disktype;
+}
+
+#Build image
+my $CMD;
+print "Now building the image, issuing command .....\n";
+$CMD=$config->siimage . " --Add --host $HOST --name $imgopts{name} --path $imgopts{imgpath} --filename $imgopts{pkgfile} --location $imgopts{pkgpath} --arch $imgopts{arch}";
+print "$CMD\n";
+my $RC=system("$CMD");
+if ($RC != 0 ) {
+	$RC=$RC>>8;
+        carp("Failed to build image $imgopts{name}.  Cleaning up now...\n");
+	system($config->siimage . " --Delete --name $imgopts{name}");
+        croak("Cleaned up image $imgopts{name}");
+}
+
+print "Setting root password in image.....\n";
+
+update_user(
+            imagepath => $imgopts{imgpath},
+            user => 'root',
+            password => $rootpw
+           );
+
+#Build partition table
+print "\n\nGenerating partition files, issuing command.....\n";
+	$CMD=$config->sidisk . " --Add --name $imgopts{name} --file $partitionfile $disktype";
+print "$CMD\n";
+my $RC=system("$CMD");
+if ($RC != 0 ) {
+	$RC=$RC>>8;
+	croak("Command failed with RC=$RC, exiting...\n");
+}
+
+#Call mkautoinstallscript
+print "\n\nGenerating autoinstall script, issuing command.....\n";
+$CMD=$config->mkaiscript . " -quiet -image $imgopts{name} -ip-assignment $imgopts{ipmeth} -post-install $imgopts{piact}";
+print "$CMD\n";
+my $RC=system("$CMD");
+if ($RC != 0 ) {
+	$RC=$RC>>8;
+	croak("Command failed with RC=$RC, exiting...\n");
+}
+
+print "\n\nWould you like to create clients to use this image?\n";
+$INPUTNOK=1;
+my $choice;
+while ($INPUTNOK) {
+	$choice = promptedRead("y/n", 0, "y");
+	$choice=lc($choice);
+	if (($choice =~ /^y/) || ($choice =~ /^n/)) {
+		$INPUTNOK=0;
+    	} 
+}
+$INPUTNOK=1;
+if ($choice =~ /^n/){
+	print "Thanks for playing....\n";
+	exit 0;
+} 
+
+#Gather client information
+print "\n\nEnter the basename for the clients, this will be combined with the\n";
+print "the suffix number to derive the actual hostnames.\n";
+$INPUTNOK=1;
+while ($INPUTNOK) {
+	$cliopts{basename} = promptedRead("basename");
+	if ($cliopts{basename} =~ /\./) {
+		print "Error, the basename cannot contain '.'.\n";
+	} else {
+		$INPUTNOK=0;
+	}
+}
+$INPUTNOK=1;
+
+print "\n\nEnter the number of clients to create.\n";
+$INPUTNOK=1;
+while ($INPUTNOK) {
+    $cliopts{count} = promptedRead("count");
+    if ( $cliopts{count} !~ /^[0-9]+$/ ) {
+        carp "Error, the count must be a number.\n";
+    } else {
+        $INPUTNOK=0;
+    }
+}
+$INPUTNOK=1;
+
+print "\n\nEnter the starting number for the suffix of the clients, this number\n";
+print "will be combined with the hostname stub to derive actual hostnames.\n";
+print "for example a hostname stub of 'www' and a suffix of 3 will name the clients\n";
+print "thusly 'www3,www4,...'. This number will be incremented for each client.\n";
+$INPUTNOK=1;
+while ($INPUTNOK) {
+    $cliopts{start} = promptedRead("starting suffix");
+    if ( $cliopts{start} !~ /^[0-9]+$/ ) {
+        carp "Error, the suffix must be a number.\n";
+    } else {
+        $INPUTNOK=0;
+    }
+}
+$INPUTNOK=1;
+
+
+print "\n\nEnter the ip address for the first client.\n";
+print "This ip address will be incremented for each client.\n";
+while ($INPUTNOK) {
+    $cliopts{ipstart} = promptedRead("IP address");
+    if ( $cliopts{ipstart} !~ /^[0-9\.]+$/ ) {
+        carp "Error, the range must be of the form 'a.b.c.d'.\n";
+    } else {
+        $INPUTNOK=0;
+    }
+}
+$INPUTNOK=1;
+print "\n\nEnter the ip netmask for the clients.\n";
+while ($INPUTNOK) {
+    $cliopts{netmask} = promptedRead("IP netmask",0,"255.255.255.0");
+    if ( $cliopts{netmask} !~ /^[0-9\.]+$/ ) {
+        carp "Error, the netmask must be of the form 'a.b.c.d'.\n";
+    } else {
+        $INPUTNOK=0;
+    }
+}
+$INPUTNOK=1;
+print "\n\nEnter the default gateway for the clients.\n";
+while ($INPUTNOK) {
+    $cliopts{gateway} = promptedRead("Gateway",1);
+    if ( $cliopts{gateway} !~ /^[0-9\.]+$/ ) {
+        carp "Error, the gateway must be of the form 'a.b.c.d'.\n";
+    } else {
+        $INPUTNOK=0;
+    }
+}
+$INPUTNOK=1;
+
+my $gateway = "";
+if ($cliopts{gateway}) {
+	$gateway="--gateway $cliopts{gateway}";
+} 
+
+
+print "\n\nEnter the domain for the clients,\n";
+$cliopts{domain} = promptedRead("domain",1);
+
+my $domain = "";
+if ($cliopts{domain}) {
+	$domain="--domain $cliopts{domain}";
+} 
+
+
+#Call addclients
+print "Now creating clients.....\n";
+$CMD= $config->sirange." --basename $cliopts{basename} --start $cliopts{start} --count $cliopts{count} --ipstart $cliopts{ipstart} $domain --image $imgopts{name} --netmask $cliopts{netmask} $gateway";
+print "$CMD\n";
+my $RC=system("$CMD");
+if ($RC != 0 ) {
+	$RC=$RC>>8;
+	croak("Command failed with RC=$RC, exiting...\n");
+}
+
+exit 0;
+
+## SUBROUTINES
+
+#
+# prompts user for input (using optional/default replies)
+#
+sub promptedRead {
+    my ($prompt, $optional, $default) = @_;
+    local $_;
+    print "Enter $prompt ";
+    print "[ $default ] " if $default;
+    print ": ";
+    while (<>) {
+        chomp;
+        s/\s+//g;
+        $_ = $default if defined($default) and $_ eq '';
+        last if $_ ne '' or $optional;
+        print "Enter $prompt ";
+        print "[ $default ] " if $default;
+        print ": ";
+    }
+    return $_;
+}
+
+
+sub execute {
+    my ($cmd, @params) = @_;
+    my @output;
+    open(PIPE, "$cmd @params |") or die "could not execute $cmd: $!\n";
+    local $_;
+    while (<PIPE>) {
+        chomp;
+        push @output, $_;
+    }
+    close PIPE;
+    return @output;
+}
+
+sub image_exists {
+	my $name=shift;
+	my $CMD=$config->siimage . " -L";
+	my @IMAGES=`$CMD`;
+	foreach (@IMAGES) {
+		my ($iname)=split;
+		$iname=~s/NAME=//;
+		if ($iname eq $name) {
+			return 1;
+		}
+	}
+}
+
+## POD
+ 
+__END__
+ 
+=head1 NAME
+ 
+buildimage - Interactive, text based interface to SystemInstaller.
+ 
+=head1 SYNOPSIS
+ 
+  buildimage
+ 
+=head1 DESCRIPTION
+ 
+The buildimage command is used to create images and clients for SIS.
+ 
+=head2 Syntax
+ 
+buildimage 
+ 
+=head1 NOTES
+ 
+There are no options for buildimage. It will interactively ask questions and
+call the required commands to build the image and the clients for the image. In
+the process it will ask you for a disk partition file and a package file. You
+can find an example of a disk partition file in
+/usr/share/doc/systeminstaller-[version]/disktable. The man page for mksidisk
+has more information about this. Package files for various distros can be found
+in /usr/share/systeminstaller/distinfo. The man page for mksiimage has more
+information about package files.
+ 
+=head1 AUTHOR
+ 
+Michael Chase-Salerno <mchasal@users.sourceforge.net>
+ 
+=head1 SEE ALSO
+ 
+perl(1), mksidisk(1), mksiimage(1), SIS(3). 

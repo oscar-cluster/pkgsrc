@@ -1,0 +1,13 @@
+# Default stage file for Red Hat Enterprise Linux 4
+# basesystem and its prereqs
+# Copyright (c) 2005, Bernard Li <bli@bcgsc.ca>
+SISstage
+filesystem
+setup
+basesystem
+glibc-common
+glibc
+libgcc
+libtermcap
+termcap
+tzdata
