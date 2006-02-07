@@ -13,6 +13,8 @@
 export LC_ALL=C
 RPMBLD=`rpm --eval '%{_topdir}'`
 
+FILES_TO_RM=""
+
 run_cmd () {
     if [ -n "$VERBOSE" ]; then
 	echo ">> $1" 1>&2
@@ -57,10 +59,13 @@ build_rpms () {
 }
 
 build_all () {
-   local NAME=$1
-   local SPEC=$NAME.spec
+   local SPEC=$1
+   local DIR=`dirname $SPEC`
    local SRPM
    local sfiles
+   if [ -z "$DIR" ]; then
+       DIR="."
+   fi
    sfiles=`grep '^ *Source[0-9]*:' $SPEC | awk '{printf $NF" "}'`
    pfiles=`grep '^ *Patch[0-9]*:' $SPEC | awk '{printf $NF" "}'`
    set_spec_name_version $SPEC
@@ -69,6 +74,18 @@ build_all () {
        # replace %{name} and %{version} strings in file names
        file=`echo $ARCHIVE_NAME | \
              sed -e "s/%{name}/$SPEC_NAME/" -e "s/%{version}/$SPEC_VERSION/"`
+       if [ "$DIR" != "." -a -n "$ARCHIVE_SUFFIX" ]; then
+	   # we have a tarfile, this must be built from DIR
+	   if [ "$DIR" != "$file" ]; then
+	       if [ ! -e "$file" ]; then
+		   run_cmd "cp -pr $DIR $file"
+		   FILES_TO_RM="$FILES_TO_RM $file"
+	       else
+		   echo "File/directory $file already exists. Cannot continue."
+		   return
+	       fi
+	   fi
+       fi
        if [ -d $file ]; then
 	   run_cmd "tar cv $ARCHIVE_OPT --exclude=.svn -f $file.$ARCHIVE_SUFFIX $file" || exit 2
 	   run_cmd "mv $file.$ARCHIVE_SUFFIX $RPMBLD/SOURCES" || exit 2
@@ -157,15 +174,22 @@ fi
 for PKG in $PKGS; do
    #
    if [ -e $PKG.spec ]; then
-      build_all $PKG
+      build_all $PKG.spec
    else
-      if [ -e $PKG/$PKG.spec ]; then
-         cp -p $PKG/$PKG.spec .
-         build_all $PKG
-         rm -f $PKG.spec
-      else
-         echo "Unknown package $PKG !"
+       if [ -d "$PKG" ]; then
+	   # find first spec file inside directory
+	   SPECF=`ls -1 $PKG/*.spec | head -1`
+	   if [ ! -z "$SPECF" -a -f "$SPECF" ]; then
+	       build_all $SPECF
+	   else
+	       echo "Could not find a spec file inside $PKG"
+	   fi
+       else
+	   echo "Unknown package $PKG !"
       fi
    fi
 done
 
+for f in $FILES_TO_RM; do
+   rm -rf $f
+done
