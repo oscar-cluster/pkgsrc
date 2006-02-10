@@ -1,0 +1,110 @@
+#!/bin/bash
+#
+# Virtual cluster node generator.
+#
+# Copyright (c) 2006 Erich Focht
+
+
+NODES=$1
+if [ -z "$NODES" ]; then
+fi
+
+if [ $NODES -le 0 -o $NODES -gt 8 ]; then
+    echo "Number of nodes should be between 1 and 8"
+    exit 1
+fi
+
+
+bld_vmx ()
+{
+    local VNAME=$1
+    cat > $VNAME.vmx <<EOI
+config.version = "8"
+virtualHW.version = "3"
+memsize = "256"
+ide0:0.present = "TRUE"
+ide0:0.fileName = "$VNAME.vmdk"
+ide0:0.deviceType = "disk"
+ide1:0.present = "FALSE"
+ide1:0.fileName = "../CentOS-4.2-i386-binDVD1.iso"
+ide1:0.deviceType = "cdrom-image"
+floppy0.present = "FALSE"
+ethernet0.present = "TRUE"
+ethernet0.connectionType = "bridged"
+usb.present = "TRUE"
+sound.present = "FALSE"
+displayName = "VirtualNode $VNAME"
+guestOS = "other26xlinux"
+nvram = "$NAME.nvram"
+scsi0:0.redo = ""
+ethernet0.addressType = "generated"
+uuid.location = "56 4d 41 70 25 0b 94 26-5c ce 05 24 b2 61 9c f9"
+uuid.bios = "56 4d 41 70 25 0b 94 26-5c ce 05 24 b2 61 9c f9"
+ide1:0.autodetect = "TRUE"
+ethernet0.generatedAddress = "00:0c:29:61:9c:f9"
+ethernet0.generatedAddressOffset = "0"
+checkpoint.vmState = ""
+tools.remindInstall = "TRUE"
+ide0:0.redo = ""
+floppy.present = "FALSE"
+uuid.action = "create"
+EOI
+}
+
+
+bld_image ()
+{
+   local IMG=$1
+
+   uudecode << 'EOF'
+begin 644 hda10G.vmdk.bz2
+M0EIH.3%!6293681?F;L`+H[____^SLS<S?_N_^[=S/_OW^S,S,S,S,S,S,S,
+MS,S,S,S,T`3>UP`'`Z#@`9)1H`````````>__TJJH!_^JJ``````T```````
+M``<T30&0#)@FFFC(TT8F!`Q,AH8)D9&C1D9`9,!/31&(Q-,1IDT`#!!4J-E'
+M[_U2J(&AH9``TT``T9-``#3$:``T-#"``9```````@9,@8@TTTP)A&3"&C`!
+M-&F$#$,)B-`&1H8$R,$PFFC30T-!HP`)*(T(T$FT">IDT``&@T#0>I^J`&@&
+M@````````VIDT,$,)M)4:U^#HS'5E94B8#F`"3&`($D@A8(0)KQ``!:B`P:T
+M`M@+X@2*%2Q<SD'3Z/-2I]'3U5>ML;.YO<!#AP^3F=.WK^""%$ZAGJ]GN^'R
+M^ES]HKN\_-[?NP?YA8G^<D@`0BHQ*EL]IM=LX))&R2*0-9$1$1$1$1$1```!
+M2`7XGGGGB>>>>`````````````````````````````````````````2`````
+M```````````````"@"B`````````````2```````*`*(``````!0FFFE*4I3
+M2FD"B`$TTI3:::M6K5IS6T]+L=AM>T=/U739F9F9F9NF9F9F9F9F9F9F9F9F
+M9F9F9F9F9F9F9F:]K!LH`````````:^C6YT`````````!KZM-&L`````````
+M`:^FKT>;YS_MA5=?V'9=GVG;=SWG?>!X?C>1L7KY_`!"B18\B5VR^Z9-G=_A
+M/\:%'RI>?IZ^WO\?/U]_G[3J5:U?^E)8L>7,FS@```````````````````'1
+M:M*JJJJJJJJJJJJJJJJJJJJJU:555555555555555555552I4J5*ET[FGKI)
+M)))("]@IGON\6WA!S^'5"(6)*)B1PV`VY:D#H;X,!FOU1.9!A6PVW/FSQO#^
+MZ+Z_H"FU2.QD$U`L/'8F#/.\(P:;"+]W%E.9-B1.>NGD15]=DR!R(V(?K6,:
+M(EH;D:8^+`8%R]`\BNHM1A#K'A0A<,QH1'RXPU%LQ$I@B'"FO(Q9?$>0V.AB
+MYQR(?PU`J&)#4N[HTU6Y]$2,:SJ\J01P(T<2($16=94@R4<^\EO3;1U""P@S
+M#[U'FIZ7AX[:^J7A6>KT6"8B_;+JJ./7/T"K)\X=&AQ/:BOHVO2E,4UB?914
+M*+%J?5;/3D669C)D)+E47V#7GFC\I2D3JLA@(7JUA$0HG#BULG,)CI2BF3XR
+9,1::N!2J(Y"*C$(!`D?\7<D4X4)"$7YF[```
+`
+end
+EOF
+  bzip2 -dc < hda10G.vmdk.bz2 > $IMG.vmdk
+  rm -f hda10G.vmdk.bz2
+}
+
+
+
+
+
+i=0
+while [ $i -lt $NODES ]; do
+    i=`expr $i + 1`
+    NAME="node_$i"
+    if [ ! -d $NAME ]; then
+	mkdir $NAME
+	cd $NAME
+	bld_vmx vnode_$i
+	bld_image vnode_$i
+	vmplayer vnode_$i.vmx &
+	cd ..
+    else
+	echo "Directory $NAME already exists. Skipping."
+    fi
+done
+
+
