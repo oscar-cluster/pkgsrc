@@ -247,7 +247,9 @@ sub progress_bar {
 				    -pady => 4,
 				    );
 
+    my $var;
     our $progress_widget = $progress_window->ProgressBar(
+							 -variable => \$var,
 							 -takefocus => 0,
 							 -width => 20,
 							 -length => 400,

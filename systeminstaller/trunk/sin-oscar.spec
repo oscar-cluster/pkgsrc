@@ -4,8 +4,8 @@
 
 Summary: System Installer
 Name: systeminstaller
-Version: 2.0
-Release: 2
+Version: 2.1
+Release: 1
 License: GPL
 URL: http://systeminstaller.sourceforge.net
 Group: Applications/System
@@ -125,6 +125,11 @@ fi
 
 
 %changelog
+* Sat Feb 11 2006 Bernard Li <bli@bcgsc.ca>
+- Fix tksis bug (patch by Steven A. DuChene)
+- Added detection for Mandriva Linux 2006+
+- Fix for OSCAR bug #1343429 - "Use of uninitialized value in hash element"
+
 * Fri Jan 13 2006 Erich Focht
 - bug fix for better detection of nodev filesystems in disktab files
 

@@ -127,7 +127,7 @@ sub find_distro {
         my $version;
         my @relfiles;
  
-        # Is this Mandriva?
+        # Is this Mandrakelinux?
         @relfiles=glob("$pkgdir/mandrakelinux-release*.rpm");
         if (scalar(@relfiles) == 1) {
                 $distro="Mandrake";
@@ -137,6 +137,7 @@ sub find_distro {
                 return($distro,$version);
         }
         undef @relfiles;
+
 	# Is this Mandrake?
 	@relfiles=glob("$pkgdir/mandrake-release*.rpm");
 	if (scalar(@relfiles) == 1) {
@@ -145,6 +146,19 @@ sub find_distro {
 		my ($j1,$j2,$version,$j3)=split(/-/,$relfiles[0]);
 		return($distro,$version);
 	}
+        undef @relfiles;
+
+        # Is this Mandriva (from 2006 on)?
+        @relfiles=glob("$pkgdir/mandriva-release*.rpm");
+        if (scalar(@relfiles) == 1) {
+                $distro="Mandriva";
+                # Now find the version
+                $relfiles[0]=~s/.*\///;
+                my ($j1,$j2,$version,$j3)=split(/-/,$relfiles[0]);
+                return($distro,$version);
+        }
+        undef @relfiles;
+
         # Is this Redhat AS?
         @relfiles=glob("$pkgdir/redhat-release-as*.rpm");
         if (scalar(@relfiles) == 1) {
@@ -155,6 +169,7 @@ sub find_distro {
                 $version=~s/AS//;
                 return($distro,$version);
         }
+        undef @relfiles;
 
         # Is it Fedora ?
         @relfiles=glob("$pkgdir/fedora-release*.rpm");
