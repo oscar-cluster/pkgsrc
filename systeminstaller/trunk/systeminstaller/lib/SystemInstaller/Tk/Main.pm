@@ -42,7 +42,7 @@ sub img_window {
     my $tree;
     
     my $window = new MainWindow();
-    $window->geometry("625x400");
+    $window->geometry("650x400");
     
     my ($imagepic, $clientpic);
     eval {$imagepic = $window->Pixmap('imageicon', file => "$imgdir/image.xpm");};
