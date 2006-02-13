@@ -160,11 +160,6 @@ sub list_image {
     my %args = @_;
     my $sql = "SELECT * FROM Images ";
 
-    my %convert_sis2oda = ( architecture => "arch",
-			    name => "name",
-			    path => "location" );
-
-
     &convert_sis2oda(\%args, "image");
     my @where = map { "$_='".$args->{$_}."'" } keys(%{$args});
     if (@where) {
@@ -175,7 +170,8 @@ sub list_image {
     die "$0:Failed to query values via << $sql >>"
         if (!do_select($sql,\@images, $options_ref, $error_strings_ref));
 
-    &convert_oda2sis(\@images, "Nics");
+    print Dumper(@images);
+    &convert_results_oda2sis(\@images, "image");
     return @images;
 }
 
@@ -195,7 +191,21 @@ sub convert_sis2oda {
 sub convert_oda2sis {
     my ($ref, $table) = @_;
     my @where;
+
+    my %oda2sis;
+    my %tmp = %{$sis2oda{$table}};
+    for my $k (keys(%tmp)) {
+	my ($var,$condition) = split(":",$tmp{$k});
+	$oda2sis{$var} = $k;
+    }
+
     for my $o (keys(%{$ref})) {
+	if (!exists($oda2sis{$o})) {
+	    print "Could not find key $o in oda2sis table!\n";
+	    print "Result hash:\n".Dumper($ref);
+	    print "oda2sis hash:\n".Dumper($oda2sis);
+	    exit;
+	}
 	my $k = $oda2sis{$o};
 	my $v = $ref->{$o}
 	delete $ref->{$o};
@@ -212,104 +222,104 @@ sub convert_results_oda2sis {
 }
 
 
-sub exists_image {
-    my ($name) = @_;
-    my @images = list_image(name => $name);
-    return scalar(@images);
-}
-
-sub list_image {return _list_obj('SIS::Image',@_)}
-sub del_image {return sisdel('SIS::Image',@_)}
-sub set_image {return sisset('SIS::Image',@_)}
-
-sub exists_client {
-    my ($name) = @_;
-    my @images = list_client(name => $name);
-    return scalar(@images);
-}
-
-sub list_client {return _list_obj('SIS::Client',@_)}
-sub del_client {return sisdel('SIS::Client',@_)}
-sub set_client {return sisset('SIS::Client',@_)}
-
-sub exists_adapter {
-    my ($name, $client) = @_;
-    my @images = list_adapter(devname => $name, client => $client);
-    return scalar(@images);
-}
-sub list_adapter {return _list_obj('SIS::Adapter',@_)}
-sub del_adapter {return sisdel('SIS::Adapter',@_)}
-sub set_adapter {return sisset('SIS::Adapter',@_)}
-
-sub _list_obj {
-    my $type = shift;
-    my %criteria = @_;
-    my @obj = ();
-    my @temp = sisget($type);
-    foreach my $obj (@temp) {
-        if(match_p($obj, \%criteria)) {
-            push @obj, $obj->clone;
-        }
-    }
-    if(wantarray) {
-        return @obj;
-    } elsif(scalar(@obj) == 1) {
-        return $obj[0];
-    } else {
-        return undef;
-    }
-}
-
-sub _dbfile {
-    my $type = shift;
-    my $file = $DBPATH . "/" . $DBMAP->{$type}->{file};
-    if(-e $file) {
-        return $file;
-    }
-    croak("Can't find db file $file!");
-}
-
-sub sisget {
-    my $type = shift;
-    my %dbh = ();
-    my $file = _dbfile($type);
-    return () if -z $file;
-    my $rc = tie (%dbh, 'MLDBM', $file, GDBM_READER(), 0444) or croak("Couldn't open MLDBM $file: $!");
-    my @obj =  (sort {$a->primkey cmp $b->primkey} values %dbh);
-    # This must be done to get rid of the untie warning
-    undef $rc;
-    untie %dbh;
-    return @obj;
-}
-
-sub sisset {
-    my $type = shift;
-    my @obj = @_;
-    my %dbh = ();
-    my $file = _dbfile($type);
-    my $rc = tie (%dbh, 'MLDBM', $file, GDBM_WRCREAT(), 0640) or croak("Couldn't open MLDBM $file: $!");
-    foreach my $o (@obj) {
-        $dbh{$o->primkey} = $o;
-    }
-    # This must be done to get rid of the untie warning
-    undef $rc;
-    untie %dbh;
-    return 1;
-}
-
-sub sisdel {
-    my $type = shift;
-    my @keys = @_;
-    my %dbh = ();
-    my $file = _dbfile($type);
-    my $rc = tie (%dbh, 'MLDBM', $file, GDBM_WRCREAT(), 0640) or croak("Couldn't open MLDBM $file: $!");
-    foreach my $key (@keys) {
-        delete $dbh{$key};
-    }
-    # This must be done to get rid of the untie warning
-    undef $rc;
-    untie %dbh;
-    return 1;
-}
+# sub exists_image {
+#     my ($name) = @_;
+#     my @images = list_image(name => $name);
+#     return scalar(@images);
+# }
+# 
+# sub list_image {return _list_obj('SIS::Image',@_)}
+# sub del_image {return sisdel('SIS::Image',@_)}
+# sub set_image {return sisset('SIS::Image',@_)}
+# 
+# sub exists_client {
+#     my ($name) = @_;
+#     my @images = list_client(name => $name);
+#     return scalar(@images);
+# }
+# 
+# sub list_client {return _list_obj('SIS::Client',@_)}
+# sub del_client {return sisdel('SIS::Client',@_)}
+# sub set_client {return sisset('SIS::Client',@_)}
+# 
+# sub exists_adapter {
+#     my ($name, $client) = @_;
+#     my @images = list_adapter(devname => $name, client => $client);
+#     return scalar(@images);
+# }
+# sub list_adapter {return _list_obj('SIS::Adapter',@_)}
+# sub del_adapter {return sisdel('SIS::Adapter',@_)}
+# sub set_adapter {return sisset('SIS::Adapter',@_)}
+# 
+# sub _list_obj {
+#     my $type = shift;
+#     my %criteria = @_;
+#     my @obj = ();
+#     my @temp = sisget($type);
+#     foreach my $obj (@temp) {
+#         if(match_p($obj, \%criteria)) {
+#             push @obj, $obj->clone;
+#         }
+#     }
+#     if(wantarray) {
+#         return @obj;
+#     } elsif(scalar(@obj) == 1) {
+#         return $obj[0];
+#     } else {
+#         return undef;
+#     }
+# }
+# 
+# sub _dbfile {
+#     my $type = shift;
+#     my $file = $DBPATH . "/" . $DBMAP->{$type}->{file};
+#     if(-e $file) {
+#         return $file;
+#     }
+#     croak("Can't find db file $file!");
+# }
+# 
+# sub sisget {
+#     my $type = shift;
+#     my %dbh = ();
+#     my $file = _dbfile($type);
+#     return () if -z $file;
+#     my $rc = tie (%dbh, 'MLDBM', $file, GDBM_READER(), 0444) or croak("Couldn't open MLDBM $file: $!");
+#     my @obj =  (sort {$a->primkey cmp $b->primkey} values %dbh);
+#     # This must be done to get rid of the untie warning
+#     undef $rc;
+#     untie %dbh;
+#     return @obj;
+# }
+# 
+# sub sisset {
+#     my $type = shift;
+#     my @obj = @_;
+#     my %dbh = ();
+#     my $file = _dbfile($type);
+#     my $rc = tie (%dbh, 'MLDBM', $file, GDBM_WRCREAT(), 0640) or croak("Couldn't open MLDBM $file: $!");
+#     foreach my $o (@obj) {
+#         $dbh{$o->primkey} = $o;
+#     }
+#     # This must be done to get rid of the untie warning
+#     undef $rc;
+#     untie %dbh;
+#     return 1;
+# }
+# 
+# sub sisdel {
+#     my $type = shift;
+#     my @keys = @_;
+#     my %dbh = ();
+#     my $file = _dbfile($type);
+#     my $rc = tie (%dbh, 'MLDBM', $file, GDBM_WRCREAT(), 0640) or croak("Couldn't open MLDBM $file: $!");
+#     foreach my $key (@keys) {
+#         delete $dbh{$key};
+#     }
+#     # This must be done to get rid of the untie warning
+#     undef $rc;
+#     untie %dbh;
+#     return 1;
+# }
 
 42;
