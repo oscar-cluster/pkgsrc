@@ -27,7 +27,7 @@ use vars qw($VERSION @EXPORT);
 
 use AppConfig;
 
-$VERSION = sprintf("%d.%02d", q$Revision: 1.53 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision$ =~ /(\d+)\.(\d+)/);
 
 # Globally needed variables
 my $config = AppConfig->new(

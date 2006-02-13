@@ -1,4 +1,4 @@
-#   $Id: Passwd.pm,v 1.8 2002/06/12 15:34:35 mchasal Exp $
+#   $Id$
 
 #   This program is free software; you can redistribute it and/or modify
 #   it under the terms of the GNU General Public License as published by
@@ -25,7 +25,7 @@ use strict;
 use base qw(Exporter);
 use vars qw($VERSION @EXPORT @EXPORT_OK  %EXPORT_TAGS);
 
-$VERSION = sprintf("%d.%02d", q$Revision: 1.8 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision$ =~ /(\d+)\.(\d+)/);
 
 @EXPORT_OK = qw(update_user);
 

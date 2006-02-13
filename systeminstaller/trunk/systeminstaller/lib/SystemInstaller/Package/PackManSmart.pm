@@ -22,7 +22,6 @@ use strict;
 use File::Path;
 use File::Basename;
 use SystemInstaller::Log qw(verbose get_verbose);
-use SystemInstaller::Image qw(find_distro split_version);
 use OSCAR::PackMan;
 use Carp;
 
@@ -33,7 +32,7 @@ use vars qw($VERSION $config);
 
 $ENV{SECURE_LEVEL} = 1;
  
-$VERSION = sprintf("r%d", q$Revision$ =~ /(\d+)/);
+$VERSION = sprintf("r%d", q$Revision: 1111$ =~ /(\d+)/);
 
 #
 ## API FUNCTIONS

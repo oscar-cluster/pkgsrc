@@ -4,7 +4,7 @@ use lib '/usr/local/lib/systemimager/perl','/usr/lib/systemimager/perl';
 # The global version is stored here so that it can be used by 
 # the man page string in rewriting POD2MAN_EXE
 
-my $version = "1.04";
+my $version = "2.1";
 my $release = "1";
 my $releasex = "1";
 
@@ -78,11 +78,6 @@ manifest :
 \t\t mv MANIFEST MANIFEST.bak; \\
 \t fi
 \t cp MANIFEST.stub MANIFEST
-\t for file in `find distinfo | grep -v CVS`; do \\
-\t\t if [[ -f \$\$file ]]; then \\
-\t\t\t echo \$\$file >> MANIFEST; \\
-\t\t fi; \\
-\t done
 
 manext_install ::
 \tcd doc && \\
@@ -110,12 +105,9 @@ WriteMakefile(
 				bin/mksiadapter
 				bin/mksidisk
 				bin/mksiimage 
-				bin/buildimage
 				bin/mksimachine
 				bin/mksirange
 				bin/mkdhcpconf
-				bin/mkpkgcache
-				bin/simigratedb
 				tksis/tksis
 				)],
               'INSTALLBIN' => "/usr/bin",

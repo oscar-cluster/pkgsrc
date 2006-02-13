@@ -4,6 +4,31 @@ SystemInstaller is a tool to install a system with any Linux distribution.
 It works hand-in-hand with SystemImager and SystemConfigurator to build 
 a cluster.
 
+***********************************************************************
+
+Since version 1.04 the OSCAR project was the only active user and maintainer of
+SystemInstaller. Several extensions were added to version 1.04 and maintained
+as patches inside the OSCAR SRPM file. At the beginning of the year 2006 the OSCAR
+specific version of SystemInstaller was finally checked into the OSCAR group's
+SVN repository in order to facilitate development and the addition of OSCAR
+specific features.
+
+THIS BRANCH OF SYSTEMIMAGER MAKES SENSE ONLY WHEN USED WITH OSCAR!
+
+The integration with OSCAR can onlz be improved if unnecessary components
+of SystemImager don't need to be maintained any more. This version will be
+systematically stripped by not needed and obsolete components.
+
+Erich Focht, February 12, 2006.
+
+************************************************************************
+
+The original SystemInstaller README file is included below. Some info is
+obsolete.
+
+************************************************************************
+
+
 If you wish to help out in any way, please visit the 
 SystemInstaller home page (http://systeminstaller.sourceforge.net).
 

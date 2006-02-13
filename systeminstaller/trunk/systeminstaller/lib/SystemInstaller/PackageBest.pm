@@ -28,7 +28,7 @@ use Carp;
 use vars qw($VERSION @ISA @EXPORT);
 use POSIX;
 
-$VERSION = sprintf("%d.%02d", q$Revision: 1.4 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision$ =~ /(\d+)\.(\d+)/);
 
 my @PBMODS=qw(Rpm);
 

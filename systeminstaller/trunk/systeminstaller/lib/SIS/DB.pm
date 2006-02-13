@@ -1,6 +1,6 @@
 package SIS::DB;
 
-#   $Id: DB.pm,v 1.2 2002/12/17 17:25:48 mchasal Exp $
+#   $Id$
 
 #   Copyright (c) 2002 International Business Machines
 
@@ -101,7 +101,7 @@ use Fcntl;
 use base qw(Exporter);
 use vars qw($VERSION $DBPATH $DBMAP @EXPORT);
 
-$VERSION = sprintf("%d.%02d", q$Revision: 1.2 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision$ =~ /(\d+)\.(\d+)/);
 
 @EXPORT = qw(exists_image list_image set_image del_image
              exists_client list_client set_client del_client

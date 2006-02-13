@@ -3,9 +3,12 @@
 eval 'exec /usr/bin/perl  -S $0 ${1+"$@"}'
     if 0; # not running under some shell
 
-#   $Header: /cvsroot/systeminstaller/systeminstaller/bin/mkdhcpconf,v 1.21 2003/10/23 22:22:44 pramath Exp $
+#   $Id$
 
 #   Copyright (c) 2001 International Business Machines
+#
+#   Copyright (c) 2004-2006 Erich Focht <efocht@hpce.nec.com>
+#                           All rights reserved
 
 #   This program is free software; you can redistribute it and/or modify
 #   it under the terms of the GNU General Public License as published by

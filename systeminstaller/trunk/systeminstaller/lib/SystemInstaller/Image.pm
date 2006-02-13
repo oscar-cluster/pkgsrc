@@ -1,9 +1,7 @@
 package SystemInstaller::Image;
 
-#   $Header: /cvsroot/oscar/oscar/packages/sis/scripts/fedora_patch/Image.pm,v 1.1.2.1 2004/01/29 18:53:35 bligneri Exp $
+#   $Id$
 
-#   Copyright (c) 2001 International Business Machines
- 
 #   This program is free software; you can redistribute it and/or modify
 #   it under the terms of the GNU General Public License as published by
 #   the Free Software Foundation; either version 2 of the License, or
@@ -18,8 +16,12 @@ package SystemInstaller::Image;
 #   along with this program; if not, write to the Free Software
 #   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  
-#   Michael Chase-Salerno <salernom@us.ibm.com>             
+#   Copyright (c) 2001 International Business Machines
+#                      Michael Chase-Salerno <salernom@us.ibm.com>             
 #   Copyright (c) 2004, Revolution Linux Inc, Benoit des Ligneris
+#   Copyright (c) 2003-2006 Erich Focht <efocht@hpce.nec.com>
+#                           All rights reserved
+
 use strict;
 
 use base qw(Exporter);
@@ -28,10 +30,10 @@ use File::Path;
 use SystemInstaller::Log qw (verbose);
 use Carp;
  
-@EXPORT = qw(find_distro init_image del_image write_scconf cp_image split_version); 
-@EXPORT_OK = qw(find_distro init_image del_image write_scconf cp_image split_version); 
+@EXPORT = qw(init_image del_image write_scconf cp_image split_version); 
+@EXPORT_OK = qw(init_image del_image write_scconf cp_image split_version); 
  
-$VERSION = sprintf("%d.%02d", q$Revision: 1.1.2.1 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision$ =~ /(\d+)\.(\d+)/);
 
 my @MODS=qw(Kernel_ia64 Kernel_iseries Kernel_x86);
 use SystemInstaller::Image::Kernel_x86;
@@ -101,171 +103,6 @@ sub cp_image {
 
 
 } # cp_image
-
-
-
-sub split_version {
-# Splits the version from find_distro into its major and 
-# minor parts for reference into the distinfo tree
-# Input:        Version from find_distro
-# Output:       A list with the major and minor parts.
-        my $version=shift;
-        my ($maj,$min)=split(/\./,$version);
-        return ($maj,$min);
-}
-
-sub find_distro {
-# Try to determine which distro is contained in a directory
-#
-# Input:	Package file directory
-# Returns:	A 2 element list, 
-#			distro name, release
-#				or
-#			null if unable to determine
-        my $pkgdir=$_[0];
-        my $distro;
-        my $version;
-        my @relfiles;
- 
-        # Is this Mandrakelinux?
-        @relfiles=glob("$pkgdir/mandrakelinux-release*.rpm");
-        if (scalar(@relfiles) == 1) {
-                $distro="Mandrake";
-                # Now find the version
-                $relfiles[0]=~s/.*\///;
-                my ($j1,$j2,$version,$j3)=split(/-/,$relfiles[0]);
-                return($distro,$version);
-        }
-        undef @relfiles;
-
-	# Is this Mandrake?
-	@relfiles=glob("$pkgdir/mandrake-release*.rpm");
-	if (scalar(@relfiles) == 1) {
-		$distro="Mandrake";
-		$relfiles[0]=~s/.*\///;
-		my ($j1,$j2,$version,$j3)=split(/-/,$relfiles[0]);
-		return($distro,$version);
-	}
-        undef @relfiles;
-
-        # Is this Mandriva (from 2006 on)?
-        @relfiles=glob("$pkgdir/mandriva-release*.rpm");
-        if (scalar(@relfiles) == 1) {
-                $distro="Mandriva";
-                # Now find the version
-                $relfiles[0]=~s/.*\///;
-                my ($j1,$j2,$version,$j3)=split(/-/,$relfiles[0]);
-                return($distro,$version);
-        }
-        undef @relfiles;
-
-        # Is this Redhat AS?
-        @relfiles=glob("$pkgdir/redhat-release-as*.rpm");
-        if (scalar(@relfiles) == 1) {
-                $distro="RedhatAS";
-                # Now find the version
-                $relfiles[0]=~s/.*\///;
-                my ($j1,$j2,$j3,$version,$j3)=split(/-/,$relfiles[0]);
-                $version=~s/AS//;
-                return($distro,$version);
-        }
-        undef @relfiles;
-
-        # Is it Fedora ?
-        @relfiles=glob("$pkgdir/fedora-release*.rpm");
-        if (scalar(@relfiles) == 1) {
-                $distro="Fedora";
-                # Now find the version
-                $relfiles[0]=~s/.*\///;
-                my ($j1,$j2,$version,$j3)=split(/-/,$relfiles[0]);
-                return($distro,$version);
-        }
-        undef @relfiles;
-
-        # Is this Redhat?
-        @relfiles=glob("$pkgdir/redhat-release*.rpm");
-        if (scalar(@relfiles) == 1) {
-                $distro="Redhat";
-                # Now find the version
-                $relfiles[0]=~s/.*\///;
-                my ($j1,$j2,$version,$j3)=split(/-/,$relfiles[0]);
-		#EF# treat 3WS, 3ES and 3AS the same way
-		if ($version =~ m/3(WS|ES|AS)/) {
-			$version = "el3";
-		} elsif ($version =~ m/4(WS|ES|AS)/) {
-			$version = "el4";
-		}
-                return($distro,$version);
-        }
-        undef @relfiles;
-	#EF# Is it Scientific Linux or CentOS? Treat is like Redhat EL
-	@relfiles=glob("$pkgdir/sl-release*.rpm $pkgdir/centos-release*.rpm");
-	if (scalar(@relfiles) == 1) {
-	    $distro="Redhat";
-	    # Now find the version
-	    $relfiles[0]=~s/.*\///;
-	    my ($j1,$j2,$version,$j3)=split(/-/,$relfiles[0]);
-	    if ($j1 =~ m/^(sl|centos)$/) {
-		if ($version =~ m/^3/) {
-		    $version = "el3";
-	        } elsif ($version =~ m/^4/) {
-		    $version = "el4";
-		}
-	    }
-	    return($distro,$version);
-	}
-	undef @relfiles;
-        # How about TurboLinux?
-        @relfiles=glob("$pkgdir/distribution-release-TL*.rpm");
-        if (scalar(@relfiles) >= 1) {
-                $distro="Turbo";
-                # Now find the version
-                $relfiles[0]=~s/.*\///;
-                my ($j1,$j2,$version,$j3)=split(/-/,$relfiles[0]);
-                $version=~s/TLS//;
-                return($distro,$version);
-        }
-        undef @relfiles;
-        # Maybe Suse?
-        my $versionrpm;
-        @relfiles=glob("$pkgdir/aaa_version*.rpm");
-        if (scalar(@relfiles) >= 1) {
-                $versionrpm=$relfiles[0];
-        } elsif (scalar(@relfiles=glob("$pkgdir/sles-release*.rpm")) >= 1) {
-                 $versionrpm=$relfiles[0];
-        } else  {
-                @relfiles=glob("$pkgdir/aaa_base*.rpm");
-                if (scalar(@relfiles) >= 1) {
-                        $versionrpm=$relfiles[0];
-                }
-        }
-        if ($versionrpm) {
-                $distro="Suse"; # Unless it is SLES down below.
-                # Now find the version
-                mkdir("/tmp/find_distro");
-                system("cd /tmp/find_distro; rpm2cpio $versionrpm | cpio -iumd --quiet  etc/SuSE-release");
-                unless (open(BASE,"< /tmp/find_distro/etc/SuSE-release")) {
-                        carp("Unable to determine distro for Suse");
-                } else {
-                        while (<BASE>) {
-                                chomp;
-                                if (/SLES/) {
-                                        $distro="SLES";
-                                }
-                                if (/^VERSION/) {
-                                        $version=$_;
-                                        $version=~s/^VERSION = //;
-                                }
-                        }
-                }
-                rmtree("/tmp/find_distro");
-                return($distro,$version);
-        }
-        undef @relfiles;
-        #If we got here, we couldn't figure it out.
-        return ;
-}                       
-
 
 sub write_scconf {
         # Write the boot and kernel info to the systemconfig.conf file.

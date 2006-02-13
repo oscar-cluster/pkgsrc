@@ -8,7 +8,7 @@ BEGIN {
 
 # 1 test use
 eval {
-	use SystemInstaller::Package::Rpm;
+	use SystemInstaller::Package::PackManSmart;
 	return 1;
 };
-ok($@,'') or croak("Couldn't use Rpm.pm");
+ok($@,'') or croak("Couldn't use PackManSmart.pm");

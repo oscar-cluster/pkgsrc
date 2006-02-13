@@ -1,7 +1,7 @@
 package Tk::SISTree;
 
 use vars qw($VERSION);
-$VERSION = '3.019'; # $Id: SISTree.pm,v 1.11 2002/12/17 17:25:49 mchasal Exp $
+$VERSION = '3.019'; # $Id$
 
 use Tk ();
 use Tk::Derived;

@@ -32,7 +32,7 @@ $ENV{PATH}=$config->binpath .":" . $ENV{PATH};
 use strict;
 use vars qw($config $VERSION);
 
-$VERSION = sprintf("%d.%02d", q$Revision: 1.53 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision$ =~ /(\d+)\.(\d+)/);
 use lib "/usr/lib/systeminstaller","/usr/local/lib/systemimager/perl", "/usr/lib/systemimager/perl";
 use SIS::DB;
 use SIS::Image;

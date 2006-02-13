@@ -25,7 +25,7 @@ use vars qw($VERSION @ATTR);
 use base qw(SIS::Component);
 use SIS::DB;
 
-$VERSION = sprintf("%d.%02d", q$Revision: 1.4 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision$ =~ /(\d+)\.(\d+)/);
 
 @ATTR = qw(route hostname domainname arch imagename name proccount);
 

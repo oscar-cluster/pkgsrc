@@ -1,6 +1,6 @@
 package SIS::Component;
 
-#   $Id: Component.pm,v 1.2 2002/12/17 17:25:48 mchasal Exp $
+#   $Id$
 
 #   Copyright (c) 2001 International Business Machines
 

@@ -20,7 +20,7 @@
 
 use strict;
 use vars qw($config $VERSION);
-$VERSION = sprintf("%d.%02d", q$Revision: 1.18 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision$ =~ /(\d+)\.(\d+)/);
 use lib "/usr/local/lib/systemimager/perl", "/usr/lib/systemimager/perl","/usr/lib/systeminstaller";
 use SIS::Client;
 use SIS::Adapter;

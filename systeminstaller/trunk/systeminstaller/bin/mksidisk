@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-#   $Header: /cvsroot/systeminstaller/systeminstaller/bin/mksidisk,v 1.33 2003/04/11 20:44:28 mchasal Exp $
+#   $Id$
 
 #   Copyright (c) 2001 International Business Machines
 
@@ -23,7 +23,7 @@
 
 use strict;
 use vars qw($config $VERSION);
-$VERSION = sprintf("%d.%02d", q$Revision: 1.33 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d", q$Revision$ =~ /(\d+)/);
 use lib "/usr/lib/systeminstaller";
 use SIS::Image;
 use SIS::DB;
