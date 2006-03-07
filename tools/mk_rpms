@@ -43,7 +43,11 @@ build_srpm () {
 build_rpms () {
     local SRPM=$1
     local TMPO=/tmp/rpmbld_$$
-    run_cmd "rpmbuild --rebuild $SRPM > $TMPO 2>&1"
+    local TARGET
+    if [ `uname -i` = "i386" ]; then
+	TARGET="--target i686"
+    fi
+    run_cmd "rpmbuild --rebuild $SRPM $TARGET > $TMPO 2>&1"
     if [ $? -ne 0 ]; then
 	echo "EEEE: Building RPMs from $SRPM failed."
 	tail -10 $TMPO
