@@ -1,0 +1,32 @@
+#!/usr/bin/perl
+
+if ($ARGV[0] eq "-t") {
+    $test=1;
+    shift @ARGV;
+}
+
+$fromver=$ARGV[0];
+$tover=$ARGV[1];
+
+if (!$fromver || !$tover) {
+   print "Usage: $0 [-t] from_version to_version\n";
+   print "   -t  : only show what would be replaced, don't really replace\n";
+   exit;
+}
+
+$SVN_UPDATE="svn_update";
+
+@fromfiles=glob("*$fromver*");
+$fromver=~s/\./\\./g;
+
+for $old (@fromfiles) {
+    $new = $old;
+    $new =~ s/$fromver/$tover/;
+    if (-e $new) {
+	print "$old -> $new\n";
+	if (!$test) {
+	    system("$SVN_UPDATE $old $new");
+	}
+    }
+}
+

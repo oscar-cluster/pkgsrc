@@ -1,0 +1,17 @@
+#!/bin/bash
+
+old=$1
+new=$2
+if [ $# -ne 2 ]; then
+   echo "Usage: $0 old new"
+   exit 1
+fi
+if [ -e "$new" ]; then
+   nnew=${new}_
+   mv $new $nnew
+else
+   echo "File $new does not exist!"
+   exit 1
+fi
+svn mv $old $new
+mv $nnew $new
