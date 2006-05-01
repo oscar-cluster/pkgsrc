@@ -4,6 +4,17 @@
 # a spec file. The spec file must be named the same way as the source
 # directory, with a .spec appended.
 #
+# Usage:
+#
+# mk_rpms --only-rpms srpm1 [srpms2 ...]
+#
+# mk_rpms dir
+#
+# mk_rpms spec_file
+#
+# mk_rpms --only-srpms dir|spec_file
+#
+#
 # When running without PKG arguments the spec files in the current
 # directory are searched.
 #
@@ -155,8 +166,12 @@ if [ $# -gt 0 ]; then
 		VERBOSE=1
 		shift
 		;;
-	    --srpm)
+	    --only-srpm)
 		SRPMONLY=1
+		shift
+		;;
+	    --only-rpm)
+		RPMONLY=1
 		shift
 		;;
 	    -v|--verbose)
@@ -170,10 +185,17 @@ if [ $# -gt 0 ]; then
 	esac
     done
 fi
-if [ -z "$PKGS" ]; then
-    echo "No arguments passed. Searching for spec files in current directory."
-    PKGS=`ls -1 *.spec | sed s/.spec//`
+if [ -n "$RPMONLY" ]; then
+    echo "Building only RPMs, passed arguments are interpreted as SRPMs"
+    SRPMS=$PKGS
+    PKGS=""
 fi
+
+for SRPM in $SRPMS; do
+    if [ -f "$SRPM" ]; then
+	build_rpm $SRPM
+    fi
+done
 
 for PKG in $PKGS; do
    #
