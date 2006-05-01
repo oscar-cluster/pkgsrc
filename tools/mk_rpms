@@ -6,7 +6,7 @@
 #
 # Usage:
 #
-# mk_rpms --only-rpms srpm1 [srpms2 ...]
+# mk_rpms --only-rpm srpm1 [srpms2 ...]
 #
 # mk_rpms dir
 #
@@ -193,7 +193,7 @@ fi
 
 for SRPM in $SRPMS; do
     if [ -f "$SRPM" ]; then
-	build_rpm $SRPM
+	build_rpms $SRPM
     fi
 done
 
