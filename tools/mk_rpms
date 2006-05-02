@@ -58,6 +58,11 @@ build_rpms () {
     if [ `uname -i` = "i386" ]; then
 	TARGET="--target i686"
     fi
+    case "$RPMBUILDOPTS" in
+	*--target*)
+	    TARGET=""
+	    ;;
+    esac
     run_cmd "rpmbuild --rebuild $SRPM $TARGET $RPMBUILDOPTS > $TMPO 2>&1"
     if [ $? -ne 0 ]; then
 	echo "EEEE: Building RPMs from $SRPM failed."
