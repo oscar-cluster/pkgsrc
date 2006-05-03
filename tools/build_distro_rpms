@@ -97,7 +97,7 @@ use Cwd;
 use File::Basename;
 use Data::Dumper;
 use Getopt::Long;
-
+use Carp;
 
 my ($OHOME, $os, $verbose, $test, @installed_reqs);
 
@@ -222,6 +222,8 @@ sub install_requires {
     my ($requires) = @_;
     my @reqs = split(" ",$requires);
     print "Requires: ".join(" ",@reqs)."\n";
+
+    my @install_stack;
     for my $r (@reqs) {
 	if ($r =~ /^(.*):(.*)$/) {
 	    my $opkg = $1;
@@ -231,23 +233,32 @@ sub install_requires {
 	    my @rpms = glob("$pdir/distro/common-rpms/$pkg*.{$march,noarch}.rpm ".
 			    "$pdir/$bindir/$pkg*.{$march,noarch}.rpm");
 	    if (@rpms) {
-		if (!$test) {
-		    if (system("yume --repo $pool -y install ".join(" ",@rpms))) {
-			print "Failed to install required rpms ".join(" ",@rpms)."\n";
-		    } else {
-			push @installed_reqs, @rpms;
-		    }
-		}
+		push @install_stack, @rpms;
 	    }
 	} else {
-	    if (!$test) {
-		if (system("yume --repo $pool -y install $r")) {
-		    print "Failed to install required rpm $r\n";
-		} else {
-		    push @installed_reqs, $r;
-		}
-	    }
+	    push @install_stack, $r;
 	}
+    }
+    if (!$test) {
+	# remember RPMs which were installed before
+	my %before = map { $_ => 1 } split("\n",`rpm -qa`);
+	my $cmd = "yume --repo $pool -y install ".join(" ",@install_stack);
+	print "Executing: $cmd\n" if $verbose;
+	if (system($cmd)) {
+	    print "Warning: failed to install requires: ".join(" ",@reqs)."\n";
+	}
+	local *CMD;
+	open CMD, "rpm -qa |" or do {
+	    print "Could not run rpm command\n";
+	    return;
+	};
+	while (<CMD>) {
+	    chomp;
+	    next if exists $before{$_};
+	    push @installed_reqs, $_;
+	}
+	close CMD;
+	undef %before;
     }
 }
 
