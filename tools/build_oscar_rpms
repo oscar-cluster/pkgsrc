@@ -33,8 +33,8 @@
 # pool manually (yume --repo /tftpboot/distro/$distro-$version-$arch --prepare)
 # in order to be able to install requirements and dependencies.
 #
-# You will need to copy the mk_rpms tool into the scripts/ directory before using
-# this tool. It is used for building RPMs out of the SRPMs.
+# You will need to copy the build_rpms tool into the scripts/ directory
+# before using this tool. It is used for building RPMs out of the SRPMs.
 #
 # CONFIGURATION:
 # -------------
@@ -285,7 +285,7 @@ sub remove_installed_reqs {
 # Core rpm building routine
 # - detects name and version-release from source rpms
 # - checks whether rpms containing name/version already exist in the target dir
-# - builds by calling mk_rpms, adds build options from config file
+# - builds by calling build_rpms, adds build options from config file
 # - all rpms resulting from build end up in the target directory
 #
 sub build_if_needed {
@@ -328,7 +328,7 @@ sub build_if_needed {
 		if ($opt) {
 		    print "setting \$RPMBUILDOPTS=$opt\n";
 		}
-		my $cmd = "$OHOME/scripts/mk_rpms --only-rpm $s";
+		my $cmd = "$OHOME/scripts/build_rpms --only-rpm $s";
 		print "Executing: $cmd\n";
 		if (!$test) {
 		    my $ret = system($cmd);
