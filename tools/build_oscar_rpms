@@ -220,6 +220,8 @@ sub build_rpms {
 #
 sub install_requires {
     my ($requires) = @_;
+    return if (!$requires);
+
     my @reqs = split(" ",$requires);
     print "Requires: ".join(" ",@reqs)."\n";
 
