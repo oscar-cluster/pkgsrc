@@ -1,0 +1,15 @@
+Source: rapt
+Section: misc
+Priority: optional
+Maintainer   : Erich Focht <efocht@hpce.nec.com>
+Build-Depends: debhelper (>= 4.0.0)
+Standards-Version: 1.0 
+
+Package: rapt
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Wrapper for apt-get which extends it to deal with local package
+ repositories, prepare their metadata, export them through http and install
+ remove packages into chroot images (including debootstrapping).
+ This functionality is required within the OSCAR clustering stack for debian
+ support in the packman package manager abstraction.

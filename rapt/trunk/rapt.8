@@ -1,0 +1,105 @@
+.PU
+.TH RAPT 8 local
+.SH NAME
+rapt \- apt-get wrapper for easy cluster management
+.SH SYNOPSIS
+.B rapt OPTIONS [APT_GET_OPTIONS]
+.br
+.SH DESCRIPTION
+.I Rapt
+is a tool for setting up, exporting apt repositories and executing
+apt-get commands for only these repositories. Additionally rapt offers the
+possibility to install or remove packages into a chroot directory.
+
+
+This tool can:
+.br
+ - prepare an .deb repository
+.br
+ - export it through apache
+.br
+ - execute apt-get commands applying only to this repository (locally)
+.br
+ - execute apt-get commands on the cluster nodes applying only to this repository.
+ - execute apt-get commands in an image directory.
+.br
+This tool is the equivalent of yume for rpm based repositories.
+
+
+.SH OPTIONS
+
+.TP
+.B --repo URL :
+repository which should be included in yum actions (multiple --repo options
+are possible). If no --repo option is passed, rapt tries to detect the default
+repository names dynamically. This feature only works on an OSCAR cluster, on
+both master- and client-nodes.
+.br
+Remote debian repositories need to follow the following format:
+.br
+{http|ftp}://url/+codename+component1+component2+...
+.br
+for example:
+.br
+ftp://ftp.debian.org/debian/+stable+main+non-free+contrib
+
+.TP
+.B --export :
+create httpd configuration for local repositories. The repositories have to be
+passed by using --repo. The URL will be /repo/repopath on the local
+web server. This command fails if the configuration path for the webserver is
+not detected.
+
+.TP
+.B --unexport :
+delete httpd configuration for local repositories. Pass repositories with the
+--repo option.
+
+.TP
+.B --listexp :
+list local repositories which are exported via http.
+
+.TP
+.B --prepare :
+generate repository metadata (Packages file) for local repositories. This
+calls "dpkg-scanpackages" and generates the package independent repository
+metadata in the subdirectory dists/$codename/binary-$arch/.
+
+.TP
+.B --installroot imagedir :
+install or remove packages into the chroot image located in imagedir. If the
+image directory is empty, debootstrap will install a basic system into it
+before attempting to install any other package.
+
+.TP
+.B --help :
+display help information.
+
+.TP
+.B --verbose :
+verbose output.
+
+Setting the environment variable $RAPT_VERBOSE to a nonzero value will
+generate verbose output like the -v option.
+
+
+
+When used on an OSCAR cluster the repositories default to the distribution
+specific repository locations. These can be displayed by using the command
+$OSCAR_HOME/scripts/distro-query.
+
+
+.SH "SEE ALSO"
+apt-get(8), yume(8).
+
+.SH "DIAGNOSTICS"
+Exit status is normally 0.
+If an error occurs, exit status is nonzero.
+
+.SH BUGS
+None ;-)
+
+.SH AUTHOR
+Erich Focht, NEC HPCE, email: efocht at hpce dot nec dot com
+.br
+Document version $Revision$
