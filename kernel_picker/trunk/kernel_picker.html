@@ -1,0 +1,233 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<!-- Manual page created with latex2man on Tue Nov  4 17:04:07 CST 2003 --
+-- Author of latex2man: Juergen.Vollmer@acm.org --
+-- NOTE: This file is generated, DO NOT EDIT. -->
+<html>
+<head><title>KERNEL\_PICKER</title></head>
+<body bgcolor="white">
+<h1 align=center>
+kernel_picker -<br>
+ An OSCAR Helper Tool 
+</h1>
+<h4 align=center>Terry Fleury </h4>
+<h4 align=center>2003/09/03</h4>
+<h4 align=center>Version 1.4</h4>
+<p>
+<tt>kernel_picker</tt>
+is a Perl script which allows the user to install 
+a given kernel into an OSCAR image different from the one which is 
+installed by default. 
+<h3>Table of Contents</h3>
+<ul>
+<li><a href="#section_1">Synopsis </a></li>
+<li><a href="#section_2">Description </a></li>
+<li><a href="#section_3">Options </a></li>
+<li><a href="#section_4">General Remarks </a></li>
+<li><a href="#section_5">Requirements </a></li>
+<li><a href="#section_6">Version </a></li>
+<li><a href="#section_7">Author </a>
+</li></ul>
+<p>
+<h2><a name="section_1">Synopsis</a></h2>
+
+<p>
+<tt>kernel_picker</tt>
+[<b>--oscarimage </b>[<i>image_name</i>]]
+[<b>--bootkernel </b><i>boot_kernel</i>]
+[<b>--bootlabel </b><i>boot_label</i>]
+[<b>--bootramdisk </b>[<i>Y/n</i>]]
+[<b>--networkboot </b>[<i>Y/n</i>]]
+[<b>--kernelversion </b><i>version_number</i>]
+[<b>--modulespath </b><i>modules_path</i>]
+[<b>--systemmap </b><i>system_map</i>]
+[<b>--version</b>]
+[<b>--help</b>]
+<p>
+<h2><a name="section_2">Description</a></h2>
+
+<tt>kernel_picker</tt>
+allows you to substitute a given kernel into your 
+OSCAR (SIS) image prior to building your nodes. If executed with no 
+command line options, you will be prompted for all required 
+information. You can also specify command line options as shown 
+below. Any necessary information that you do not give via an option 
+will cause the program to prompt you for that information. 
+<p>
+The program assumes that the optional OSCAR image files you wish to 
+use reside in a subdirectory in the 
+<tt>/var/lib/systemimager/images</tt>
+directory. By default, the 
+original OSCAR image is in a subdirectory named <tt>oscarimage</tt>.
+<p>
+<h2><a name="section_3">Options</a></h2>
+
+<dl compact>
+<dt>[<b>--oscarimage </b>[<i>image_name</i>]]
+<dd> The name of the OSCAR image 
+directory. If you use this option but do not specify 
+<i>image_name</i>,
+the default directory '<tt>oscarimage</tt>'
+will be 
+used. 
+</dd>
+<dt>[<b>--autoselectimage</b>]
+<dd> In the event that there are two or more 
+OSCAR image directories but you do not want to have to specify one via 
+the '--oscarimage' option (e.g. when you want to call 
+<tt>kernel_picker</tt>
+from another program), use this option. (The 
+first OSCAR image directory, alphabetcially ignoring case, will be 
+used.) Otherwise, you will be presented with a list of OSCAR image 
+directories and be asked to choose one to use. 
+</dd>
+<dt>[<b>--bootkernel </b><i>boot_kernel</i>]
+<dd> The full path specifier of the 
+kernel to use at boot time. This kernel file will be copied to the 
+system's boot directory. Also, <tt>systemconfig.conf</tt>'s
+PATH option 
+will be set approriately. 
+</dd>
+<dt>[<b>--bootlabel </b><i>boot_label</i>]
+<dd> The label for the kernel to use at 
+boot time. This value is set as the LABEL option in the 
+<tt>systemconfig.conf</tt>
+file. If you provide the <i>boot_kernel</i>
+but do not provide the <i>kernel_label</i>,
+the <i>kernel_label</i>
+defaults to the file name specified by the <i>boot_kernel</i>
+(without 
+any leading path information). 
+</dd>
+<dt>[<b>--bootramdisk </b>[<i>Y/n</i>]]
+<dd> Whether or not to configure a ram disk 
+for booting. This value is set as the CONFIGRD option in the 
+<tt>systemconfig.conf</tt>
+file. If you do not specify Y or N, it 
+defaults to YES. 
+</dd>
+<dt>[<b>--networkboot </b>[<i>Y/n</i>]]
+<dd> Whether or not to use the specified 
+<i>boot_kernel</i>
+for network booting the nodes during the build 
+process. If so, the kernel gets copied to '<tt>/tftpboot</tt>'.
+If you 
+do not specify Y or N, it defaults to YES. 
+</dd>
+<dt>[<b>--kernelversion </b><i>version_number</i>]
+<dd> If your boot kernel uses 
+loadable modules, you must provide the full version number/name of the 
+kernel. This is the value output by the Unix command 
+'<tt>uname -r</tt>'.
+</dd>
+<dt>[<b>--modulespath </b><i>modules_path</i>]
+<dd> If your boot kernel uses 
+loadable modules, you must profide the source directory containing the 
+<tt>/lib/modules/version_number</tt>
+directory tree. There is no 
+need to prepend <tt>/lib/modules/version_number</tt>
+to this 
+option (but it doesn't hurt if you do). 
+</dd>
+<dt>[<b>--systemmap </b><i>system_map</i>]
+<dd> If your boot kernel uses loadable 
+modules, you may optionally provide the full path specifier of the 
+<tt>System.map</tt>
+file to use by depmod. Enter the full path/file name 
+of the source file. This file will be copied to the boot directory. 
+</dd>
+<dt>[<b>--version</b>]
+<dd> Prints out the version string of the program and 
+then quits. 
+</dd>
+<dt>[<b>--help</b>]
+<dd> Prints out a help message and then quits. 
+</dd>
+</dl>
+<p>
+<h2><a name="section_4">General Remarks</a></h2>
+
+<ol compact>
+<li value =1><tt>kernel_picker</tt> does not modify any configuration on the host
+machine. 
+</li>
+<li value =2>When you run the program without any command line options, you will be 
+prompted for all required information. If you use any command line 
+options, the program will assume that you know what you are doing and 
+prompt you ONLY for information which is required for correct 
+execution. For example, if you specify the <b>--bootlabel</b>
+but not 
+any of the options required for loadable modules 
+(<b>--kernelversion</b>,
+<b>--modulespath</b>,
+and <b>--systemmap</b>),
+the program will assume that your kernel does not require loadable 
+modules and will not prompt you for any of those options. 
+</li>
+<li value =3>All of the required information is gathered prior to acutally running 
+any commands. So you can abort execution before the end and no files 
+will be modified/copied. 
+</li>
+<li value =4>Many of the questions have a default value indicated by bracketed text 
+at the end of the question. If this value is okay, simply hit 
+&lt;ENTER&gt; to accept it. For most of the questions, the default 
+value is probably what you want. 
+</li>
+<li value =5>If there is only one subdirectory in the 
+<tt>/var/lib/systemimager/images</tt>
+directory, it will be used as the 
+<b>--oscarimage</b>.
+</li>
+<li value =6>When you enter the <i>boot_kernel</i>, it will be scanned for a
+version number string. If found, this will be used as the default 
+values for the <i>kernel_label</i>
+and <i>version_number</i>.
+You can 
+override this by entering your own label and version. 
+</li>
+<li value =7>If you want to run the program from the command line and not be 
+prompted for any information, you should invoke the program as 
+follows: 
+<p>
+<tt>kernel_picker</tt>
+<b>--bootkernel</b><i> boot_kernel</i>
+<b>--bootramdisk</b>
+N 
+<b>--networkboot</b>
+N 
+</li>
+</ol>
+<p>
+<h2><a name="section_5">Requirements</a></h2>
+
+<dl compact>
+<dt>Perl
+<dd> The <tt>kernel_picker</tt>
+script requires Perl version 
+&gt;=5.5. 
+</dd>
+<dt>Initrd::Generic.pm
+<dd> In order to extract the kernel version number 
+string from the <i>boot_kernel</i>,
+<tt>kernel_picker</tt>
+requires the 
+<tt>Initrd</tt>
+package. This is usually found in the 
+<tt>/usr/lib/systemconfig</tt>
+directory and is part of the 
+<tt>systemconfigurator</tt>
+RPM package. 
+</dd>
+</dl>
+<p>
+<h2><a name="section_6">Version</a></h2>
+
+Version: 1.4 of 2003/09/03.
+<p>
+<h2><a name="section_7">Author</a></h2>
+
+Terry Fleury <br>
+ 
+Email: <a href ="mailto:tfleury@ncsa.uiuc.edu"><tt>tfleury@ncsa.uiuc.edu</tt></a>
+</body>
+</html>
+<!-- NOTE: This file is generated, DO NOT EDIT. -->
