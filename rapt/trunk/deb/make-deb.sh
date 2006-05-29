@@ -9,58 +9,50 @@
 #                    All rights reserved
 #
 
-# we get the version number (first parameter)
-number_of_args=$#
-version=$1
+# we get the version number from the debian/control file. This file must be updated before the creation of a new package# 
+version=`grep "Standards-Version:" debian/control | sed 's/Standards-Version: //' | sed 's/ //'`
 path=`pwd`
 
 
 package=rapt
 
-echo "Be sure that we execute this script as root."
 echo "Be also sure before to create the package that package information is up-to-date."
 echo "Read the file deb/README for more details."
 echo "Press enter to continue or Ctrl+C to abord."
 read $toto
 
-if [ $number_of_args -eq 0 ] 
-then
-  echo "You have to specify a version number as parameter. This number should be the same than in the deb/control file." 
-else 
+echo "Creating Debian package for $package version " $version
 
-  echo "Creating Debian package for $package version " $version
+# we first copy everything in /tmp/deb-packman and prepare a directory for packaging
+rm -rf /tmp/deb$$
+mkdir -p /tmp/deb$$/$package-$version
+cp -rf ../* /tmp/deb$$/$package-$version
+rm -rf /tmp/deb$$/$package-$version/deb
+tar czf /tmp/deb$$/$package-$version.tar.gz /tmp/deb-packman/$package-$version
 
-  # we first copy everything in /tmp/deb-packman and prepare a directory for packaging
-  rm -rf /tmp/deb$$
-  mkdir -p /tmp/deb$$/$package-$version
-  cp -rf ../* /tmp/deb$$/$package-$version
-  rm -rf /tmp/deb$$/$package-$version/deb
-  tar czf /tmp/deb$$/$package-$version.tar.gz /tmp/deb-packman/$package-$version
+cd  /tmp/deb$$/$package-$version
 
-  cd  /tmp/deb$$/$package-$version
+# we clean up the stub
+rm -f debian/*.ex debian/*.EX
 
-  # we clean up the stub
-  rm -f debian/*.ex debian/*.EX
+# we create all the files for the package
+dh_make --copyright gpl --single
 
-  # we create all the files for the package
-  dh_make --copyright gpl --single
-
-  # a complete tree of directories is now ready. We update that thanks to information we already have.
-  cd $path
-  cp Makefile /tmp/deb$$/$package-$version
-  cp debian/control /tmp/deb$$/$package-$version/debian
-  cp debian/copyright /tmp/deb$$/$package-$version/debian
+# a complete tree of directories is now ready. We update that thanks to information we already have.
+cd $path
+cp Makefile /tmp/deb$$/$package-$version
+cp debian/control /tmp/deb$$/$package-$version/debian
+cp debian/copyright /tmp/deb$$/$package-$version/debian
   
-  # we then really create the package
-  cd  /tmp/deb$$/$package-$version
-  dpkg-buildpackage -rfakeroot
+# we then really create the package
+cd  /tmp/deb$$/$package-$version
+dpkg-buildpackage -rfakeroot
 
-  # then we grab the created files :-)
-  cd .. 
-  cp -rf *.changes *.deb *.orig.tar.gz $path
-  cd $path
-  rm -rf /tmp/deb$$
+# then we grab the created files :-)
+cd .. 
+cp -rf *.changes *.deb *.orig.tar.gz $path
+cd $path
+rm -rf /tmp/deb$$
 
-  echo "Package(s) created and available in the deb directory"
-fi
+echo "Package(s) created and available in the deb directory"
 
