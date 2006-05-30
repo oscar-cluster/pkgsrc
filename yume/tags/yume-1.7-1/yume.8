@@ -1,0 +1,139 @@
+.PU
+.TH YUME 8 local
+.SH NAME
+yume \- yum wrapper for easy cluster management
+.SH SYNOPSIS
+.B yum OPTIONS [YUM_OPTIONS]
+.br
+.SH DESCRIPTION
+.I Yume
+is a tool for setting up, exporting yum repositories and executing
+yum commands for only these repositories. Use it as high level RPM
+replacement which resolves dependencies automatically.
+
+This tool is very useful for managing clusters which are running distributions
+using the rpm package format. It can:
+.br
+ - prepare an rpm repository
+.br
+ - export it through apache
+.br
+ - execute yum commands applying only to this repository (locally)
+.br
+ - execute yum commands on the cluster nodes applying only to this repository.
+.br
+This makes installing packages, creating cluster node images, updating
+revisions much simpler than with rpm.
+
+
+.SH OPTIONS
+
+.TP
+.B --repo URL :
+repository which should be included in yum actions (multiple --repo options
+are possible). If no --repo option is passed, yume tries to detect the default
+repository names dynamically. This feature only works on an OSCAR cluster, on
+both master- and client-nodes.
+
+.TP
+.B --export :
+create httpd configuration for local repositories. The repositories have to be
+passed by using --repo. The URL will be /repo/repopath on the local
+web server. This command fails if the configuration path for the webserver is
+not detected. Be careful and avoid having the same basename for two
+repositories.
+
+.TP
+.B --unexport :
+delete httpd configuration for local repositories. Pass repositories with the
+--repo option.
+
+.TP
+.B --listexp :
+list local repositories which are exported via http.
+
+.TP
+.B --prepare :
+generate repodata for local repositories. This calls "createrepo" and
+generates the package independent repository metadata in the repodata/
+subdirectory.
+
+.TP
+.B --help :
+display help information.
+
+.TP
+.B --verbose :
+verbose output. Multiple specifications of this option lead to higher
+verbosity.
+
+Setting the environment variable $YUME_VERBOSE to a number between 1 and
+10 will generate verbose output like multiple -v options.
+
+
+
+.SH EXAMPLES
+
+Suppose you have installed a distribution like RHEL3 update4 on your system
+and would like to upgrade it to RHEL3 update5. If your system is not connected
+to the internet, you won't be able to run up2date for doing this. Create a
+repository for the update5 RPMs (for example /tftpboot/rpms_u5) and copy all
+RPMs from the ISOs or CDs to it.
+
+Next steps:
+
+.TP
+.B yume --prepare --repo /tftpboot/rpms_u5
+creates repository metadata in /tftpboot/rpms_u5/repodata. This step is needed
+as yum relies on the existence and freshness of this metadata.
+
+.TP
+.B yume --repo /tftpboot/rpms_u5 -- check-update
+checks which packages need updating. The action is limited to the rpms
+in /tftpboot/rpms_u5 and ignores any other repositories (like those in
+/etc/yum.conf.c/).
+
+.TP
+.B yume --repo /tftpboot/rpms_u5 update
+updates packages by invoking
+.RB yum update
+and limiting the RPMs search to those in the given repository.
+
+.TP
+.B yume --export --repo /tftpboot/rpms_u5
+creates the httpd configuration file for exporting the repository data through
+apache. The URL will be http://servername/repo/tftpboot/rpms_u5 .
+
+.TP
+.B yume --repo http://servername/repo/tftpboot/rpms_u5 update
+Updates the RPMs with yum, uses the repository accessed through http. This is
+useful for updating cluster nodes from a central repository.
+
+.TP
+.B yume --repo /tftpboot/rpm --repo /tftpboot/oscar install oscarpackage
+Installs the package oscarpackage locally, resolves dependencies by searching
+the two repositories specified by --repo.
+
+.TP
+.B yume --repo /tftpboot/rpm --repo /tftpboot/oscar --installroot /var/lib/systemimager/images/oscarimage install `cat pkglist`
+installs the packages listed in the file pkglist into the image specified by
+the --installroot yum option. Useful for creating client node images.
+
+When used on an OSCAR cluster the repositories default to the distribution
+specific repository locations. These can be displayed by using the command
+$OSCAR_HOME/scripts/distro-query.
+
+.SH "SEE ALSO"
+yum(8), yum.conf(5), createrepo(8).
+
+.SH "DIAGNOSTICS"
+Exit status is normally 0.
+If an error occurs, exit status is nonzero.
+
+.SH BUGS
+None ;-)
+
+.SH AUTHOR
+Erich Focht, NEC HPCE, email: efocht@hpce.nec.com
+.br
+Document version $Revision: 112 $

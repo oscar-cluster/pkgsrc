@@ -1,0 +1,212 @@
+#!/usr/bin/perl
+#
+#   This program is free software; you can redistribute it and/or modify
+#   it under the terms of the GNU General Public License as published by
+#   the Free Software Foundation; either version 2 of the License, or
+#   (at your option) any later version.
+#
+#   This program is distributed in the hope that it will be useful,
+#   but WITHOUT ANY WARRANTY; without even the implied warranty of
+#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#   GNU General Public License for more details.
+#
+#   You should have received a copy of the GNU General Public License
+#   along with this program; if not, write to the Free Software
+#   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+#
+#
+# Query OSCAR Database (ODA) for OSCAR Package (opkg) information.
+#
+# $Id: yume-opkg 14 2005-09-15 11:22:27Z focht $
+#
+# (c) Erich Focht, NEC HPCE, Stuttgart, 2005
+
+
+use strict;
+use lib "$ENV{OSCAR_HOME}/lib";
+use OSCAR::Database;
+use Getopt::Long;
+use Data::Dumper;
+
+my %pkgid;
+my %pkgname;
+
+my ($mydistro, $mydistrov, $mygroup, $myarch, $imagedir, $test);
+my ($all, $do_rpms, $list, $install, $update, $remove, @repos, $yes);
+my $verbose = 0;
+
+GetOptions( 
+	    "help"        => \&help,
+	    "distro=s"    => \$mydistro,
+	    "distrover=s" => \$mydistrov,
+	    "group=s"     => \$mygroup,
+	    "arch=s"      => \$myarch,
+	    "all"         => \$all,
+	    "rpms"        => \$do_rpms,
+	    "list"        => \$list,
+	    "install"     => \$install,
+	    "update"      => \$update,
+	    "remove"      => \$remove,
+	    "repo=s"      => \@repos,
+	    "image=s"     => \$imagedir,
+	    "test"        => \$test,
+	    "yes|y"       => \$yes,
+	    "verbose|v+"  => \$verbose,
+          );
+
+my @myopkgs = @ARGV;
+
+# what action should be taken?
+if (!$list && !$install && !$update && !$remove) {
+    print "None of the options --list, --install, --update, --remove was selected\n";
+    print "Don't know what to do.\n";
+    help();
+}
+
+if ($install + $remove + $update > 1) {
+    print "More than one of the options --install, --update, --remove was selected\n";
+    print "Retry with only one of them!\n";
+    help();
+}
+
+if ($install + $remove + $update == 1) {
+    if (scalar(@repos) == 0) {
+	print "No package repository specifie.\n";
+	print "Retry with some --repo options!\n";
+	help();
+    }
+}
+
+if ($imagedir && ! -d $imagedir) {
+    print "$imagedir is not a directory!\n";
+    help();
+}
+
+# any opkgs required?
+if ($do_rpms && !scalar(@myopkgs)) {
+    print "No opkgs passed as arguments, but --rpms was selected!\n";
+    help();
+}
+
+# check whether distro was specified
+if ($do_rpms && (!$mydistro || !$mydistrov)) {
+    # try running OS_Detect
+    if ($ENV{OSCAR_HOME}) {   # we're probably on the master
+	my $os;
+	eval "use lib \"$ENV{OSCAR_HOME}/lib\"";
+	eval "use OSCAR::OCA::OS_Detect";
+	if ($?) {
+	    print "Unable to load OS_Detect\n\n";
+	    help();
+	} else {
+	    eval "\$os = OSCAR::OCA::OS_Detect::open(\$imagedir)";
+	    if (exists $os->{distro}) {
+		$mydistro = $os->{compat_distro};
+		$mydistrov = $os->{compat_distrover};
+	    } else {
+		print "Unable to detect distro\n\n";
+		help();
+	    }
+	}
+    } else {
+	print "You must specify the distribution with --distro and --distrover\n";
+	help();
+    }
+}
+
+# was arch specified? If not, set it to local arch
+if (!$myarch) {
+    chomp($myarch = `uname -i`);
+}
+
+my @pkglst = map { $_->{package} } &list_selected_packages();
+
+if ($all || (scalar(@myopkgs) == 0)) {
+    @myopkgs = @pkglst;
+}
+
+# list opkgs if required
+if ($list && !$do_rpms) {
+    foreach (@myopkgs) {
+	print "$_\n";
+    }
+    exit 0;
+}
+
+
+#print Dumper(%rpms);
+
+my @pkg_list;
+for my $opkg (@myopkgs) {
+    my %sel = (arch       => $myarch,
+	       distro     => $mydistro,
+	       distro_ver => $mydistrov
+	       );
+    if ($mygroup) {
+	$sel{group} = $mygroup;
+    }
+    my @pkgs = &pkgs_of_opkg($opkg, undef, 1, %sel);
+
+    print "OSCAR package $opkg\n" if ($verbose);
+    if ($verbose || $list) {
+	map { print "$_\n" } @pkgs;
+    }
+    push @pkg_list, @pkgs;
+}
+
+exit 0 if ($list);
+
+# if install/remove/update is requested, do that with yume
+my $yc = "yume";
+foreach (@repos) {
+    $yc .= " --repo $_";
+}
+$yc .= " --verbose" if ($verbose);
+$yc .= " --";
+$yc .= " -y" if ($yes);
+$yc .= " --installroot $imagedir" if ($imagedir);
+my $rpmargs = join(" ",@pkg_list);
+if ($install) {
+    $yc .= " install $rpmargs";
+} elsif ($remove) {
+    $yc .= " remove $rpmargs";
+} elsif ($update) {
+    $yc .= " update $rpmargs";
+}
+print "Executing command: $yc\n" if ($verbose);
+system($yc) if (!$test);
+
+exit $?;
+
+sub help {
+    print "USAGE:\n";
+    print "$0 --distro DISTRO --distrover DISTRO_VERSION [--group GROUP] \\\n";
+    print "   [--arch ARCH] [--list|--install|--update|--remove] [--all] \\\n";
+    print "   [--image IMAGE_DIR] [--repo REPO_URL ...] [--yes] [--rpms] \\\n";
+    print "   [--test] [--verbose|-v ...] [opkg1 [opkg2 ...]]\n\n";
+    print "Query/install/update/remove OSCAR packages, corresponding RPMs,\n";
+    print "which belong to a particular node group (e.g. oscar_server or\n";
+    print "oscar_client, use no group for common packages).\n";
+    print "Options:\n";
+    print "  --distro D    : distribution name as used in config.xml\n";
+    print "  --distrover V : distribution version as used in config.xml\n";
+    print "                  Example: --distro redhat --distrover el4\n";
+    print "  --group G     : node group as used in the OSCAR database, for\n";
+    print "                  example: oscar_server, oscar_clients\n";
+    print "  --arch A      : architecture, overriding local machine architecture\n";
+    print "  --all         : select all opkgs in the default set\n";
+    print "  --rpms        : list rpms belonging to the selected opkgs\n";
+    print "\n";
+    print "  --list        : list opkgs or rpms\n";
+    print "  --install     : install rpms by using yum(e)\n";
+    print "  --update      : update rpms with yum(e)\n";
+    print "  --remove      : remove rpms with yum(e)\n";
+    print "\n";
+    print "  --repo R      : specify package repository for yum(e).\n";
+    print "  --test        : just show what would be done, don't do it.\n";
+    print "  --yes|-y      : pass \"yes\" to yum if it requires input.\n";
+    print "  --verbose|-v  : increase verbosity of output.\n";
+    print "\n";
+    exit 1;
+}
+
