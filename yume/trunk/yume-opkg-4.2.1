@@ -1,0 +1,253 @@
+#!/usr/bin/perl
+#
+#   This program is free software; you can redistribute it and/or modify
+#   it under the terms of the GNU General Public License as published by
+#   the Free Software Foundation; either version 2 of the License, or
+#   (at your option) any later version.
+#
+#   This program is distributed in the hope that it will be useful,
+#   but WITHOUT ANY WARRANTY; without even the implied warranty of
+#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#   GNU General Public License for more details.
+#
+#   You should have received a copy of the GNU General Public License
+#   along with this program; if not, write to the Free Software
+#   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+#
+#
+# Query OSCAR Database (ODA) for OSCAR Package (opkg) information.
+#
+# $Id: yume-opkg 14 2005-09-15 11:22:27Z focht $
+#
+# (c) Erich Focht, NEC HPCE, Stuttgart, 2005
+
+
+use strict;
+use Getopt::Long;
+use Data::Dumper;
+
+my %pkgid;
+my %pkgname;
+
+my ($mydistro, $mydistrov, $mygroup, $myarch, $imagedir, $test);
+my ($all, $do_rpms, $list, $install, $update, $remove, @repos, $yes);
+my $verbose = 0;
+
+GetOptions( 
+	    "help"        => \&help,
+	    "distro=s"    => \$mydistro,
+	    "distrover=s" => \$mydistrov,
+	    "group=s"     => \$mygroup,
+	    "arch=s"      => \$myarch,
+	    "all"         => \$all,
+	    "rpms"        => \$do_rpms,
+	    "list"        => \$list,
+	    "install"     => \$install,
+	    "update"      => \$update,
+	    "remove"      => \$remove,
+	    "repo=s"      => \@repos,
+	    "image=s"     => \$imagedir,
+	    "test"        => \$test,
+	    "yes|y"       => \$yes,
+	    "verbose|v+"  => \$verbose,
+          );
+
+my @myopkgs = @ARGV;
+
+# what action should be taken?
+if (!$list && !$install && !$update && !$remove) {
+    print "None of the options --list, --install, --update, --remove was selected\n";
+    print "Don't know what to do.\n";
+    help();
+}
+
+if ($install + $remove + $update > 1) {
+    print "More than one of the options --install, --update, --remove was selected\n";
+    print "Retry with only one of them!\n";
+    help();
+}
+
+if ($install + $remove + $update == 1) {
+    if (scalar(@repos) == 0) {
+	print "No package repository specifie.\n";
+	print "Retry with some --repo options!\n";
+	help();
+    }
+}
+
+if ($imagedir && ! -d $imagedir) {
+    print "$imagedir is not a directory!\n";
+    help();
+}
+
+# any opkgs required?
+if ($do_rpms && !scalar(@myopkgs)) {
+    print "No opkgs passed as arguments, but --rpms was selected!\n";
+    help();
+}
+
+# check whether distro was specified
+if ($do_rpms && (!$mydistro || !$mydistrov)) {
+    print "You must specify the distribution with --distro and --distrover\n";
+    help();
+}
+
+# was arch specified? If not, set it to local arch
+if (!$myarch) {
+    chomp($myarch = `uname -i`);
+    if ($myarch eq "i386") {
+	$myarch = "ia32";
+    }
+}
+
+# get list of packages
+map { chomp; my ($i,$n)=split(" ",$_); $pkgid{$n}=$i; $pkgname{$i}=$n; }
+            `oda read_records packages id name`;
+
+my $defid;
+# get id of default package set
+for (`oda read_records package_sets`) {
+    chomp;
+    my ($n,$i) = split(" ");
+    if ($n eq "Default") {
+	$defid = $i;
+	last;
+    }
+}
+print "Default package set id = $defid\n" if ($verbose > 1);
+
+my @pkglst;
+# get hash of packages in package sets
+map { chomp; my ($p,$s)=split(" ",$_); if ($s == $defid) { push @pkglst,$p; } }
+    `oda read_records package_sets_included_packages package_id package_set_id`;
+
+if ($all || (scalar(@myopkgs) == 0)) {
+    @myopkgs = @pkglst;
+}
+
+# list opkgs if required
+if ($list && !$do_rpms) {
+    foreach (@myopkgs) {
+	print "$pkgname{$_}\n";
+    }
+    exit 0;
+}
+
+# for each package get list of RPMs
+# get table fields with:
+# mysql -s -s -e "use oscar; show fields from packages_rpmlists;"
+# table packages_rpmlists
+#+----------------------+--------------+------+-----+---------+-------+
+#| Field                | Type         | Null | Key | Default | Extra |
+#+----------------------+--------------+------+-----+---------+-------+
+#| architecture         | varchar(255) | YES  |     | NULL    |       |
+#| rpm                  | varchar(255) | YES  |     | NULL    |       |
+#| __group              | varchar(255) | YES  |     | NULL    |       |
+#| package_id           | int(11)      | YES  |     | NULL    |       |
+#| distribution_version | varchar(255) | YES  |     | NULL    |       |
+#| distribution         | varchar(255) | YES  |     | NULL    |       |
+#+----------------------+--------------+------+-----+---------+-------+
+
+
+my %rpms;
+my %distros;
+for (`oda read_records packages_rpmlists`) {
+    chomp;
+    m/^(\S*) (\S*) (\S*) (\S*) (\S*) (\S*)$/;
+    my ($arch,$rpm,$group,$pkgid,$distro_ver,$distro) = ($1,$2,$3,$4,$5,$6);
+    $distro = lc($distro);
+    $distro_ver = lc($distro_ver);
+    if ($distro) {
+	$distros{$distro."_".$distro_ver} = 1;
+    }
+    my $tmp = { arch => $arch,
+		rpm  => $rpm,
+		group => $group,
+		distro => $distro,
+		distrover => $distro_ver };
+    if (defined $rpms{$pkgid}) {
+	push @{$rpms{$pkgid}}, $tmp;
+    } else {
+	$rpms{$pkgid} = [ $tmp ];
+    }
+}
+
+if ($verbose > 2) {
+    print "Found following distro_distrover combinations:\n";
+    print join("\n",keys(%distros))."\n";
+}
+#print Dumper(%rpms);
+
+my @pkg_list;
+for my $opkg (@myopkgs) {
+    my $oid = $pkgid{$opkg};
+    next if (!$oid);
+    print "OSCAR package $oid $opkg\n" if ($verbose);
+    for my $h (@{$rpms{$oid}}) {
+	# print Dumper($h) if ($verbose);
+	if ((($h->{arch} eq $myarch) || !$h->{arch}) &&
+	    (($h->{group} eq $mygroup) || !$h->{group}) &&
+	    (($h->{distro} eq $mydistro) || !$h->{distro}) &&
+	    (($h->{distrover} eq $mydistrov) || !$h->{distrover})) {
+	    push @pkg_list, $h->{rpm};
+	    print $h->{rpm}."\n" if ($list);
+	}
+    }
+}
+
+exit 0 if ($list);
+
+# if install/remove/update is requested, do that with yume
+my $yc = "yume";
+foreach (@repos) {
+    $yc .= " --repo $_";
+}
+$yc .= " --verbose" if ($verbose);
+$yc .= " --";
+$yc .= " -y" if ($yes);
+$yc .= " --installroot $imagedir" if ($imagedir);
+my $rpmargs = join(" ",@pkg_list);
+if ($install) {
+    $yc .= " install $rpmargs";
+} elsif ($remove) {
+    $yc .= " remove $rpmargs";
+} elsif ($update) {
+    $yc .= " update $rpmargs";
+}
+print "Executing command: $yc\n" if ($verbose);
+system($yc) if (!$test);
+
+exit $?;
+
+sub help {
+    print "USAGE:\n";
+    print "$0 --distro DISTRO --distrover DISTRO_VERSION [--group GROUP] \\\n";
+    print "   [--arch ARCH] [--list|--install|--update|--remove] [--all] \\\n";
+    print "   [--image IMAGE_DIR] [--repo REPO_URL ...] [--yes] [--rpms] \\\n";
+    print "   [--test] [--verbose|-v ...] [opkg1 [opkg2 ...]]\n\n";
+    print "Query/install/update/remove OSCAR packages, corresponding RPMs,\n";
+    print "which belong to a particular node group (e.g. oscar_server or\n";
+    print "oscar_client, use no group for common packages).\n";
+    print "Options:\n";
+    print "  --distro D    : distribution name as used in config.xml\n";
+    print "  --distrover V : distribution version as used in config.xml\n";
+    print "                  Example: --distro redhat --distrover el4\n";
+    print "  --group G     : node group as used in the OSCAR database, for\n";
+    print "                  example: oscar_server, oscar_clients\n";
+    print "  --arch A      : architecture, overriding local machine architecture\n";
+    print "  --all         : select all opkgs in the default set\n";
+    print "  --rpms        : list rpms belonging to the selected opkgs\n";
+    print "\n";
+    print "  --list        : list opkgs or rpms\n";
+    print "  --install     : install rpms by using yum(e)\n";
+    print "  --update      : update rpms with yum(e)\n";
+    print "  --remove      : remove rpms with yum(e)\n";
+    print "\n";
+    print "  --repo R      : specify package repository for yum(e).\n";
+    print "  --test        : just show what would be done, don't do it.\n";
+    print "  --yes|-y      : pass \"yes\" to yum if it requires input.\n";
+    print "  --verbose|-v  : increase verbosity of output.\n";
+    print "\n";
+    exit 1;
+}
+

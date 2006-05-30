@@ -1,0 +1,434 @@
+#!/usr/bin/perl
+#
+# Tool for setting up, exporting yum repositories and
+# executing yum commands for only these repositories.
+#
+#   This program is free software; you can redistribute it and/or modify
+#   it under the terms of the GNU General Public License as published by
+#   the Free Software Foundation; either version 2 of the License, or
+#   (at your option) any later version.
+#
+#   This program is distributed in the hope that it will be useful,
+#   but WITHOUT ANY WARRANTY; without even the implied warranty of
+#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#   GNU General Public License for more details.
+#
+#   You should have received a copy of the GNU General Public License
+#   along with this program; if not, write to the Free Software
+#   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+#
+# $Id: yume 171 2006-05-26 16:53:46Z focht $
+#
+# (C)opyright Erich Focht <efocht@hpce.nec.com>
+
+use strict;
+use Getopt::Long;
+use IO::File;
+use POSIX qw(tmpnam);
+use File::Basename;
+
+my ($name, $fh, $verbose, $export, $unexport, $prepare, $listexp);
+my $installroot;
+my @repos;
+Getopt::Long::Configure("pass_through");
+GetOptions( 
+	    "help"      => \&help,
+            "repo=s"    => \@repos,
+	    "export"    => \$export,
+	    "prepare"   => \$prepare,
+	    "unexport"  => \$unexport,
+	    "listexp"   => \&list_exported,
+	    "installroot=s" => \$installroot,
+	    "verbose|v+"    => \$verbose,
+          );
+
+$verbose = "$ENV{YUME_VERBOSE}" if ($ENV{YUME_VERBOSE});
+
+# query default OSCAR repositories if no repo given
+if (!scalar(@repos)) {
+    &get_default_repos();
+}	    
+
+help() if (!scalar(@repos));
+
+my @validarch = qw(i386 x86_64 ia64 ppc64 noarch);
+
+my $archstr = &get_arch_repos(@repos);
+$archstr = "i?86" if ($archstr eq "i386");
+
+chomp(my $hostname=`hostname -s`);
+
+if ($export || $unexport || $prepare) {
+    my $err;
+    $err = add_httpd_conf() if ($export);
+    $err = del_httpd_conf() if ($unexport);
+    $err = prep_repodata() if ($prepare);
+    exit $err;
+}
+
+########################
+### go for a yum command
+########################
+
+# temporary file
+do {$name=tmpnam()} until $fh=IO::File->new($name,O_RDWR|O_CREAT|O_EXCL);
+
+# install exit handler which removes the temporary file
+END {cleanup()};
+
+# create yum config file
+print $fh <<EOF;
+[main]
+cachedir=/var/cache/yum
+debuglevel=2
+logfile=/var/log/yume.log
+pkgpolicy=newest
+#distroverpkg=redhat-release
+tolerant=1
+exactarch=1
+retries=20
+obsoletes=1
+reposdir=
+gpgcheck=0
+EOF
+
+# chop trailing slashes from repository names
+foreach (@repos) {
+    s:\/$::;
+}
+
+for my $repo (@repos) {
+    if (($repo !~ /^(file|ftp|http|mirror)/) && -d $repo && ($repo=~/^\//)) {
+	$repo = "file:".$repo;
+    }
+    my $base=basename($repo);
+    my $dir=basename(dirname($repo));
+    print $fh "[$dir"."_"."$base]\n";
+    print $fh "name=$base package repository\n";
+    if ($repo =~ /^mirror:(.*)$/) {
+	my $url = $1;
+	print $fh "mirrorlist=$url\n\n";
+    } else {
+	print $fh "baseurl=$repo\n\n";
+    }
+}
+close $fh;
+
+# print temporary config file if required
+if ($verbose) {
+    print "=== yum.conf file used ($name) ===\n";
+    system("cat $name");
+    print "==========================================\n";
+}
+
+# run yum command
+my $cmd = "yum -c $name";
+if (($verbose > 2) && ($verbose <= 10)) {
+    $cmd .= " -d $verbose -e 2";
+}
+if ($installroot) {
+    $cmd .= " --installroot $installroot";
+}
+my @yumargs = @ARGV;
+
+# x86_64 needs arch to be specified, otherwise it installs
+# both i386 and x86_64 rpms (if available)
+if ($archstr eq "x86_64") {
+    @yumargs = &transform_args(@ARGV);
+}
+
+$cmd .= " ".join(" ",@yumargs);
+print "Executing: $cmd\n" if ($verbose);
+my $err = system($cmd);
+exit $err;
+
+
+#############################################################################
+
+sub help {
+    print "Usage: $0 OPTIONS [YUM_OPTIONS]\n";
+    print "\n";
+    print "Call yum with _only_ the repositories on the command line configured.\n";
+    print "OPTIONS can be:\n";
+    print " --repo URL : repository which should be included in yum actions\n";
+    print "              (multiple --repo options are possible).\n";
+    print " --export   : create httpd configuration for local repositories\n";
+    print " --unexport : delete httpd configuration for local repositories\n";
+    print " --listexp  : list exported local repositories\n";
+    print " --prepare  : generate repodata for local repositories\n";
+    print " --help     : this help information\n";
+    print " --verbose  : verbose output\n";
+    print "\n";
+    print "YUM_OPTIONS are options to be passed to the yum command.\n";
+    print "Setting the environment variable \$YUME_VERBOSE to a number\n";
+    print "between 1 and 10 will generate verbose output like multiple\n";
+    print "-v options.\n\n";
+    exit;
+}
+
+sub cleanup {
+    if (-e $name) {
+	unlink($name) or die "Couldn't unlink $name : $!";
+    }
+}
+
+sub get_default_repos {
+    # if OSCAR_HOME is defined, we're probably on a master
+    if ($ENV{OSCAR_HOME}) {
+	my $dquery = "$ENV{OSCAR_HOME}/scripts/distro-query";
+	if (-x $dquery) {
+	    if ($installroot && (-x "$installroot/bin/bash")) {
+		$dquery = $dquery . " --image $installroot";
+	    }
+	    print "Executing: $dquery\n" if ($verbose);
+	    local *CMD;
+	    open CMD, "$dquery |" or die "Could not run $dquery: $!";
+	    while (<CMD>) {
+		chomp;
+		if (/Distro package url : (\S+)$/) {
+		    push @repos, split(",",$1);
+		} elsif (/OSCAR package pool : (\S+)$/) {
+		    push @repos, split(",",$1);
+		}
+	    }
+	    close CMD;
+	} else {
+	    print "Command $ENV{OSCAR_HOME}/scripts/distro-query not found\n";
+	    print "Unable to detect default repositories.\n";
+	}
+    } else {
+	my $master = gethostbyname("oscar_server");
+	if ($master) {
+	    my $node=`hostname`; chomp $node;
+	    print "Executing: ssh oscar_server \\\$OSCAR_HOME/scripts/distro-query --node $node\n" if ($verbose);
+	    local *CMD;
+	    open CMD, "ssh oscar_server \\\$OSCAR_HOME/scripts/distro-query --node $node |";
+	    while (<CMD>) {
+		chomp;
+		if (/Distro package url : (\S+)$/) {
+		    push @repos, split(",",$1);
+		} elsif (/OSCAR package pool : (\S+)$/) {
+		    push @repos, split(",",$1);
+		}
+	    }
+	    close CMD;
+	} else {
+	    print "You are not on an OSCAR cluster. You must specify a repository!\n";
+	    help();
+	}
+    }
+    if ($verbose) {
+	print "Repositories detected:\n\t".join("\n\t",@repos)."\n";
+    }
+}
+
+# guess architecture from repository name
+sub get_arch_repos {
+    my (@repos) = @_;
+    my $arch;
+    my $varch = join("|",@validarch);
+    for my $r (@repos) {
+	if ($r =~ m/-([^-]+)$/) {
+	    my $a = $1;
+	    if ($a =~ /^($varch)$/) {
+		if (!$arch) {
+		    $arch = $a;
+		} else {
+		    if ($arch ne $a) {
+			print "WARNING: multiple architecture repos specified.\n";
+		    }
+		}
+	    } else {
+		print "WARNING: repository name doesn't match any valid architecture\n";
+	    }
+	}
+    }
+    if ($arch && $verbose) {
+	print "Architecture: $arch\n";
+    }
+    return $arch;
+}
+
+#
+sub transform_args {
+    my (@args) = @_;
+    my @trans;
+
+    return @args if (!$archstr);
+
+    my $varch = join("|",@validarch);
+
+    my $flag = 0;
+    for my $a (@args) {
+	if ($flag) {
+	    if (($a !~ /\.($varch)$/) && ($a !~ /\.rpm$/)) {
+		$a .= ".{$archstr,noarch}";
+	    }
+	}
+	push @trans, $a;
+	if ($a =~ /^(install|update)$/) {
+	    $flag = 1;
+	}
+    }
+    if ($verbose > 5) {
+	print "Arguments transformation:\n";
+	for (my $i = 0; $i <= $#args; $i++) {
+	    print "\t".$args[$i]."\t\t".$trans[$i]."\n";
+	}
+    }
+    return @trans; 
+}
+
+sub find_httpdir {
+    my $httpdir;
+    for my $d ("httpd", "apache", "apache2") {
+	if (-d "/etc/$d/conf.d") {
+	    $httpdir = "/etc/$d/conf.d";
+	    last;
+	}
+    }
+    if ($verbose) {
+	print "Found httpdir = $httpdir\n";
+    }
+    return $httpdir;
+}
+
+sub add_httpd_conf {
+    my $httpdir = find_httpdir();
+    my $changed = 0;
+    my $err = 0;
+    if ($httpdir) {
+	for my $repo (@repos) {
+	    if ($repo =~ /^(file:\/|\/)/) {
+		$repo =~ s|^file:||;
+		if (!-d $repo) {
+		    print "Could not find directory $repo. Skipping.\n";
+		    $err++;
+		    next;
+		}
+		my $pname = "repo$repo";
+		my $rname = $pname;
+		$rname =~ s:/:_:g;
+		my $cname = "$httpdir/$rname.conf";
+		if (-f $cname) {
+		    print "Config file $cname already existing. Skipping.\n";
+		    next;
+		}
+		print "Exporting $repo through httpd, http://$hostname/$pname\n";
+		open COUT, ">$cname" or die "Could not open $cname : $!";
+		print COUT "Alias /$pname $repo\n";
+		print COUT "<Directory $repo/>\n";
+		print COUT "  Options Indexes\n";
+		print COUT "  order allow,deny\n";
+		print COUT "  allow from all\n";
+		print COUT "</Directory>\n";
+		close COUT;
+		++$changed;
+	    } else {
+		print "Repository URL is not a local absolute path!\n";
+		print "Skipping $repo\n";
+		$err++;
+		next;
+	    }
+	}
+    } else {
+	print "Could not find directory $httpdir!\n";
+	print "Cannot setup httpd configuration for repositories.\n";
+	$err++;
+    }
+    restart_httpd() if ($changed);
+    return $err;
+}
+
+sub del_httpd_conf {
+    my $httpdir = find_httpdir();
+    my $changed = 0;
+    my $err = 0;
+    if ($httpdir) {
+	for my $repo (@repos) {
+	    if ($repo =~ /^(file:\/|\/)/) {
+		$repo =~ s|^file:||;
+		my $pname = "repo$repo";
+		my $rname = $pname;
+		$rname =~ s:/:_:g;
+		my $cname = "$httpdir/$rname.conf";
+		if (-f $cname) {
+		    print "Deleting config file $cname\n";
+		    if (unlink($cname)) {
+			print "WARNING: Could not delete $cname : $!\n";
+			$err++;
+		    } else {
+			++$changed;
+		    }
+		}
+	    } else {
+		print "Repository URL is not a local absolute path!\n";
+		print "Skipping $repo\n";
+		$err++;
+		next;
+	    }
+	}
+    } else {
+	print "Could not find directory $httpdir!\n";
+	print "Cannot delete httpd configuration for repositories.\n";
+	$err++;
+    }
+    restart_httpd() if ($changed);
+    return $err;
+}
+
+sub list_exported {
+    my $httpdir = find_httpdir();
+    if ($httpdir) {
+	for my $repoconf (glob("$httpdir/repo_*.conf")) {
+	    my $rname = basename($repoconf,".conf");
+	    my ($dummy, $alias,$rdir) = split(" ",`grep "^Alias" $repoconf`);
+	    chomp $rdir;
+	    print "URL $alias : Repository --repo $rdir\n";
+	}
+    }
+    exit;
+}
+
+sub restart_httpd {
+    for my $httpd ("httpd", "httpd2", "apache", "apache2") {
+	if (-x "/etc/init.d/$httpd") {
+	    print "Restarting $httpd\n";
+	    system("/etc/init.d/$httpd restart");
+	    last;
+	}
+    }
+}
+
+sub prep_repodata {
+    my $createrepo=`which createrepo`;
+    my $ret = 0;
+    if ($?) {
+	print "ERROR: Could not find createrepo executable! Aborting.\n";
+	return 1;
+    }
+    chomp $createrepo;
+    for my $repo (@repos) {
+	if ($repo =~ /^(file:\/|\/)/) {
+	    if ($repo =~ /^file:/) {
+		$repo =~ s/^file://;
+	    }
+	    if (!-d $repo) {
+		print "Could not find directory $repo. Skipping.\n";
+		$ret++;
+		next;
+	    }
+	    print "Creating repodata cache for $repo\n";
+	    my $cmd = "createrepo -p";
+	    $cmd .= " --verbose" if ($verbose);
+	    $cmd .= " --cachedir $repo/repocache $repo";
+	    
+	    my $err = system($cmd);
+	    if ($err) {
+		print "... cache creation failed.\n";
+		$ret += abs($err);
+	    }
+	}
+    }
+    return $ret;
+}

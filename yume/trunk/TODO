@@ -1,0 +1,3 @@
+1. Add --export to the scripts/wizard_prep
+
+2. Adapt yume_opkg to OSCAR5 database format and queries.
