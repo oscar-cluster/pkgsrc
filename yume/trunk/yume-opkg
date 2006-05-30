@@ -69,7 +69,7 @@ if ($install + $remove + $update > 1) {
     help();
 }
 
-if ($install + $remove + $update == 1) {
+if ($install + $update == 1) {
     if (scalar(@repos) == 0) {
 	print "No package repository specifie.\n";
 	print "Retry with some --repo options!\n";
@@ -162,7 +162,7 @@ foreach (@repos) {
     $yc .= " --repo $_";
 }
 $yc .= " --verbose" if ($verbose);
-$yc .= " --";
+#$yc .= " --";
 $yc .= " -y" if ($yes);
 $yc .= " --installroot $imagedir" if ($imagedir);
 my $rpmargs = join(" ",@pkg_list);
