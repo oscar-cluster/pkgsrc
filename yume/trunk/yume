@@ -20,7 +20,6 @@
 # $Id: yume 171 2006-05-26 16:53:46Z focht $
 #
 # (C)opyright Erich Focht <efocht@hpce.nec.com>
-# (C)opyright 2006 Bernard Li <bli@bcgsc.ca>
 
 use strict;
 use Getopt::Long;
