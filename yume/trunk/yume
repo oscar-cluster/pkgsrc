@@ -20,6 +20,7 @@
 # $Id: yume 171 2006-05-26 16:53:46Z focht $
 #
 # (C)opyright Erich Focht <efocht@hpce.nec.com>
+# (C)opyright 2006 Bernard Li <bli@bcgsc.ca>
 
 use strict;
 use Getopt::Long;
@@ -402,6 +403,7 @@ sub restart_httpd {
 
 sub prep_repodata {
     my $createrepo=`which createrepo`;
+    my $comps = "comps.xml";
     my $ret = 0;
     if ($?) {
 	print "ERROR: Could not find createrepo executable! Aborting.\n";
@@ -421,8 +423,10 @@ sub prep_repodata {
 	    print "Creating repodata cache for $repo\n";
 	    my $cmd = "createrepo -p";
 	    $cmd .= " --verbose" if ($verbose);
+	    my $compsfile = "$repo/$comps";
+	    $cmd .= " --groupfile $compsfile" if (-e $compsfile);
 	    $cmd .= " --cachedir $repo/repocache $repo";
-	    
+	    print "cmd: $cmd\n" if ($verbose);
 	    my $err = system($cmd);
 	    if ($err) {
 		print "... cache creation failed.\n";
