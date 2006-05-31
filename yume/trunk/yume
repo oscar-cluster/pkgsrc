@@ -1,8 +1,5 @@
 #!/usr/bin/perl
 #
-# Tool for setting up, exporting yum repositories and
-# executing yum commands for only these repositories.
-#
 #   This program is free software; you can redistribute it and/or modify
 #   it under the terms of the GNU General Public License as published by
 #   the Free Software Foundation; either version 2 of the License, or
@@ -17,9 +14,21 @@
 #   along with this program; if not, write to the Free Software
 #   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
-# $Id: yume 171 2006-05-26 16:53:46Z focht $
+# Tool for setting up, exporting yum repositories and
+# executing yum commands for only these repositories.
+# - extended by repoquery capabilities
+# - added rpm groups aware metadata (BLi)
+# - added rpm groups support for install/update/remove
 #
-# (C)opyright Erich Focht <efocht@hpce.nec.com>
+# $Id$
+#
+# Author and copyright holder:
+# (C)opyright 2005,2006 Erich Focht <efocht@hpce.nec.com>
+# ---------------   All rights reserved. ----------------
+#
+# Contributions:
+#      grouplist aware metadata: (c) 2006 Bernard Li <bli@bcgsc.ca>
+#
 
 use strict;
 use Getopt::Long;
@@ -27,7 +36,7 @@ use IO::File;
 use POSIX qw(tmpnam);
 use File::Basename;
 
-my ($name, $fh, $verbose, $export, $unexport, $prepare, $listexp);
+my ($name, $fh, $verbose, $export, $unexport, $prepare, $listexp, $repoquery);
 my $installroot;
 my @repos;
 Getopt::Long::Configure("pass_through");
@@ -39,6 +48,7 @@ GetOptions(
 	    "unexport"  => \$unexport,
 	    "listexp"   => \&list_exported,
 	    "installroot=s" => \$installroot,
+	    "repoquery|rq"  => \$repoquery,
 	    "verbose|v+"    => \$verbose,
           );
 
@@ -66,9 +76,9 @@ if ($export || $unexport || $prepare) {
     exit $err;
 }
 
-########################
-### go for a yum command
-########################
+#####################################
+### go for a yum or repoquery command
+#####################################
 
 # temporary file
 do {$name=tmpnam()} until $fh=IO::File->new($name,O_RDWR|O_CREAT|O_EXCL);
@@ -121,45 +131,59 @@ if ($verbose) {
     print "==========================================\n";
 }
 
-# run yum command
-my $cmd = "yum -c $name";
-if (($verbose > 2) && ($verbose <= 10)) {
-    $cmd .= " -d $verbose -e 2";
-}
-if ($installroot) {
-    $cmd .= " --installroot $installroot";
-}
-my @yumargs = @ARGV;
+my ($cmd, $err);
+if ($repoquery) {
 
-# x86_64 needs arch to be specified, otherwise it installs
-# both i386 and x86_64 rpms (if available)
-if ($archstr eq "x86_64") {
-    @yumargs = &transform_args(@ARGV);
-}
+    # run repoquery command
+    $cmd = "repoquery -c $name";
+    my @args = @ARGV;
+    $cmd .= " ".join(" ",@args);
+    print "Executing: $cmd\n" if ($verbose);
+    $err = system($cmd);
 
-$cmd .= " ".join(" ",@yumargs);
-print "Executing: $cmd\n" if ($verbose);
-my $err = system($cmd);
+} else {
+
+    # run yum command
+    $cmd = "yum -c $name";
+    if (($verbose > 2) && ($verbose <= 10)) {
+	$cmd .= " -d $verbose -e 2";
+    }
+    if ($installroot) {
+	$cmd .= " --installroot $installroot";
+    }
+    my @yumargs = @ARGV;
+
+    # x86_64 needs arch to be specified, otherwise it installs
+    # both i386 and x86_64 rpms (if available)
+    if ($archstr eq "x86_64") {
+	@yumargs = &transform_args(@ARGV);
+    }
+    @yumargs = &transform_groups(@yumargs);
+
+    $cmd .= " ".join(" ",@yumargs);
+    print "Executing: $cmd\n" if ($verbose);
+    $err = system($cmd);
+}
 exit $err;
-
 
 #############################################################################
 
 sub help {
     print "Usage: $0 OPTIONS [YUM_OPTIONS]\n";
     print "\n";
-    print "Call yum with _only_ the repositories on the command line configured.\n";
+    print "Call yum or repoquery with _only_ the repositories on the command line configured.\n";
     print "OPTIONS can be:\n";
-    print " --repo URL : repository which should be included in yum actions\n";
-    print "              (multiple --repo options are possible).\n";
-    print " --export   : create httpd configuration for local repositories\n";
-    print " --unexport : delete httpd configuration for local repositories\n";
-    print " --listexp  : list exported local repositories\n";
-    print " --prepare  : generate repodata for local repositories\n";
-    print " --help     : this help information\n";
-    print " --verbose  : verbose output\n";
+    print " --repo URL  : repository which should be included in yum actions\n";
+    print "               (multiple --repo options are possible).\n";
+    print " --export    : create httpd configuration for local repositories\n";
+    print " --unexport  : delete httpd configuration for local repositories\n";
+    print " --listexp   : list exported local repositories\n";
+    print " --prepare   : generate repodata for local repositories\n";
+    print " --help      : this help information\n";
+    print " --repoquery : invoke repoquery command instead of yum\n";
+    print " --verbose   : verbose output\n";
     print "\n";
-    print "YUM_OPTIONS are options to be passed to the yum command.\n";
+    print "YUM_OPTIONS are options to be passed to the yum or repoquery command.\n";
     print "Setting the environment variable \$YUME_VERBOSE to a number\n";
     print "between 1 and 10 will generate verbose output like multiple\n";
     print "-v options.\n\n";
@@ -228,7 +252,8 @@ sub get_arch_repos {
     my $arch;
     my $varch = join("|",@validarch);
     for my $r (@repos) {
-	if ($r =~ m/-([^-]+)$/) {
+	$r =~ s:/$::;
+	if ($r =~ m/\-([^\-]+)$/) {
 	    my $a = $1;
 	    if ($a =~ /^($varch)$/) {
 		if (!$arch) {
@@ -249,7 +274,10 @@ sub get_arch_repos {
     return $arch;
 }
 
-#
+# Unfortunately a big distributor decided that on x86_64 some packages should
+# have identical names for 32 and 64 bits. Therefore yume will install both
+# RPMs (x86_64 and i686) if they are available. Trying to avoid this by
+# renaming packages by $pkg.{x86_64,noarch}
 sub transform_args {
     my (@args) = @_;
     my @trans;
@@ -261,11 +289,13 @@ sub transform_args {
     my $flag = 0;
     for my $a (@args) {
 	if ($flag) {
-	    if (($a !~ /\.($varch)$/) && ($a !~ /\.rpm$/)) {
+	    if (($a !~ /\.($varch)$/) && ($a !~ /\.rpm$/) && ($a !~ /^@/)) {
 		$a .= ".{$archstr,noarch}";
 	    }
 	}
 	push @trans, $a;
+	#
+	# this does not apply to "remove"
 	if ($a =~ /^(install|update)$/) {
 	    $flag = 1;
 	}
@@ -276,6 +306,38 @@ sub transform_args {
 	    print "\t".$args[$i]."\t\t".$trans[$i]."\n";
 	}
     }
+    return @trans; 
+}
+
+# transform args replacing groups in the arguments (strings starting with @)
+sub transform_groups {
+    my (@args) = @_;
+    my @trans;
+
+    my @groupargs = grep /^@/, @args;
+    return @args if (!scalar(@groupargs));
+
+    my @nogroupargs = grep !/^@/, @args;
+
+    my @ops = grep /^(install|update|remove)$/, @args;
+
+    if (scalar(@ops) > 1) {
+	print "!! The argument line contains multiple install/remove/update operators !!\n";
+	print "!! Only one is allowed with group support !!\n";
+	exit 1;
+    } elsif (!scalar(@ops)) {
+	print "None of install/remove/update was selected!\n" if ($verbose);
+	return @args;
+    }
+    my $op = $ops[0];
+
+    if (scalar(@nogroupargs) > 1) {
+	push @trans, @nogroupargs;
+    }
+    push @trans, "group$op";
+    @groupargs = map { s/^@//; $_ } @groupargs;
+    push @trans, @groupargs;
+
     return @trans; 
 }
 

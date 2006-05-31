@@ -8,13 +8,32 @@
 #      ptty_try cmd args ...
 #
 
+
 #use blib;
-use IO::Pty;
+eval "require IO::Pty";
+if ($@) {
+    print "IO::Pty is probably not installed on your system.\n";
+    print "Running without pseudo-tty functionality.\n";
+    exec @ARGV;
+}
 require POSIX;
 $^W = 1;
 
 my $pty = new IO::Pty;
 my $pid;
+
+my $logfile;
+
+sub cleanup {
+    if (-f $logfile) {
+	unlink($logfile);
+    }
+    exit;
+}
+
+$SIG{INT} = \&cleanup;
+$SIG{HUP} = \&cleanup;
+$SIG{KILL} = \&cleanup;
 
 unless (@ARGV) {
   { 
@@ -101,7 +120,8 @@ sub process
 
 sub parent
 {
- open(LOG,">log") || die;
+ chomp($logfile = `mktemp /tmp/ptytry.XXXXXXX`);
+ open(LOG,">>$logfile") || die;
  my ($pty) = @_;
  my $tty = $pty;
  my ($rin,$win,$ein) = ('','','');
@@ -136,6 +156,7 @@ sub parent
     }
   }
  close(LOG);
+ unlink($logfile);
 }
 
 

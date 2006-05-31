@@ -25,6 +25,17 @@ using the rpm package format. It can:
 This makes installing packages, creating cluster node images, updating
 revisions much simpler than with rpm.
 
+With the --repoquery option repository queries directed at the repositories
+passed on the command line are done with the help of the repoquery tool
+(yum-utils package). This allows one to locate package download paths,
+identify dependencies and provides inside the specified repositories.
+
+In order to facilitate package groups (rpm groups) handling, package arguments
+starting with "@" are interpreted as rpm group names. The arguments line
+passed to yum is adapted according to the requested group
+operation. Limitation: only one operation (install/remove/update) is allowed
+per command line for "@" group handling!
+
 
 .SH OPTIONS
 
@@ -57,6 +68,13 @@ list local repositories which are exported via http.
 generate repodata for local repositories. This calls "createrepo" and
 generates the package independent repository metadata in the repodata/
 subdirectory.
+
+.TP
+.B --repoquery :
+call repoquery with the repositories on the command line (or default repos
+on OSCAR systems). This allows finegrained searching of requirements, provides
+and download paths for RPMs, even in remote repositories. Try "repoquery
+--help" for the repository query arguments.
 
 .TP
 .B --help :
@@ -119,12 +137,20 @@ the two repositories specified by --repo.
 installs the packages listed in the file pkglist into the image specified by
 the --installroot yum option. Useful for creating client node images.
 
+.TP
+.B yume install python-devel @eclipse
+installs the rpm python-devel and the rpm group "eclipse" from the default
+(OSCAR) repositories.
+
 When used on an OSCAR cluster the repositories default to the distribution
 specific repository locations. These can be displayed by using the command
 $OSCAR_HOME/scripts/distro-query.
 
+
+
+
 .SH "SEE ALSO"
-yum(8), yum.conf(5), createrepo(8).
+yum(8), yum.conf(5), createrepo(8), repoquery.
 
 .SH "DIAGNOSTICS"
 Exit status is normally 0.
@@ -136,4 +162,4 @@ None ;-)
 .SH AUTHOR
 Erich Focht, NEC HPCE, email: efocht@hpce.nec.com
 .br
-Document version $Revision: 112 $
+Document version $Revision$

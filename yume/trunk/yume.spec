@@ -1,7 +1,7 @@
-# $Id: yume.spec 171M 2006-05-28 20:48:14Z (lokal) $
+# $Id$
 Summary: Wrapper to yum for clusters
 Name: yume
-Version: 1.7
+Version: 2.0
 Vendor: NEC HPCE
 Release: 1
 License: GPL
@@ -11,7 +11,10 @@ Group: System Environment/Tools
 BuildArch: noarch
 BuildRoot: %{_tmppath}/%{name}
 Requires: yum
-Requires: perl-IO-Tty
+Requires: yum-utils
+# removed perl-IO-Tty requirement, it is actually only needed by packman,
+# and it works even without it.
+#Requires: perl-IO-Tty
 # actually "createrepo" is also needed, but only on the master node,
 # so don't add it to the requires.
 AutoReqProv: no
@@ -28,6 +31,8 @@ is very useful for clusters. It can:
 - execute yum commands on the cluster nodes applying only to this repository.
 This makes installing packages, creating cluster node images, updating
 revisions much simpler than with rpm.
+In addition, yume can just query the specified repositories by invoking
+repoquery.
 
 %prep
 %setup -n %{name}
@@ -57,6 +62,10 @@ rm -rf $RPM_BUILD_ROOT
 %{_mandir}/man8/yume*
 
 %changelog
+* Wed May 31 2006 Erich Focht
+- added rpm groups support (e.g. yume install @eclipse)
+- added repoquery support (--repoquery)
+- moved ptty_try log file to /tmp, cleaning it up at interruption
 * Thu May 25 2006 Erich Focht
 - added mirror:http://mirrorlist_url/ option handling
 * Mon Mar 06 2006 Erich Focht
