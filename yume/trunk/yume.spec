@@ -1,7 +1,7 @@
 # $Id$
 Summary: Wrapper to yum for clusters
 Name: yume
-Version: 2.0
+Version: 2.1
 Vendor: NEC HPCE
 Release: 1
 License: GPL
@@ -10,8 +10,7 @@ Source: %{name}.tar.gz
 Group: System Environment/Tools
 BuildArch: noarch
 BuildRoot: %{_tmppath}/%{name}
-Requires: yum
-Requires: yum-utils
+Requires: yum >= 2.4.0
 # removed perl-IO-Tty requirement, it is actually only needed by packman,
 # and it works even without it.
 #Requires: perl-IO-Tty
@@ -48,6 +47,7 @@ install -d -o root -g root -m 755 $RPM_BUILD_ROOT%{_datadir}/%{name}
 install -d -o root -g root -m 755 $RPM_BUILD_ROOT%{_mandir}/man8
 install -o root -g root -m 755  yume $RPM_BUILD_ROOT%{_bindir}
 install -o root -g root -m 755  yume-opkg $RPM_BUILD_ROOT%{_bindir}
+install -o root -g root -m 755  yum-repoquery $RPM_BUILD_ROOT%{_bindir}
 install -o root -g root -m 755  ptty_try $RPM_BUILD_ROOT%{_bindir}
 install -o root -g root -m 755  *.rpmlist $RPM_BUILD_ROOT%{_datadir}/%{name}
 install -o root -g root -m 755  yume.8 $RPM_BUILD_ROOT%{_mandir}/man8
@@ -62,6 +62,8 @@ rm -rf $RPM_BUILD_ROOT
 %{_mandir}/man8/yume*
 
 %changelog
+* Thu Jun 01 2006 Erich Focht
+- including yum-repoquery and removing dependency of yum-utils.
 * Wed May 31 2006 Erich Focht
 - added rpm groups support (e.g. yume install @eclipse)
 - added repoquery support (--repoquery)

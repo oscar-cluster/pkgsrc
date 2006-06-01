@@ -134,8 +134,17 @@ if ($verbose) {
 my ($cmd, $err);
 if ($repoquery) {
 
+    # try using native repoquery, if available
+    my $rq = `which repoquery >/dev/null 2>&1`;
+    if ($?) {
+	# fall back to included yum-repoquery
+	$rq = "/usr/bin/yum-repoquery";
+    } else {
+	$rq = "repoquery";
+    }
+
     # run repoquery command
-    $cmd = "repoquery -c $name";
+    $cmd = "$rq -c $name";
     my @args = @ARGV;
     $cmd .= " ".join(" ",@args);
     print "Executing: $cmd\n" if ($verbose);
