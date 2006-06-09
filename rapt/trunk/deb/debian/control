@@ -6,7 +6,7 @@ Build-Depends: debhelper (>= 4.0.0)
 Standards-Version: 1.0 
 
 Package: rapt
-Architecture: any
+Architecture: all
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: Wrapper for apt-get which extends it to deal with local package
  repositories, prepare their metadata, export them through http and install
