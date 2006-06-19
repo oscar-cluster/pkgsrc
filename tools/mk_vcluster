@@ -4,9 +4,57 @@
 #
 # Copyright (c) 2006 Erich Focht
 
+NODES=1
+MEMSIZE=256
+IDE=0
+SCSI=0
 
-NODES=$1
+while [ -n "$1" ]; do
+   case $1 in
+   --ide)
+      shift
+      [ -z "$1" ] && usage
+      IDE=$1
+      shift
+      ;;
+   --scsi)
+      shift
+      [ -z "$1" ] && usage
+      SCSI=$1
+      shift
+      ;;
+   --iso)
+      shift
+      [ -z "$1" ] && usage
+      ISO=$1
+      shift
+      ;;
+   --mem)
+      shift
+      [ -z "$1" ] && usage
+      MEMSIZE=$1
+      shift
+      ;;
+   --name)
+      shift
+      [ -z "$1" ] && usage
+      ONAME=$1
+      shift
+      ;;
+   --start)
+      shift
+      START=y
+      ;;
+   *) NODES=$1
+      shift
+      ;;
+   esac
+done
+
+
 if [ -z "$NODES" ]; then
+    echo "Usage:   $0 number_of_nodes"
+    exit 0
 fi
 
 if [ $NODES -le 0 -o $NODES -gt 8 ]; then
@@ -14,6 +62,56 @@ if [ $NODES -le 0 -o $NODES -gt 8 ]; then
     exit 1
 fi
 
+if [ $IDE -eq 0 -a $SCSI -eq 0 ]; then
+    IDE=1
+fi
+
+if [ $IDE -lt 0 -o $IDE -gt 2 ]; then
+    echo "Number of IDE disks should be between 0 and 2"
+    exit 1
+fi
+
+if [ $SCSI -lt 0 -o $SCSI -gt 7 ]; then
+    echo "Number of SCSI disks should be between 0 and 7"
+    exit 1
+fi
+
+which uudecode >/dev/null 2>&1
+if [ $? -ne 0 ]; then
+    echo "uudecode not found. Cannot continue."
+    exit 1
+fi
+
+if [ -z "$ONAME" ]; then
+    ONAME="node"
+fi
+
+usage ()
+{
+    echo "Usage:"
+    echo "   $0 [--ide NI] [--scsi NS] [--mem MEM_IN_MB] \ "
+    echo "        [--iso PATH] [--name BASENAME] [--start] NNODES"
+    echo
+    echo "Build a set (NNODES) of subdirectories each of them containing"
+    echo "a empty virtual machine ready to be booted and installed. They"
+    echo "will have one bridged virtual ethernet interface defined and"
+    echo "a set of virtual and empty 10GB harddisks attached."
+    echo "Arguments:"
+    echo "  --ide NI   : number of virtual 10GB IDE harddisks (default=1)"
+    echo "  --scsi NS  : number of virtual 10GB SCSI harddisks (default=0)"
+    echo "  --mem MB   : virtual machine memory size in MB (default=256)"
+    echo "  --iso PATH : path of ISO image to boot. The path should be"
+    echo "               relative to the VM directory. For example:"
+    echo "               --iso '../CentOS-4.3-i386-binDVD1.iso'"
+    echo "               Clearly for big distros DVD ISOs make more sense"
+    echo "               than CD-ROM ones..."
+    echo "  --name NAME : Basename of the virtual machines. If more than one"
+    echo "               machine is defined the names will be NAME_1, NAME_2, ..."
+    echo "               When only one VM is created its name will simply be NAME."
+    echo "               The default basename is 'node'."
+    echo "  --start    : Will try to start the newly created virtual machines."
+    exit 1
+}
 
 bld_vmx ()
 {
@@ -21,40 +119,52 @@ bld_vmx ()
     cat > $VNAME.vmx <<EOI
 config.version = "8"
 virtualHW.version = "3"
-memsize = "256"
-ide0:0.present = "TRUE"
-ide0:0.fileName = "$VNAME.vmdk"
-ide0:0.deviceType = "disk"
-ide1:0.present = "FALSE"
-ide1:0.fileName = "../CentOS-4.2-i386-binDVD1.iso"
-ide1:0.deviceType = "cdrom-image"
+memsize = "$MEMSIZE"
 floppy0.present = "FALSE"
 ethernet0.present = "TRUE"
 ethernet0.connectionType = "bridged"
 usb.present = "TRUE"
 sound.present = "FALSE"
-displayName = "VirtualNode $VNAME"
+displayName = "VNode $VNAME"
 guestOS = "other26xlinux"
-nvram = "$NAME.nvram"
-scsi0:0.redo = ""
-ethernet0.addressType = "generated"
+nvram = "$VNAME.nvram"
 uuid.location = "56 4d 41 70 25 0b 94 26-5c ce 05 24 b2 61 9c f9"
 uuid.bios = "56 4d 41 70 25 0b 94 26-5c ce 05 24 b2 61 9c f9"
-ide1:0.autodetect = "TRUE"
+ethernet0.addressType = "generated"
 ethernet0.generatedAddress = "00:0c:29:61:9c:f9"
 ethernet0.generatedAddressOffset = "0"
+ethernet0.virtualDev = "e1000"
 checkpoint.vmState = ""
 tools.remindInstall = "TRUE"
-ide0:0.redo = ""
-floppy.present = "FALSE"
 uuid.action = "create"
 EOI
 }
 
-
-bld_image ()
+add_iso ()
 {
-   local IMG=$1
+    local VNAME=$1
+    if [ -z "$ISO" ]; then
+	cat >> $VNAME.vmx <<EOI
+ide1:0.autodetect = "TRUE"
+ide1:0.present = "FALSE"
+ide1:0.fileName = "../CentOS-4.2-i386-binDVD1.iso"
+ide1:0.deviceType = "cdrom-image"
+EOI
+    else
+	cat >> $VNAME.vmx <<EOI
+ide1:0.autodetect = "TRUE"
+ide1:0.present = "TRUE"
+ide1:0.fileName = "$ISO"
+ide1:0.deviceType = "cdrom-image"
+EOI
+    fi	
+}
+
+bld_ide_image ()
+{
+   local VNAME=$1
+   local NIDE=$2
+   local IMG="ide10G$NIDE"
 
    uudecode << 'EOF'
 begin 644 hda10G.vmdk.bz2
@@ -85,22 +195,101 @@ end
 EOF
   bzip2 -dc < hda10G.vmdk.bz2 > $IMG.vmdk
   rm -f hda10G.vmdk.bz2
+
+    cat >> $VNAME.vmx <<EOI
+ide0:$NIDE.present = "TRUE"
+ide0:$NIDE.fileName = "$IMG.vmdk"
+ide0:$NIDE.deviceType = "disk"
+ide0:$NIDE.redo = ""
+EOI
+
 }
 
+bld_scsi_image ()
+{
+   local VNAME=$1
+   local NSCSI=$2
+   local IMG="scsi10G$NSCSI"
 
+   uudecode << 'EOF'
+begin 644 sda10G.vmdk.bz2
+M0EIH.3%!629369UM3+$`+I#____^SLS<S__N_^[=S/_OW^S,S,S,S,S,S,S,
+MS,S,S,S,T`3>UP`'`Z#@`9)`!&F`FC1@`$R8F`3;__4JJ)A_ZJ@``3)DP)@:
+M)@(P3)@$:,C)DPF)CIZF$9,0,C:!#0T8)HT,`0&3(9,C3!-#3(,F3`C`09,F
+M(9-`#1HT!4J-E'[_U2JF@`::`--`#)HQ``!HT``#1D--`9!D```````,0,F$
+M-#3)H80TP)A#(P33)HT:-,`F`1H`9&)HP(PC3$T`R#3)IA,@)*(T3(1@A#U-
+M&@``&@#1ZGZH```````````T>H&AIIH/0GE*[6OP<R8ZE2KRF`Y@`DQ@"!)(
+M(6"$":\0``"K$($$@6@%V"2*WI8N9Q,;(0I<K-4*M'37,&6QM.`=[`=<+U]`
+MA<<2-(E#/+Y_3Z_;[JOQE?.\^SU[?7_[_N!A0I(`$(KL2J:O6:W7."21LDBD
+M#5Q$1$1$1$1$0```4@%\)YYYXGGGG@``````````````````````````````
+M``````````$@````````````````````H`H@````````````$@```*`*(```
+M```````4)III2E*4TII`H@!--*4UEEJU:M69Z\:>XNEZN^IUFHJJJJJJK`55
+M55555555555555555555555555555;RV"Y@````````!;V+;ZP`````````%
+MO:LL6P`````````!;V6N?G]!_]TDDV.RVFUVWV_=]^^X'X<7CW$"#"AQ(TCE
+MYYDV=U3Z%'K[.VE3[JG?X>/EY^GK[>]7X^:WU]U_S]_NE/*YIT^A1```````
+M`````````````:2U9))))))))))))))))))))))))))))))))+5DDDDDDDDD
+MDDDDDDDDDDDDDDDDDDDDDJ5*E2I4YOOJW4DDDDD!>P53T_/!V<(._M:>(E,2
+M43$C@,!M5J0.AOD7^HT99,@K:8;M"[9WM2^[9W=\4A6<]'3H)J!>"VL,3!DY
+M\1^;YDU]L=/=7]G8G.EH=<-0]#'*=''`Z%'[@:AY@B-%I3^`^*_8%5Z!Y%K3
+M:BL.M]["&\97A$>W@C473$1,$0UIKR,*/(/(;+HX64<B'ZM0*C\<&58>^1<T
+M'9ER+B-%<HYLAF.1V(HD0HN+2PYF)ESKQK:+V&?>;R4V9@9AMI+4ZY896BBD
+MN4U'X>F39UBB_0*!/G#I:'$]J*6'S\Z"*F\F,3F4R4B/$/)RMK,@13Q\TLH2
+M7%CGV#7GFC\2B10GL<0-M6$)BX469`:#%0,)L:BF:";/LBYLA%KHXE+MQR$5
+0V(0"!(_XNY(IPH2$ZVIEB```
+`
+end
+EOF
+  bzip2 -dc < sda10G.vmdk.bz2 > $IMG.vmdk
+  rm -f sda10G.vmdk.bz2
+
+    cat >> $VNAME.vmx <<EOI
+scsi0:$NSCSI.present = "TRUE"
+scsi0:$NSCSI.fileName = "$IMG.vmdk"
+scsi0:$NSCSI.deviceType = "disk"
+scsi0:$NSCSI.redo = ""
+EOI
+
+}
 
 
 
 i=0
 while [ $i -lt $NODES ]; do
     i=`expr $i + 1`
-    NAME="node_$i"
+    if [ $NODES -gt 1 ]; then
+	NAME="${ONAME}_$i"
+    else
+	NAME=$ONAME
+    fi
     if [ ! -d $NAME ]; then
 	mkdir $NAME
 	cd $NAME
-	bld_vmx vnode_$i
-	bld_image vnode_$i
-	vmplayer vnode_$i.vmx &
+	bld_vmx $NAME
+
+	# add iso, if defined, a default value otherwise
+	add_iso $NAME
+
+	# build IDE disks
+	for (( k=0 ; k<$IDE ; k++ )); do
+	    bld_ide_image $NAME $k
+	done
+
+	# build SCSI disks
+	for (( j=0 ; j<$SCSI ; j++ )); do
+	    bld_scsi_image $NAME $j
+	done
+
+	if [ -n "$START" ]; then
+	    if [ -x /usr/bin/vmplayer ]; then
+		vmplayer $NAME.vmx &
+	    elif [ -x /usr/bin/vmware-cmd ]; then
+		# register config file
+		vmware-cmd -s register `pwd`/$NAME.vmx
+		# start it
+		vmware-cmd `pwd`/$NAME.vmx start on
+	    fi
+	fi
+
 	cd ..
     else
 	echo "Directory $NAME already exists. Skipping."
