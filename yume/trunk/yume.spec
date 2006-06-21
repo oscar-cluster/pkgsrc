@@ -1,7 +1,7 @@
 # $Id$
 Summary: Wrapper to yum for clusters
 Name: yume
-Version: 2.1
+Version: 2.2
 Vendor: NEC HPCE
 Release: 1
 License: GPL
@@ -62,6 +62,8 @@ rm -rf $RPM_BUILD_ROOT
 %{_mandir}/man8/yume*
 
 %changelog
+* Wed Jun 21 2006 Erich Focht
+- suse_bootstrap support for installing into empty suse images
 * Thu Jun 01 2006 Erich Focht
 - including yum-repoquery and removing dependency of yum-utils.
 * Wed May 31 2006 Erich Focht
