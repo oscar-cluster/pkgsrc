@@ -128,9 +128,9 @@ close $fh;
 
 # print temporary config file if required
 if ($verbose) {
-    print "=== yum.conf file used ($name) ===\n";
+    print STDERR "=== yum.conf file used ($name) ===\n";
     system("cat $name");
-    print "==========================================\n";
+    print STDERR "==========================================\n";
 }
 
 my ($cmd, $err);
@@ -149,7 +149,7 @@ if ($repoquery) {
     $cmd = "$rq -c $name";
     my @args = @ARGV;
     $cmd .= " ".join(" ",@args);
-    print "Executing: $cmd\n" if ($verbose);
+    print STDERR "Executing: $cmd\n" if ($verbose);
     $err = system($cmd);
 
 } else {
@@ -179,7 +179,7 @@ if ($repoquery) {
     @yumargs = &transform_groups(@yumargs);
 
     $cmd .= " ".join(" ",@yumargs);
-    print "Executing: $cmd\n" if ($verbose);
+    print STDERR "Executing: $cmd\n" if ($verbose);
     $err = system($cmd);
 }
 exit $err;
@@ -205,7 +205,7 @@ sub distro_repos {
 	    if ($repo =~ /^file:/) {
 		$repo =~ s/^file://;
 	    }
-	    print "Executing: $dquery --pool $repo\n" if ($verbose);
+	    print STDERR "Executing: $dquery --pool $repo\n" if ($verbose);
 	    local *CMD;
 	    open CMD, "$dquery --pool $repo |"
 		or croak("Could not run $dquery --pool $repo");
@@ -223,6 +223,10 @@ sub distro_repos {
     }
 }
 
+# EF: Due to SuSE's "special" post scriptlets, we need some special handling
+# when starting with an empty image. This is somewhat equivalent to
+# debootstrap... With sane scriptlets in the packages this should actually
+# not be needed.
 sub bootstrap_suse {
     my ($img) = @_;
     # create etc/mtab in image
@@ -296,7 +300,7 @@ EOF
     map { $cmd .= "--repo $_ " } @repos;
     $cmd .= "--repoquery --location glibc | egrep '.rpm\$'";
     print STDERR "Locating glibc in repositories, this can take a while...\n";
-    print "executing: $cmd\n" if ($verbose);
+    print STDERR "Executing: $cmd\n" if ($verbose);
     open OUT, "$cmd |" or croak("Could not run $prog!: $!");
     while (<OUT>) {
 	chomp;
@@ -324,10 +328,23 @@ EOF
 	}
 	$glibcrpm = $tmpdir . "/" . basename($glibcrpm);
     }
-    print "Installing $glibcrpm into image $img\n" if ($verbose);
+    print STDERR "Installing $glibcrpm into image $img\n" if ($verbose);
     !system("rpm -ihv --root $img --force --nodeps $glibcrpm")
 	or carp("Failed to install $glibcrpm into $img");
     $ENV{YAST_IS_RUNNING}="1";
+    # There's a bug in the sysconfig rpm which leaves us with the network
+    # service disabled. This forces us to install everything up to the
+    # sysconfig package and enable "network", then continue with the rest
+    # of the installation.
+    $cmd = "$prog ";
+    map { $cmd .= "--repo $_ " } @repos;
+    $cmd .= "--installroot $img -y install aaa_base sysconfig";
+    print STDERR "Installing aaa_base and sysconfig into the image $img\n";
+    print STDERR "Executing: $cmd\n" if ($verbose);
+    !system($cmd) or croak("Failed to run yum: $!");
+    print STDERR "enabling network service in image $img\n" if ($verbose);
+    !system("chroot $img /sbin/insserv -f network")
+	or croak("Failed to enable network service in image $img: $!");
 }
 
 sub help {
@@ -370,7 +387,7 @@ sub get_default_repos {
 	    if ($installroot && (-x "$installroot/bin/bash")) {
 		$dquery = $dquery . " --image $installroot";
 	    }
-	    print "Executing: $dquery\n" if ($verbose);
+	    print STDERR "Executing: $dquery\n" if ($verbose);
 	    local *CMD;
 	    open CMD, "$dquery |" or die "Could not run $dquery: $!";
 	    while (<CMD>) {
@@ -390,7 +407,7 @@ sub get_default_repos {
 	my $master = gethostbyname("oscar_server");
 	if ($master) {
 	    my $node=`hostname`; chomp $node;
-	    print "Executing: ssh oscar_server \\\$OSCAR_HOME/scripts/distro-query --node $node\n" if ($verbose);
+	    print STDERR "Executing: ssh oscar_server \\\$OSCAR_HOME/scripts/distro-query --node $node\n" if ($verbose);
 	    local *CMD;
 	    open CMD, "ssh oscar_server \\\$OSCAR_HOME/scripts/distro-query --node $node |";
 	    while (<CMD>) {
@@ -408,7 +425,7 @@ sub get_default_repos {
 	}
     }
     if ($verbose) {
-	print "Repositories detected:\n\t".join("\n\t",@repos)."\n";
+	print STDERR "Repositories detected:\n\t".join("\n\t",@repos)."\n";
     }
 }
 
@@ -426,16 +443,16 @@ sub get_arch_repos {
 		    $arch = $a;
 		} else {
 		    if ($arch ne $a) {
-			print "WARNING: multiple architecture repos specified.\n";
+			print STDERR "WARNING: multiple architecture repos specified.\n";
 		    }
 		}
 	    } else {
-		print "WARNING: repository name doesn't match any valid architecture\n";
+		print STDERR "WARNING: repository name $r doesn't match any valid architecture\n" if ($verbose);
 	    }
 	}
     }
     if ($arch && $verbose) {
-	print "Architecture: $arch\n";
+	print STDERR "Repository architecture: $arch\n";
     }
     return $arch;
 }
@@ -467,9 +484,9 @@ sub transform_args {
 	}
     }
     if ($verbose > 5) {
-	print "Arguments transformation:\n";
+	print STDERR "Arguments transformation:\n";
 	for (my $i = 0; $i <= $#args; $i++) {
-	    print "\t".$args[$i]."\t\t".$trans[$i]."\n";
+	    print STDERR "\t".$args[$i]."\t\t".$trans[$i]."\n";
 	}
     }
     return @trans; 
@@ -492,7 +509,7 @@ sub transform_groups {
 	print "!! Only one is allowed with group support !!\n";
 	exit 1;
     } elsif (!scalar(@ops)) {
-	print "None of install/remove/update was selected!\n" if ($verbose);
+	print STDERR "None of install/remove/update was selected!\n" if ($verbose);
 	return @args;
     }
     my $op = $ops[0];
@@ -516,7 +533,7 @@ sub find_httpdir {
 	}
     }
     if ($verbose) {
-	print "Found httpdir = $httpdir\n";
+	print STDERR "Found httpdir = $httpdir\n";
     }
     return $httpdir;
 }
@@ -653,7 +670,7 @@ sub prep_repodata {
 	    my $compsfile = "$repo/$comps";
 	    $cmd .= " --groupfile $compsfile" if (-e $compsfile);
 	    $cmd .= " --cachedir $repo/repocache $repo";
-	    print "cmd: $cmd\n" if ($verbose);
+	    print STDERR "Executing: $cmd\n" if ($verbose);
 	    my $err = system($cmd);
 	    if ($err) {
 		print "... cache creation failed.\n";
