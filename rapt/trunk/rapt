@@ -58,6 +58,7 @@ use IO::File;
 use POSIX qw(tmpnam);
 use File::Basename;
 use Carp;
+use Switch;
 # add the line below when ready for it
 #use OSCAR::PackMan;
 
@@ -851,14 +852,25 @@ sub detect_codename_dir {
     my ($dir) = @_;
     my $codename;
 
-    if (-f "$dir/etc/debian-release") {
+    if (-f "$dir/etc/debian_version") {
 	# the codename for debian distribution is supposed to be the first
 	# line of the /etc/debian_version file.
 	# Moreover, we just support sarge (aka. Debian 3.1).
 	open (IN, "$dir/etc/debian_version")
 	    or die "Can't open file: $!\n";
-	$codename = <IN>;
-	close IN;
+        $codename = <IN>;
+        close IN;
+        # Since the codename may have multiple forms (3.1 vs sarge for 
+        # instance, we translate to a generic codename (e.g. 3.1->sarge)
+        # WARNING a \n is added after the codename when we read the file!
+        switch ($codename) {
+                case "3.0\n" { 
+                        $codename = "sarge"; 
+                }
+                case "3.1\n" {
+                        $codename = "sarge";
+                }
+        }
     } elsif (-f "$dir/etc/lsb-release") {
 	# there is a chance for this being a ubuntu distro
 	# it is not supported, yet, but we'll recognize it
