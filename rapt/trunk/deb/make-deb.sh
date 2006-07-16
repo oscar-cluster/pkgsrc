@@ -28,7 +28,7 @@ rm -rf /tmp/deb$$
 mkdir -p /tmp/deb$$/$package-$version
 cp -rf ../* /tmp/deb$$/$package-$version
 rm -rf /tmp/deb$$/$package-$version/deb
-tar czf /tmp/deb$$/$package-$version.tar.gz /tmp/deb-packman/$package-$version
+tar czf /tmp/deb$$/$package-$version.tar.gz /tmp/deb$$/$package-$version
 
 cd  /tmp/deb$$/$package-$version
 
@@ -43,6 +43,8 @@ cd $path
 cp Makefile /tmp/deb$$/$package-$version
 cp debian/control /tmp/deb$$/$package-$version/debian
 cp debian/copyright /tmp/deb$$/$package-$version/debian
+cp debian/rules /tmp/deb$$/$package-$version/debian
+cp debian/changelog /tmp/deb$$/$package-$version/debian
   
 # we then really create the package
 cd  /tmp/deb$$/$package-$version

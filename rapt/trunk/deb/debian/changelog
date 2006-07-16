@@ -1,0 +1,14 @@
+rapt (1.0-2) unstable; urgency=low
+
+  * Initial Release.
+  * Bugfix: codename detection for the local system
+  * Bugfix: creation of repository's metadata for packages no dependent to any
+    architecture
+
+ -- gvallee <gvallee@localhost.localdomain>  Sat, 15 Jul 2006 22:43:39 -0400
+
+rapt (1.0-1) unstable; urgency=low
+  * Initial Release.
+
+ -- gvallee <gvallee@localhost.localdomain>  Sat, 15 Jul 2006 22:40:43 -0400
+
