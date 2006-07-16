@@ -328,6 +328,7 @@ sub get_arch_repos {
                 my $r2;
                 for $r2 (@sub_repos) {
                         $arch = get_arch_repos ($r2);
+                        chomp ($arch);
                 }
 	} elsif ($r =~ m/-([^-]+)$/) {
 	    my $a = $1;
@@ -642,7 +643,6 @@ sub write_pid {
 
 ###############################################################
 # stuff below this line should be deleted once packman is used!
-
 
 sub find_httpdir {
     my $httpdir;
