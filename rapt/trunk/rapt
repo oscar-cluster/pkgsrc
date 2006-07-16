@@ -21,7 +21,11 @@
 #
 # Author:
 # (C)opyright Erich Focht <efocht@hpce.nec.com>
-#             All rights reserved
+#      All rights reserved
+# Update:
+# (C)opyright Oak Ridge National Laboratory
+#       Geoffroy Vallee <valleegr@ornl.gov>
+#       All rights reserved
 #
 # # # #
 #
@@ -48,7 +52,9 @@
 #
 # # # #
 #
-# 
+# WARNING rapt does not support currently multiple architectures.
+#
+# # # #
 
 
 
@@ -297,14 +303,33 @@ sub get_default_repos {
     }
 }
 
-# guess architecture from repository name
+# guess architectures from repositories' name
+# @param: list of repositories
+# @return: list of architectures
+# GV: this function is weird because we get a list of repos (which may be for
+# different architecture) but we return only one architecture!!.
+# WARNING, currently we do not return a list of architectures
 sub get_arch_repos {
     my (@repos) = @_;
     my $arch;
     my $varch = join("|",@validarch);
     for my $r (@repos) {
 	$r =~ s:/$::;
-	if ($r =~ m/-([^-]+)$/) {
+        if (!index ($r,"/tftpboot/oscar/common",0)) {
+                # if the repo is a repo for comon packages, it is a special 
+                # case since no real architecture is associated. In Debian 
+                # packages are supposed to all be in "pool" and only 
+                # repository metadata is supposed to be organized by 
+                # architecture.
+                # Therefore in our case, for the common repo, we check
+                # architectures within /tftpboot/oscar/distro and create an
+                # assocaited repo for all of them
+                my @sub_repos = `find /tftpboot/oscar -name \"debian*\"`;
+                my $r2;
+                for $r2 (@sub_repos) {
+                        $arch = get_arch_repos ($r2);
+                }
+	} elsif ($r =~ m/-([^-]+)$/) {
 	    my $a = $1;
 	    if ($a =~ /^($varch)$/) {
 		if (!$arch) {
@@ -317,7 +342,7 @@ sub get_arch_repos {
 	    } else {
 		print "WARNING: repository name doesn't match any valid architecture\n";
 	    }
-	}
+	} 
     }
     if ($arch && $verbose) {
 	print "Architecture: $arch\n";
