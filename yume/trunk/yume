@@ -407,9 +407,10 @@ sub get_default_repos {
 	my $master = gethostbyname("oscar_server");
 	if ($master) {
 	    my $node=`hostname`; chomp $node;
-	    print STDERR "Executing: ssh oscar_server \\\$OSCAR_HOME/scripts/distro-query --node $node\n" if ($verbose);
+	    my $cmd = "ssh oscar_server bash -l -c ".'\\\\\$OSCAR_HOME'."/scripts/distro-query --node $node";
+	    print STDERR "Executing: $cmd\n" if ($verbose);
 	    local *CMD;
-	    open CMD, "ssh oscar_server \\\$OSCAR_HOME/scripts/distro-query --node $node |";
+	    open CMD, "$cmd |";
 	    while (<CMD>) {
 		chomp;
 		if (/Distro package url : (\S+)$/) {
