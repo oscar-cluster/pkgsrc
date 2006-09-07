@@ -426,10 +426,21 @@ sub get_default_repos {
 	    }
 	    close CMD;
 	    my $err = $? >> 8;
-	    if ($err && $conn_closed && $attempts < 5) {
-		sleep 1;
-		$attempts++;
-		goto REMOTE_QUERY;
+	    if ($err) {
+		if ($conn_closed) {
+		    if ($attempts < 5) {
+			$attempts++;
+			print STDERR "Connection closed by remote host. Retrying $attempts/5\n";
+			sleep 1;
+			goto REMOTE_QUERY;
+		    } else {
+			print STDERR "Connection closed by remote host while distro-query. Giving up.\n";
+			exit 1;
+		    }
+		} else {
+		    print STDERR "Unexpected error detected ($err) while distro-query. Exiting.\n";
+		    exit $err;
+		}
 	    }
 	} else {
 	    print "You are not on an OSCAR cluster. You must specify a repository!\n";
