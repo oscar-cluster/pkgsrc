@@ -412,7 +412,7 @@ sub get_default_repos {
 	  REMOTE_QUERY:
 	    my $attempts = 0;
 	    local *CMD;
-	    open CMD, "$cmd |";
+	    open CMD, "$cmd 2>&1 |" or die "Could not run $cmd : $!";
 	    my $conn_closed = 0;
 	    while (<CMD>) {
 		chomp;
