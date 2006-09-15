@@ -36,6 +36,10 @@ use IO::File;
 use POSIX qw(tmpnam);
 use File::Basename;
 
+# number of ssh retries for and delay between them
+my $max_ssh_attempts = 30;
+my $ssh_delay = 2;
+
 my ($name, $fh, $verbose, $export, $unexport, $prepare, $listexp, $repoquery);
 my $installroot;
 my @repos;
@@ -412,8 +416,8 @@ sub get_default_repos {
 	    my $node=`hostname`; chomp $node;
 	    my $cmd = "ssh oscar_server bash -l -c \\\"\\\$OSCAR_HOME/scripts/distro-query --node $node\\\"";
 	    print STDERR "Executing: $cmd\n" if ($verbose);
-	  REMOTE_QUERY:
 	    my $attempts = 0;
+	  REMOTE_QUERY:
 	    local *CMD;
 	    open CMD, "$cmd 2>&1 |" or die "Could not run $cmd : $!";
 	    my $conn_closed = 0;
@@ -431,10 +435,10 @@ sub get_default_repos {
 	    my $err = $? >> 8;
 	    if ($err) {
 		if ($conn_closed) {
-		    if ($attempts < 5) {
+		    if ($attempts < $max_ssh_attempts) {
 			$attempts++;
-			print STDERR "Connection closed by remote host. Retrying $attempts/5\n";
-			sleep 1;
+			print STDERR "Connection closed by remote host. Retrying $attempts/$max_ssh_attempts\n" if ($verbose);
+			sleep $ssh_delay;
 			goto REMOTE_QUERY;
 		    } else {
 			print STDERR "Connection closed by remote host while distro-query. Giving up.\n";
