@@ -106,7 +106,7 @@ EOF
 
 # chop trailing slashes from repository names
 foreach (@repos) {
-    s:\/$::;
+  s:\/$::;
 }
 
 for my $repo (@repos) {
@@ -181,6 +181,9 @@ if ($repoquery) {
     $cmd .= " ".join(" ",@yumargs);
     print STDERR "Executing: $cmd\n" if ($verbose);
     $err = system($cmd);
+}
+if ($err) {
+    print STDERR "ERROR while executing \"$cmd\" : $!\n";
 }
 exit $err;
 
@@ -407,7 +410,7 @@ sub get_default_repos {
 	my $master = gethostbyname("oscar_server");
 	if ($master) {
 	    my $node=`hostname`; chomp $node;
-	    my $cmd = "ssh oscar_server bash -l -c ".'\\\\\$OSCAR_HOME'."/scripts/distro-query --node $node";
+	    my $cmd = "ssh oscar_server bash -l -c \\\"\\\$OSCAR_HOME/scripts/distro-query --node $node\\\"";
 	    print STDERR "Executing: $cmd\n" if ($verbose);
 	  REMOTE_QUERY:
 	    my $attempts = 0;
