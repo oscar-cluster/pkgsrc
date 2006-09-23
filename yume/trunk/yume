@@ -64,7 +64,10 @@ if (!scalar(@repos)) {
     &get_default_repos();
 }	    
 
-help() if (!scalar(@repos));
+if (!scalar(@repos)) {
+    print "ERROR: No repositories passed and none detected!\n";
+    help();
+}
 
 my @validarch = qw(i386 x86_64 ia64 ppc64 noarch);
 
@@ -167,6 +170,9 @@ if ($repoquery) {
 	# special handling for empty suse images
 	if ((scalar(grep /^install$/, @ARGV) == 1) &&
 	    &img_empty($installroot)) {
+	    # try creating lock directory, if it fails we'll fail in
+	    # other place anyway
+	    system("mkdir -p $installroot/var/lock/rpm");
 	    if (&distro_repos() eq "suse") {
 		&bootstrap_suse($installroot);
 	    }
@@ -181,6 +187,11 @@ if ($repoquery) {
 	@yumargs = &transform_args(@ARGV);
     }
     @yumargs = &transform_groups(@yumargs);
+
+    if (!scalar(@yumargs)) {
+	print "No arguments passed to yum! Not doing anything.\n";
+	help();
+    }
 
     $cmd .= " ".join(" ",@yumargs);
     print STDERR "Executing: $cmd\n" if ($verbose);
