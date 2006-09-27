@@ -216,6 +216,7 @@ sub img_empty {
 # Only meaningful on the master node, under OSCAR.
 sub distro_repos {
     return if (!exists($ENV{OSCAR_HOME}));
+    return if (! -d $ENV{OSCAR_HOME}."/oscarsamples");
     my $dquery = "$ENV{OSCAR_HOME}/scripts/distro-query";
     if (-x $dquery) {
 	my $dist;
@@ -399,7 +400,7 @@ sub cleanup {
 
 sub get_default_repos {
     # if OSCAR_HOME is defined, we're probably on a master
-    if ($ENV{OSCAR_HOME}) {
+    if ($ENV{OSCAR_HOME} && -d $ENV{OSCAR_HOME}."/oscarsamples") {
 	my $dquery = "$ENV{OSCAR_HOME}/scripts/distro-query";
 	if (-x $dquery) {
 	    if ($installroot && (-x "$installroot/bin/bash")) {
