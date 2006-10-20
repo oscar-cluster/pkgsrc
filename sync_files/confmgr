@@ -1,0 +1,108 @@
+#!/usr/bin/perl
+# confmgr
+# Manages files in sync_files configuration
+
+# written by Jason Brechin
+
+use strict;
+use Getopt::Long;
+use AppConfig::File;
+
+Getopt::Long::Configure("permute", "auto_abbrev");
+
+my $configfile = '/opt/sync_files/etc/sync_files.conf';
+my $verbose = 0;
+my $syncnow = 0;
+my $force = 0;
+my @files;
+my $logger = '/usr/bin/logger';
+my $add;
+my $rm;
+
+my $syncfiles;
+my @syncfiles;
+my @rmfile;
+#Distro checking
+if ( -f "/etc/SuSE-release" ) {
+  $logger = "/bin/logger";
+}
+
+if ( ! -f "$configfile" ) {
+  print "$configfile doesn't even exist!\n";
+  print "This implies a serious problem with your installation!\n";
+  exit 1;
+}
+
+sub usage {
+  print "$0 [-v] [-h] [--force] [--syncnow] [--add|--rm] file1 ...\n";
+  print "\n";
+  print "--help		Displays helpful information\n";
+  print "--force	Force operation (to sync)\n";
+  print "--syncnow	Synchronize files now\n";
+  print "--add		Add the files\n";
+  print "--rm		Remove the files\n";
+  print "\n";
+  print "Look in $configfile to find more options\n";
+  exit;
+}
+
+sub getconfig {
+  #Command line options
+  &GetOptions('force|f' => \$force,
+	      'help|?' => sub { usage; },
+	      'syncnow'=> \$syncnow,
+	      'verbose+' => \$verbose,
+	      'add' => \$add,
+	      'rm' => \$rm,
+             );
+  @files = @ARGV;  #all other args are files
+
+  if ($add && $rm) { print "Can't add and remove!\n"; exit 1; }
+
+  # Get current file config
+  my $config = AppConfig->new( { ERROR => sub {;} } );
+  $config->define("syncfile=s@");
+  $config->file($configfile);
+  $syncfiles = $config->get('syncfile');
+  @syncfiles = @$syncfiles;
+  if($verbose>1) {print "We have @syncfiles in $configfile\n";}
+}
+getconfig;
+
+if ($rm) {
+  open(CONFIG, "$configfile") or die "Couldn't open $configfile: $!\n";
+  my @lines = <CONFIG>;
+  foreach my $line (@lines) {
+    if ( $line =~ m#^\s*syncfile\s+(\S*)\s*$# ) {
+#      print "$line";
+      if ( @rmfile = grep( /^$1$/, @files) ) {
+        $line = '';
+        if($verbose) {print "Removed $rmfile[0]\n";}
+      }
+    } 
+  }
+  close CONFIG;
+  open(CONFIG, "> $configfile") or die "Couldn't open $configfile: $!\n";
+  print CONFIG @lines;
+  close CONFIG;
+  system("$logger -p syslog.info confmgr removed @files from sync_files config");
+}
+
+if ($add) {
+  open(CONFIG, ">> $configfile") or die "Couldn't open $configfile: $!\n";
+  foreach my $file (@files) {
+    if ( grep( /^$file$/, @syncfiles) ) {
+      if($verbose) {print "Already got $file\n";}
+    } else {
+      print CONFIG "syncfile $file\n";
+    }
+  }
+  close CONFIG;
+  system("$logger -p syslog.info confmgr added @files to sync_files config");
+}
+
+if ($syncnow || $force) { 
+  my $cmd = "/opt/sync_files/bin/sync_files";
+  if ($force) { $cmd = "$cmd --force"; }
+  !system("$cmd") or die "Couldn't run $cmd: $!\n";
+}

@@ -1,0 +1,490 @@
+#!/usr/bin/perl
+# 'sync_files'
+# Also copies to SIS images
+# Supports getent (all PAM auth methods)
+# Supports use of C3 tools or scp to sync files
+# Does not rewrite $crontab unless necessary
+# Can suppress $crontab modification (e.g. for manual changes)
+# Sorts getent files (passwd/group) by id, not name
+
+# written by Jason Brechin 
+# with help/suggestions from 
+# Benoit des Ligneris
+# Frank Crawford
+# Thomas Naughton
+# Erich Focht - December 2004, October 2005
+#       - added multi-distro functionality and changed logic for updating
+#         checksums when nodes are down
+
+# Load modules to handle command line and .conf file
+
+use strict;
+use Getopt::Long;
+use AppConfig::File;
+use File::Copy "cp";
+use lib "/usr/lib/systeminstaller";
+use SIS::DB;
+use SIS::Image;
+
+Getopt::Long::Configure ("permute", "auto_abbrev");
+
+# Declarations
+my $change    = 0;
+my $configfile= '/opt/sync_files/etc/sync_files.conf';
+my $force;
+my $verbose;
+my $crononly  = 0;
+my $directory = '/var/lib/systemimager/images';
+my $crontab   = '/etc/crontab';
+my $crondelay = 15;
+my $cronmodify= 1;
+my $checksums = '/opt/sync_files/etc/checksums';
+my $templates = '/opt/sync_files/templates';
+my $syncfile;
+my $filelist;
+my @filestosync;
+my @files;
+my @crontabin;
+my $cronline;
+my $found     = 0;
+my $line;
+my $changed;
+my @images;
+my $logger    = '/usr/bin/logger';
+my $getent    = 0;
+my $usec3     = 1;
+my $scphost;
+
+sub usage {
+  print "--help        Displays helpful information\n";
+  print "--force       Forces an update of all files\n";
+  print "--crononly    Only updates crontab\n";
+  print "\n";
+  print "Look in /opt/sync_files/etc/sync_files.conf file\n";
+  print "to set additional persistent options\n";
+  print "Files to sync must be listed in sync_files.conf\n";
+  exit;
+}
+
+sub getconfig {
+  #Command line options
+  if ( $verbose ) { print "Now parsing command-line options\n"; }
+  &GetOptions('force' => sub { $force = 1; $crononly = 0; },
+    'verbose+' => \$verbose,
+    'help|?' => sub { usage; },
+    'crononly' => sub { $crononly = 1; $force = 0; },
+  );
+
+  #Distro checking
+  if ( -f "/etc/SuSE-release" ) {
+    $logger = "/bin/logger";
+  }
+  #.conf file handling
+  if ( -f "$configfile" ) {
+    my $state   = AppConfig::State->new();
+    my $config  = AppConfig->new();
+    if ($verbose ) { print "Now defining variables from config file\n"; }
+    $config->define("checksums=s");
+    $config->define("syncfile=s@");
+    $config->define("crondelay=i");
+    $config->define("crontab=s");
+    $config->define("cronmodify!", { DEFAULT => 1 });
+    $config->define("getent!", { DEFAULT => 1 });
+    $config->define("usec3!",  { DEFAULT => 1 });
+    $config->define("scphost=s@");
+    $config->file($configfile);
+    if ( $verbose > 1 ) { 
+      print "Ignore weird lines in the next Setting x to y section\n";
+    }
+    foreach my $var qw(syncfile checksums crondelay 
+                    crontab cronmodify getent usec3 scphost) {
+      #print "$var - _" . $config->get($var) . "_\n";
+      #print "defined? " . defined($config->get($var)) . "\n";
+      if ( defined($config->get($var)) ) {
+        if ( $verbose > 1 ) {
+          print "Setting $var to " . $config->get($var) . "\n";
+        }
+        my $line = '$' . "$var = " . '$config->get($var)';
+        eval "$line;";
+      } 
+    }
+  }
+
+  if ($verbose > 0 ) {
+    print "syncfile     = @$syncfile (" . scalar(@$syncfile) . ")\n";
+    print "checksums    = $checksums\n";
+    print "crondelay    = $crondelay\n";
+    print "crontab      = $crontab\n";
+    print "Verbosity level: $verbose\n";
+    print "crononly     = $crononly\n";
+    print "cronmodify   = $cronmodify\n";
+    print "getent       = $getent\n";
+    print "usec3        = $usec3\n";
+    print "scphost      = @$scphost (" . scalar(@$scphost) . ")\n";
+  }
+}
+
+
+# Simple crontab update routine
+sub cronupdate {
+  if ( $cronmodify != 1 ) { return 1; }
+
+  if ( $crondelay > 0 ) {
+    if ( $crondelay > 59 ) {
+      print "Your cron delay is too big, setting back to 59\n";
+      $crondelay = 59;
+    }
+  }
+  $cronline = "*/$crondelay * * * * root env USER=root /opt/sync_files/bin/sync_files >/dev/null 2>&1";
+  open(CRONTABIN, "$crontab") or die "Couldn't read $crontab! $!\n";
+  @crontabin = <CRONTABIN>;
+  close CRONTABIN;
+  my @newtab;
+  foreach $line (@crontabin) {
+    chomp $line;
+    if ( $line eq $cronline ) { $found = 1; @newtab = @crontabin; return 0; }
+    elsif ( $line =~ /\/opt\/sync_files\/bin\/sync_files/ ) {
+      $line = $cronline;
+      $found = 1;
+    }
+    push @newtab, $line;
+  }
+  if ( $found == 0 ) { push @newtab, $cronline; }
+  if ( $verbose > 1 ) { print join("\n", @newtab) . "\n"; }
+
+  open(CRONTABOUT,">$crontab") or die "Couldn't write $crontab! $!\n";
+  print CRONTABOUT join("\n", @newtab)."\n\n";
+  close CRONTABOUT;
+}
+
+# Generates checksums of files in filestosync
+sub genchksums {
+  if ( $verbose > 0 ) { print "Generating $checksums\n"; }
+  $filelist = join(' ', @$syncfile);
+  !system("/usr/bin/md5sum $filelist > $checksums") or die "ERROR, could not generate $checksums! $!\n";
+}
+
+# Generates files /opt/sync_files/etc/passwd, /opt/sync_files/etc/group and
+# /opt/sync_files/etc/shadow with the getent(1) command. So, if we're
+# using LDAP, NIS or NIS+, all networked users will be able to use
+#  the cluster. Don't forget to set these files in the config file
+sub getentfiles {
+  if ( !-d "/opt/sync_files/tmp/etc" ) { 
+    system("mkdir /opt/sync_files/tmp/etc"); 
+  }
+  our $passwd = "/opt/sync_files/tmp/etc/passwd";
+  our $group = "/opt/sync_files/tmp/etc/group";
+  our $shadow = "/opt/sync_files/tmp/etc/shadow";
+  push (@$syncfile, $passwd);
+  push (@$syncfile,  $group);
+  push (@$syncfile, $shadow);
+
+  # We must sort the output of getent because it doesn't list users
+  # in the same order everytime.
+  my $sort = 'sort -n -k 3 -t:';
+  !system("getent passwd | $sort > $passwd")
+      or die "ERROR occured while creating $passwd : $!";
+  chmod 0644, "$passwd" or die "Couldn't chmod $passwd: $!";
+  !system("getent group  | $sort > $group")
+      or die "ERROR occured while creating $group : $!";
+  chmod 0644, "$group" or die "Couldn't chmod $group: $!";
+  # If you're using pam_ldap, make sure that the current user is
+  # able to read the userPassword attribute.
+  !system("getent shadow | sort > $shadow")
+      or die "ERROR occured while creating $shadow : $!";
+  chmod 0400, "$shadow" or die "Couldn't chmod $shadow: $!";
+}
+
+# Detect whether all hosts targetted by c3 are up and responding
+
+sub c3_hosts_up {
+    my @c3out = `. /etc/profile.d/c3.sh; cexec -p echo ALIVE`;
+    my @alive = grep /ALIVE/,@c3out;
+    if ($verbose) {
+	print "=== c3_hosts_up():\n";
+	print "c3out:\n";
+	print @c3out;
+	print "alive:\n";
+	print @alive;
+    }
+    if (scalar(@c3out) == scalar(@alive)) {
+	return 1;
+    } else {
+	return 0;
+    }
+}
+
+sub distro_detect {
+    my ($type, $target) = @_;
+    my $distro = "unknown";
+    my %dkeys = ( "redhat-release" => "redhat",
+		  "sl-release"     => "redhat",
+		  "tao-release"    => "redhat",
+		  "fedora-release" => "redhat",
+		  "SuSE-release"   => "suse" );
+    # find distro
+    foreach my $k (keys %dkeys) {
+	if ($type eq "dir") {
+	    if (-e "$target/etc/$k") {
+		$distro = $dkeys{$k};
+		last;
+	    }
+	} elsif ($type eq "host") {
+	    if (!system("ssh $target test -e /etc/$k")) {
+		$distro = $dkeys{$k};
+		last;
+	    }
+	}
+    }
+    if ($verbose > 0) {
+	print "distro_detect: $distro\n";
+    }
+    return $distro;
+}
+
+sub basename {
+    my ($s, $c) = @_;
+    $s =~ s:^.*\/::g;
+    if ($c) {
+	$s =~ s:$c$::;
+    }
+    return $s;
+}
+
+# sort group and passwd files by ID
+sub id_sort {
+    int((split(":",$a))[2]) <=> int((split(":",$b))[2]);
+}
+
+# create a filtered version of the file by using the templates
+sub filter_file {
+    my ($src, $distro) = @_;
+    my $mydistro = distro_detect("dir", "/");
+    my $base = basename($src);
+    if ($verbose > 0) {
+	print "filter_file: $src $distro, mydistro=$mydistro\n";
+    }
+    if (!-f "$templates/$mydistro/$base") {
+	print "Could not find template for file $base, distro $mydistro\n";
+	print "If this contains distro-specific lines, please create a template\n";
+	print "in directory $templates\n";
+	return;
+    }
+    #
+    # build filter for the current machine's distribution
+    #
+    my @afilt;
+    open FIN, "$templates/$mydistro/$base";
+    while (<FIN>) {
+	if (/^([^:]+):/) {
+	    push @afilt, $1;
+	}
+    }
+    close FIN;
+    my $filter = join("|",@afilt);
+    if ($verbose > 0) {	print "filter: $filter\n"; }
+    #
+    # filter out own distro specific lines
+    #
+    open FIN, "$src" or die "Could not open file $src";
+    my @fin = grep !/^($filter):/, <FIN>;
+    close FIN;
+
+    # remember permissions of original file
+    my $permission = (stat $src)[2];
+
+    #
+    # append distro-specific lines
+    #
+    if (!-f "$templates/$distro/$base") {
+	print "Could not find template for file $base, distro $distro\n";
+	print "If this contains distro-specific lines, please create a template\n";
+	print "in directory $templates\n";
+	return;
+    }
+    open FIN, "$templates/$distro/$base" or die "Could not open $templates/$distro/$base";
+    while (<FIN>) {
+	push @fin, $_;
+    }
+    close FIN;
+    #
+    # write out distro-specific version
+    #
+    my $tgt = $src . "_" . $distro;
+    open FOUT, "> $tgt" or die "Could not open file $tgt";
+    chmod $permission,$tgt or print "Setting permission to file $tgt failed\n";
+    if (($tgt =~ m/passwd/) || ($tgt =~ m/group/)) {
+	my @fout = sort id_sort @fin;
+	print FOUT @fout;
+    } else {
+	print FOUT @fin;
+    }
+    close FOUT;
+}
+
+
+
+#Main program starts here
+
+getconfig;
+
+if ( $verbose > 0 ) { print `whoami`; }
+
+if ( $getent ) { getentfiles; }
+
+# Make sure files exist before trying to checksum or sync them
+foreach my $file (@$syncfile) {
+  if ( -e "$file" ) {
+    push @filestosync, $file;
+  }
+}
+
+if ( $verbose > 0 ) { print "filestosync equals @filestosync\n"; }
+
+if ( ! -r $checksums ) {
+    if ($verbose > 0) { print "I will create $checksums now.\n"; }
+#  $force = 1;
+    genchksums;
+}
+
+# If some checksum fails, then we have changes
+my @chkout;
+# Force the english output
+open(CMD, "export LC_ALL=C; /usr/bin/md5sum -c $checksums 2>/dev/null | grep FAILED | cut -d : -f 1 |");
+@chkout = <CMD>;
+close CMD;
+
+if ( scalar(@chkout) > 0 ){
+  $change = 1;
+  if ( $verbose > 0 ) { print "There have been changes\n"; }
+}
+
+if ( $verbose > 0 ) { print "chkout is @chkout\n"; }
+
+# Now, if we need to, we sync the appropriate files
+if ( $crononly == 0 && ( $change == 1 || $force == 1 ) ) {
+    my $want_update;
+    my $dstfile;
+    my $success = 1;
+
+# Find all the possible image directories
+    my @distros;
+    my %distroh;
+    foreach my $i (list_image()) {
+	my $iname = $i->name;
+	my $idir = $i->location;
+	if (-d $idir) {
+	    push @images, $iname;
+	    # detect and save also: distro
+	    my $d = distro_detect("dir",$idir);
+	    push @distros, $d;
+	    $distroh{$d} = 1;
+	}
+    }
+    if ( $usec3 ) {
+	my $allup = c3_hosts_up();
+	if ($verbose) { print "c3_hosts_up returned : $allup\n"; }
+	if (!$allup) {
+	    $success = 0;
+	    print "Not all hosts were accessible by c3! Will retry the update later\n";
+	}
+    }
+
+
+    foreach my $file (@filestosync) {
+	$want_update = 0;
+	if ( $force == 1 ) {
+	    $want_update = 1;
+	} else {
+	    foreach my $changed (@chkout) {
+		chomp $changed;
+		if ( $changed eq $file ) {
+		    $want_update = 1;
+		    $change++;
+		}
+	    }
+	} #end if $force
+	if ( $want_update ) {
+	    if ( $verbose > 0 ) { print "Updating $file\n"; }
+	    system("$logger -p syslog.info sync_files found an updated $file and is pushing it to the clients");
+	    if( $file =~ /\/opt\/sync_files\/tmp(.*)/ ) {
+		# Remove the path
+		$file =~ /\/opt\/sync_files\/tmp\/(.*)/;
+		$dstfile = '/' . $1;
+	    } else {
+		$dstfile = $file;
+	    }
+	    
+	    # prepare distro-specific versions of files to be updated
+	    #
+	    foreach my $d (keys %distroh) {
+		filter_file($file, $d);
+	    }
+	    
+	    #C3 is the default transport mechanism, since it tends to perform better
+	    #than scp
+	    if ( $usec3 ) {
+		if ( $verbose > 1 ) { print "Using c3 to sync $file to $dstfile\n"; }
+		
+		# sync files to corresponding image-subcluster
+		
+		for (my $i=0; $i<=$#images; $i++) {
+		    my $img = $images[$i];
+		    my $dist = $distros[$i];
+		    my $src = $file;
+		    if (-f $file."_".$dist) {
+			$src .= "_".$dist;
+		    }
+		    !system("/usr/bin/scpush --image $img --writeimg $src $dstfile") or do {
+			$success = 0;
+			print "Can't push file $src to $dstfile for image $img! $!\n";
+		    }
+		}
+	    }
+	    #scp can be used as an alternative or as a substitute 
+	    if ( scalar(@$scphost) ) {    
+		foreach my $scphn (@$scphost) {
+		    
+		    # - determine distro of host
+		    my $dist = distro_detect("host", $scphn);
+		    
+		    if ( $verbose > 1 ) { 
+			print "Using scp to sync $file to $scphn:$dstfile\n";
+		    }
+		    
+		    # - copy distro-specific file to it
+		    my $src = $file;
+		    if (-f $src."_".$dist) {
+			$src .= "_".$dist;
+		    }
+		    !system("scp $src $scphn:$dstfile") or do {
+			$success = 0;
+			print "Can't scp file $src to $dstfile! $!\n";
+		    }
+		}
+	    }
+	    if ( !$usec3 && !scalar(@$scphost) ) {
+		warn "No transport defined! Only image will be updated.\n";
+	    }
+	} #end if $want_update
+    } #end foreach in @filestosync
+    
+    # If there were changes, we store the new checksums
+    if ( $change >= 1 && $crononly == 0 && $success) {
+	if ($verbose) {
+	    print "Storing new checksums. success=$success, change=$change, crononly=$crononly\n";
+	}
+	genchksums;
+    }
+} #end if !$crononly && ( $change || $force )
+
+if ( $getent ) {
+    push ( my @gefiles, our $passwd, our $group, our $shadow );
+    foreach my $getentfile (@gefiles) {
+	if ( -e "$getentfile" ) {
+	    !system('\rm -f ' . "$getentfile") or warn "Couldn't rm -f $getentfile.\n";
+	}
+    }
+}
+
+cronupdate;
