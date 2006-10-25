@@ -1,17 +1,11 @@
-# Name of package
-%define name sync_files
-
-# Version of package
-%define version 2.3
-
 # Installation Location
 %define install_dir /opt/sync_files
 
 #==============================================================
 
 Summary: OSCARized File Synchronization System
-Name:    %{name}
-Version: %{version}
+Name: sync_files
+Version: 2.4
 Release: 1
 BuildArchitectures: noarch
 Distribution: OSCAR
@@ -79,6 +73,12 @@ mv /etc/crontab.preun /etc/crontab
 #==============================================================
 
 %changelog
+* Tue Oct 25 2006 Erich Focht
+- added filter for image specific templates
+- added options for filter-only
+- moved templates to templates/distro/*
+- added mandriva distro templates
+- version: 2.4-1
 * Wed Dec 14 2005 Erich Focht
 - fixed bug: missing "use" for SIS::DB and SIS::Image
 - version: 2.1-1
