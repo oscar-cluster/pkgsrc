@@ -76,15 +76,15 @@ my @delfiles;
 
 Getopt::Long::Configure("pass_through");
 GetOptions( 
-	    "help"      => \&help,
-            "repo=s"    => \@repos,
-	    "export"    => \$export,
-	    "prepare"   => \$prepare,
-	    "unexport"  => \$unexport,
-	    "listexp"   => \&list_exported,
-	    "installroot=s" => \$installroot,
-	    "verbose|v+"    => \$verbose,
-          );
+        "help"      => \&help,
+        "repo=s"    => \@repos,
+        "export"    => \$export,
+        "prepare"   => \$prepare,
+        "unexport"  => \$unexport,
+        "listexp"   => \&list_exported,
+        "installroot=s" => \$installroot,
+        "verbose|v+"    => \$verbose,
+        );
 
 $verbose = "$ENV{RAPT_VERBOSE}" if ($ENV{RAPT_VERBOSE});
 
@@ -126,7 +126,7 @@ foreach (@repos) {
 for my $repo (@repos) {
     # prepend "file:" to absolute path repos
     if (($repo !~ /^(file|ftp|http)/) && -d $repo && ($repo=~/^\//)) {
-	$repo = "file:".$repo;
+        $repo = "file:".$repo;
     }
 }
 
@@ -147,10 +147,19 @@ $SIG{INT} = \&cleanup;
 if ($installroot) {
     if ((scalar(grep /^install$/, @ARGV) == 1) && &img_needs_bootstrap) {
 
-	# EF: don't know yet how to use a local repository for debootstrap
-	# therefore using default remote repository
-	# Warning: distro codename is detected from local installation...
-	&debootstrap($installroot,&detect_codename);
+        # EF: don't know yet how to use a local repository for debootstrap
+        # therefore using default remote repository
+        # Warning: distro codename is detected from local installation...
+        &debootstrap($installroot,&detect_codename);
+
+        # Debian/Sarge sucks for one point: if we want to be able to install
+        # kernel packages, the /etc/kernel-img.conf file has to be created
+        # manually
+        my $cmd = "echo \"do_initrd = Yes\" > $installroot/etc/kernel-img.conf";
+        print ("Executing: $cmd\n");
+        if (system($cmd)) {
+            print ("Impossible to create file $installroot/etc/kernel-img.conf");
+        }
 
     }
     @repos = &repo_file2http;
@@ -506,21 +515,30 @@ sub debootstrap {
     my $mirror = shift;
 
     if (system("which debootstrap 2>/dev/null")) {
-	print "ERROR: Could not find command debootstrap!\n";
-	exit 1;
+        print "ERROR: Could not find command debootstrap!\n";
+        exit 1;
     }
 
     # create directory if not existing
     if (! -d "$target") {
-	!system("mkdir -p $target")
-	    or croak("Could not make directory $target: $!");
+        !system("mkdir -p $target")
+          or croak("Could not make directory $target: $!");
     }
 
     my $cmd = "debootstrap --verbose $suite $target $mirror";
     print "Executing: $cmd\n" if $verbose;
     if (system($cmd)) {
-	print "Failed to debootstrap, aborting.\n";
-	return 0;
+        print "Failed to debootstrap, aborting.\n";
+        return 0;
+    }
+    # Debian/Sarge sucks for one point: if we want to be able to install
+    # kernel packages, the /etc/kernel-img.conf file has to be created
+    # manually
+    $cmd = "echo \"do_initrd = Yes\" > $target/etc/kernel-img.conf";
+    print ("Executing: $cmd\n");
+    if (system ($cmd)) {
+        print ("Error: cannot create the file $target/etc/kernel-img.conf");
+        return 0;
     }
     return 1;
 }

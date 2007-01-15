@@ -1,20 +1,27 @@
-rapt (1.0-3) unstable; urgency=low
+rapt (1.0-4gv1) UNRELEASED; urgency=low
+
+  * Setup correctly initrd when creating a new image with debootstrap.
+
+ -- Geoffroy Vallee <valleegr@ornl.gov>  Fri, 22 Dec 2006 14:05:08 -0500
+
+rapt (1.0-3) UNRELEASED; urgency=low
 
   * Bugfix for the detection of the architecture for common-debs packages.
 
- -- root <root@localhost.localdomain>  Sun, 16 Jul 2006 12:27:28 -0400
+ -- Geoffroy Vallee <valleegr@ornl.gov>  Sun, 16 Jul 2006 12:27:28 -0400
 
-rapt (1.0-2) unstable; urgency=low
+rapt (1.0-2) UNRELEASED; urgency=low
 
   * Initial Release.
   * Bugfix: codename detection for the local system.
   * Bugfix: creation of repository's metadata for packages no dependent to any
     architecture.
 
- -- gvallee <gvallee@localhost.localdomain>  Sat, 15 Jul 2006 22:43:39 -0400
+ -- Geoffroy Vallee <valleegr@ornl.gov>  Sat, 15 Jul 2006 22:43:39 -0400
 
-rapt (1.0-1) unstable; urgency=low
+rapt (1.0-1) UNRELEASED; urgency=low
+
   * Initial Release.
 
- -- gvallee <gvallee@localhost.localdomain>  Sat, 15 Jul 2006 22:40:43 -0400
+ -- Geoffroy Vallee <valleegr@ornl.gov>  Sat, 15 Jul 2006 22:40:43 -0400
 
