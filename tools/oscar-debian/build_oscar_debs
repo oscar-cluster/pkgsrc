@@ -1,0 +1,92 @@
+#!/usr/bin/perl
+#
+# (C)opyright Oak Ridge National Laboratory 
+#             Geoffroy Vallee <valleegr@ornl.gov>
+#             All rights reserved
+#
+###############################################################################
+# This tool creates Deb packages for OSCAR. 
+# WARNING the current script assumes OSCAR source is within a directory named
+# "oscar", all other names will create a failure
+###############################################################################
+
+use strict;
+use Carp;
+
+my $source_location = shift;
+my $packaging_dir = "/tmp/oscar-debian";
+my $cmd;
+my $verbose = 1;
+
+if ($source_location eq "") {
+    croak ("Impossible to find OSCAR source ($source_location)");
+}
+
+# We clean up some stuff before to install OSCAR
+#my $oscar_version=`cd $source_location; dist/get-oscar-version.sh VERSION`;
+#chomp ($oscar_version);
+#my $oscar_dist_dir = "$source_location/../oscar-$oscar_version";
+#chomp ($oscar_dist_dir);
+#print "Testing if $oscar_dist_dir exists\n" if ($verbose);
+#if (-e $oscar_dist_dir) {
+#    print "The directory already exists, we delete it\n" if ($verbose);
+#    $cmd = "rm -rf $oscar_dist_dir";
+#    print "Executing: $cmd\n" if ($verbose);
+#    if (system ($cmd)) {
+#        croak ("Impossible to delete the directory");
+#    }
+#} else {
+#    print "The directory does not exist\n" if ($verbose);
+#}
+
+# We initialize the packaging environment
+$cmd = "rm -rf " . $packaging_dir . "; mkdir -p $packaging_dir";
+print "Executing: $cmd\n" if ($verbose);
+if (system ($cmd)) {
+    croak ("Impossible to initialized the packaging environment");
+}
+
+# We copy sources for package creation
+print ("We copy sources for package creation\n");
+$cmd = "cp -r $source_location $packaging_dir; " .
+    "rm -rf `find $packaging_dir -name .svn`";
+print "Executing: $cmd\n" if ($verbose);
+if (system ($cmd)) {
+    croak ("Impossible to copy OSCAR sources");
+}
+
+# We copy Debian files for package creation
+print ("We copy Debian files for package creation\n");
+$cmd = "cp -rf debian $packaging_dir/oscar";
+print "Executing: $cmd\n" if ($verbose);
+if (system ($cmd)) {
+    croak ("Impossible to copy Debian files for package creation");
+}
+
+# We install OSCAR in the packaging location
+#$cmd = "cd $source_location; make install DESTDIR=$packaging_dir";
+#print "Executing: $cmd\n" if ($verbose);
+#if (system ($cmd)) {
+#    croak ("Impossible to install OSCAR for package creation");
+#}
+
+# We change the installation directory name in order to have something more
+# usefull
+#$cmd = "mv $packaging_dir/opt/oscar-$oscar_version $packaging_dir/opt/oscar";
+#print "Executing: $cmd\n" if ($verbose);
+#if (system ($cmd)) {
+#    croak ("Impossible to rename the OSCAR directory");
+#}
+
+# We create Debian packages
+$cmd = "cd $packaging_dir/oscar; dpkg-buildpackage -b";
+print "Executing: $cmd\n" if ($verbose);
+if (system ($cmd)) {
+    croak ("Impossible to create Debian packages");
+}
+
+print "Done!\n";
+print "Debian packages are available in $packaging_dir\n";
+
+exit (0);
+

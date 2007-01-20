@@ -1,0 +1,18 @@
+Source: oscar
+Section: misc
+Priority: optional
+Maintainer: Geoffroy Vallee <valleegr@ornl.gov>
+Build-Depends: debhelper (>= 4.0.0), libqt-perl
+Standards-Version: 3.7.2.2
+
+Package: oscar
+Architecture: all
+Depends: perl, libqt-perl
+Description: OSACR (Open Source Cluster Application Resources).
+ OSCAR (Open Source Cluster Application Resources) is a snapshot of the best 
+ known methods for building, programming, and using High Performance Computing
+ (HPC) clusters. It consists of a fully integrated and easy to install software
+ bundle designed for high performance cluster computing. Everything needed to
+ install, build, maintain, program, and use a Linux cluster is included in the
+ suite, making it unnecessary to download or even install any individual software packages on your cluster.
+
