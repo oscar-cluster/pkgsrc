@@ -25,7 +25,7 @@ Description: Meta-package for core OSCAR packages.
 
 Package: oscar-package-sis
 Architecture: all
-Depends: perl, libqt-perl, systemconfigurator (>= 2.2.7), 
+Depends: systemconfigurator (>= 2.2.7), 
     systemimager-bittorrent (>= 3.7.5), systemimager-client (>= 3.7.5),
     systemimager-common (>= 3.7.5), systemimager-doc (>= 3.7.5),
     systemimager-flamethrower (>= 3.7.5), 
@@ -38,6 +38,17 @@ Description: OSCAR package for SIS.
 
 Package: oscar-package-c3
 Architecture: all
-Depends: perl, libqt-perl, python, c3 (>= 4.0)
+Depends: c3 (>= 4.0)
 Description: OSCAR package for C3.
  OSCAR package for C3.
+
+Package: oscar-package-rapt
+Architecture: all
+Depends: rapt
+Description: OSCAR package for RAPT.
+ OSCAR package for RAPT.
+
+Package: oscar-package-oda
+Architecture: all
+Description: OSCAR package for ODA.
+ OSACR package for ODA (OSCAR DAtabase).
