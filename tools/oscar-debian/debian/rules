@@ -63,9 +63,11 @@ install: build
 
 	# The oscar installation procedure sucks, it is very monolithic,
 	# we have to do everything manually
+	
+	# Prepare the "oscar" package
 	mkdir -p $(CURDIR)/debian/oscar/opt/oscar
-	rm -f `find $(CURDIR)/debian/oscar-tmp/ -name "*deb"`
-	rm -f `find $(CURDIR)/debian/oscar-tmp/ -name "*rpm"`
+	rm -f `find $(CURDIR)/debian/oscar-tmp/ -name "*.deb"`
+	rm -f `find $(CURDIR)/debian/oscar-tmp/ -name "*.rpm"`
 	mv $(CURDIR)/debian/oscar-tmp/opt/oscar-*/install_cluster \
 		$(CURDIR)/debian/oscar/opt/oscar
 	mv $(CURDIR)/debian/oscar-tmp/opt/oscar-*/COPYING \
@@ -88,6 +90,11 @@ install: build
 		$(CURDIR)/debian/oscar/opt/oscar
 	mv $(CURDIR)/debian/oscar-tmp/opt/oscar-*/src \
 		$(CURDIR)/debian/oscar/opt/oscar
+
+	# Prepare the "oscar-package-sis" package
+	mkdir -p $(CURDIR)/debian/oscar-package-sis/opt/oscar/packages
+	mv $(CURDIR)/debian/oscar-tmp/opt/oscar-*/packages/sis \
+		$(CURDIR)/debian/oscar-package-sis/opt/oscar/packages
 
 # Build architecture-independent files here.
 binary-indep: build install

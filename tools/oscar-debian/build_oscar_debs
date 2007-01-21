@@ -7,7 +7,8 @@
 ###############################################################################
 # This tool creates Deb packages for OSCAR. 
 # WARNING the current script assumes OSCAR source is within a directory named
-# "oscar", all other names will create a failure
+# "oscar", all other names will create a failure. In the future we may want to
+# use a tarball
 ###############################################################################
 
 use strict;
