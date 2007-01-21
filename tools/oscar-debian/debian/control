@@ -7,7 +7,7 @@ Standards-Version: 3.7.2.2
 
 Package: oscar
 Architecture: all
-Depends: perl, libqt-perl
+Depends: perl, libqt-perl, oscar-packages-core
 Description: OSCAR (Open Source Cluster Application Resources).
  OSCAR (Open Source Cluster Application Resources) is a snapshot of the best 
  known methods for building, programming, and using High Performance Computing
@@ -16,6 +16,12 @@ Description: OSCAR (Open Source Cluster Application Resources).
  install, build, maintain, program, and use a Linux cluster is included in the
  suite, making it unnecessary to download or even install any individual 
  software packages on your cluster.
+
+Package: oscar-packages-core
+Architecture: all
+Depends: oscar-package-sis, oscar-package-c3
+Description: Meta-package for core OSCAR packages.
+ Meta-package for core OSCAR packages.
 
 Package: oscar-package-sis
 Architecture: all

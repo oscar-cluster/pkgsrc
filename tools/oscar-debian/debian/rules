@@ -100,6 +100,11 @@ install: build
 	mkdir -p $(CURDIR)/debian/oscar-package-c3/opt/oscar/packages
 	mv $(CURDIR)/debian/oscar-tmp/opt/oscar-*/packages/c3 \
 		$(CURDIR)/debian/oscar-package-c3/opt/oscar/packages
+	
+	# Prepare the "oscar-packages-core" package. Note that this package is
+	# there only to simplify the management of dependencies, it does not
+	# contain any files
+	mkdir -p $(CURDIR)/debian/oscar-packages-core
 
 # Build architecture-independent files here.
 binary-indep: build install
