@@ -91,6 +91,11 @@ install: build
 	mv $(CURDIR)/debian/oscar-tmp/opt/oscar-*/src \
 		$(CURDIR)/debian/oscar/opt/oscar
 
+	# Prepare the "oscar-package-base" package
+	mkdir -p $(CURDIR)/debian/oscar-package-base/opt/oscar/packages
+	mv $(CURDIR)/debian/oscar-tmp/opt/oscar-*/packages/base \
+		$(CURDIR)/debian/oscar-package-base/opt/oscar/packages
+
 	# Prepare the "oscar-package-sis" package
 	mkdir -p $(CURDIR)/debian/oscar-package-sis/opt/oscar/packages
 	mv $(CURDIR)/debian/oscar-tmp/opt/oscar-*/packages/sis \

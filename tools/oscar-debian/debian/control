@@ -19,7 +19,8 @@ Description: OSCAR (Open Source Cluster Application Resources).
 
 Package: oscar-packages-core
 Architecture: all
-Depends: oscar-package-sis, oscar-package-c3
+Depends: oscar-package-sis, oscar-package-c3, oscar-package-rapt, 
+    oscar-package-oda, oscar-package-base
 Description: Meta-package for core OSCAR packages.
  Meta-package for core OSCAR packages.
 
@@ -51,4 +52,9 @@ Description: OSCAR package for RAPT.
 Package: oscar-package-oda
 Architecture: all
 Description: OSCAR package for ODA.
- OSACR package for ODA (OSCAR DAtabase).
+ OSCAR package for ODA (OSCAR DAtabase).
+
+Package: oscar-package-base
+Architecture: all
+Description: OSCAR package for base
+ OSCAR package for base.
