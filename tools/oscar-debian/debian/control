@@ -27,5 +27,11 @@ Depends: perl, libqt-perl, systemconfigurator (>= 2.2.7),
     systemimager-i386initrd-template (>= 3.7.5),
     systemimager-server (>= 3.7.5), systeminstaller-oscar (>= 2.3.1),
     systeminstaller-oscar-x11 (>= 2.3.1)
-Description: OSCAR (Open Source Cluster Application Resources).
+Description: OSCAR package for SIS.
  OSCAR package for the SIS suite.
+
+Package: oscar-package-c3
+Architecture: all
+Depends: perl, libqt-perl, python, c3 (>= 4.0)
+Description: OSCAR package for C3.
+ OSCAR package for C3.
