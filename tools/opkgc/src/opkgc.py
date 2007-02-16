@@ -26,6 +26,9 @@ import sys
 import getopt
 from OpkgcCompiler import *
 
+# should be in a config file
+template_dir = '../templates'
+
 def usage():
     """ Print command usage
     """
@@ -82,7 +85,7 @@ def main():
         targets.append( CompilerRpm( output ) )
 
     for target in targets[:]:
-        target.compile( config_file )
+        target.compile( config_file, template_dir )
         if build:
             target.build()
     

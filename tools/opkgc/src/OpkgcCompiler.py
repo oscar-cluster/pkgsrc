@@ -16,7 +16,18 @@ class Compiler:
     """ Generic class for compiling config.xml
     """
 
-    __template_dir = '../xslt-doc/'
+    __template_dir = ''
+    __dest_dir = ''
+
+    def __init__(self, dest_dir, template_dir):
+        self.__dest_dir = dest_dir
+        self.__template_dir = template_dir
+
+    def getDestDir(self):
+        return self.__dest_dir
+
+    def getTemplateDir(self):
+        return self.__template_dir
 
     def transform(self, template, orig, dest):
         """ Transform 'orig' to 'dest' with template 'template'
@@ -24,7 +35,7 @@ class Compiler:
         'template' is a XSLT file
         """
         print "Generate '" + dest + "' with template '" + template + "'"
-        xslt_transformator = XSLT_transform (orig, self.__template_dir + template, dest)
+        xslt_transformator = XSLT_transform (orig, self.getTemplateDir() + template, dest)
 
     def compile(self, file):
         """ Abstract method to generate packaging files
@@ -37,18 +48,14 @@ class Compiler:
         raise NotImplementedError
 
 class CompilerRpm(Compiler):
-    """ Implement Dist for RPM packaging
+    """ Extend Compiler for RPM packaging
     """
 
     __template = 'opkg-core-spec.xsl'
     __dest = 'test.spec'
-    __dest_dir = ''
-
-    def __init__(self, dest_dir):
-        self.__dest_dir = dest_dir
 
     def compile(self, file):
-        self.transform(self.__template, file, self.__dest_dir + "/" + self.__dest)
+        self.transform(self.__template, file, self.getDestDir() + "/" + self.__dest)
 
     def build(self):
         print "Not yet implemented"
