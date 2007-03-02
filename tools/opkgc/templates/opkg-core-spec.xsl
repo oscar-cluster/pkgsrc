@@ -27,6 +27,11 @@ Packager:       <xsl:value-of select="packager/name"/> <xsl:value-of select="pac
 License:        <xsl:value-of select="license"/>
 Group:          <xsl:value-of select="group"/>
 BuildArch:      noarch
+<xsl:for-each select="binary-package-list"><xsl:if test="not(filter/group)">
+<xsl:for-each select="pkg">Requires:       <xsl:value-of select="."/><xsl:text>
+</xsl:text>
+</xsl:for-each>
+</xsl:if></xsl:for-each>
 
 %package server
 Summary:        <xsl:value-of select="summary"/>, server part
@@ -35,6 +40,13 @@ Distribution:   OSCAR
 Packager:       <xsl:value-of select="packager/name"/> <xsl:value-of select="packager/email"/>
 License:        <xsl:value-of select="license"/>
 Group:          <xsl:value-of select="group"/>
+<xsl:for-each select="binary-package-list">
+<xsl:choose>
+<xsl:when test="filter/group = 'oscar_server'">
+Requires:       <xsl:value-of select="pkg"/>
+</xsl:when>
+</xsl:choose>
+</xsl:for-each>
 BuildArch:      noarch
 
 %package client
@@ -44,6 +56,13 @@ Distribution:   OSCAR
 Packager:       <xsl:value-of select="packager/name"/> <xsl:value-of select="packager/email"/>
 License:        <xsl:value-of select="license"/>
 Group:          <xsl:value-of select="group"/>
+<xsl:for-each select="binary-package-list">
+<xsl:choose>
+<xsl:when test="filter/group = 'oscar_clients'">
+Requires:       <xsl:value-of select="pkg"/>
+</xsl:when>
+</xsl:choose>
+</xsl:for-each>
 BuildArch:      noarch
 
 %description
