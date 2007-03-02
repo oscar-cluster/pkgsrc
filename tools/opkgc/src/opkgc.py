@@ -27,7 +27,7 @@ import getopt
 from OpkgcCompiler import *
 
 # should be in a config file
-template_dir = '../templates'
+template_dir = '../templates/'
 
 def usage():
     """ Print command usage
@@ -68,7 +68,7 @@ def main():
             output = a
 
     # Other options checking
-    if (not debian) and (not rpm):
+    if (not debian) and (not rpm) or (len(args) == 0):
         usage()
         sys.exit(2)
 
@@ -82,10 +82,10 @@ def main():
 #    if debian:
 #        targets.append( CompilerDebian() )
     if rpm:
-        targets.append( CompilerRpm( output ) )
+        targets.append( CompilerRpm( output, template_dir ) )
 
     for target in targets[:]:
-        target.compile( config_file, template_dir )
+        target.compile( config_file )
         if build:
             target.build()
     
