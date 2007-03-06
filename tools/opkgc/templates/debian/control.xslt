@@ -4,12 +4,15 @@
 <xsl:output method ="text" encoding="us-ascii" />
 
 <xsl:template name="depends" >
-  <xsl:param name="group" select="oscar_api" />
+  <xsl:param name="group" />
   
   <xsl:for-each select="binary-package-list/pkg">
     <xsl:if test="../filter/distribution/name = 'debian' or not(../filter/distribution)" >
       <xsl:choose>
 	<xsl:when test="../filter/group = $group" >
+	  <xsl:value-of select="." />
+	</xsl:when>
+	<xsl:when test="$group = 'oscar_api' and not(../filter/group)" >
 	  <xsl:value-of select="." /><xsl:text>, </xsl:text> 
 	</xsl:when>
       </xsl:choose>
@@ -38,7 +41,7 @@ Standards-Version: 3.7.2
 
 Package: opkg-api-<xsl:value-of select="$namelc"/>
 Architecture: all
-Depends: <xsl:call-template name="depends" />
+Depends: <xsl:call-template name="depends" ><xsl:with-param name="group" >oscar_api</xsl:with-param></xsl:call-template>
 Description: <xsl:value-of select="summary"/>, API part
 
 Package: opkg-server-<xsl:value-of select="$namelc"/>
