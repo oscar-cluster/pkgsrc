@@ -103,5 +103,6 @@ class CompilerDebian(Compiler):
         """
         ret = []
         for p in os.listdir(os.path.join(self.getTemplateDir(), self.__deb_dir)):
-            ret.append(os.path.join(self.getTemplateDir(), self.__deb_dir, p))
+            if not re.search("\.svn", p):
+                ret.append(os.path.join(self.getTemplateDir(), self.__deb_dir, p))
         return ret
