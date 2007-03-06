@@ -37,7 +37,7 @@ class Compiler:
         
         'template' is a XSLT file
         """
-        xslt_transformator = XSLT_transform (orig, self.getTemplateDir() + template, dest)
+        xslt_transformator = XSLT_transform (orig, os.path.join (self.getTemplateDir(), template), dest)
 
     def rmDir(self, d):
         """ Remove recursively a directory, even if not empty, like rm -r

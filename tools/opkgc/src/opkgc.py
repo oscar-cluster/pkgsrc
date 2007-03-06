@@ -27,7 +27,7 @@ import getopt
 from OpkgcCompiler import *
 
 # should be in a config file
-template_dir = '../templates/'
+template_dir = '../templates'
 
 def usage():
     """ Print command usage
