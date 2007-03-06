@@ -79,8 +79,8 @@ def main():
 
     targets = []
     print "Source file: " + config_file
-#    if debian:
-#        targets.append( CompilerDebian() )
+    if debian:
+        targets.append( CompilerDebian( output, template_dir ) )
     if rpm:
         targets.append( CompilerRpm( output, template_dir ) )
 
@@ -88,6 +88,6 @@ def main():
         target.compile( config_file )
         if build:
             target.build()
-    
+
 if __name__ == "__main__":
     main()
