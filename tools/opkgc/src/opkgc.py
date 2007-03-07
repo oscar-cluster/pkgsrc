@@ -40,7 +40,7 @@ def usage():
 
 def main():
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "hdrbo:p", ["help", "deb", "rpm", "build", "output="])
+        opts, args = getopt.getopt(sys.argv[1:], "hdrbo:", ["help", "deb", "rpm", "build", "output="])
     except getopt.GetoptError:
         # Print help information
         usage()
