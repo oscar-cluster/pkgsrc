@@ -25,23 +25,22 @@
 import sys
 import getopt
 from OpkgcCompiler import *
-
-# should be in a config file
-template_dir = '../templates'
+from OpkgcConfig import *
 
 def usage():
     """ Print command usage
     """
     print "Usage: " + sys.argv[0] + " [-h] [--build] [--output=dir] --deb --rpm config.xml"
     print ""
+    print "\t--build  : build packages"
+    print ""
     print "\tAt least, one of these option must be enabled:"
     print "\t--deb    : output Debian packaging files"
     print "\t--rpm    : output RPM packaging files"
-    print "\t--build  : build packages"
 
 def main():
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "hdrbo:", ["help", "deb", "rpm", "build", "output="])
+        opts, args = getopt.getopt(sys.argv[1:], "hdrbo:p", ["help", "deb", "rpm", "build", "output="])
     except getopt.GetoptError:
         # Print help information
         usage()
@@ -53,6 +52,7 @@ def main():
     build = False
     output = "."
     config_file = ""
+    validate = True
     
     for o, a in opts:
         if o in ("-h", "--help"):
@@ -80,9 +80,9 @@ def main():
     targets = []
     print "Source file: " + config_file
     if debian:
-        targets.append( CompilerDebian( output, template_dir ) )
+        targets.append( CompilerDebian( output, validate ) )
     if rpm:
-        targets.append( CompilerRpm( output, template_dir ) )
+        targets.append( CompilerRpm( output, validate ) )
 
     for target in targets[:]:
         target.compile( config_file )

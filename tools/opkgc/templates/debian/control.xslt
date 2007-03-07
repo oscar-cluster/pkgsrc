@@ -10,15 +10,21 @@
     <xsl:if test="../filter/distribution/name = 'debian' or not(../filter/distribution)" >
       <xsl:choose>
 	<xsl:when test="../filter/group = $group" >
-	  <xsl:value-of select="." />
+	  <xsl:call-template name="addpkg" />
 	</xsl:when>
 	<xsl:when test="$group = 'oscar_api' and not(../filter/group)" >
-	  <xsl:value-of select="." /><xsl:text>, </xsl:text> 
+	  <xsl:call-template name="addpkg" />
 	</xsl:when>
       </xsl:choose>
     </xsl:if>
   </xsl:for-each>
+</xsl:template>
 
+<xsl:template name="addpkg" >
+  <xsl:value-of select="." />
+  <xsl:if test="position() != last()" >
+    <xsl:text>, </xsl:text>
+  </xsl:if>  
 </xsl:template>
 
 <xsl:template match="/">

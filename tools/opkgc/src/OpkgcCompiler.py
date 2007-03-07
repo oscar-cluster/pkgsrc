@@ -11,33 +11,41 @@ import os
 import re
 import shutil
 import exceptions
-from OpkgcXslt import *
+from OpkgcXml import *
+from OpkgcConfig import *
 
 __all__ = ['Compiler', 'CompilerRpm', 'CompilerDebian']
 
 class Compiler:
     """ Generic class for compiling config.xml
     """
+    __config = None
 
-    __template_dir = ''
+    __xml_tool = None
     __dest_dir = ''
+    __validate = True
 
-    def __init__(self, dest_dir, template_dir):
+    def __init__(self, dest_dir, validate):
         self.__dest_dir = dest_dir
-        self.__template_dir = template_dir
+        self.__xml_tool = XmlTools()
+        self.__validate = validate
 
     def getDestDir(self):
         return self.__dest_dir
 
-    def getTemplateDir(self):
-        return self.__template_dir
+    def xmlInit(self, orig):
+        self.__xml_tool.init (orig)
 
-    def xsltTransform(self, template, orig, dest):
+    def xmlValidate(self):
+        if self.__validate:
+            self.__xml_tool.validate()
+
+    def xmlCompile(self, template, dest):
         """ Transform 'orig' to 'dest' with XSLT template 'template'
         
         'template' is a XSLT file
         """
-        xslt_transformator = XSLT_transform (orig, os.path.join (self.getTemplateDir(), template), dest)
+        self.__xml_tool.transform (os.path.join (Config().getValue("templateDir"), template), dest)
 
     def rmDir(self, d):
         """ Remove recursively a directory, even if not empty, like rm -r
@@ -67,7 +75,9 @@ class CompilerRpm(Compiler):
     __dest = 'test.spec'
 
     def compile(self, file):
-        self.xsltTransform(self.__template, file, os.path.join(self.getDestDir(), self.__dest))
+        self.xmlInit (file)
+        self.xmlValidate ()
+        self.xmlCompile(self.__template, os.path.join(self.getDestDir(), self.__dest))
 
     def build(self):
         print "Not yet implemented"
@@ -82,6 +92,9 @@ class CompilerDebian(Compiler):
     def compile(self, file):
         """ Creates debian package files
         """
+        self.xmlInit (file)
+        self.xmlValidate ()
+
         debiandir = os.path.join(self.getDestDir(), self.__pkg_dir, 'debian')
         if (os.path.exists(debiandir)):
             self.rmDir(debiandir)
@@ -91,7 +104,7 @@ class CompilerDebian(Compiler):
             if re.search("\.xslt", template):
                 (head, tail) = os.path.split(template)
                 (base, ext) = os.path.splitext(tail)
-                self.xsltTransform(template, file, os.path.join(debiandir, base))
+                self.xmlCompile(template, os.path.join(debiandir, base))
             else:
                 shutil.copy(template, debiandir)
 
@@ -102,7 +115,7 @@ class CompilerDebian(Compiler):
         """ Return list of files in Debian templates dir
         """
         ret = []
-        for p in os.listdir(os.path.join(self.getTemplateDir(), self.__deb_dir)):
+        for p in os.listdir(os.path.join(Config().getValue("templateDir"), self.__deb_dir)):
             if not re.search("\.svn", p):
-                ret.append(os.path.join(self.getTemplateDir(), self.__deb_dir, p))
+                ret.append(os.path.join(Config().getValue("templateDir"), self.__deb_dir, p))
         return ret
