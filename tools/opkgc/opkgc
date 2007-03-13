@@ -24,7 +24,7 @@
 
 import sys
 import getopt
-from Opkgc import *
+from Opkgc.OpkgcCompiler import *
 
 def usage():
     """ Print command usage

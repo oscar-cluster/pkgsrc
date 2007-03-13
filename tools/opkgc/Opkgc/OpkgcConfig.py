@@ -11,8 +11,8 @@ __all__ = ['Config']
 class Config:
     __instance = None
 
-    __datas = {"templateDir":"../templates",
-               "xsdPath":"../doc/opkg.xsd"}
+    __datas = {"templateDir":"templates",
+               "xsdPath":"doc/opkg.xsd"}
 
     def __new__ (cls):
         if cls.__instance is None:
