@@ -111,4 +111,21 @@
       <pkg rel="&gt;" version="0.1" >lsnipes</pkg>
     </requires><!-- optional -->
   </apiDeps><!-- optional -->
+
+  <changelog>
+    <versionEntry version="2.3.6-5" >
+      <changelogEntry authorName="John Foo Jr." date="2006-10-29T13:20:00.000+01:00" >
+	- Update from upstream
+	- Add a little blue
+      </changelogEntry>
+      <changelogEntry authorName="John Foo" date="2006-10-28T12:54:00" closes="452 1247" >
+	- Fix this bug
+      </changelogEntry>
+    </versionEntry>
+    <versionEntry version="2.3.6-1" >
+      <changelogEntry authorName="Laurent Michel" date="2005-01-01T04:20:00-05:00" >
+	- Blurp
+      </changelogEntry>
+    </versionEntry>
+  </changelog>
 </oscar>

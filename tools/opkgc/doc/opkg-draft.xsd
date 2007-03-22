@@ -72,6 +72,9 @@
       <xsd:element ref="serverDeps" minOccurs="0" maxOccurs="1" />
       <xsd:element ref="clientDeps" minOccurs="0" maxOccurs="1" />
       <xsd:element ref="apiDeps" minOccurs="0" maxOccurs="1" />
+
+      <!-- Changelog -->
+      <xsd:element ref="changelog" minOccurs="1" maxOccurs="1" />
     </xsd:sequence>
   </xsd:complexType>
 
@@ -270,4 +273,39 @@
       <xsd:enumeration value="x86_64" />
     </xsd:restriction>
   </xsd:simpleType>
+
+  <!-- Changelog -->
+  <xsd:element name="changelog" >
+    <xsd:complexType>
+      <xsd:sequence>
+	<xsd:element name="versionEntry" minOccurs="1" maxOccurs="unbounded" >
+	  <xsd:complexType>
+	    <xsd:sequence>
+	      <xsd:element name="changelogEntry" minOccurs="1" maxOccurs="unbounded" />
+	    </xsd:sequence>
+	    <xsd:attribute name="version" type="xsd:string" use="required" />
+	  </xsd:complexType>
+	</xsd:element>
+      </xsd:sequence>
+    </xsd:complexType>
+  </xsd:element>
+
+  <xsd:element name="changelogEntry" type="changelogEntryType" />
+  <xsd:complexType name="changelogEntryType" >
+    <xsd:simpleContent>
+      <xsd:extension base="xsd:string" >
+	<xsd:attribute name="authorName" type="xsd:string" use="required" />
+	<!-- 
+	     See format here:
+	     http://www.w3.org/TR/2004/REC-xmlschema-2-20041028/datatypes.html#dateTime 
+	-->
+	<xsd:attribute name="date" type="xsd:dateTime" use="required" />
+	<xsd:attribute name="closes" use="required" >
+	  <xsd:simpleType>
+	    <xsd:list itemType="xsd:positiveInteger" />
+	  </xsd:simpleType>
+	</xsd:attribute>
+      </xsd:extension>
+    </xsd:simpleContent>
+  </xsd:complexType>
 </xsd:schema>
