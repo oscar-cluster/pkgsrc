@@ -67,19 +67,24 @@ class Compiler:
         """
         raise NotImplementedError
 
+    def getPackageName(self):
+        return self.xml_tool.getXmlDoc().find('/name').text.lower()
+
 class CompilerRpm(Compiler):
     """ Extend Compiler for RPM packaging
     """
 
     template = 'opkg-core-spec.xsl'
-    dest = 'test.spec'
 
     def compile(self, file):
         self.xmlInit (file)
         self.xmlValidate ()
+
+        dest = 'opkg' + '-' + self.getPackageName() + '.spec'
+
         self.xmlCompile(
             os.path.join(Config().getValue("templateDir"), self.template),
-            os.path.join(self.getDestDir(), self.dest))
+            os.path.join(self.getDestDir(), dest))
 
     def build(self):
         print "Not yet implemented"
@@ -89,7 +94,6 @@ class CompilerDebian(Compiler):
     """
 
     debDir = 'debian'
-    pkgDir = 'opkg'
 
     def compile(self, file):
         """ Creates debian package files
@@ -97,8 +101,7 @@ class CompilerDebian(Compiler):
         self.xmlInit (file)
         self.xmlValidate ()
 
-        pkgName = self.xml_tool.getXmlDoc().find('/name').text.lower()
-        pkgDir = self.pkgDir+'-'+pkgName
+        pkgDir = 'opkg' + '-' + self.getPackageName()
 
         debiandir = os.path.join(self.getDestDir(), pkgDir, 'debian')
         if (os.path.exists(debiandir)):
