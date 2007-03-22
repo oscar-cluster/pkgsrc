@@ -6,17 +6,8 @@
 <xsl:template name="depends" >
   <xsl:param name="group" />
   
-  <xsl:for-each select="binary-package-list/pkg">
-    <xsl:if test="../filter/distribution/name = 'debian' or not(../filter/distribution)" >
-      <xsl:choose>
-	<xsl:when test="../filter/group = $group" >
-	  <xsl:call-template name="addpkg" />
-	</xsl:when>
-	<xsl:when test="$group = 'oscar_api' and not(../filter/group)" >
-	  <xsl:call-template name="addpkg" />
-	</xsl:when>
-      </xsl:choose>
-    </xsl:if>
+  <xsl:for-each select="binary-package-list/pkg[(../filter/distribution/name = 'debian' or not(../filter/distribution)) and (../filter/group = $group or (not(../filter/group) and $group = 'oscar_api'))]">
+    <xsl:call-template name="addpkg" />
   </xsl:for-each>
 </xsl:template>
 

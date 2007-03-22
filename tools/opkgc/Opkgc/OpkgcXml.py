@@ -52,3 +52,5 @@ class XmlTools:
         xml_file.close()
         return xml_doc
 
+    def getXmlDoc(self):
+        return self.__xml_doc
