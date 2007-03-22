@@ -87,13 +87,17 @@ class CompilerRpm(Compiler):
             os.path.join(self.getDestDir(), dest))
 
     def build(self):
-        print "Not yet implemented"
+        rpmCmd = 'rpmbuild'
+        rpmOpts = ''
+
+        ret = os.system(rpmCmd + ' ' + rpmOpts)
 
 class CompilerDebian(Compiler):
     """ Extend Compiler for Debian packaging
     """
 
     debDir = 'debian'
+    pkgDir = ''
 
     def compile(self, file):
         """ Creates debian package files
@@ -101,9 +105,9 @@ class CompilerDebian(Compiler):
         self.xmlInit (file)
         self.xmlValidate ()
 
-        pkgDir = 'opkg' + '-' + self.getPackageName()
+        self.pkgDir = 'opkg' + '-' + self.getPackageName()
 
-        debiandir = os.path.join(self.getDestDir(), pkgDir, 'debian')
+        debiandir = os.path.join(self.getDestDir(), self.pkgDir, 'debian')
         if (os.path.exists(debiandir)):
             self.rmDir(debiandir)
         os.makedirs(debiandir)
@@ -117,7 +121,11 @@ class CompilerDebian(Compiler):
                 shutil.copy(template, debiandir)
 
     def build(self):
-        print "Not yet implemented"
+        cdCmd = 'cd ' + self.pkgDir
+        dpkgCmd = 'dpkg-buildpackage'
+        dpkgOpts = '-rfakeroot'
+
+        ret = os.system(cdCmd + ';' + dpkgCmd + ' ' + dpkgOpts)
 
     def getTemplates(self):
         """ Return list of files in Debian templates dir
