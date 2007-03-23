@@ -1,6 +1,8 @@
 ###################################################################
 # Copyright (c) 2007 Oak Ridge National Laboratory,
 #                    Geoffroy Vallee <valleegr@ornl.gov>
+#                    All rights reserved
+# Copyright (c) 2007 IRISA-INRIA
 #                    Jean Parpaillon <jean.parpaillon@irisa.fr>
 #                    All rights reserved
 # For license information, see the COPYING file in the top level
