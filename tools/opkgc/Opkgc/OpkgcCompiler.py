@@ -74,8 +74,6 @@ class CompilerRpm(Compiler):
     """ Extend Compiler for RPM packaging
     """
 
-    template = 'opkg-core-spec.xsl'
-
     def compile(self, file):
         self.xmlInit (file)
         self.xmlValidate ()
@@ -83,12 +81,12 @@ class CompilerRpm(Compiler):
         dest = 'opkg' + '-' + self.getPackageName() + '.spec'
 
         self.xmlCompile(
-            os.path.join(Config().getValue("templateDir"), self.template),
+            Config().get("RPM", "templatefile"),
             os.path.join(self.getDestDir(), dest))
 
     def build(self):
-        rpmCmd = 'rpmbuild'
-        rpmOpts = ''
+        rpmCmd = Config().get("RPM", "buildcmd")
+        rpmOpts = Config().get("RPM", "buildopts")
 
         ret = os.system(rpmCmd + ' ' + rpmOpts)
 
@@ -122,8 +120,8 @@ class CompilerDebian(Compiler):
 
     def build(self):
         cdCmd = 'cd ' + self.pkgDir
-        dpkgCmd = 'dpkg-buildpackage'
-        dpkgOpts = '-rfakeroot'
+        dpkgCmd = Config().get("DEBIAN", "buildcmd")
+        dpkgOpts = Config().get("DEBIAN", "buildopts")
 
         ret = os.system(cdCmd + ';' + dpkgCmd + ' ' + dpkgOpts)
 
@@ -131,7 +129,7 @@ class CompilerDebian(Compiler):
         """ Return list of files in Debian templates dir
         """
         ret = []
-        for p in os.listdir(os.path.join(Config().getValue("templateDir"), self.debDir)):
+        for p in os.listdir(Config().get("DEBIAN", "templatedir")):
             if not re.search("\.svn", p):
-                ret.append(os.path.join(Config().getValue("templateDir"), self.debDir, p))
+                ret.append(os.path.join(Config().get("DEBIAN", "templatedir"), p))
         return ret

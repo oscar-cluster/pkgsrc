@@ -25,6 +25,7 @@
 import sys
 import getopt
 from Opkgc.OpkgcCompiler import *
+from Opkgc.OpkgcConfig import *
 
 def usage():
     """ Print command usage
@@ -44,6 +45,9 @@ def main():
         # Print help information
         usage()
         sys.exit(2)
+
+    # Initialize config file. Here just to detect early lack of config file
+    Config()
 
     # Default values
     debian = False

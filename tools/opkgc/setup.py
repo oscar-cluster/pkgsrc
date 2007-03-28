@@ -37,5 +37,6 @@ set of RPM or Debian packages.""",
                       'templates/debian/copyright',
                       'templates/debian/rules',
                       'templates/opkg-core-spec.xsl']),
-                    ('share/opkgc/tmpl', ['templates/opkg-core-spec.xsl'])]
+                    ('share/opkgc/tmpl', ['templates/opkg-core-spec.xsl']),
+                    ('/etc', ['conf/opkgc.conf'])]
      )

@@ -6,18 +6,29 @@
 # directory of the source
 ###################################################################
 
+import ConfigParser, os
+
 __all__ = ['Config']
 
 class Config:
     __instance = None
 
-    __datas = {"templateDir":"templates",
-               "xsdPath":"doc/opkg.xsd"}
+    config = None
+    configFile = ["./opkgc.conf", "~/.opkgc", "/etc/opkgc.conf"]
+    __defaults = {"templateDir":"templates",
+                  "xsdPath":"doc/opkg.xsd"}
 
     def __new__ (cls):
         if cls.__instance is None:
             cls._instance = object.__new__(cls)
         return cls._instance
-    
-    def getValue (self, var):
-        return self.__datas[var]
+
+    def __init__(self):
+        self.config = ConfigParser.ConfigParser()
+        success = self.config.read(['/etc/opkgc.conf', os.path.expanduser('~/.opkgc'), './opkgc.conf'])
+        if len(success) == 0:
+            print "No configuration file found (in /etc/opkgc.conf, ~/.opkgc or ./opkgc.conf)"
+            raise SystemExit
+        
+    def get (self, section, option):
+        return self.config.get(section, option)

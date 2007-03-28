@@ -25,7 +25,7 @@ class XmlTools:
     
     def init (self, xml_file):
         self.__xml_doc = self.parseXml(xml_file)
-        self.__xmlschema_doc = self.parseXml(Config().getValue("xsdPath"))
+        self.__xmlschema_doc = self.parseXml(Config().get("GENERAL", "xsdfile"))
 
     def transform (self, xsl_file, output_file):
         # we parse then the XSLT file
@@ -44,7 +44,7 @@ class XmlTools:
     def validate (self):
         xmlschema = etree.XMLSchema(self.__xmlschema_doc)
         if not xmlschema.validate(self.__xml_doc):
-            print "Input file invalid. Check against XML schema " + Config().getValue("xsdPath")
+            print "Input file invalid. Check against XML schema " + Config().get("GENERAL", "xsdfile")
             raise SystemExit
 
     def parseXml (self, file):
