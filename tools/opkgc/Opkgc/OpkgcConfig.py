@@ -15,8 +15,6 @@ class Config:
 
     config = None
     configFile = ["./opkgc.conf", "~/.opkgc", "/etc/opkgc.conf"]
-    __defaults = {"templateDir":"templates",
-                  "xsdPath":"doc/opkg.xsd"}
 
     def __new__ (cls):
         if cls.__instance is None:

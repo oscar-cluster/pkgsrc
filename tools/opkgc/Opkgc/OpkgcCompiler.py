@@ -13,6 +13,8 @@ import shutil
 import exceptions
 from OpkgcXml import *
 from OpkgcConfig import *
+from OpkgDescription import *
+from Cheetah.Template import Template
 
 __all__ = ['Compiler', 'CompilerRpm', 'CompilerDebian']
 
@@ -40,12 +42,25 @@ class Compiler:
         if self.validate:
             self.xml_tool.validate()
 
+    def getXmlDoc(self):
+        return self.xml_tool.getXmlDoc()
+
     def xmlCompile(self, template, dest):
         """ Transform 'orig' to 'dest' with XSLT template 'template'
         
         'template' is a XSLT file
         """
         self.xml_tool.transform (template, dest)
+
+    def cheetahCompile(self, orig, template, dest):
+        """ Transform 'orig' to 'dest' with Cheetah template 'template'
+        
+        'template' is a XSLT file
+        """
+        t = Template(file=template, searchList=[orig])
+        f = open(dest, 'w')
+        f.write(t.respond())
+        f.close()
 
     def rmDir(self, d):
         """ Remove recursively a directory, even if not empty, like rm -r
@@ -94,7 +109,6 @@ class CompilerDebian(Compiler):
     """ Extend Compiler for Debian packaging
     """
 
-    debDir = 'debian'
     pkgDir = ''
 
     def compile(self, file):
@@ -102,6 +116,8 @@ class CompilerDebian(Compiler):
         """
         self.xmlInit (file)
         self.xmlValidate ()
+
+        desc = OpkgDescriptionDebian(self.xml_tool.getXmlDoc())
 
         self.pkgDir = 'opkg' + '-' + self.getPackageName()
 
@@ -111,10 +127,10 @@ class CompilerDebian(Compiler):
         os.makedirs(debiandir)
 
         for template in self.getTemplates():
-            if re.search("\.xslt", template):
+            if re.search("\.tmpl", template):
                 (head, tail) = os.path.split(template)
                 (base, ext) = os.path.splitext(tail)
-                self.xmlCompile(template, os.path.join(debiandir, base))
+                self.cheetahCompile(desc, template, os.path.join(debiandir, base))
             else:
                 shutil.copy(template, debiandir)
 

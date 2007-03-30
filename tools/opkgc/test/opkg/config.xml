@@ -11,7 +11,7 @@
      
       $Id: config.xml 5616 2007-01-18 09:08:06Z bli $
   -->
-  <name>sample-package</name>
+  <name>sample-Package</name>
 
   <class>core</class><!-- optional -->
 
@@ -52,6 +52,13 @@
       <institution>OSCAR Inc.</institution><!-- optional -->
       <beginYear>2006</beginYear><!-- optional -->
       <endYear>2006</endYear><!-- optional -->
+    </author>
+    <author cat="uploader" >
+      <name>Dr No</name>
+      <email>dr.no@uranus.com</email>
+      <institution>Corporation Inc.</institution><!-- optional -->
+      <beginYear>2030</beginYear><!-- optional -->
+      <endYear>2150</endYear><!-- optional -->
     </author>
   </authors>
 
@@ -107,16 +114,16 @@
   <changelog>
     <versionEntry version="2.3.6-5" >
       <changelogEntry authorName="John Foo Jr." date="2006-10-29T13:20:00.000+01:00" >
-	- Update from upstream
-	- Add a little blue
+	<item>Update from upstream</item>
+	<item>Add a little blue</item>
       </changelogEntry>
       <changelogEntry authorName="John Foo" date="2006-10-28T12:54:00" closes="452 1247" >
-	- Fix this bug
+	<item>Fix this bug</item>
       </changelogEntry>
     </versionEntry>
     <versionEntry version="2.3.6-1" >
       <changelogEntry authorName="Laurent Michel" date="2005-01-01T04:20:00-05:00" >
-	- Blurp
+	<item>Blurp</item>
       </changelogEntry>
     </versionEntry>
   </changelog>

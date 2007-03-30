@@ -1,0 +1,37 @@
+Source: opkg-${node('/name', 'lower')}
+Section: admin
+Priority: optional
+Maintainer: ${authors('maintainer')}
+Uploaders: ${authors('uploader')}
+Build-Depends: debhelper (>= 5)
+Standards-Version: 3.7.2
+
+Package: opkg-api-${node('/name', 'lower')}
+Architecture: $arch
+$depends('apiDeps', 'requires')$depends('apiDeps', 'conflicts')$depends('apiDeps', 'provides')$depends('apiDeps', 'suggests')#slurp
+Description: ${node('/summary')}, API part
+ ${description}
+ .
+ This package contains the API part of the package.
+ .
+  ${node('/uri')}
+
+Package: opkg-server-${node('/name', 'lower')}
+Architecture: $arch
+$depends('serverDeps', 'requires')$depends('serverDeps', 'conflicts')$depends('serverDeps', 'provides')$depends('serverDeps', 'suggests')#slurp
+Description: ${node('/summary')}, server part
+ $description
+ .
+ This package contains the server part of the package.
+ .
+  ${node('/uri')}
+
+Package: opkg-client-${node('/name', 'lower')}
+Architecture: $arch
+$depends('clientDeps', 'requires')$depends('clientDeps', 'conflicts')$depends('clientDeps', 'provides')$depends('clientDeps', 'suggests')#slurp
+Description: ${node('/summary')}, client part
+ $description
+ .
+ This package contains the client part of the package.
+ .
+  ${node('/uri')}
