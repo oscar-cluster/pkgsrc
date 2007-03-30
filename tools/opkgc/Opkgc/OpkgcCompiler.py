@@ -2,6 +2,9 @@
 # Copyright (c) 2007 INRIA-IRISA,
 #                    Jean Parpaillon <jean.parpaillon@inria.fr>
 #                    All rights reserved
+# Copyright (c) 2007 Oak Ridge National Laboratory
+#                    Geoffroy Vallee <valleegr@ornl.gov>
+#                    All rights reserved
 # For license information, see the COPYING file in the top level
 # directory of the source
 ###################################################################
@@ -21,6 +24,9 @@ __all__ = ['Compiler', 'CompilerRpm', 'CompilerDebian']
 class Compiler:
     """ Generic class for compiling config.xml
     """
+    
+    filter_xslt_file = "/tmp/opkgc/param.xsl"
+
     config = None
 
     dest_dir = ''
@@ -85,6 +91,23 @@ class Compiler:
     def getPackageName(self):
         return self.xml_tool.getXmlDoc().find('/name').text.lower()
 
+    def genXSLTParam(self, distrib):
+        try:
+            file = open(self.filter_xslt_file,'w')
+            file.write ("<?xml version=\"1.0\" encoding=\"ISO-8859-1\" ?> \n")
+            file.write ("<xsl:stylesheet version=\"1.0\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\">\n")
+            file.write ("<xsl:output method =\"text\" encoding=\"us-ascii\" /><xsl:variable name=\"distrib\">")
+            file.write (distrib)
+            file.write ("</xsl:variable>\n")
+            file.write ("</xsl:stylesheet>")
+            file.close ();
+        except:
+            print "Impossible to generate the file for distribution specification " + self.filter_xslt_file
+            sys.exit(2)
+
+    def deleteXSLTParam(self):
+        os.remove (self.filter_xslt_file)
+
 class CompilerRpm(Compiler):
     """ Extend Compiler for RPM packaging
     """
@@ -92,12 +115,15 @@ class CompilerRpm(Compiler):
     def compile(self, file):
         self.xmlInit (file)
         self.xmlValidate ()
+        self.genXSLTParam ("rhel")
 
         dest = 'opkg' + '-' + self.getPackageName() + '.spec'
 
         self.xmlCompile(
             Config().get("RPM", "templatefile"),
             os.path.join(self.getDestDir(), dest))
+
+        self.deleteXSLTParam ()
 
     def build(self):
         rpmCmd = Config().get("RPM", "buildcmd")
@@ -117,6 +143,8 @@ class CompilerDebian(Compiler):
         self.xmlInit (file)
         self.xmlValidate ()
 
+        self.genXSLTParam ("debian")
+
         desc = OpkgDescriptionDebian(self.xml_tool.getXmlDoc())
 
         self.pkgDir = 'opkg' + '-' + self.getPackageName()
@@ -133,6 +161,8 @@ class CompilerDebian(Compiler):
                 self.cheetahCompile(desc, template, os.path.join(debiandir, base))
             else:
                 shutil.copy(template, debiandir)
+
+        self.deleteXSLTParam ()
 
     def build(self):
         cdCmd = 'cd ' + self.pkgDir
