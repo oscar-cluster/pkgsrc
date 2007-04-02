@@ -34,12 +34,12 @@ class XmlTools:
     def transform (self, xsl_file, output_file, params):
         # Creating the params stylesheet
         self.genXSLTParam(params)
-
+        
         # we parse then the XSLT file
         xsl_doc = self.parseXml(xsl_file)
-
+        
         transform = etree.XSLT(xsl_doc)
-
+        
         # We apply then the XSLT transformation to the XML doc
         result = transform(self.__xml_doc)
         
@@ -47,14 +47,16 @@ class XmlTools:
         output = open (output_file, "w")
         output.write(str(result))
         output.close()
-
+        
         # Remove the params stylesheet
         self.delXSLTParam()
-
+    
     def validate (self):
+        """ Return false if config.xml is not valid
+        """
         xmlschema = etree.XMLSchema(self.__xmlschema_doc)
         if not xmlschema.validate(self.__xml_doc):
-            print "Input file invalid. Check against XML schema " + Config().get("GENERAL", "xsdfile")
+            print "Config.xml file is invalid. Check against XML schema " + Config().get("GENERAL", "xsdfile")
             raise SystemExit
 
     def parseXml (self, file):

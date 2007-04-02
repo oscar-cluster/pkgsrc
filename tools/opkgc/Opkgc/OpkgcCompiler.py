@@ -28,12 +28,14 @@ class Compiler:
 
     dest_dir = ''
     validate = True
+    inputdir = ''
 
     xml_tool = XmlTools()
 
-    def __init__(self, dest_dir, validate):
+    def __init__(self, inputdir, dest_dir, validate):
         self.dest_dir = dest_dir
         self.validate = validate
+        self.inputdir = inputdir
 
     def getDestDir(self):
         return self.dest_dir
@@ -65,7 +67,7 @@ class Compiler:
         f.write(t.respond())
         f.close()
 
-    def compile(self, file):
+    def compile(self):
         """ Abstract method to generate packaging files
         """
         raise NotImplementedError
@@ -78,12 +80,25 @@ class Compiler:
     def getPackageName(self):
         return self.xml_tool.getXmlDoc().find('/name').text.lower()
 
+    def getConfigFile(self):
+        """ Return path of config.xml file
+        Raise exception if not found
+        """
+        path = os.path.join(self.inputdir, "config.xml")
+        if os.path.exists(path):
+            return path
+        else:
+            print "No config.xml file found. Either:"
+            print "* specify the --input=dir option"
+            print "* run opkgc from the opkg directory"
+            raise SystemExit
+
 class CompilerRpm(Compiler):
     """ Extend Compiler for RPM packaging
     """
 
-    def compile(self, file):
-        self.xmlInit (file)
+    def compile (self):
+        self.xmlInit (self.getConfigFile())
         self.xmlValidate ()
 
         dest = 'opkg' + '-' + self.getPackageName() + '.spec'
@@ -105,10 +120,10 @@ class CompilerDebian(Compiler):
 
     pkgDir = ''
 
-    def compile(self, file):
+    def compile (self):
         """ Creates debian package files
         """
-        self.xmlInit (file)
+        self.xmlInit (self.getConfigFile())
         self.xmlValidate ()
 
         desc = OpkgDescriptionDebian(self.xml_tool.getXmlDoc())
@@ -117,7 +132,7 @@ class CompilerDebian(Compiler):
 
         debiandir = os.path.join(self.getDestDir(), self.pkgDir, 'debian')
         if (os.path.exists(debiandir)):
-            Config().rmDir(rmDir(debiandir))
+            Config().rmDir(debiandir)
         os.makedirs(debiandir)
 
         for template in self.getTemplates():

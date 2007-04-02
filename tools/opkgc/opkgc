@@ -30,9 +30,11 @@ from Opkgc.OpkgcConfig import *
 def usage():
     """ Print command usage
     """
-    print "Usage: " + sys.argv[0] + " [-h] [--build] [--output=dir] --deb --rpm config.xml"
+    print "Usage: " + sys.argv[0] + " [-h] [--build] [-o|--output=dir] [-i|--input=dir]--deb --rpm"
     print ""
     print "\t--build  : build packages"
+    print "\t--input  : opkg directory, default current dir"
+    print "\t--output : build packages in specified dir"
     print ""
     print "\tAt least, one of these option must be enabled:"
     print "\t--deb    : output Debian packaging files"
@@ -40,7 +42,7 @@ def usage():
 
 def main():
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "hdrbo:", ["help", "deb", "rpm", "build", "output="])
+        opts, args = getopt.getopt(sys.argv[1:], "hdrbi:o:", ["help", "deb", "rpm", "build", "input=", "output="])
     except getopt.GetoptError:
         # Print help information
         usage()
@@ -53,8 +55,8 @@ def main():
     debian = False
     rpm = False
     build = False
+    inputdir = "."
     output = "."
-    config_file = ""
     validate = True
     
     for o, a in opts:
@@ -67,28 +69,24 @@ def main():
             rpm = True
         if o in ("-b", "--build"):
             build = True
+        if o in ("-i", "--input"):
+            inputdir = a
         if o in ("-o", "--output"):
             output = a
 
     # Other options checking
-    if (not debian) and (not rpm) or (len(args) == 0):
-        usage()
-        sys.exit(2)
-
-    config_file = str(args[0])
-    if config_file == "":
+    if (not debian) and (not rpm):
         usage()
         sys.exit(2)
 
     targets = []
-    print "Source file: " + config_file
     if debian:
-        targets.append( CompilerDebian( output, validate ) )
+        targets.append( CompilerDebian( inputdir, output, validate ) )
     if rpm:
-        targets.append( CompilerRpm( output, validate ) )
+        targets.append( CompilerRpm( inputdir, output, validate ) )
 
     for target in targets[:]:
-        target.compile( config_file )
+        target.compile()
         if build:
             target.build()
 
