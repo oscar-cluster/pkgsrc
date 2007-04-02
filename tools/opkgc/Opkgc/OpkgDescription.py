@@ -6,6 +6,7 @@
 # directory of the source
 ###################################################################
 
+import re
 from OpkgcXml import *
 
 __all__ = ['OpkgDescription', 'OpkgDescriptionDebian']
@@ -14,9 +15,42 @@ class OpkgDescription:
     """ Describe a config.xml file
     """
     xmldoc = None
+    month = {"01":"Jan", "02":"Feb", "03":"Mar", "04":"Apr",
+             "05":"May", "06":"Jun", "07":"Jul", "08":"Aug",
+             "09":"Sep", "10":"Oct", "11":"Nov", "12":"Dec"}
 
     def __init__(self, xmldoc):
         self.xmldoc = xmldoc
+
+    def date(self, date, format):
+        """ Convert 'xsdDate' in xsd:dateTime format
+        (cf. http://www.w3.org/TR/2004/REC-xmlschema-2-20041028/datatypes.html#dateTime)
+        and return in the format specified.
+        Format is one of:
+        'RFC822'
+        """
+        p = re.compile(r'^-?(?P<year>[0-9]{4})'
+                           r'-(?P<month>[0-9]{2})'
+                           r'-(?P<day>[0-9]{2})'
+                           r'T(?P<hour>[0-9]{2}):'
+                           r'(?P<min>[0-9]{2}):'
+                           r'(?P<sec>[0-9]{2})(?P<sfrac>\.[0-9]+)?'
+                           r'(?P<tz>((?P<tzs>-|\+)(?P<tzh>[0-9]{2}):(?P<tzm>[0-9]{2}))|Z)?')
+        m = p.search(date)
+        if format == 'RFC822':
+            date = "%s %s %s" % (m.group('day'), self.month[m.group('month')], m.group('year'))
+            time = "%s:%s" % (m.group('hour'), m.group('min'))
+            if m.group('sec'):
+                time += ":%s" % m.group('sec')
+            zone = ""
+            if m.group('tz'):
+                if m.group('tz') == "Z":
+                    zone = "Z"
+                else:
+                    zone = "%s%s%s" % (m.group('tzs'), m.group('tzh'), m.group('tzm'))
+            return "%s %s %s" % (date, time, zone)
+        else:
+            return date
 
     def node(self, path, capitalize=''):
         s = self.xmldoc.findtext(path)
@@ -159,7 +193,7 @@ class OpkgDescriptionDebian(OpkgDescription):
                                  "name":cEntryNode.get('authorName')})
             
             vEntry = {"version":vEntryNode.get('version'),
-                      "uploader":self.uploader(vEntryNode),
+                      "uploader":(self.uploader(vEntryNode)),
                       "logs":cEntries}
             changelog.append(vEntry)
 
@@ -167,9 +201,11 @@ class OpkgDescriptionDebian(OpkgDescription):
 
     def uploader(self, versionEntry):
         """ Return the version uploader
-        """ 
-        name = versionEntry.find('changelogEntry').get('authorName').strip()
+        """
+        cEntry = versionEntry.find('changelogEntry')
+        name = cEntry.get('authorName').strip()
+        date = cEntry.get('date')
         authors = self.xmldoc.findall('authors/author')
         for a in authors:
             if a.findtext('name').strip() == name:
-                return self.author(a)
+                return "%s %s" % (self.author(a), self.date(date, "RFC822"))
