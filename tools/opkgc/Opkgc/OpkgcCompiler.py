@@ -24,9 +24,6 @@ __all__ = ['Compiler', 'CompilerRpm', 'CompilerDebian']
 class Compiler:
     """ Generic class for compiling config.xml
     """
-    
-    filter_xslt_file = "/tmp/opkgc/param.xsl"
-
     config = None
 
     dest_dir = ''
@@ -51,12 +48,12 @@ class Compiler:
     def getXmlDoc(self):
         return self.xml_tool.getXmlDoc()
 
-    def xmlCompile(self, template, dest):
+    def xmlCompile(self, template, dest, params):
         """ Transform 'orig' to 'dest' with XSLT template 'template'
-        
         'template' is a XSLT file
+        'params' is a dictionnary with params to give to the template
         """
-        self.xml_tool.transform (template, dest)
+        self.xml_tool.transform (template, dest, params)
 
     def cheetahCompile(self, orig, template, dest):
         """ Transform 'orig' to 'dest' with Cheetah template 'template'
@@ -67,16 +64,6 @@ class Compiler:
         f = open(dest, 'w')
         f.write(t.respond())
         f.close()
-
-    def rmDir(self, d):
-        """ Remove recursively a directory, even if not empty, like rm -r
-        """
-        for p in os.listdir(d):
-            if os.path.isdir(os.path.join(d,p)):
-                cleandir(os.path.join(d,p))
-            else:
-                os.remove(os.path.join(d,p))
-        os.rmdir(os.path.join(d))
 
     def compile(self, file):
         """ Abstract method to generate packaging files
@@ -91,23 +78,6 @@ class Compiler:
     def getPackageName(self):
         return self.xml_tool.getXmlDoc().find('/name').text.lower()
 
-    def genXSLTParam(self, distrib):
-        try:
-            file = open(self.filter_xslt_file,'w')
-            file.write ("<?xml version=\"1.0\" encoding=\"ISO-8859-1\" ?> \n")
-            file.write ("<xsl:stylesheet version=\"1.0\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\">\n")
-            file.write ("<xsl:output method =\"text\" encoding=\"us-ascii\" /><xsl:variable name=\"distrib\">")
-            file.write (distrib)
-            file.write ("</xsl:variable>\n")
-            file.write ("</xsl:stylesheet>")
-            file.close ();
-        except:
-            print "Impossible to generate the file for distribution specification " + self.filter_xslt_file
-            sys.exit(2)
-
-    def deleteXSLTParam(self):
-        os.remove (self.filter_xslt_file)
-
 class CompilerRpm(Compiler):
     """ Extend Compiler for RPM packaging
     """
@@ -115,15 +85,13 @@ class CompilerRpm(Compiler):
     def compile(self, file):
         self.xmlInit (file)
         self.xmlValidate ()
-        self.genXSLTParam ("rhel")
 
         dest = 'opkg' + '-' + self.getPackageName() + '.spec'
 
         self.xmlCompile(
             Config().get("RPM", "templatefile"),
-            os.path.join(self.getDestDir(), dest))
-
-        self.deleteXSLTParam ()
+            os.path.join(self.getDestDir(), dest),
+            {"distrib":"rhel"})
 
     def build(self):
         rpmCmd = Config().get("RPM", "buildcmd")
@@ -143,15 +111,13 @@ class CompilerDebian(Compiler):
         self.xmlInit (file)
         self.xmlValidate ()
 
-        self.genXSLTParam ("debian")
-
         desc = OpkgDescriptionDebian(self.xml_tool.getXmlDoc())
 
         self.pkgDir = 'opkg' + '-' + self.getPackageName()
 
         debiandir = os.path.join(self.getDestDir(), self.pkgDir, 'debian')
         if (os.path.exists(debiandir)):
-            self.rmDir(debiandir)
+            Config().rmDir(rmDir(debiandir))
         os.makedirs(debiandir)
 
         for template in self.getTemplates():
@@ -161,8 +127,6 @@ class CompilerDebian(Compiler):
                 self.cheetahCompile(desc, template, os.path.join(debiandir, base))
             else:
                 shutil.copy(template, debiandir)
-
-        self.deleteXSLTParam ()
 
     def build(self):
         cdCmd = 'cd ' + self.pkgDir

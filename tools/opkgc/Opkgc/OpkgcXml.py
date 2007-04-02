@@ -9,6 +9,8 @@
 # directory of the source
 ###################################################################
 
+import sys
+import os
 from lxml import etree
 from StringIO import StringIO
 from OpkgcConfig import *
@@ -17,6 +19,8 @@ class XmlTools:
     __instance = None
     __xml_doc = None
     __xmlschema_doc = None
+
+    filter_xslt_file = "/tmp/opkgc/param.xsl"
 
     def __new__ (cls):
         if cls.__instance is None:
@@ -27,7 +31,10 @@ class XmlTools:
         self.__xml_doc = self.parseXml(xml_file)
         self.__xmlschema_doc = self.parseXml(Config().get("GENERAL", "xsdfile"))
 
-    def transform (self, xsl_file, output_file):
+    def transform (self, xsl_file, output_file, params):
+        # Creating the params stylesheet
+        self.genXSLTParam(params)
+
         # we parse then the XSLT file
         xsl_doc = self.parseXml(xsl_file)
 
@@ -40,6 +47,9 @@ class XmlTools:
         output = open (output_file, "w")
         output.write(str(result))
         output.close()
+
+        # Remove the params stylesheet
+        self.delXSLTParam()
 
     def validate (self):
         xmlschema = etree.XMLSchema(self.__xmlschema_doc)
@@ -56,3 +66,35 @@ class XmlTools:
 
     def getXmlDoc(self):
         return self.__xml_doc
+
+    def genXSLTParam(self, vars):
+        """ Generate a XSLT stylesheet with
+        <xsl:variable /> tags, from 'vars' dictionnary
+        """
+        try:
+            self.delXSLTParam()
+
+            os.makedirs(os.path.dirname(self.filter_xslt_file))
+                        
+            root = etree.Element("xsl:stylesheet")
+            root.set("version", "1.0")
+            root.set("xmlns:xsl", "http://www.w3.org/1999/XSL/Transform")
+            
+            output = etree.SubElement(root, "xsl:output")
+            output.set("method", "text")
+            output.set("encoding", "us-ascii")
+            
+            for key in vars.keys():
+                v = etree.SubElement(root, "xsl:variable")
+                v.set("name", key)
+                v.text = vars[key]
+                
+            tree = etree.ElementTree(root)
+            tree.write(self.filter_xslt_file, xml_declaration=True)
+        except(Exception), e:
+            print "Can not write params stylesheet('%s'): %s" % (self.filter_xslt_file, e)
+            sys.exit(2)
+
+    def delXSLTParam(self):
+        Config().rmDir(os.path.dirname(self.filter_xslt_file))
+        
