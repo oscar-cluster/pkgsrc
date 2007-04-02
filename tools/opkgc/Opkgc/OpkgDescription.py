@@ -95,21 +95,9 @@ class OpkgDescriptionDebian(OpkgDescription):
         return desc.strip()
 
     def arch(self):
-        """ Return comma-separated list of architectures,
-        or 'all' if none.
+        """ Return 'all'
         """
-        alist = self.xmldoc.findall('/filters/arch')
-        if len(alist) == 0:
-            arch = 'all'
-        else:
-            i = 0
-            arch = ''
-            for a in alist:
-                if i != 0:
-                    arch += ', '
-                arch += self.archName[a.text]
-                i += 1
-        return arch
+        return "all"
 
     def authors(self, type):
         """ Return comma separated list of authors of type 'type'
@@ -214,4 +202,4 @@ class OpkgDescriptionDebian(OpkgDescription):
         authors = self.xmldoc.findall('authors/author')
         for a in authors:
             if a.findtext('name').strip() == name:
-                return "%s %s" % (self.author(a), self.date(date, "RFC822"))
+                return "%s  %s" % (self.author(a), self.date(date, "RFC822"))
