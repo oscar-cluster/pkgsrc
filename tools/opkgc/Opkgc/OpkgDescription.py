@@ -189,6 +189,12 @@ class OpkgDescriptionDebian(OpkgDescription):
             cEntryNodes = vEntryNode.findall('changelogEntry')
             for cEntryNode in cEntryNodes:
                 items = [i.text.strip() for i in cEntryNode.findall('item')]
+                
+                closes = cEntryNode.get('closes')
+                if closes:
+                    for bug in closes.split():
+                        items.append("closes: Bug#%s" % bug)
+                
                 cEntries.append({"items":items,
                                  "name":cEntryNode.get('authorName')})
             

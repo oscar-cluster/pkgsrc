@@ -122,7 +122,7 @@
       </changelogEntry>
     </versionEntry>
     <versionEntry version="2.3.6-1" >
-      <changelogEntry authorName="Laurent Michel" date="2005-01-01T04:20:00-05:00" >
+      <changelogEntry authorName="Laurent Michel" date="2005-01-01T04:20:00-05:00" closes="123421" >
 	<item>Blurp</item>
       </changelogEntry>
     </versionEntry>
