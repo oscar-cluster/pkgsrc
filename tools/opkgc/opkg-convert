@@ -232,14 +232,52 @@ function del_convert_stylesheet() {
 }
 
 function convert_config_xml() {
-    oldconfig=$1
-    newconfig=$2
+    oldconfig=$olddir/config.xml
+    newconfig=$newdir/config.xml
 
     xsltproc=`check_tool xsltproc`
 
     write_convert_stylesheet
+    echo "[CONVERT] config.xml"
     $xsltproc $xsltfile $oldconfig > $newconfig
     del_convert_stylesheet
+}
+
+function convert_scripts() {
+    mkdir $newdir/scripts
+
+    scripts=`find $olddir/scripts/ ! -type d ! -path '*/.svn*'`
+    for script in $scripts; do
+	s=''
+	case `basename $script` in
+	    setup)                     s='api-pre-install';;
+	    pre_configure)             s='api-pre-configure';;
+	    post_configure)            s='api-post-configure';;
+	    post_clients)              s='api-post-image';;
+	    post_install)              s='api-post-deploy';;
+	    post_server_rpm_install)   s='server-post-install';;
+	    post_server_rpm_uninstall) s='server-post-uninstall';;
+	    post_client_rpm_install)   s='client-post-install';;
+	    post_client_rpm_uninstall) s='client-post-uninstall';;
+	    *)                         s=`basename $script`;;
+	esac
+	echo "[COPY] $script to $newdir/scripts/$s"
+	cp $script $newdir/scripts/$s
+    done
+}
+
+function convert_doc() {
+    if [ -d $olddir/doc ]; then
+	echo "[COPY] $olddir/doc to $newdir/doc"
+	rsync -avr --exclude '.svn' --exclude '*~' $olddir/doc $newdir
+    fi
+}
+
+function convert_testing() {
+    if [ -d $olddir/testing ]; then
+	echo "[COPY] $olddir/testing to $newdir/testing"
+	rsync -avr --exclude '.svn' --exclude '*~' $olddir/testing $newdir
+    fi
 }
 
 if [ ! -e "$1/config.xml" ]; then
@@ -252,4 +290,7 @@ newdir=`basename $1`.new
 
 [ -d $newdir ] && rm -rf $newdir
 mkdir $newdir
-convert_config_xml $olddir/config.xml $newdir/config.xml
+convert_config_xml
+convert_scripts
+convert_doc
+convert_testing
