@@ -95,6 +95,15 @@ class Compiler:
             print "* run opkgc from the opkg directory"
             raise SystemExit
 
+    def getScripts(self):
+        """ Return list of files in scripts/ dir
+        """
+        ret = []
+        for p in os.listdir(os.path.join(self.inputdir, "scripts")):
+            if not re.search("\.svn|.*~", p) and not os.path.isdir(p):
+                ret.append(os.path.join(self.inputdir, "scripts", p))
+        return ret
+
     def SupportedDist(cls):
         """ Return a list of supported dist
         """
@@ -132,9 +141,13 @@ class CompilerRpm(Compiler):
 class CompilerDebian(Compiler):
     """ Extend Compiler for Debian packaging
     """
-
     supportedDist = ['debian']
     pkgDir = ''
+    scriptsOrigDest = {'api-pre-install':       'opkg-api-%s.preinst',
+                       'server-post-install':   'opkg-server-%s.postinst',
+                       'server-post-uninstall': 'opkg-server-%s.postrm',
+                       'client-post-install':   'opkg-client-%s.postinst',
+                       'client-post-uninstall': 'opkg-client-%s.postrm'}
 
     def compile (self):
         """ Creates debian package files
@@ -144,7 +157,8 @@ class CompilerDebian(Compiler):
 
         desc = OpkgDescriptionDebian(self.xml_tool.getXmlDoc())
 
-        self.pkgDir = 'opkg' + '-' + self.filterPackageName(self.getPackageName())
+        pkgName = self.filterPackageName(self.getPackageName())
+        self.pkgDir = 'opkg' + '-' + pkgName
 
         debiandir = os.path.join(self.getDestDir(), self.pkgDir, 'debian')
         if (os.path.exists(debiandir)):
@@ -161,7 +175,20 @@ class CompilerDebian(Compiler):
                 shutil.copy(template, debiandir)
 
         # Manage [pre|post]-scripts
-        
+        for orig in self.getScripts():
+            basename = os.path.basename(orig)
+            try:
+                # If script is one of scripts included as
+                # {pre|post}{inst|rm} scripts, copy with appropriate filename
+                # (see Debian Policy for it)
+                dest = self.scriptsOrigDest[basename] % pkgName
+                shutil.copy(orig, os.path.join(debiandir, dest))
+            except(KeyError):
+                # else, file is packaged in /var/lib/oscar/packages/<packages>/
+                filelist = open(os.path.join(debiandir, "opkg-api-%s.install" % pkgName), "a")
+                filelist.write("%s /var/lib/oscar/packages/%s\n" % (basename, pkgName))
+                filelist.close()
+                shutil.copy(orig, os.path.join(self.getDestDir(), self.pkgDir))
 
     def build(self):
         cdCmd = 'cd ' + self.pkgDir
@@ -176,7 +203,7 @@ class CompilerDebian(Compiler):
         ret = []
         for p in os.listdir(Config().get("DEBIAN", "templatedir")):
             f = os.path.join(Config().get("DEBIAN", "templatedir"), p)
-            if not re.search("\.svn", p) and not os.path.isdir(f):
+            if not re.search("\.svn|.*~", p) and not os.path.isdir(f):
                 ret.append(f)
         return ret
 

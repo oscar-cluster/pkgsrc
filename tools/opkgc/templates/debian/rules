@@ -30,12 +30,11 @@ install: install-stamp
 install-stamp:
 	dh_testdir
 	dh_clean -k
-
 	dh_install
 
 	touch $@
 
-binary:
+binary: build install
 	dh_testdir
 	dh_testroot
 	dh_installchangelogs
