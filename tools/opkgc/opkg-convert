@@ -62,13 +62,11 @@ function write_convert_stylesheet() {
       <uri><xsl:value-of select="uri" /></uri>
     </xsl:if>
 
-    <xsl:apply-templates select="packager|maintainer" />
+    <authors>
+      <xsl:apply-templates select="packager|maintainer" />
+    </authors>
 
-    <xsl:if test="filter" >
-      <filters>
-	<xsl:apply-templates select="filter" />
-      </filters>
-    </xsl:if>
+    <xsl:call-template name="filters" />
 
     <serverDeps>
       <xsl:apply-templates select="(provides|requires|binary-package-list|conflicts)[filter/group = 'oscar_server']" />
@@ -90,7 +88,7 @@ function write_convert_stylesheet() {
 	
 	<changelogEntry 
 	    authorName="{packager/name}" 
-	    date="1970-01-01T00:00Z" >
+	    date="1970-01-01T00:00:00Z" >
 	  <item>*** AUTO-GENERATED - FIXME ***</item>
 	</changelogEntry>
       </versionEntry>
@@ -130,13 +128,21 @@ function write_convert_stylesheet() {
     </author>
   </xsl:template>
 
-  <xsl:template match="filter" >
-    <xsl:if test="distribution" >
-      <dist><xsl:value-of select="distribution/name" /></dist>
+  <xsl:template name="filters" >
+    <xsl:if test="filter" >
+      <filters>
+	<xsl:apply-templates select="filter/distribution" />
+	<xsl:apply-templates select="filter/architecture" />
+      </filters>
     </xsl:if>
-    <xsl:if test="architecture" >
-      <arch><xsl:value-of select="architecture" /></arch>
-    </xsl:if>
+  </xsl:template>
+
+  <xsl:template match="distribution" >
+    <dist><xsl:value-of select="name" /></dist>
+  </xsl:template>
+
+  <xsl:template match="architecture" >
+    <arch><xsl:value-of select="." /></arch>
   </xsl:template>
 
   <xsl:template match="provides|requires|binary-package-list|conflicts" >
@@ -186,11 +192,7 @@ function write_convert_stylesheet() {
   </xsl:template>
 
   <xsl:template name="pkglist" >
-    <xsl:if test="filter" >
-      <filters>
-	<xsl:apply-templates select="filter" />
-      </filters>
-    </xsl:if>
+    <xsl:call-template name="filters" />
     <xsl:apply-templates select="pkg" />
   </xsl:template>
 
@@ -215,9 +217,7 @@ function write_convert_stylesheet() {
   <xsl:template name="warning" >
     <xsl:message terminate="no"  >
 ***
-*** Please check the generated config.xml. Especially the following points:
-*** - in filters, arch element must appear _after_ dist ones. The current 
-***   script does not handle this well.
+*** Please check the following points in the generated config.xml:
 *** - changelog: a default changelog entry has been written, please modify it.
 ***
     </xsl:message>

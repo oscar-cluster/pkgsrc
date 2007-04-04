@@ -274,6 +274,7 @@
       <xsd:enumeration value="i386" />
       <xsd:enumeration value="amd64" />
       <xsd:enumeration value="x86_64" />
+      <xsd:enumeration value="ia64" />
     </xsd:restriction>
   </xsd:simpleType>
 
