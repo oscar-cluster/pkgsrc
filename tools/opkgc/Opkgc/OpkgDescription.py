@@ -45,7 +45,7 @@ class OpkgDescription:
             zone = ""
             if m.group('tz'):
                 if m.group('tz') == "Z":
-                    zone = "Z"
+                    zone = "GMT"
                 else:
                     zone = "%s%s%s" % (m.group('tzs'), m.group('tzh'), m.group('tzm'))
             return "%s %s %s" % (date, time, zone)
@@ -203,3 +203,7 @@ class OpkgDescriptionDebian(OpkgDescription):
         for a in authors:
             if a.findtext('name').strip() == name:
                 return "%s  %s" % (self.author(a), self.date(date, "RFC822"))
+
+    def name(self):
+        p = re.compile(r'[^a-zA-Z0-9-]')
+        return p.sub('-', self.node("/name", 'lower'))

@@ -25,6 +25,8 @@ function check_tool() {
 }
 
 function write_convert_stylesheet() {
+    date=`date +%Y-%m-%dT%k:%M:%S%:z`
+
     cat > $xsltfile <<EOF
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
@@ -88,7 +90,7 @@ function write_convert_stylesheet() {
 	
 	<changelogEntry 
 	    authorName="{packager/name}" 
-	    date="1970-01-01T00:00:00Z" >
+	    date="$date" >
 	  <item>*** AUTO-GENERATED - FIXME ***</item>
 	</changelogEntry>
       </versionEntry>

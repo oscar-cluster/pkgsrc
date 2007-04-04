@@ -144,7 +144,7 @@ class CompilerDebian(Compiler):
 
         desc = OpkgDescriptionDebian(self.xml_tool.getXmlDoc())
 
-        self.pkgDir = 'opkg' + '-' + self.getPackageName()
+        self.pkgDir = 'opkg' + '-' + self.filterPackageName(self.getPackageName())
 
         debiandir = os.path.join(self.getDestDir(), self.pkgDir, 'debian')
         if (os.path.exists(debiandir)):
@@ -179,3 +179,9 @@ class CompilerDebian(Compiler):
             if not re.search("\.svn", p) and not os.path.isdir(f):
                 ret.append(f)
         return ret
+
+    def filterPackageName(self, s):
+        """ Filter s to comply with Debian package name syntax
+        """
+        p = re.compile(r'[^a-zA-Z0-9-]')
+        return p.sub('-', s)
