@@ -29,13 +29,15 @@ class Compiler:
     dest_dir = ''
     validate = True
     inputdir = ''
-
+    dist = ''
+    
     xml_tool = XmlTools()
 
-    def __init__(self, inputdir, dest_dir, validate):
+    def __init__(self, inputdir, dest_dir, dist, validate):
         self.dest_dir = dest_dir
         self.validate = validate
         self.inputdir = inputdir
+        self.dist = dist
 
     def getDestDir(self):
         return self.dest_dir
@@ -93,9 +95,22 @@ class Compiler:
             print "* run opkgc from the opkg directory"
             raise SystemExit
 
+    def SupportedDist(cls):
+        """ Return a list of supported dist
+        """
+        return cls.supportedDist
+    SupportedDist = classmethod(SupportedDist)
+
+    def SupportDist(cls, dist):
+        """ Return true if the class support 'dist'
+        """
+        return dist in cls.supportedDist
+    SupportDist = classmethod(SupportDist)
+        
 class CompilerRpm(Compiler):
     """ Extend Compiler for RPM packaging
     """
+    supportedDist = ['fc', 'rhel']
 
     def compile (self):
         self.xmlInit (self.getConfigFile())
@@ -106,7 +121,7 @@ class CompilerRpm(Compiler):
         self.xmlCompile(
             Config().get("RPM", "templatefile"),
             os.path.join(self.getDestDir(), dest),
-            {"distrib":"rhel"})
+            {"distrib":self.dist})
 
     def build(self):
         rpmCmd = Config().get("RPM", "buildcmd")
@@ -118,6 +133,7 @@ class CompilerDebian(Compiler):
     """ Extend Compiler for Debian packaging
     """
 
+    supportedDist = ['debian']
     pkgDir = ''
 
     def compile (self):
@@ -135,6 +151,7 @@ class CompilerDebian(Compiler):
             Config().rmDir(debiandir)
         os.makedirs(debiandir)
 
+        # Compile template files
         for template in self.getTemplates():
             if re.search("\.tmpl", template):
                 (head, tail) = os.path.split(template)
@@ -142,6 +159,9 @@ class CompilerDebian(Compiler):
                 self.cheetahCompile(desc, template, os.path.join(debiandir, base))
             else:
                 shutil.copy(template, debiandir)
+
+        # Manage [pre|post]-scripts
+        
 
     def build(self):
         cdCmd = 'cd ' + self.pkgDir
@@ -155,6 +175,7 @@ class CompilerDebian(Compiler):
         """
         ret = []
         for p in os.listdir(Config().get("DEBIAN", "templatedir")):
-            if not re.search("\.svn", p):
-                ret.append(os.path.join(Config().get("DEBIAN", "templatedir"), p))
+            f = os.path.join(Config().get("DEBIAN", "templatedir"), p)
+            if not re.search("\.svn", p) and not os.path.isdir(f):
+                ret.append(f)
         return ret

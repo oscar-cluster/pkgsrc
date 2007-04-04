@@ -24,25 +24,42 @@
 
 import sys
 import getopt
+import re
 from Opkgc.OpkgcCompiler import *
 from Opkgc.OpkgcConfig import *
+
+compilers = ['CompilerRpm', 'CompilerDebian']
 
 def usage():
     """ Print command usage
     """
-    print "Usage: " + sys.argv[0] + " [-h] [--build] [-o|--output=dir] [-i|--input=dir]--deb --rpm"
+    print "Usage: " + sys.argv[0] + " [-h] [-u|--supported-dist] [--build]"
+    print "               [-o|--output=dir] [-i|--input=dir] --dist=targetDist"
+    print ""
+    print "\t--supported-dist : list supported distributions for --dist option"
+    print "\t--dist           : target distibution, default to current distribution"
     print ""
     print "\t--build  : build packages"
     print "\t--input  : opkg directory, default current dir"
     print "\t--output : build packages in specified dir"
-    print ""
-    print "\tAt least, one of these option must be enabled:"
-    print "\t--deb    : output Debian packaging files"
-    print "\t--rpm    : output RPM packaging files"
+
+def distList():
+    """ Print supported target distributions
+    """
+    print "Supported target distributions are:"
+    for compiler in compilers:
+        for target in eval(compiler).SupportedDist():
+            print target
+
+def getCurrentDist():
+    """
+    """
 
 def main():
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "hdrbi:o:", ["help", "deb", "rpm", "build", "input=", "output="])
+        opts, args = getopt.getopt(sys.argv[1:],
+                                   "hubi:o:d:",
+                                   ["help", "supported-dist", "build", "input=", "output=", "dist="])
     except getopt.GetoptError:
         # Print help information
         usage()
@@ -52,43 +69,44 @@ def main():
     Config()
 
     # Default values
-    debian = False
-    rpm = False
     build = False
     inputdir = "."
     output = "."
     validate = True
+    dist = ''
     
     for o, a in opts:
         if o in ("-h", "--help"):
             usage()
             sys.exit()
-        if o in ("-d", "--deb"):
-            debian = True
-        if o in ("-r", "--rpm"):
-            rpm = True
+        if o in ("-u", "--supported-dist"):
+            distList()
+            sys.exit()
         if o in ("-b", "--build"):
             build = True
         if o in ("-i", "--input"):
             inputdir = a
         if o in ("-o", "--output"):
             output = a
+        if o in ("-o", "--dist"):
+            dist = a
 
-    # Other options checking
-    if (not debian) and (not rpm):
-        usage()
+    # Build list of available target distributions and
+    # associated compiler
+    targets = {}
+    for compiler in compilers:
+        for target in eval(compiler).SupportedDist():
+            targets[target] = compiler
+
+    # Check if given target dist is available
+    if dist == '' or not(targets[dist]):
+        distList()
         sys.exit(2)
 
-    targets = []
-    if debian:
-        targets.append( CompilerDebian( inputdir, output, validate ) )
-    if rpm:
-        targets.append( CompilerRpm( inputdir, output, validate ) )
-
-    for target in targets[:]:
-        target.compile()
-        if build:
-            target.build()
+    c = eval(targets[dist])( inputdir, output, dist, validate )
+    c.compile()
+    if build:
+        c.build()
 
 if __name__ == "__main__":
     main()
