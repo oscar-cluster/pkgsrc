@@ -7,6 +7,7 @@
 ###################################################################
 
 import re
+from time import *
 from OpkgcXml import *
 
 __all__ = ['OpkgDescription', 'OpkgDescriptionDebian']
@@ -133,7 +134,7 @@ class OpkgDescriptionDebian(OpkgDescription):
         """
         dlist = [d
                  for d in self.xmldoc.findall(part + '/' + relation)
-                 if self.filterDist(d, 'Debian')]
+                 if self.filterDist(d, 'debian')]
         pkglistlist = [d.findall('pkg') for d in dlist]
         depends = ''
         i = 0
@@ -153,7 +154,7 @@ class OpkgDescriptionDebian(OpkgDescription):
         """ Return true if 'elem' contains a filter for distribution 'dist'
         or no filters at all.
         """
-        distFilters = [d.text.strip() for d in elem.findall('filters/dist')]
+        distFilters = [d.text.strip().lower() for d in elem.findall('filters/dist')]
         return len(distFilters) == 0 or dist in distFilters
 
     def pkgDep(self, e):
@@ -207,3 +208,32 @@ class OpkgDescriptionDebian(OpkgDescription):
     def name(self):
         p = re.compile(r'[^a-zA-Z0-9-]')
         return p.sub('-', self.node("/name", 'lower'))
+
+    def copyrights(self, cat):
+        """ Return list of copyrights for 'cat'
+        cat: mainstream|uploader|upstream
+        """
+        copyrights = []
+        clist = self.xmldoc.findall('authors/author')
+        for c in clist:
+            if c.get('cat') == cat:
+                company = c.findtext('institution')
+                if company:
+                    ccholder = company
+                else:
+                    ccholder = "%s <%s>" % (c.findtext('name'), c.findtext('email'))
+                beginyear = c.findtext('beginYear')
+                endyear = c.findtext('endYear')
+                if not(endyear):
+                    endyear = "%i" % gmtime().tm_year
+                ccyear = ""
+                if beginyear:
+                    ccyears = "%s-" % beginyear
+                ccyear += "%s" % endyear
+
+                cc = "Copyright (c) %s %s\n" % (ccyear, ccholder)
+                if company:
+                    cc += "\t%s <%s>" % (c.findtext('name'), c.findtext('email'))
+                copyrights.append(cc)
+
+        return copyrights

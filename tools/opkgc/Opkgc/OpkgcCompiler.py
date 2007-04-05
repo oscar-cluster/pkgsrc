@@ -100,9 +100,11 @@ class Compiler:
         """ Return list of files in scripts/ dir
         """
         ret = []
-        for p in os.listdir(os.path.join(self.inputdir, "scripts")):
-            if not re.search("\.svn|.*~", p) and not os.path.isdir(p):
-                ret.append(os.path.join(self.inputdir, "scripts", p))
+        scriptdir = os.path.join(self.inputdir, "scripts")
+        if os.path.isdir(scriptdir):
+            for p in os.listdir(scriptdir):
+                if not re.search("\.svn|.*~", p) and not os.path.isdir(p):
+                    ret.append(os.path.join(self.inputdir, "scripts", p))
         return ret
 
     def SupportedDist(cls):
@@ -193,13 +195,26 @@ class CompilerDebian(Compiler):
                 shutil.copy(orig, self.pkgDir)
 
         # Copy doc
-        Tools.copy(os.path.join(self.inputdir, "doc"),
-                   self.pkgDir,
-                   True,
-                   '\.svn|.*~')
-        filelist = open(os.path.join(debiandir, "opkg-api-%s.install" % pkgName), "a")
-        filelist.write("doc/* /usr/share/doc/opkg-api-%s\n" % pkgName)
-        filelist.close()
+        docdir = os.path.join(self.inputdir, "doc")
+        if os.path.isdir(docdir):
+            Tools.copy(docdir,
+                       self.pkgDir,
+                       True,
+                       '\.svn|.*~')
+            filelist = open(os.path.join(debiandir, "opkg-api-%s.install" % pkgName), "a")
+            filelist.write("doc/* /usr/share/doc/opkg-api-%s\n" % pkgName)
+            filelist.close()
+
+        # Copy testing scripts
+        testdir = os.path.join(self.inputdir, "testing")
+        if os.path.isdir(testdir):
+            Tools.copy(testdir,
+                       self.pkgDir,
+                       True,
+                       '\.svn|.*~')
+            filelist = open(os.path.join(debiandir, "opkg-api-%s.install" % pkgName), "a")
+            filelist.write("testing/* /var/lib/oscar/testing/%s\n" % pkgName)
+            filelist.close()
 
     def build(self):
         cdCmd = 'cd ' + self.pkgDir
