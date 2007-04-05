@@ -123,16 +123,24 @@ class CompilerRpm(Compiler):
     """ Extend Compiler for RPM packaging
     """
     supportedDist = ['fc', 'rhel']
+    pkgDir = ''
 
     def compile (self):
         self.xmlInit (self.getConfigFile())
         self.xmlValidate ()
 
-        dest = 'opkg' + '-' + self.getPackageName() + '.spec'
+        pkgName = Tools.normalizeWithDash(self.getPackageName())
+        self.pkgDir = os.path.join(self.getDestDir(), "opkg-%s" % pkgName)
+
+        if (os.path.exists(self.pkgDir)):
+            Tools.rmDir(self.pkgDir)
+        os.makedirs(self.pkgDir)
+        
+        specfile = 'opkg' + '-' + pkgName + '.spec'
 
         self.xmlCompile(
-            Config().get("RPM", "templatefile"),
-            os.path.join(self.getDestDir(), dest),
+            os.path.join(Config().get("RPM", "templatedir"), "opkg.spec.xsl"),
+            os.path.join(self.pkgDir, specfile),
             {"distrib":self.dist})
 
     def build(self):
@@ -160,7 +168,7 @@ class CompilerDebian(Compiler):
 
         desc = OpkgDescriptionDebian(self.xml_tool.getXmlDoc())
 
-        pkgName = self.filterPackageName(self.getPackageName())
+        pkgName = Tools.normalizeWithDash(self.getPackageName())
         self.pkgDir = os.path.join(self.getDestDir(), "opkg-%s" % pkgName)
 
         if (os.path.exists(self.pkgDir)):
@@ -232,9 +240,3 @@ class CompilerDebian(Compiler):
             if not re.search("\.svn|.*~", p) and not os.path.isdir(f):
                 ret.append(f)
         return ret
-
-    def filterPackageName(self, s):
-        """ Filter s to comply with Debian package name syntax
-        """
-        p = re.compile(r'[^a-zA-Z0-9-]')
-        return p.sub('-', s)

@@ -56,3 +56,10 @@ class Tools:
             else:
                 shutil.copy(orig, dest)
     __copy = staticmethod(__copy)
+
+    def normalizeWithDash(s):
+        """ Replace non-alphanumeric chars by '-' in s
+        """
+        p = re.compile(r'[^a-zA-Z0-9-]')
+        return p.sub('-', s)
+    normalizeWithDash = staticmethod(normalizeWithDash)
