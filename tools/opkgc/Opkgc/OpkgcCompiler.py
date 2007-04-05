@@ -17,6 +17,7 @@ import exceptions
 from OpkgcXml import *
 from OpkgcConfig import *
 from OpkgDescription import *
+from OpkgcTools import *
 from Cheetah.Template import Template
 
 __all__ = ['Compiler', 'CompilerRpm', 'CompilerDebian']
@@ -158,11 +159,12 @@ class CompilerDebian(Compiler):
         desc = OpkgDescriptionDebian(self.xml_tool.getXmlDoc())
 
         pkgName = self.filterPackageName(self.getPackageName())
-        self.pkgDir = 'opkg' + '-' + pkgName
+        self.pkgDir = os.path.join(self.getDestDir(), "opkg-%s" % pkgName)
 
-        debiandir = os.path.join(self.getDestDir(), self.pkgDir, 'debian')
-        if (os.path.exists(debiandir)):
-            Config().rmDir(debiandir)
+        if (os.path.exists(self.pkgDir)):
+            Tools.rmDir(self.pkgDir)
+
+        debiandir = os.path.join(self.pkgDir, 'debian')
         os.makedirs(debiandir)
 
         # Compile template files
@@ -188,7 +190,16 @@ class CompilerDebian(Compiler):
                 filelist = open(os.path.join(debiandir, "opkg-api-%s.install" % pkgName), "a")
                 filelist.write("%s /var/lib/oscar/packages/%s\n" % (basename, pkgName))
                 filelist.close()
-                shutil.copy(orig, os.path.join(self.getDestDir(), self.pkgDir))
+                shutil.copy(orig, self.pkgDir)
+
+        # Copy doc
+        Tools.copy(os.path.join(self.inputdir, "doc"),
+                   self.pkgDir,
+                   True,
+                   '\.svn|.*~')
+        filelist = open(os.path.join(debiandir, "opkg-api-%s.install" % pkgName), "a")
+        filelist.write("doc/* /usr/share/doc/opkg-api-%s\n" % pkgName)
+        filelist.close()
 
     def build(self):
         cdCmd = 'cd ' + self.pkgDir

@@ -30,18 +30,3 @@ class Config:
         
     def get (self, section, option):
         return self.config.get(section, option)
-
-    def rmDir (self, d):
-        """ -- Not clean here, should be in a OpkgcTools class --
-        Remove recursively a directory, even if not empty, like rm -r
-
-        Fails silently
-        """
-        if os.path.exists(d):
-            for p in os.listdir(d):
-                if os.path.isdir(os.path.join(d,p)):
-                    self.rmDir(os.path.join(d,p))
-                else:
-                    os.remove(os.path.join(d,p))
-            os.rmdir(os.path.join(d))
-

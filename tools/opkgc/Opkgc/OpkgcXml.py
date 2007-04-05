@@ -14,6 +14,7 @@ import os
 from lxml import etree
 from StringIO import StringIO
 from OpkgcConfig import *
+from OpkgcTools import *
 
 class XmlTools:
     __instance = None
@@ -98,5 +99,5 @@ class XmlTools:
             sys.exit(2)
 
     def delXSLTParam(self):
-        Config().rmDir(os.path.dirname(self.filter_xslt_file))
+        Tools.rmDir(os.path.dirname(self.filter_xslt_file))
         
