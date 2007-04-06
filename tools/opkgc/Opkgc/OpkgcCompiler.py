@@ -14,6 +14,7 @@ import os
 import re
 import shutil
 import exceptions
+import tarfile
 from OpkgcXml import *
 from OpkgcConfig import *
 from OpkgDescription import *
@@ -122,12 +123,16 @@ class Compiler:
 class CompilerRpm(Compiler):
     """ Extend Compiler for RPM packaging
     """
-    supportedDist = ['fc', 'rhel']
+    configSection = "RPM"
+    supportedDist = ['fc', 'rhel', 'mdv', 'suse']
     pkgDir = ''
+    specfile = ''
 
     def compile (self):
         self.xmlInit (self.getConfigFile())
         self.xmlValidate ()
+
+        desc = OpkgDescriptionRpm(self.xml_tool.getXmlDoc(), self.dist)
 
         pkgName = Tools.normalizeWithDash(self.getPackageName())
         self.pkgDir = os.path.join(self.getDestDir(), "opkg-%s" % pkgName)
@@ -136,22 +141,37 @@ class CompilerRpm(Compiler):
             Tools.rmDir(self.pkgDir)
         os.makedirs(self.pkgDir)
         
-        specfile = 'opkg' + '-' + pkgName + '.spec'
+        self.specfile = os.path.join(self.getDestDir(),
+                                     "opkg-%s.spec" % pkgName)
+        if (os.path.exists(self.specfile)):
+            os.remove(self.specfile)
 
-        self.xmlCompile(
-            os.path.join(Config().get("RPM", "templatedir"), "opkg.spec.xsl"),
-            os.path.join(self.pkgDir, specfile),
-            {"distrib":self.dist})
+        # Produce spec file
+        self.cheetahCompile(
+            desc,
+            os.path.join(Config().get(self.configSection, "templatedir"), "opkg.spec.tmpl"),
+            self.specfile)
+
+        # Produce a tarball from package dir
+        tarpath = "%s.tar.gz" % self.pkgDir
+        if (os.path.exists(tarpath)):
+            os.remove(tarpath)
+
+        tar = tarfile.open(tarpath, "w:gz")
+        tar.add(self.pkgDir)
+        tar.close()
 
     def build(self):
-        rpmCmd = Config().get("RPM", "buildcmd")
-        rpmOpts = Config().get("RPM", "buildopts")
+        cmd = Config().get(self.configSection, "buildcmd")
+        opts = Config().get(self.configSection, "buildopts")
+        opts += " %s" % self.specfile
 
-        ret = os.system(rpmCmd + ' ' + rpmOpts)
+        ret = os.system("%s %s" % (cmd, opts))
 
 class CompilerDebian(Compiler):
     """ Extend Compiler for Debian packaging
     """
+    configSection = "DEBIAN"
     supportedDist = ['debian']
     pkgDir = ''
     scriptsOrigDest = {'api-pre-install':       'opkg-api-%s.preinst',
@@ -166,7 +186,7 @@ class CompilerDebian(Compiler):
         self.xmlInit (self.getConfigFile())
         self.xmlValidate ()
 
-        desc = OpkgDescriptionDebian(self.xml_tool.getXmlDoc())
+        desc = OpkgDescriptionDebian(self.xml_tool.getXmlDoc(), self.dist)
 
         pkgName = Tools.normalizeWithDash(self.getPackageName())
         self.pkgDir = os.path.join(self.getDestDir(), "opkg-%s" % pkgName)
@@ -224,19 +244,19 @@ class CompilerDebian(Compiler):
             filelist.write("testing/* /var/lib/oscar/testing/%s\n" % pkgName)
             filelist.close()
 
-    def build(self):
-        cdCmd = 'cd ' + self.pkgDir
-        dpkgCmd = Config().get("DEBIAN", "buildcmd")
-        dpkgOpts = Config().get("DEBIAN", "buildopts")
-
-        ret = os.system(cdCmd + ';' + dpkgCmd + ' ' + dpkgOpts)
-
     def getTemplates(self):
         """ Return list of files in Debian templates dir
         """
         ret = []
-        for p in os.listdir(Config().get("DEBIAN", "templatedir")):
-            f = os.path.join(Config().get("DEBIAN", "templatedir"), p)
+        for p in os.listdir(Config().get(self.configSection, "templatedir")):
+            f = os.path.join(Config().get(self.configSection, "templatedir"), p)
             if not re.search("\.svn|.*~", p) and not os.path.isdir(f):
                 ret.append(f)
         return ret
+
+    def build(self):
+        cdCmd = 'cd ' + self.pkgDir
+        cmd = Config().get(self.configSection, "buildcmd")
+        opts = Config().get(self.configSection, "buildopts")
+
+        ret = os.system(cdCmd + ';' + cmd + ' ' + opts)

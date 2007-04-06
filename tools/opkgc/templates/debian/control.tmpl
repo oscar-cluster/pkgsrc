@@ -6,13 +6,13 @@ Uploaders: ${authors('uploader')}
 Build-Depends: debhelper (>= 5)
 Standards-Version: 3.7.2
 
-Package: opkg-${name}-api
+Package: opkg-${name}
 Architecture: $arch
 $depends('apiDeps', 'requires')$depends('apiDeps', 'conflicts')$depends('apiDeps', 'provides')$depends('apiDeps', 'suggests')#slurp
-Description: ${node('/summary')}, API part
+Description: ${node('/summary')}
  ${description}
  .
- This package contains the API part of the package.
+ This package contains cluster wide scripts for $name.
  .
   ${node('/uri')}
 

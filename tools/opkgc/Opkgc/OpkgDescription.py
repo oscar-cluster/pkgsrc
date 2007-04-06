@@ -10,18 +10,23 @@ import re
 from time import *
 from OpkgcXml import *
 
-__all__ = ['OpkgDescription', 'OpkgDescriptionDebian']
+__all__ = ['OpkgDescription', 'OpkgDescriptionDebian', 'OpkgDescriptionRpm']
 
 class OpkgDescription:
     """ Describe a config.xml file
     """
+    oscarDepends = {"clientDeps":"oscar-base-client",
+                    "apiDeps":"oscar-base",
+                    "serverDeps":"oscar-base-server"}    
     xmldoc = None
     month = {"01":"Jan", "02":"Feb", "03":"Mar", "04":"Apr",
              "05":"May", "06":"Jun", "07":"Jul", "08":"Aug",
              "09":"Sep", "10":"Oct", "11":"Nov", "12":"Dec"}
+    dist = ""
 
-    def __init__(self, xmldoc):
+    def __init__(self, xmldoc, dist):
         self.xmldoc = xmldoc
+        self.dist = dist
 
     def date(self, date, format):
         """ Convert 'xsdDate' in xsd:dateTime format
@@ -31,12 +36,12 @@ class OpkgDescription:
         'RFC822'
         """
         p = re.compile(r'^-?(?P<year>[0-9]{4})'
-                           r'-(?P<month>[0-9]{2})'
-                           r'-(?P<day>[0-9]{2})'
-                           r'T(?P<hour>[0-9]{2}):'
-                           r'(?P<min>[0-9]{2}):'
-                           r'(?P<sec>[0-9]{2})(?P<sfrac>\.[0-9]+)?'
-                           r'(?P<tz>((?P<tzs>-|\+)(?P<tzh>[0-9]{2}):(?P<tzm>[0-9]{2}))|Z)?')
+                       r'-(?P<month>[0-9]{2})'
+                       r'-(?P<day>[0-9]{2})'
+                       r'T(?P<hour>[0-9]{2}):'
+                       r'(?P<min>[0-9]{2}):'
+                       r'(?P<sec>[0-9]{2})(?P<sfrac>\.[0-9]+)?'
+                       r'(?P<tz>((?P<tzs>-|\+)(?P<tzh>[0-9]{2}):(?P<tzm>[0-9]{2}))|Z)?')
         m = p.search(date)
         if format == 'RFC822':
             date = "%s %s %s" % (m.group('day'), self.month[m.group('month')], m.group('year'))
@@ -53,6 +58,10 @@ class OpkgDescription:
         else:
             return date
 
+    def name(self):
+        p = re.compile(r'[^a-zA-Z0-9-]')
+        return p.sub('-', self.node("/name", 'lower'))
+
     def node(self, path, capitalize=''):
         s = self.xmldoc.findtext(path)
         if capitalize == 'lower':
@@ -61,44 +70,6 @@ class OpkgDescription:
             return s.upper()
         else:
             return s
-
-class OpkgDescriptionDebian(OpkgDescription):
-    """ Filters out some fields in a opkg description,
-        for Debian templates
-    """
-
-    archName = {"i386":"i386",
-                "amd64":"amd64",
-                "x86_64":"ia64"}
-
-    dependsName = {"requires":"Depends",
-                   "conflicts":"Conflicts",
-                   "provides":"Provides",
-                   "suggests":"Suggests"}
-
-    relName = {"<":"<<",
-               "<=":">=",
-               "=":"=",
-               ">=":">=",
-               ">":">>"}
-
-    def __init__(self, xmldoc):
-        OpkgDescription.__init__(self, xmldoc)
-
-    def description(self):
-        """ Return the description in Debian format:
-            each line begin with a space
-        """
-        desc = ''
-        t = self.xmldoc.findtext('/description')
-        for line in t.split('\n'):
-            desc += ' ' + line.strip() + '\n'
-        return desc.strip()
-
-    def arch(self):
-        """ Return 'all'
-        """
-        return "all"
 
     def authors(self, type):
         """ Return comma separated list of authors of type 'type'
@@ -126,24 +97,29 @@ class OpkgDescriptionDebian(OpkgDescription):
         author += ' <%s>' % etree.findtext('email')
         return author
         
-    def depends(self, part, relation):
-        """ Return list of dependencies of type 'relation' for
-        the 'part' package part.
-        Relation is one of: requires, conflicts, provides, suggests
-        Part is one of: apiDeps, serverDeps, clientDeps
+    def formatDepends(self, dlist, part, relation):
+        """ Format a dependancy list element
+        (requires|provides|conflicts|suggests).
+        relation: dlist parent
+        part: relation parent
+        (lxml does not keep track of parents :-(
         """
-        dlist = [d
-                 for d in self.xmldoc.findall(part + '/' + relation)
-                 if self.filterDist(d, 'debian')]
-        pkglistlist = [d.findall('pkg') for d in dlist]
+        pkglist = []
+        for d in dlist:
+            pkglist.extend(d.findall('pkg'))
+
         depends = ''
         i = 0
-        for pkglist in pkglistlist:
-            for pkg in pkglist:
-                if i != 0:
-                    depends += ', '
-                depends += self.pkgDep(pkg)
-                i += 1
+        # Add requires for oscar-base-<part>
+        if relation == 'requires':
+            depends += self.oscarDepends[part]
+            i += 1
+            
+        for pkg in pkglist:
+            if i != 0:
+                depends += ', '
+            depends += self.formatPkg(pkg)
+            i += 1
         ret = ''
         if i == 0:
             return ''
@@ -157,15 +133,102 @@ class OpkgDescriptionDebian(OpkgDescription):
         distFilters = [d.text.strip().lower() for d in elem.findall('filters/dist')]
         return len(distFilters) == 0 or dist in distFilters
 
-    def pkgDep(self, e):
+class OpkgDescriptionRpm(OpkgDescription):
+    """ Filters out some fields in a opkg description,
+        for RPM templates
+    """
+    dependsName = {"requires":"Requires",
+                   "conflicts":"Conflicts",
+                   "provides":"Provides"}
+
+    relName = {"<":"<",
+               "<=":">=",
+               "=":"=",
+               ">=":">=",
+               ">":">"}
+
+    def version(self, part):
+        """ Return part of version
+        part: upstream|release
+        """
+        version = self.xmldoc.find('changelog/versionEntry').get('version').strip()
+        return re.match(r'^(?P<upstream>.*)-(?P<release>.*)', version).group(part)
+
+    def description(self):
+        """ Return the description with stripped lines.
+        """
+        desc = ''
+        t = self.xmldoc.findtext('/description')
+        for line in t.split('\n'):
+            desc += line.strip()
+        return desc.strip()
+
+    def depends(self, part, relation):
+        """ Return list of dependencies of type 'relation' for
+        the 'part' package part.
+        Relation is one of: requires, conflicts, provides, suggests
+        Part is one of: apiDeps, serverDeps, clientDeps
+        """
+        dlist = [d
+                 for d in self.xmldoc.findall(part + '/' + relation)
+                 if self.filterDist(d, self.dist)]
+        return self.formatDepends(dlist, part, relation)
+
+    def formatPkg(self, e):
         """ Return formatted package name plus dependancy relation
         """
         ret = e.text.strip()
         version = e.get('version')
         rel = e.get('rel')
         if version:
-            ret += ' (%s %s)' % (self.relName[rel], version)
+            ret += ' %s %s' % (self.relName[rel], version)
         return ret
+
+class OpkgDescriptionDebian(OpkgDescription):
+    """ Filters out some fields in a opkg description,
+        for Debian templates
+    """
+
+    archName = {"i386":"i386",
+                "amd64":"amd64",
+                "x86_64":"ia64"}
+
+    dependsName = {"requires":"Depends",
+                   "conflicts":"Conflicts",
+                   "provides":"Provides",
+                   "suggests":"Suggests"}
+
+    relName = {"<":"<<",
+               "<=":">=",
+               "=":"=",
+               ">=":">=",
+               ">":">>"}
+
+    def description(self):
+        """ Return the description in Debian format:
+            each line begin with a space
+        """
+        desc = ''
+        t = self.xmldoc.findtext('/description')
+        for line in t.split('\n'):
+            desc += ' ' + line.strip() + '\n'
+        return desc.strip()
+
+    def arch(self):
+        """ Return 'all'
+        """
+        return "all"
+
+    def depends(self, part, relation):
+        """ Return list of dependencies of type 'relation' for
+        the 'part' package part.
+        Relation is one of: requires, conflicts, provides, suggests
+        Part is one of: apiDeps, serverDeps, clientDeps
+        """
+        dlist = [d
+                 for d in self.xmldoc.findall(part + '/' + relation)
+                 if self.filterDist(d, self.dist)]
+        return self.formatDepends(dlist, part, relation)
 
     def changelog(self):
         """ Return a list of versionEntries
@@ -237,3 +300,13 @@ class OpkgDescriptionDebian(OpkgDescription):
                 copyrights.append(cc)
 
         return copyrights
+
+    def formatPkg(self, e):
+        """ Return formatted package name plus dependancy relation
+        """
+        ret = e.text.strip()
+        version = e.get('version')
+        rel = e.get('rel')
+        if version:
+            ret += ' (%s %s)' % (self.relName[rel], version)
+        return ret
