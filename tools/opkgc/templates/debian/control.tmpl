@@ -6,7 +6,7 @@ Uploaders: ${authors('uploader')}
 Build-Depends: debhelper (>= 5)
 Standards-Version: 3.7.2
 
-Package: opkg-api-${name}
+Package: opkg-${name}-api
 Architecture: $arch
 $depends('apiDeps', 'requires')$depends('apiDeps', 'conflicts')$depends('apiDeps', 'provides')$depends('apiDeps', 'suggests')#slurp
 Description: ${node('/summary')}, API part
@@ -16,7 +16,7 @@ Description: ${node('/summary')}, API part
  .
   ${node('/uri')}
 
-Package: opkg-server-${name}
+Package: opkg-${name}-server
 Architecture: $arch
 $depends('serverDeps', 'requires')$depends('serverDeps', 'conflicts')$depends('serverDeps', 'provides')$depends('serverDeps', 'suggests')#slurp
 Description: ${node('/summary')}, server part
@@ -26,7 +26,7 @@ Description: ${node('/summary')}, server part
  .
   ${node('/uri')}
 
-Package: opkg-client-${name}
+Package: opkg-${name}-client
 Architecture: $arch
 $depends('clientDeps', 'requires')$depends('clientDeps', 'conflicts')$depends('clientDeps', 'provides')$depends('clientDeps', 'suggests')#slurp
 Description: ${node('/summary')}, client part
