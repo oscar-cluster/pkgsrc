@@ -1,13 +1,12 @@
 Installing opkgc
 ================
 
-This software use distutils package from Python standard distributions.
-Hence, to install opkgc, simply run:
-./setup.py install --help
-and follow the instructions.
+Run
+$ ./configure
+$ make
+$ make install
 
 Dependancies
 ------------
 
 * Python 2.4 (not tested with other versions)
-* Python lxml
