@@ -77,58 +77,83 @@
 	<title>Introduction</title>
 	
 	<para>
-	  OSCAR packages are described by configuration files
-	  (i.e. <emphasis>config.xml</emphasis> files. The files are pretty
-	  similar to meta-files for the creation of binary packages, for
-	  instance they provide dependences information, package information
-	  (such as version, author's information).
+	  OSCAR packages are described by a set of files in a
+	  distribution independant way. These files contains mandatory
+	  informations for binary packages generation plus some
+	  optional informations common to distribution specific
+	  packages system.  <filename>config.xml</filename> file
+	  contains most of informations about OPKG. For instance, it
+	  provides dependences informations, package information (such
+	  as version, author's information) and changelog. The other
+	  files are scripts executed before or after package
+	  installation or removal, plus documenation and testing
+	  scripts. A complete description of an OPKG is available on
+	  the OSCAR developpers
+	  wiki<footnote><para><!-- uri>http://svn.oscar.openclustergroup.org/trac/oscar/wiki/opkgAPI</uri --></para></footnote>.
 	</para>
 	<para>
-	  The idea is therefore to use the <emphasis>config.xml</emphasis>
-	  files to generate meta-files for binary packages. Typically that
-	  OPKGC allows developers to generate meta-files for binary packages
-	  for different distribution. For instance, they may want to execute
-	  the following command for the generation of binary package
-	  meta-files for RHEL: <emphasis>opkgc --rpm="rhel"
-	  config.xml</emphasis>. This command will parse the configuration
-	  file of the OPKG and generate the appropriate binary package
-	  meta-files.
+	  The idea is therefore to use these files to generate
+	  meta-files for binary packages. Typically, OPKGC allows
+	  developers to generate meta-files for binary packages for
+	  different distribution. For instance, they may want to
+	  execute the following command for the generation of binary
+	  package meta-files for RHEL: <command>opkgc --dist="rhel"
+	  &lt;directory&gt;</command>. This command will parse files
+	  in the given directory of the OPKG and generate the
+	  appropriate binary package meta-files.
 	</para>
       </sect3>
       <sect3>
 	<title>Implementation</title>
 	<para>
-	  The core of the mechanism for the generation of binary package
-	  meta-files is divided into two parts: (i) the parsing of the
-	  <emphasis>config.xml</emphasis>, and (ii) the transformation
-	  of this XML files to a binary package meta-file.
+	  The core of the mechanism for the generation of binary
+	  package meta-files is divided into three parts: (i) the
+	  parsing of the <filename>config.xml</filename>, (ii) the
+	  transformation of this XML files to the binary package
+	  meta-files and (iii) the addition of the various scripts and
+	  documentation files into the binary packages.
 	</para>
 	<para>
-	  Configuration files being XML documents, and since a lot of
-	  parsers are today available, the goal for OPKGC is therefore
-	  to not implement a new parser but use an existing one. That
-	  will ease the OPKGC maintenance and will avoid bugs implied by
-	  the implementation of a new parser.
+	  To parse <filename>config.xml</filename> file, which is an
+	  XML document, OPKG use a standard API available in the
+	  Python language, <command>etree</command>. That will ease
+	  the OPKGC maintenance and will avoid bugs implied by the
+	  implementation of a new parser.
 	</para>
 	<para>
-	  For the transformation of <emphasis>config.xml</emphasis> into
-	  binary package meta-files, a solution is to use XSLT, a
-	  standard set of tools for the transformation of XML
-	  documents. This approach has the advantage to not need to
-	  implement a new mechanism for the transformation, we only have
-	  to write the XSLT stylesheet which describes the
-	  transformation. The drawback of that approach is that XSLT is
-	  not really a progamming language and therefore the syntax and
-	  the way XSLT is working may seem non trivial (cf. parameters
-	  management).
+	  A naive approach for the transformation of
+	  <emphasis>config.xml</emphasis> into binary package
+	  meta-files is to use XSLT files. XSLT stylesheets are
+	  dedicated to XML files transformations and a language
+	  (XPATH) allows access to elements in the XML document in a
+	  concise form. The main drawback is that generated files are
+	  not XML files and XSLT does not allow to control fine enough
+	  the syntax of generated files (ie, regarding spaces, carriage
+	  returns, or other regex transformations).
 	</para>
 	<para>
-	  Therefore OPKGC is composed of two parts: (i) XSLT stylesheets
-	  that describe the needed transformation for the generation of
-	  binary package meta-package, and (ii) a python code that
-	  drives the XSLT and generate the packages.
+	  Therefore, the
+	  <emphasis>Cheetah</emphasis><footnote><para>Included into
+	  all Python distributions: 
+	  <!-- uri>http://cheetahtemplate.org/</uri --></para></footnote>
+	  template system is used for meta-files generations. It needs
+	  more code to be written, but, this is the only way to
+	  generate syntaxically correct files.
+	</para>
+	<para>
+	  Therefore OPKGC is composed of two parts: (i) Cheetah
+	  templates for generated files meta-files, and (ii) a python
+	  code that drives the templating system, creates the right
+	  meta-files tree and generate the packages.
 	</para>
       </sect3>
+    </sect2>
+
+    <sect2>
+      <title><command>opkgc</command> Installation</title>
+
+      <para>
+      </para>
     </sect2>
 
     <sect2>

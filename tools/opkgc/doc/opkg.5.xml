@@ -1,0 +1,241 @@
+<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"
+"http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
+<refentry id='opkg.5'>
+  <refmeta>
+    <refentrytitle>opkg</refentrytitle>
+    <manvolnum>5</manvolnum>
+  </refmeta>
+
+  <refnamediv>
+    <refname>opkg</refname>
+    <refpurpose>Format for OSCAR packages (opkg)</refpurpose>
+  </refnamediv>
+
+  <refsect1>
+    <title>Introduction</title>
+    <para>
+      This manual describes the structure of an OSCAR package.
+    </para>
+    <para>
+      OSCAR packages (<emphasis>opkg</emphasis>) describes software
+      in a multi-distribution way and with cluster-wide
+      characteristics.
+    </para>
+    <para>
+      The compiler for <emphasis>opkg</emphasis> is
+      <command>opkgc</command>. It produces a set of three native (RPM
+      or Deb) packages:
+      <orderedlist>
+	<listitem><para><command>opkg-&lt;package&gt;</command></para></listitem>
+	<listitem><para><command>opkg-&lt;package&gt;-server</command></para></listitem>
+	<listitem><para><command>opkg-&lt;package&gt;-client</command></para></listitem>
+      </orderedlist>
+    </para>
+    <para>
+      <command>opkg-&lt;package&gt;</command> depends on
+      <command>oscar-base</command> package plus other specified
+      packages, if any. It is installed on the server. It contains
+      various scripts to execute on the OSCAR server before or after
+      other packahes have been installed. For a detailed description,
+      see <xref linkend="base" />.
+    </para>
+    <para>
+      <command>opkg-&lt;package&gt;-server</command> depends on
+      <command>oscar-base-server</command> package plus other
+      specified packages, if any. It is installed on the server. Its
+      main goal is to describe dependancies for server side of the
+      software. It may also contain post installation or removal
+      scripts. For a detailed description, see <xref
+      linkend="baseserver" />.
+    </para>
+    <para>
+      <command>opkg-&lt;package&gt;-client</command> depends on
+      <command>oscar-base-client</command> package plus other
+      specified packages, if any. It is installed on the client nodes
+      image. Its main goal is to describe dependancies for client side
+      of the software. It may also contain post installation or
+      removal scripts. For a detailed description, see <xref
+      linkend="baseclient" />.
+    </para>
+  </refsect1>
+
+  <refsect1>
+    <title>Description</title>
+    <para>
+      We call OSCAR package source (<emphasis>opkg source</emphasis>)
+      a directory containing needed files to build an OSCAR package
+      (<emphasis>opkg</emphasis>). The following is the list of files
+      composing an <emphasis>opkg source</emphasis>. <xref
+      linkend="files" /> contains a detailed description of each
+      files.
+    </para>
+    <table>
+      <title>OSCAR Package Source</title>
+      <tgroup  cols="2">
+	<tbody>
+	  <row>
+	    <entry><filename>config.xml</filename></entry>
+	    <entry>required</entry>
+	  </row>
+	  <row>
+	    <entry><filename>scripts</filename></entry>
+	    <entry>optional</entry>
+	  </row>
+	  <row>
+	    <entry><filename>doc</filename></entry>
+	    <entry>optional</entry>
+	  </row>
+	  <row>
+	    <entry><filename>testing</filename></entry>
+	    <entry>optional</entry>
+	  </row>
+	</tbody>
+      </tgroup>
+    </table>
+
+    <refsect2 id="files" >
+      <title>OSCAR Package Source Files</title>
+
+      <refsect3>
+	<title><filename>config.xml</filename> File</title>
+	<para>
+	  The file <filename>config.xml</filename> contains the
+	  description of the package (authors, dependancies,
+	  changelog, informal description, etc.).
+	</para>
+	<para>
+	  It is described in a formal way by a XML schema located in
+	  <filename>/usr/share/doc/opkg/opkg.xsd</filename> if you
+	  installed the <command>opkgc</command>. The schema is also
+	  available online at <ulink
+	  url="http://svn.oscar.openclustergroup.org/trac/oscar/browser/pkgsrc/tools/opkgc/doc/opkg.xsd"
+	  >http://svn.oscar.openclustergroup.org/trac/oscar/browser/pkgsrc/tools/opkgc/doc/opkg.xsd</ulink>
+	</para>
+      </refsect3>
+
+      <refsect3>
+	<title><filename>doc</filename> Directory</title>
+	<para>
+	  All files in this directory are included as documentation of
+	  the <command>opkg-&lt;package&gt;</command>
+	  package. Depending on standards of distributions, these
+	  files are translated into HTML or PDF files. Hence,
+	  recommended language for documentation is either
+	  <command>LaTeX</command> or <command>DocBook</command>.
+	</para>
+      </refsect3>
+
+      <refsect3>
+	<title><filename>scripts</filename> Directory</title>
+	<para>
+	  This directory contains executable scripts executed before
+	  or after package installation or removal, or during other
+	  stage of the deployment of an OSCAR cluster.
+	</para>
+	<para>
+	  As shown on <xref linkend="scriptstable" />, some scripts
+	  are integrated into the native package system (RPM or Deb)
+	  as pre | post - install | removal scripts. These scripts
+	  must be written in <emphasis>sh</emphasis> language. It is
+	  the responsability of the author to write scripts which
+	  comply with generated packages policies:
+	  <itemizedlist>
+	    <listitem>
+	      <para>
+       		for RPM packages, a detailed description of scripts
+       		API is at <ulink
+       		url="http://www.rpm.org/max-rpm/s1-rpm-inside-scripts.html#S2-RPM-INSIDE-ERASE-TIME-SCRIPTS"
+       		>http://www.rpm.org/max-rpm/s1-rpm-inside-scripts.html#S2-RPM-INSIDE-ERASE-TIME-SCRIPTS</ulink>,
+	      </para>
+	    </listitem>
+	    <listitem>
+	      <para>
+		for Debian packages, please refer to the Debian Policy
+		Manual, at <ulink
+		url="http://www.debian.org/doc/debian-policy/ch-maintainerscripts.html"
+		>http://www.debian.org/doc/debian-policy/ch-maintainerscripts.html</ulink>
+	      </para>
+	    </listitem>
+	  </itemizedlist>
+	</para>
+	<para>
+	  Sample scripts are available in
+	  <filename>/usr/share/doc/opkg/samples/scripts</filename>
+	  directory if you installed an <command>opkgc</command>
+	  package.
+	</para>
+	<table id="scriptstable" >
+	  <title>opkg scripts</title>
+	  <tgroup cols="3">
+	    <thead>
+	      <row>
+		<entry>File name</entry>
+		<entry>Package</entry>
+		<entry>Description</entry>
+	      </row>
+	    </thead>
+	    <tbody>
+	      <row>
+		<entry><filename>api-pre-install</filename></entry>
+		<entry><command>opkg-&lt;package&gt;</command></entry>
+		<entry>native pre-install script</entry>
+	      </row>
+	    </tbody>
+	  </tgroup>
+	</table>
+      </refsect3>
+
+      <refsect3>
+	<title><filename>testing</filename> Directory</title>
+	<para>
+	  Desc
+	</para>
+      </refsect3>
+
+      
+    </refsect2>
+
+    <refsect2>
+      <title>Native Generated Packages</title>
+
+      <refsect3 id="base" >
+	<title><command>opkg-&lt;package&gt;</command></title>
+	<para>
+	  Desc
+	</para>
+      </refsect3>  
+      
+      <refsect3 id="baseserver" >
+	<title><command>opkg-&lt;package&gt;-server</command></title>
+	<para>
+	  Desc
+	</para>
+      </refsect3>  
+      
+      <refsect3 id="baseclient" >
+	<title><command>opkg-&lt;package&gt;-client</command></title>
+	<para>
+	  Desc
+	</para>
+      </refsect3>
+    </refsect2>
+      
+  </refsect1>
+
+  <refsect1>
+    <title>Author</title>
+    <para>
+      This manual has been written by Jean Parpaillon
+      <email>jean.parpaillon@irisa.fr</email>.
+    </para>
+  </refsect1>
+
+  <refsect1>
+    <title>See Also</title>
+    <para>
+      <simplelist>
+	<member>opkgc (1)</member>
+      </simplelist>
+    </para>
+  </refsect1>
+</refentry>

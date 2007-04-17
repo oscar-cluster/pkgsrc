@@ -54,7 +54,7 @@ AC_ARG_ENABLE([doc-one-html],
 			      [Build html doc (one page) @<:@default: disable@:>@])],
 	      [],
 	      [enable_doc_one_html="no"])
-AC_CHECK_PROG([DB2HTML], [db2html], [yes], [no])
+AC_CHECK_PROG([DB2HTML], [xmlto], [yes], [no])
 if test "$enable_doc_html" = "yes" -a "$DB2HTML" = "yes"; then
    HTMLDOC="yes"
 else
@@ -67,6 +67,9 @@ else
 fi
 AC_SUBST(HTMLDOC)
 AC_SUBST(ONEHTMLDOC)
+
+AC_CHECK_PROG([MANDOC], [xmlto], [yes], [no])
+AC_SUBST(MANDOC)
 
 dnl files to generate with automake
 AC_CONFIG_FILES([Makefile])
