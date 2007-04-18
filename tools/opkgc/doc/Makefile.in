@@ -11,10 +11,13 @@ pdfdocs = opkgc-manual.pdf opkgc.1.pdf opkg.5.pdf
 htmldocs = opkgc-manual
 onehtmldocs = opkgc-manual.html opkgc.1.html opkg.5.html
 
+html_stylesheet = db.css
+xsl_fragment = css.xslt
+
 MANS_SOURCES = $(patsubst %, %.xml, $(manpages))
 DOC_SOURCES = $(patsubst %.pdf, %.xml, $(pdfdocs))
 
-DISTFILES = $(DOC_SOURCES) $(MANS_SOURCES) $(schemas) $(EXTRA_DIST) 
+DISTFILES = $(DOC_SOURCES) $(MANS_SOURCES) $(schemas) $(EXTRA_DIST) samples $(html_stylesheet) $(xsl_fragment)
 DISTCLEAN_FILES = $(EXTRA_DISTCLEAN_FILES) Makefile
 
 CLEAN_FILES = $(manpages) $(EXTRA_CLEAN_FILES)
@@ -76,7 +79,13 @@ man: $(MAN_TARGETS)
 	$(DB2PDF) $< 
 
 %.html: %.xml
-	$(DB2ONEHTML) $<
+	fragments=""; \
+	if test -n "$(xsl_fragment)"; then \
+	  for f in $(xsl_fragment); do \
+	    fragments="$$fragments -m $$f"; \
+	  done; \
+	fi; \
+	$(DB2ONEHTML) $$fragments $<
 
 %: %.xml
 	$(DB2HTML) $<
@@ -111,6 +120,7 @@ install-data: install-man $(PDF_TARGETS) $(HTML_TARGETS) $(ONE_HTML_TARGETS) $(S
 	    $(mkdir_p) "$(DESTDIR)$(htmldir)"; \
 	    $(INSTALL_DATA) "$$t" "$(DESTDIR)$(htmldir)/$$t"; \
 	  done; \
+	  $(INSTALL_DATA) $(html_stylesheet) "$(DESTDIR)$(htmldir)/"; \
 	fi
 	if test "$(HTML_TARGETS)" != ""; then \
 	  for t in $(HTML_TARGETS); do \
@@ -118,12 +128,15 @@ install-data: install-man $(PDF_TARGETS) $(HTML_TARGETS) $(ONE_HTML_TARGETS) $(S
 	    ( cd $$t; \
 	      $(INSTALL_DATA) * "$(DESTDIR)$(htmldir)/$$t"; \
 	    ) \
+	    $(INSTALL_DATA) $(html_stylesheet) "$(DESTDIR)$(htmldir)/"; \
 	  done; \
 	fi
 	for t in $(SCHEMAS); do \
 	  $(mkdir_p) "$(DESTDIR)$(pkgdatadir)"; \
 	  $(INSTALL_DATA) "$$t" "$(DESTDIR)$(pkgdatadir)/$$t"; \
 	done
+	$(mkdir_p) $(DESTDIR)$(docdir)/samples
+	rsync -avr --exclude '.svn' --exclude '*~' samples $(DESTDIR)$(docdir)/samples
 
 install-man: $(MAN_TARGETS)
 	for file in $(MAN_TARGETS); do \
@@ -138,6 +151,7 @@ uninstall-data: uninstall-man
 	rm -rf $(DESTDIR)$(pdfdir)
 	rm -rf $(DESTDIR)$(htmldir)
 	rm -rf $(DESTDIR)$(pkgdatadir)
+	rm -rf $(DESTDIR)$(docdir)/samples
 
 uninstall-man:
 	for file in $(MAN_TARGETS); do \
