@@ -1,0 +1,19 @@
+Source: sc3
+Section: misc
+Priority: optional
+Maintainer: Geoffroy Vallee <valleegr@ornl.gov>
+Build-Depends: debhelper (>= 4.0.0)
+Standards-Version: 3.7.2 
+
+Package: sc3
+Architecture: all
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Subcluster command and control tools
+ Subcluster tools based on the C3 cluster command and control utilities.
+ One can define subclusters by one of: image, domain name, nodelist. The user
+ commands scexec, scpush and scrpm allow, respectively, the parallel execution
+ of commands on the entire subcluster, pushing files to each node of a 
+ subcluster and rpm operations to each subcluster node. If the subcluster 
+ definition is image-based the commands can be applied to the node's image, 
+ too. Or only to the image. This helps to keep cluster nodes and their images 
+ in sync.
