@@ -1,3 +1,10 @@
+sc3 (1.1-2gv1) UNRELEASED; urgency=low
+
+  * Fix various issues with the package. Update the version to allow
+    automatic update of the package.
+
+ -- gvh [gvh] <gvh@gvh1.ornl.gov>  Fri, 11 May 2007 00:43:46 -0400
+
 sc3 (1.1-1gv1) UNRELEASED; urgency=low
 
   * New upstream version.
