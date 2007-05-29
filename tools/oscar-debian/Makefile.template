@@ -1,0 +1,21 @@
+SUBDIRS := 
+SUBDIRS += packman
+SUBDIRS += rapt
+SUBDIRS += sc3
+
+export BASEDIR := $(CURDIR)
+
+deb:
+	@for subdir in $(SUBDIRS); do \
+		cd $(BASEDIR); \
+		cd $$subdir/trunk; \
+		dpkg-buildpackage -rfakeroot -us -uc; \
+	done
+
+clean:
+	@for subdir in $(SUBDIRS); do \
+		cd $(BASEDIR); \
+		cd $$subdir; \
+		rm -f *deb *changes *dsc *tar.gz; \
+	done
+

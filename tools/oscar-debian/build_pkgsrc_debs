@@ -16,7 +16,6 @@ use strict;
 use Carp;
 
 my $source_location = shift;
-my $packaging_dir = "/tmp/oscar-debian";
 my $cmd;
 my $verbose = 1;
 
@@ -25,38 +24,27 @@ if ($source_location eq "") {
 }
 
 # We initialize the packaging environment
-$cmd = "rm -rf " . $packaging_dir . "; mkdir -p $packaging_dir";
+$cmd = "cp Makefile.template " . $source_location . "Makefile";
 print "Executing: $cmd\n" if ($verbose);
 if (system ($cmd)) {
     croak ("Impossible to initialized the packaging environment");
 }
 
-# We copy sources for package creation
-print ("We copy sources for package creation\n");
-$cmd = "cp -r $source_location $packaging_dir; " .
-    "rm -rf `find $packaging_dir -name .svn`";
-print "Executing: $cmd\n" if ($verbose);
-if (system ($cmd)) {
-    croak ("Impossible to copy OSCAR sources");
-}
-
-# We copy Debian files for package creation
-print ("We copy Debian files for package creation\n");
-$cmd = "cp -rf debian $packaging_dir/oscar";
-print "Executing: $cmd\n" if ($verbose);
-if (system ($cmd)) {
-    croak ("Impossible to copy Debian files for package creation");
-}
-
 # We create Debian packages
-$cmd = "cd $packaging_dir/oscar; dpkg-buildpackage -rfakeroot -us -uc";
+$cmd = "cd $source_location; make deb";
 print "Executing: $cmd\n" if ($verbose);
 if (system ($cmd)) {
     croak ("Impossible to create Debian packages");
 }
 
+# We remove the Makefile we created
+$cmd = "rm -f " . $source_location . "Makefile";
+print "Executing: $cmd\n" if ($verbose);
+if (system ($cmd)) {
+    croak ("Impossible to delete the Makefile");
+}
+
 print "Done!\n";
-print "Debian packages are available in $packaging_dir\n";
 
 exit (0);
 
