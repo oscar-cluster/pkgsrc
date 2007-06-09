@@ -1,3 +1,10 @@
+rapt (1.0-4gv3) UNRELEASED; urgency=low
+
+  * Port to x86_64.
+  * Update the code for the use of apache2.
+
+ -- Geoffroy Vallee <valleegr@ornl.gov>  Thu,  7 Jun 2007 23:18:29 -0400
+
 rapt (1.0-4gv2) UNRELEASED; urgency=low
 
   * Fix various package issues. The package is now compliant with the
