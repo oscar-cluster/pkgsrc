@@ -2,6 +2,8 @@ SUBDIRS :=
 SUBDIRS += packman
 SUBDIRS += rapt
 SUBDIRS += sc3
+SUBDIRS += yume
+SUBDIRS += systeminstaller-oscar
 
 export BASEDIR := $(CURDIR)
 
