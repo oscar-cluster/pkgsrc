@@ -1,0 +1,115 @@
+#!/usr/bin/python
+
+###################################################################
+# Copyright (c) 2007 Oak Ridge National Laboratory,
+#                    Geoffroy Vallee <valleegr@ornl.gov>,
+#                    All rights reserved
+# Copyright (c) 2007 INRIA-IRISA,
+#                    Jean Parpaillon <jean.parpaillon@inria.fr>
+#                    All rights reserved
+# For license information, see the COPYING file in the top level
+# directory of the source
+###################################################################
+
+###################################################################
+#
+# Description:
+#   Transform config.xml description file for OSCAR packages into
+#   Debian or RPM packages.
+#
+# Requires:
+#   python-lxml
+#
+###################################################################
+
+import sys
+import getopt
+import re
+from Opkgc.OpkgcCompiler import *
+from Opkgc.OpkgcConfig import *
+from Opkgc.OpkgcLogger import *
+
+compilers = ['CompilerRpm', 'CompilerDebian']
+
+def usage():
+    """ Print command usage
+    """
+    print "Usage: " + sys.argv[0] + " [-h] [-u|--supported-dist] [--source]"
+    print "               [-o|--output=dir] [-i|--input=dir] [-v|--verbose] "
+    print "               --dist=targetDist"
+    print ""
+    print "\t--supported-dist : list supported distributions for --dist option"
+    print "\t--dist           : target distibution, default to current distribution"
+    print ""
+    print "\t--source : does not build package, only generate sources"
+    print "\t--input  : opkg directory, default current dir"
+    print "\t--output : build packages in specified dir"
+    print "\t-v       : verbose output"
+    print "\t-v -v    : debug output"
+
+def distList():
+    """ Print supported target distributions
+    """
+    print "Supported target distributions are:"
+    for compiler in compilers:
+        for target in eval(compiler).SupportedDist():
+            print target
+
+def main():
+    try:
+        opts, args = getopt.getopt(sys.argv[1:],
+                                   "husi:o:d:v",
+                                   ["help", "supported-dist", "source", "input=", "output=", "dist=", "verbose"])
+    except getopt.GetoptError:
+        # Print help information
+        usage()
+        sys.exit(2)
+
+    # Default values
+    build = True
+    inputdir = "."
+    output = "."
+    validate = True
+    dist = ''
+    debug = Logger.ERROR
+    
+    for o, a in opts:
+        if o in ("-h", "--help"):
+            usage()
+            sys.exit()
+        if o in ("-u", "--supported-dist"):
+            distList()
+            sys.exit()
+        if o in ("-s", "--source"):
+            build = False
+        if o in ("-i", "--input"):
+            inputdir = a
+        if o in ("-o", "--output"):
+            output = a
+        if o in ("-d", "--dist"):
+            dist = a
+        if o in ("-v", "--verbose"):
+            debug = debug+1
+
+    Logger().level(debug)
+
+    # Initialize config file. Here just to detect early lack of config file
+    Config()
+
+    # Build list of available target distributions and
+    # associated compiler
+    targets = {}
+    for compiler in compilers:
+        for target in eval(compiler).SupportedDist():
+            targets[target] = compiler
+
+    # Check if given target dist is available
+    if dist == '' or not(targets[dist]):
+        distList()
+        sys.exit(2)
+
+    c = eval(targets[dist])( inputdir, output, dist, validate )
+    c.compile(build)
+
+if __name__ == "__main__":
+    main()
