@@ -1,3 +1,9 @@
+opkgc (0.2.1-2) unstable; urgency=low
+
+  * Fix dependancies with Python libs (lxml, cheetah)
+
+ -- Jean Parpaillon <jean.parpaillon@irisa.fr>  Thu, 28 Jun 2007 17:06:25 +0200
+
 opkgc (0.2.1-1) unstable; urgency=low
 
   * Update from upstream (0.2.1)

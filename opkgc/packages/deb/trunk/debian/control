@@ -9,7 +9,7 @@ XS-Python-Version: >= 2.4
 
 Package: opkgc
 Architecture: all
-Depends: ${python:Depends}
+Depends: ${python:Depends}, python-lxml, python-cheetah
 Provides: ${python:Provides}
 XB-Python-Version: ${python:Versions}
 Description: Transform OSCAR Package into .deb or RPM
