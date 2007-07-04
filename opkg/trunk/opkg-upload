@@ -1,4 +1,13 @@
 #!/usr/bin/env python
+#
+# opkg-upload: Upload given packages on the OSCAR repositories,
+# for the given distributions
+#
+# For Debian packages, it uses dput.
+#
+# Copyright (C) 2007 INRIA-IRISA
+#                    Jean Parpaillon <jean.parpaillon@irisa.fr>
+#
 
 import os, sys, getopt, pwd
 import string, re
