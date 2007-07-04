@@ -132,7 +132,7 @@ def deb_upload(changefiles, dists):
     
     write_dput_conf()
 
-    if len(dists) ==0:
+    if len(dists) == 0:
         dists = [VALID_DEB_DISTS[0]]
 
     p_ext = re.compile('^(?P<prefix>.*)\.changes$')
@@ -142,24 +142,38 @@ def deb_upload(changefiles, dists):
             ret = os.system(cmd)
             if ret != 0:
                 error("%s returned %d" % (cmd, ret))
-                info("%s uploaded in dist %s with success" % (changefile, dists))
+            else:
+                info("%s uploaded in dist %s with success" % (changefile, dist))
 
-            # Rename .upload files so that we can upload for each distro
-            uploadfile = p_ext.sub(r'\g<prefix>.upload', changefile)
-            os.rename(uploadfile, '%s.%s' % (uploadfile, dist))
+                # Rename .upload files so that we can upload for each distro
+                uploadfile = p_ext.sub(r'\g<prefix>.upload', changefile)
+                os.rename(uploadfile, '%s.%s' % (uploadfile, dist))
     
     del_dput_conf()
 
 def rpm_upload(rpmfiles, dists):
-    """ Upload RPM packages
+    """ Upload RPM packages in distributions given by dist.
+    If no dist is given, the first of VALID_RPM_DISTS is used.
     """
     if len(rpmfiles) == 0:
         return 1
 
-    print rpmfiles
-    print dists
-    
-    error("Not implemented yet")
+    if len(dists) == 0:
+        dists = [VALID_RPM_DISTS[0]]
+
+    for rpm in rpmfiles:
+        for dist in dists:
+            cmd = "rsync -av %s %s@%s:%s/%s/" % (rpm,
+                                                login,
+                                                config.get('DEFAULT', 'fqdn'),
+                                                config.get('DEFAULT', 'incoming'),
+                                                dist)
+                                                
+            ret = os.system(cmd)
+            if ret != 0:
+                error("%s returned %d" % (cmd, ret))
+            else:
+                info("%s uploaded in dist %s with success" % (rpm, dist))
 
 def main():
     global dists
