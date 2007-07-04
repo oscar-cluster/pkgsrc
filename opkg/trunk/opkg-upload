@@ -1,0 +1,244 @@
+#!/usr/bin/env python
+
+import os, sys, getopt, pwd
+import string, re
+import ConfigParser
+
+VERSION = '0.1'
+
+DFT_METHOD = 'rsync'
+DFT_HOST = 'gforge.inria.fr'
+DFT_INCOMING = '/home/groups/oscar/incoming'
+
+VALID_DEB_DISTS = ['sid', 'etch']
+VALID_RPM_DISTS = ['fc5', 'fc6', 'fc7', 'rhel4', 'rhel5', 'sles10']
+
+USAGE = """Usage: opkg-upload [options] file ...
+       -h|--help     print this and exit
+       -v|--version  print version and exit
+       -d|--debug    more verbose
+       -D|--dist=    list of distributions
+
+       file          space-separated list of files to upload:
+                     .rpm for RPMs
+                     .changes for Debian
+                     All files must be of the same type
+"""
+
+DPUT_CF_TPL = string.Template("""[oscar-$dist]
+login = $login
+method = $method
+fqdn = $fqdn
+incoming = $incoming/$dist
+
+""")
+
+dput_conf_file = 'dput.conf.opkg'
+
+login = ''
+dists = []
+config = None
+debug_level = 0
+
+def debug(msg):
+    if debug_level > 0:
+        print "[DEBUG] %s" % msg
+
+def info(msg):
+    print "[INFO] %s" % msg
+
+def warn(msg):
+    print "[WARN] %s" % msg
+
+def error(msg):
+    print >> sys.stderr, "[ERROR] %s" % msg
+
+#
+# Read config file:
+# 1- /etc/opkg-dupload.conf
+# 2- ~/.opkg-dupload.conf
+#
+def read_config():
+    global config
+    global dput_conf_file
+
+    config = ConfigParser.ConfigParser()
+
+    config.set('DEFAULT', 'fqdn', DFT_HOST)
+    config.set('DEFAULT', 'incoming', DFT_INCOMING)
+    config.set('DEFAULT', 'method', DFT_METHOD)
+    config.set('DEFAULT', 'login', '')
+
+    config_files = ('/etc/opkg-upload.conf', os.path.expanduser("~/.opkg-upload.conf"))
+    fd = None
+    for config_file in config_files:
+	try:
+	    fd = open(config_file)
+	except IOError, e:
+	    continue
+	try:
+	    config.readfp(fd)
+            debug("Read config in %s" % config_file)
+	except ConfigParser.ParsingError, e:
+	    error("Error parsing config file:\n%s" % str(e))
+	    sys.exit(1)
+	fd.close()
+
+    if fd == None:
+        debug("No config file")
+
+    dput_conf_file = os.path.join('/', 'tmp', dput_conf_file)
+
+def check_dput_conf():
+    return os.path.exists(dput_conf_file)
+
+def write_dput_conf():
+    dput_cf = ""
+    for dist in VALID_DEB_DISTS:
+        dput_cf += DPUT_CF_TPL.substitute({'dist': dist,
+                                          'login': login,
+                                          'fqdn': config.get('DEFAULT', 'fqdn'),
+                                          'method': config.get('DEFAULT', 'method'),
+                                          'incoming': config.get('DEFAULT', 'incoming')})
+
+    try:        
+        fd = open(dput_conf_file, 'w')
+        fd.write(dput_cf)
+        fd.close()
+        debug("Wrote %s" % dput_conf_file)
+    except IOError, e:
+        error("Can not write into %s: %s" % (dput_conf_file, e))
+        sys.exit(1)
+
+def del_dput_conf():
+    os.unlink(dput_conf_file)
+    debug("Remove %s" % dput_conf_file)
+
+def deb_upload(changefiles, dists):
+    """ Upload Debian packages with dput in given dists
+    If dists is empty, default one is the first in VALID_DEB_DISTS
+    """
+    if len(changefiles) == 0:
+        return 1
+    
+    write_dput_conf()
+
+    if len(dists) ==0:
+        dists = [VALID_DEB_DISTS[0]]
+
+    p_ext = re.compile('^(?P<prefix>.*)\.changes$')
+    for changefile in changefiles:
+        for dist in dists:
+            cmd = "dput -c %s oscar-%s %s" % (dput_conf_file, dist, changefile)
+            ret = os.system(cmd)
+            if ret != 0:
+                error("%s returned %d" % (cmd, ret))
+                info("%s uploaded in dist %s with success" % (changefile, dists))
+
+            # Rename .upload files so that we can upload for each distro
+            uploadfile = p_ext.sub(r'\g<prefix>.upload', changefile)
+            os.rename(uploadfile, '%s.%s' % (uploadfile, dist))
+    
+    del_dput_conf()
+
+def rpm_upload(rpmfiles, dists):
+    """ Upload RPM packages
+    """
+    if len(rpmfiles) == 0:
+        return 1
+
+    print rpmfiles
+    print dists
+    
+    error("Not implemented yet")
+
+def main():
+    global dists
+    global files
+    global login
+    global debug_level
+    
+    # Parse command line options
+    try:
+        (opts, args) = getopt.getopt(sys.argv[1:],
+                                     'vhdD:',
+                                     ['version', 'help', 'debug', 'dist='])
+    except getopt.error, msg:
+        error(msg)
+        sys.exit(1)
+
+    for option, arg in opts:
+        if option in ('-h', '--help'):
+            print USAGE
+            return
+        elif option in ('-v', '--version'):
+            print VERSION
+            return
+        elif option in ('-d', '--debug'):
+            debug_level = 1
+        elif option in ('-D', '--dist'):
+            dists = string.split(arg, ',')
+
+    # Try to get the login from the enviroment
+    if os.environ.has_key('USER'):
+        login = os.environ['USER']
+    else:
+        # Else use the current username
+        login = pwd.getpwuid(os.getuid( ))[0]
+    read_config()
+
+    # Check now the login and redefine it if needed
+    if (len(config.get('DEFAULT', 'login')) != 0):
+        login = config.get('DEFAULT', 'login')
+
+    if len(args) == 0:
+        warn("No package to upload")
+        sys.exit(0)
+
+    # The extension of the first arg is the same used for all others
+    # (ensure that all args are deb or RPM, but not both)
+    p_deb = re.compile('.*\.(changes)$')
+    p_rpm = re.compile('.*\.(rpm)$')
+    p = None
+    valid_dists = []
+    if p_deb.match(args[0]):
+        p = p_deb
+        for d in dists:
+            if d in VALID_DEB_DISTS:
+                valid_dists.append(d)
+            else:
+                error("Unknown distribution for .deb: %s" % d)
+                sys.exit(1)
+    elif p_rpm.match(args[0]):
+        p = p_rpm
+        for d in dists:
+            if d in VALID_RPM_DISTS:
+                valid_dists.append(d)
+            else:
+                error("Unknown distribution .rpm: %s" % d)
+                sys.exit(1)
+    else:
+        error("Invalid file: %s" % args[0])
+        sys.exit(1)
+
+    files = []
+    for f in args:
+        if p.match(f) and os.path.exists(f) and not os.path.isdir(f):
+            files.append(f)
+        else:
+            error("Invalid file: %s" % f)
+            sys.exit(1)
+
+    if p == p_deb:
+        deb_upload(files, valid_dists)
+    elif p == p_rpm:
+        rpm_upload(files, valid_dists)
+    
+# Main
+if __name__ == '__main__':
+    try:
+        main()
+    except KeyboardInterrupt:
+        print "exiting due to user interrupt."
+
+# vim: set expandtab shiftwidth=4 :
