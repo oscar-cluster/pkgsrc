@@ -14,7 +14,18 @@ MAIL_FROM=oscar-package@lists.sourceforge.net
 #SIGNATURES=true
 SIGNATURES=false
 
+LOCK=/tmp/update-apt.lock
+
 DEBUG=false
+
+#
+# If an instance is already running, exit
+#
+if [ -e $LOCK ]; then
+    echo "An instance of update-apt.sh is already running, exiting..."
+    exit 0
+fi
+touch $LOCK
 
 #
 # reprepro options
@@ -241,3 +252,5 @@ done
 
 rsync -av --delete $BASEDIR/dists/ $DIST_HOST:$DIST_REPOS/dists/
 rsync -av --delete $BASEDIR/pool/ $DIST_HOST:$DIST_REPOS/pool/
+
+rm $LOCK
