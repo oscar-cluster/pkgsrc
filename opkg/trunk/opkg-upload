@@ -19,8 +19,10 @@ DFT_METHOD = 'rsync'
 DFT_HOST = 'gforge.inria.fr'
 DFT_INCOMING = '/home/groups/oscar/incoming'
 
-VALID_DEB_DISTS = ['sid', 'etch']
-VALID_RPM_DISTS = ['fc5', 'fc6', 'fc7', 'rhel4', 'rhel5', 'sles10']
+VALID_DEB_DISTS = ['unstable', 'testing', 'stable']
+VALID_RPM_DISTS = ['fc5', 'fc6', 'fc7',
+                   'rhel4', 'rhel5',
+                   'sles10']
 
 USAGE = """Usage: opkg-upload [options] file ...
        -h|--help     print this and exit
@@ -201,6 +203,17 @@ def main():
             debug_level = 1
         elif option in ('-D', '--dist'):
             dists = string.split(arg, ',')
+
+    # If --dist=help, prints list of supported distributions
+    if dists[0] == 'help':
+        print "Supported distributions:"
+        print "DEB: "
+        for d in VALID_DEB_DISTS:
+            print "%s " %d
+        print "\nRPM: "
+        for d in VALID_RPM_DISTS:
+            print "%s " %d
+        sys.exit(0)
 
     # Try to get the login from the enviroment
     if os.environ.has_key('USER'):
