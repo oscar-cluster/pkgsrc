@@ -5,7 +5,7 @@ INCOMING=$BASEDIR/incoming
 
 DIST_HOST=gforge.inria.fr
 DIST_INCOMING=/home/groups/oscar/incoming
-DIST_REPOS=/home/groups/oscar/htdocs/debian-test
+DIST_REPOS=/home/groups/oscar/htdocs/debian
 
 MAIL_TO=oscar-package@lists.sourceforge.net
 MAIL_FROM=oscar-package@lists.sourceforge.net
