@@ -209,7 +209,7 @@ def main():
                 print "DEB: "
                 for d in VALID_DEB_DISTS:
                     print "%s " %d
-                    print "\nRPM: "
+                print "\nRPM: "
                 for d in VALID_RPM_DISTS:
                     print "%s " %d
                 sys.exit(0)
