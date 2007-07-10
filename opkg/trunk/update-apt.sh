@@ -3,6 +3,7 @@
 BASEDIR=/local/debian
 INCOMING=$BASEDIR/incoming
 
+DIST_USER=$USER
 DIST_HOST=gforge.inria.fr
 DIST_INCOMING=/home/groups/oscar/incoming
 DIST_REPOS=/home/groups/oscar/htdocs/debian
@@ -10,9 +11,11 @@ DIST_REPOS=/home/groups/oscar/htdocs/debian
 MAIL_TO=oscar-package@lists.sourceforge.net
 MAIL_FROM=oscar-package@lists.sourceforge.net
 
+KEYRING=http://oscar.gforge.inria.fr/oscar-keyring.gpg
+
 # If true, check for signatures
-#SIGNATURES=true
-SIGNATURES=false
+SIGNATURES=true
+#SIGNATURES=false
 
 LOCK=/tmp/update-apt.lock
 
@@ -31,7 +34,7 @@ touch $LOCK
 # reprepro options
 #
 reprepro_opts=
-if $SIGNATURES; then
+if ! $SIGNATURES; then
     reprepro_opts=$reprepro_opts --ignore=brokensignatures
 fi
 
@@ -177,14 +180,19 @@ rm_incoming() {
     log_debug "Remove $INCOMING/$file"
     rm $INCOMING/$file || return 1
     log_debug "Remove $DIST_HOST:$DIST_INCOMING/$file"
-    ssh $DIST_HOST "rm $DIST_INCOMING/$file" || return 1
+    ssh $DIST_USER@$DIST_HOST "rm $DIST_INCOMING/$file" || return 1
 }
+
+#
+# Get keyring
+#
+wget -O ~/.gnupg/pubring.gpg $KEYRING
 
 #
 # Synchronize incoming dirs
 #
 log_info "Sync incoming/ dir"
-rsync -av --exclude='*.rpm' $DIST_HOST:$DIST_INCOMING/ $INCOMING/
+rsync -av --exclude='*.rpm' $DIST_USER@$DIST_HOST:$DIST_INCOMING/ $INCOMING/
 
 #
 # Make sure we're in the base directory
@@ -250,7 +258,7 @@ for d in $INCOMING/*; do
     fi
 done
 
-rsync -av --delete $BASEDIR/dists/ $DIST_HOST:$DIST_REPOS/dists/
-rsync -av --delete $BASEDIR/pool/ $DIST_HOST:$DIST_REPOS/pool/
+rsync -av --delete $BASEDIR/dists/ $DIST_USER@$DIST_HOST:$DIST_REPOS/dists/
+rsync -av --delete $BASEDIR/pool/ $DIST_USER@$DIST_HOST:$DIST_REPOS/pool/
 
 rm $LOCK
