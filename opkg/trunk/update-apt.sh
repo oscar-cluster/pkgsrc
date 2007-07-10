@@ -186,7 +186,7 @@ rm_incoming() {
 #
 # Get keyring
 #
-wget -O ~/.gnupg/pubring.gpg $KEYRING
+wget -q -O ~/.gnupg/pubring.gpg $KEYRING
 
 #
 # Synchronize incoming dirs
