@@ -131,7 +131,7 @@ package_success() {
     echo 'Thank  you for your contribution to OSCAR.' >> $mailfile
 
     log_info "Sending success mail to $to and $MAIL_TO"
-    mail -s "[oscar-repos] $base in $dist: ACCEPTED" \
+    mail -s "$base in $dist: ACCEPTED" \
 	-c "$MAIL_TO" \
 	"$to" < $mailfile
 
@@ -164,7 +164,7 @@ package_error() {
     echo 'Thank  you for your contribution to OSCAR.' >> $mailfile
 
     log_info "Sending error mail to $to and $MAIL_TO"
-    mail -s "[oscar-repos] $base in $dist: REFUSED" \
+    mail -s "$base in $dist: REFUSED" \
 	-c "$MAIL_TO" \
 	"$to" < $mailfile
 

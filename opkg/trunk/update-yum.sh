@@ -2,22 +2,27 @@
 
 BASEDIR=/local/yum
 INCOMING=$BASEDIR/incoming
+POOL=$BASEDIR/pool
 
+if [ -z "$DIST_USER" ]; then
+    DIST_USER=$USER
+fi
 DIST_HOST=gforge.inria.fr
 DIST_INCOMING=/home/groups/oscar/incoming
 DIST_REPOS=/home/groups/oscar/htdocs/yum
 
-MAIL_TO=oscar-package@lists.sourceforge.net
-MAIL_FROM=oscar-package@lists.sourceforge.net
+MAIL_TO=oscar-package@lists.gforge.inria.fr
 
 LOCK=/tmp/update-yum.lock
 
-DEBUG=true
+DEBUG=false
+
+KEYRING=http://oscar.gforge.inria.fr/oscar-keyring.gpg
 
 #
 # createrepo options
 #
-createrepo_opts=
+createrepo_opts="--update --checkts"
 
 #
 # exit if an instance is already running
@@ -27,6 +32,11 @@ if [ -e $LOCK ]; then
     exit 0
 fi
 touch $LOCK
+
+#
+# Get keyring
+#
+wget -O ~/.gnupg/pubring.gpg $KEYRING
 
 #
 # logging facilities
@@ -64,8 +74,9 @@ package_success() {
     echo '' >> $mailfile
     echo 'Thank  you for your contribution to OSCAR.' >> $mailfile
 
-    mail -a "From: $MAIL_FROM" \
-	-s "[oscar-repos] $base in $dist: ACCEPTED" \
+    log_info "Sending success notification to $to and $MAIL_TO"
+    mail -s "$base in $dist: ACCEPTED" \
+	-c "$MAIL_TO" \
 	"$to" < $mailfile
     
     rm -f $mailfile
@@ -80,15 +91,20 @@ package_error() {
     rpm=$1
     base=`basename $rpmfile .rpm`
     dist=$2
+    msg=$3
     to=`rpm -qp --qf "%{Packager}" $rpmfile`
 
     mailfile=/tmp/oscar.mail
     echo "Package $base inclusion in distribution $dist has been refused." > $mailfile
+    if [ -n "$msg" ]; then
+	echo "$msg" >> $mailfile
+    fi
     echo '' >> $mailfile
     echo 'Thank  you for your contribution to OSCAR.' >> $mailfile
 
-    mail -a "From: $MAIL_FROM" \
-	-s "[oscar-repos] $base in $dist: REFUSED" \
+    log_info "Sending error notification to $to and $MAIL_TO"
+    mail -s "$base in $dist: REFUSED" \
+	-c "$MAIL_TO" \
 	"$to" < $mailfile
     
     rm -f $mailfile
@@ -106,7 +122,7 @@ rm_incoming() {
     log_debug "Remove $INCOMING/$file"
     rm $INCOMING/$file || return 1
     log_debug "Remove $DIST_HOST:$DIST_INCOMING/$file"
-    ssh $DIST_HOST "rm $DIST_INCOMING/$file" || return 1
+    ssh $DIST_USER@$DIST_HOST "rm $DIST_INCOMING/$file" || return 1
 }
 
 #
@@ -119,12 +135,13 @@ rsync -av \
     --exclude='*.tar.gz' \
     --exclude='*.diff.gz' \
     --exclude='*.changes' \
-    $DIST_HOST:$DIST_INCOMING/ $INCOMING/
+    $DIST_USER@$DIST_HOST:$DIST_INCOMING/ $INCOMING/
 
 #
 # Make sure we're in the base directory
 #
 cd $BASEDIR
+mkdir -p $POOL
 
 #
 # Get every distribution
@@ -143,22 +160,34 @@ for d in $INCOMING/*; do
 	    base=`basename $i .rpm`
 	    
             # Import package
+	    log_info "Check package signature"
+	    rpm --checksig $i || \
+		package_error $i $dist "Package signature is incorrect".
+
 	    log_info "Including $base into dist: $dist"
 	    cp -f $i $BASEDIR/pool/
-	    ( cd $BASEDIR/dists/$dist && ln -fs ../../pool/$base.rpm $base.rpm )
+	    
+	    arch=`echo $base | sed 's/.*\.\([^\.]*\)$/\1/'`
+	    rpmdir=RPMS
+	    if [ "$arch" = "src" ]; then
+		arch=source
+		rpmdir=SRPMS
+	    fi
+	    mkdir -p $BASEDIR/dists/$dist/$arch/$rpmdir
+	    ( cd $BASEDIR/dists/$dist/$arch/$rpmdir && ln -fs ../../../../pool/$base.rpm $base.rpm )
 	    package_success $i $dist
+
+            # Update repository metadatas
+	    log_info "Update repository metadatas"
+	    createrepo $createrepo_opts $BASEDIR/dists/$dist/$arch/
 
 	    rm_incoming $dist/$base.rpm
 	done
-
-	# Create repository metadatas
-	log_info "Update repository metadatas"
-	createrepo $createrepo_opts $BASEDIR/dists/$dist
     fi
 done
 
-rsync -av --delete $BASEDIR/dists/ $DIST_HOST:$DIST_REPOS/dists/
-rsync -av --delete $BASEDIR/pool/ $DIST_HOST:$DIST_REPOS/pool/
+rsync -av --delete $BASEDIR/dists/ $DIST_USER@$DIST_HOST:$DIST_REPOS/dists/
+rsync -av --delete $BASEDIR/pool/ $DIST_USER@$DIST_HOST:$DIST_REPOS/pool/
 
 #
 # Remove lock
