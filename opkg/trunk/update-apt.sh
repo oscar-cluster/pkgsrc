@@ -3,13 +3,14 @@
 BASEDIR=/local/debian
 INCOMING=$BASEDIR/incoming
 
-DIST_USER=$USER
+if [ -z "$DIST_USER" ]; then
+    DIST_USER=$USER
+fi
 DIST_HOST=gforge.inria.fr
 DIST_INCOMING=/home/groups/oscar/incoming
 DIST_REPOS=/home/groups/oscar/htdocs/debian
 
-MAIL_TO=oscar-package@lists.sourceforge.net
-MAIL_FROM=oscar-package@lists.sourceforge.net
+MAIL_TO=oscar-package@lists.gforge.inria.fr
 
 KEYRING=http://oscar.gforge.inria.fr/oscar-keyring.gpg
 
@@ -129,9 +130,10 @@ package_success() {
     echo '' >> $mailfile
     echo 'Thank  you for your contribution to OSCAR.' >> $mailfile
 
-    mail -a "From: $MAIL_FROM" \
-	 -s "[oscar-repos] $base in $dist: ACCEPTED" \
-         "$to" < $mailfile
+    log_info "Sending success mail to $to and $MAIL_TO"
+    mail -s "[oscar-repos] $base in $dist: ACCEPTED" \
+	-c "$MAIL_TO" \
+	"$to" < $mailfile
 
     rm -f $mailfile
 	 
@@ -161,9 +163,10 @@ package_error() {
     echo '' >> $mailfile
     echo 'Thank  you for your contribution to OSCAR.' >> $mailfile
 
-    mail -a "From: $MAIL_FROM" \
-	 -s "[oscar-repos] $base in $dist: REFUSED" \
-         "$to" < $mailfile
+    log_info "Sending error mail to $to and $MAIL_TO"
+    mail -s "[oscar-repos] $base in $dist: REFUSED" \
+	-c "$MAIL_TO" \
+	"$to" < $mailfile
 
     rm -f $mailfile
 
