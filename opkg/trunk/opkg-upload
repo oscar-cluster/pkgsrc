@@ -203,17 +203,16 @@ def main():
             debug_level = 1
         elif option in ('-D', '--dist'):
             dists = string.split(arg, ',')
-
-    # If --dist=help, prints list of supported distributions
-    if dists[0] == 'help':
-        print "Supported distributions:"
-        print "DEB: "
-        for d in VALID_DEB_DISTS:
-            print "%s " %d
-        print "\nRPM: "
-        for d in VALID_RPM_DISTS:
-            print "%s " %d
-        sys.exit(0)
+            # If --dist=help, prints list of supported distributions
+            if dists[0] == 'help':
+                print "Supported distributions:"
+                print "DEB: "
+                for d in VALID_DEB_DISTS:
+                    print "%s " %d
+                    print "\nRPM: "
+                for d in VALID_RPM_DISTS:
+                    print "%s " %d
+                sys.exit(0)
 
     # Try to get the login from the enviroment
     if os.environ.has_key('USER'):
