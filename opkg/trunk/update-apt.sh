@@ -34,7 +34,7 @@ touch $LOCK
 #
 # reprepro options
 #
-reprepro_opts=
+reprepro_opts=--ignore=wrongdistribution
 if ! $SIGNATURES; then
     reprepro_opts=$reprepro_opts --ignore=brokensignatures
 fi
