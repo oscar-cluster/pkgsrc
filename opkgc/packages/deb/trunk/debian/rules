@@ -16,8 +16,6 @@ clean:
 	find . -name *\.py[co] -exec rm {} \;
 	dh_clean
 
-configure: config.status
-
 config.status:
 	dh_testdir
 	./configure \
@@ -27,21 +25,34 @@ config.status:
 	  --disable-html-doc \
 	  --enable-html-doc
 
-build: build-stamp
-build-stamp: configure
+build: build-arch build-indep
+
+build-arch: build-arch-stamp
+build-arch-stamp: config.status
+	touch $@
+
+build-indep: build-indep-stamp
+build-indep-stamp: config.status
 	dh_testdir
 	$(MAKE)
 	touch $@
 
 install: install-stamp
-install-stamp: build-stamp
+install-stamp: build
 	$(MAKE) install DESTDIR=$(CURDIR)/debian/${PACKAGE_NAME}
 	# delete manpages in HTML
 	rm -f $(CURDIR)/debian/${PACKAGE_NAME}/usr/share/doc/opkgc/*.1.html
 	rm -f $(CURDIR)/debian/${PACKAGE_NAME}/usr/share/doc/opkgc/*.5.html
 	touch $@
 
-binary: build install
+binary: binary-arch binary-indep
+
+binary-arch: build install
+
+binary-indep: build install
+	$(MAKE) -f debian/rules DH_OPTIONS=-i binary-common
+
+binary-common:
 	dh_testdir
 	dh_testroot
 	dh_installchangelogs ChangeLog
@@ -56,4 +67,4 @@ binary: build install
 	dh_md5sums
 	dh_builddeb
 
-.PHONY: build clean binary install configure
+.PHONY: build clean binary binary-arch binary-indep install configure
