@@ -253,16 +253,20 @@ def main():
                 error("Unknown distribution .rpm: %s" % d)
                 sys.exit(1)
     else:
-        error("Invalid file: %s" % args[0])
+        error("Invalid file: %s (nor .changes nor .rpm)" % args[0])
         sys.exit(1)
 
     files = []
     for f in args:
-        if p.match(f) and os.path.exists(f) and not os.path.isdir(f):
-            files.append(f)
+        if not p.match(f):
+            error("Invalid file: %s (all files must be .changes or .rpm, but not both)" % f)
+            raise SystemExit(1)
         else:
-            error("Invalid file: %s" % f)
-            sys.exit(1)
+            if not os.path.exists(f) or os.path.isdir(f):
+                error("File does not exists: %s" % f)
+                raise SystemExit(1)
+            else:
+                files.append(f)
 
     if p == p_deb:
         deb_upload(files, valid_dists)
