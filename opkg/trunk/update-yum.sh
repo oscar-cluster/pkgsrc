@@ -2,7 +2,6 @@
 
 BASEDIR=/local/yum
 INCOMING=$BASEDIR/incoming
-POOL=$BASEDIR/pool
 
 if [ -z "$DIST_USER" ]; then
     DIST_USER=$USER
@@ -88,7 +87,7 @@ package_success() {
 # Called if error occured while updating repository
 #
 package_error() {
-    rpm=$1
+    rpmfile=$1
     base=`basename $rpmfile .rpm`
     dist=$2
     msg=$3
@@ -141,7 +140,6 @@ rsync -av \
 # Make sure we're in the base directory
 #
 cd $BASEDIR
-mkdir -p $POOL
 
 #
 # Get every distribution
@@ -161,33 +159,41 @@ for d in $INCOMING/*; do
 	    
             # Import package
 	    log_info "Check package signature"
-	    rpm --checksig $i || \
-		package_error $i $dist "Package signature is incorrect".
-
-	    log_info "Including $base into dist: $dist"
-	    cp -f $i $BASEDIR/pool/
-	    
-	    arch=`echo $base | sed 's/.*\.\([^\.]*\)$/\1/'`
-	    rpmdir=RPMS
-	    if [ "$arch" = "src" ]; then
-		arch=source
-		rpmdir=SRPMS
+	    if ! rpm --checksig $i; then
+		package_error $i $dist "Package signature is incorrect"
+	    else
+		log_info "Including $base into dist: $dist"
+		
+		name=`rpm -qp --qf '%{name}' $i`
+		arch=`rpm -qp --qf '%{arch}' $i`
+		version=`rpm -qp --qf '%{version}-%{release}' $i`
+		rpmdir=RPMS
+		if [ "$arch" = "src" ]; then
+		    arch=source
+		    rpmdir=SRPMS
+		fi
+		mkdir -p $BASEDIR/dists/$dist/$arch/$rpmdir
+		if [ -e $BASEDIR/dists/$dist/$arch/$rpmdir/$name-*.$arch.rpm ]; then
+		    # Delete other version of the package
+		    for f in $BASEDIR/dists/$dist/$arch/$rpmdir/$name-*.$arch.rpm; do
+			log_info "Delete other version of the package: $f"
+		    done
+		    rm -f $BASEDIR/dists/$dist/$arch/$rpmdir/$name-*.$arch.rpm
+		fi
+		# Create a hard link from incoming dir/. This way we don't
+		( cd $BASEDIR/dists/$dist/$arch/$rpmdir && ln -f $i )
+		package_success $i $dist
+		
+                # Update repository metadatas
+		log_info "Update repository metadatas"
+		createrepo $createrepo_opts $BASEDIR/dists/$dist/$arch/
 	    fi
-	    mkdir -p $BASEDIR/dists/$dist/$arch/$rpmdir
-	    ( cd $BASEDIR/dists/$dist/$arch/$rpmdir && ln -fs ../../../../pool/$base.rpm $base.rpm )
-	    package_success $i $dist
-
-            # Update repository metadatas
-	    log_info "Update repository metadatas"
-	    createrepo $createrepo_opts $BASEDIR/dists/$dist/$arch/
-
 	    rm_incoming $dist/$base.rpm
 	done
     fi
 done
 
 rsync -av --delete $BASEDIR/dists/ $DIST_USER@$DIST_HOST:$DIST_REPOS/dists/
-rsync -av --delete $BASEDIR/pool/ $DIST_USER@$DIST_HOST:$DIST_REPOS/pool/
 
 #
 # Remove lock
