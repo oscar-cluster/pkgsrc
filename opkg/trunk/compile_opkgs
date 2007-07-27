@@ -1,0 +1,76 @@
+#!/usr/bin/perl -w
+#
+#   This program is free software; you can redistribute it and/or modify
+#   it under the terms of the GNU General Public License as published by
+#   the Free Software Foundation; either version 2 of the License, or
+#   (at your option) any later version.
+#
+#   This program is distributed in the hope that it will be useful,
+#   but WITHOUT ANY WARRANTY; without even the implied warranty of
+#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#   GNU General Public License for more details.
+#
+#   You should have received a copy of the GNU General Public License
+#   along with this program; if not, write to the Free Software
+#   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
+#
+# Copyright (c) 2007, Geoffroy Vallee <valleegr@ornl.gov>.
+#                     Oak Ridge National Laboratory.
+#                     All rights reserved.
+#
+# This file is part of the OSCAR software package.  For license
+# information, see the COPYING file in the top level directory of the
+# OSCAR source distribution.
+#
+# This script loads the list of OPKG available via the Default package set for
+# the local Linux distribution and compile all the OPKGs with OPKGC.
+#
+
+use strict;
+
+die "ERROR: the environment variable OSCAR_HOME is not set, impossible to ".
+    "know where are OSCAR Packages" if !defined($ENV{OSCAR_HOME});
+
+die "ERROR: you execute the program as root but you will have to sign the ".
+    "binary packages. Please connect as user and make sure you can sign ".
+    "packages (GnuPG)." if ($ENV{USER} eq "root");
+
+use lib "$ENV{OSCAR_HOME}/lib";
+use OSCAR::PackageSet qw (get_list_opkgs_in_package_set);
+use OSCAR::Utils qw (print_array);
+use OSCAR::OCA::OS_Detect;
+
+my $dest_dir = "/tmp/opkgs";
+if (! -d $dest_dir) {
+    print "Creating the destination directory ($dest_dir)\n";
+    mkdir ($dest_dir);
+}
+
+my $os = OSCAR::OCA::OS_Detect::open();
+
+print "Compiling OPKGs for your local distribution ($os->{distro})\n";
+print "Packages are saved in $dest_dir.\n";
+
+my @opkgs = get_list_opkgs_in_package_set ("Default");
+print "OPKGs to compile are: ";
+print_array (@opkgs);
+
+my $cmd;
+# List of OPKGs for which the compilation failed.
+my @opkgs_error = ();
+foreach my $opkg (@opkgs) {
+    $cmd = "cd $ENV{OSCAR_HOME}/packages/$opkg; opkgc --dist=$os->{distro} ".
+           "--output=$dest_dir";
+    print "Executing: $cmd\n";
+    if (!system($cmd)) {
+        print ("ERROR: Impossible to compile the package $opkg");
+        push (@opkgs_error, $opkg);
+    }
+}
+
+if (scalar(@opkgs_error) > 0) {
+    print "The compilation of ".scalar(@opkgs_error)." OPKGs failed:\n";
+    print_array (@opkgs_error);
+}
+
+1;
