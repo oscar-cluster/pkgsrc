@@ -27,18 +27,15 @@
 #
 
 use strict;
-
-die "ERROR: the environment variable OSCAR_HOME is not set, impossible to ".
-    "know where are OSCAR Packages" if !defined($ENV{OSCAR_HOME});
-
-die "ERROR: you execute the program as root but you will have to sign the ".
-    "binary packages. Please connect as user and make sure you can sign ".
-    "packages (GnuPG)." if ($ENV{USER} eq "root");
-
 use lib "$ENV{OSCAR_HOME}/lib";
 use OSCAR::PackageSet qw (get_list_opkgs_in_package_set);
 use OSCAR::Utils qw (print_array);
 use OSCAR::OCA::OS_Detect;
+use Carp;
+
+die "ERROR: you execute the program as root but you will have to sign the ".
+    "binary packages. Please connect as user and make sure you can sign ".
+    "packages (GnuPG)." if ($ENV{USER} eq "root");
 
 my $dest_dir = "/tmp/opkgs";
 if (! -d $dest_dir) {
@@ -62,7 +59,7 @@ foreach my $opkg (@opkgs) {
     $cmd = "cd $ENV{OSCAR_HOME}/packages/$opkg; opkgc --dist=$os->{distro} ".
            "--output=$dest_dir";
     print "Executing: $cmd\n";
-    if (!system($cmd)) {
+    if (system($cmd)) {
         print ("ERROR: Impossible to compile the package $opkg");
         push (@opkgs_error, $opkg);
     }
@@ -71,6 +68,10 @@ foreach my $opkg (@opkgs) {
 if (scalar(@opkgs_error) > 0) {
     print "The compilation of ".scalar(@opkgs_error)." OPKGs failed:\n";
     print_array (@opkgs_error);
+} else {
+    print "!!Successfully compiled all the supported OPKGs for the current ".
+          "Linux distribution!!\n";
+    print "Binary packages are available in $dest_dir\n";
 }
 
 1;
