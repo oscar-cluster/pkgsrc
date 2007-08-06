@@ -1,0 +1,21 @@
+0.3
+        * Release "Ain Ghazel"
+        * Add strictness for package name
+	* Add formatting of summary and description
+	* Add better support of arch and dist filtering
+
+0.2.1
+        * Release "Los peces"
+	* Fix make install target on some distros
+	Jean Parpaillon <jean.parpaillon@irisa.fr> - June 27th, 2007
+	* Add revision history in opkgc-manual
+	Geoffroy Vallée <valleegr@ornl.gov> - June 22th, 2007
+
+0.2	
+	* Release "Caravan"
+	* Put config.xml file in opkg-<name> package
+	Jean Parpaillon <jean.parpaillon@irisa.fr> - June 19th, 2007
+	
+0.1
+	* Release "I Got Rhythm"
+	Jean Parpaillon <jean.parpaillon@irisa.fr> - April 20th, 2007
