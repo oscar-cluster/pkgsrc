@@ -1,7 +1,7 @@
 %{!?python_sitelib: %define python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
 
 Name:           opkgc
-Version:        0.3
+Version:        0.3.1
 Release:        1
 Summary:        Compiler for OSCAR package
 
@@ -47,6 +47,8 @@ rm -rf $RPM_BUILD_ROOT
 %config %{_sysconfdir}/opkgc.conf
 
 %changelog
+* Mon Aug 6 2007 Jean Parpaillon <jean.parpaillon@irisa.fr> 0.3.1-1
+- Update from upstream (0.3.1)
 * Wed Jul 18 2007 Jean Parpaillon <jean.parpaillon@irisa.fr> 0.3-1
 - Update from upstream (0.3)
 * Wed Jun 27 2007 Jean Parpaillon <jean.parpaillon@irisa.fr> 0.2.1-1
