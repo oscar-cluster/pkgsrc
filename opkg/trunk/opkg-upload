@@ -13,7 +13,7 @@ import os, sys, getopt, pwd
 import string, re
 import ConfigParser
 
-VERSION = '0.1'
+VERSION = '0.2'
 
 DFT_METHOD = 'rsync'
 DFT_HOST = 'gforge.inria.fr'
@@ -165,11 +165,11 @@ def rpm_upload(rpmfiles, dists):
 
     for rpm in rpmfiles:
         for dist in dists:
-            cmd = "rsync -av %s %s@%s:%s/%s/" % (rpm,
-                                                login,
-                                                config.get('DEFAULT', 'fqdn'),
-                                                config.get('DEFAULT', 'incoming'),
-                                                dist)
+            cmd = "rsync -av %s %s@%s:%s/%s/" % (os.path.abspath(rpm),
+                                                 login,
+                                                 config.get('DEFAULT', 'fqdn'),
+                                                 config.get('DEFAULT', 'incoming'),
+                                                 dist)
                                                 
             ret = os.system(cmd)
             if ret != 0:
