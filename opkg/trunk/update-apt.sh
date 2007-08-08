@@ -203,11 +203,6 @@ rsync -av --exclude='*.rpm' $DIST_USER@$DIST_HOST:$DIST_INCOMING/ $INCOMING/
 cd $BASEDIR
 
 #
-# Get default values for dist and component
-#
-comp=`get_default_component`
-
-#
 # Get every distribution
 #
 for d in $INCOMING/*; do
@@ -224,7 +219,7 @@ for d in $INCOMING/*; do
             # Import package
 	    if check_package $i; then 
 		log_info "Including $base into dist: $dist"
-		reprepro -Vb . --comp $comp $reprepro_opts include $dist $i 
+		reprepro -Vb . $reprepro_opts include $dist $i 
 		ret=$?
 		if test $ret = 0; then
 		    package_success $i $dist
