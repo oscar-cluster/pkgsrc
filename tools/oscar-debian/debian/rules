@@ -48,6 +48,11 @@ clean:
 	# for a svn check-out
 	#$(MAKE) clean DESTDIR=$(CURDIR)/debian/oscar-tmp
 	rm -rf $(CURDIR)/debian/oscar $(CURDIR)/debian/oscar-tmp
+	# We delete all the binaries here to be sure they will not be included 
+	# into the tarball generated with the Debian packages (they are not 
+	# needed!).
+	rm -f `find $(CURDIR) -name "*.deb"`
+	rm -f `find $(CURDIR) -name "*.rpm"`
 
 	dh_clean
 
@@ -57,70 +62,49 @@ install: build
 	dh_clean -k
 	dh_installdirs
 
-        # Add here commands to install the package into debian/hawknl.
-	mkdir -p $(CURDIR)/debian/oscar-tmp/opt
-	$(MAKE) install DESTDIR=$(CURDIR)/debian/oscar-tmp
+        # Add here commands to install the package into debian/oscar.
 
+#	$(MAKE) install DESTDIR=$(CURDIR)/debian/oscar
 	# The oscar installation procedure sucks, it is very monolithic,
 	# we have to do everything manually
 	
 	# Prepare the "oscar" package
 	mkdir -p $(CURDIR)/debian/oscar/opt/oscar
-	rm -f `find $(CURDIR)/debian/oscar-tmp/ -name "*.deb"`
-	rm -f `find $(CURDIR)/debian/oscar-tmp/ -name "*.rpm"`
-	mv $(CURDIR)/debian/oscar-tmp/opt/oscar-*/install_cluster \
+	mkdir -p $(CURDIR)/debian/oscar/usr/lib/perl5/OSCAR/
+	rm -f `find $(CURDIR) -name "*.deb"`
+	rm -f `find $(CURDIR) -name "*.rpm"`
+	mv $(CURDIR)/install_cluster \
 		$(CURDIR)/debian/oscar/opt/oscar
-	mv $(CURDIR)/debian/oscar-tmp/opt/oscar-*/COPYING \
+	mv $(CURDIR)/COPYING \
 		$(CURDIR)/debian/oscar/opt/oscar
-	mv $(CURDIR)/debian/oscar-tmp/opt/oscar-*/README \
+	mv $(CURDIR)/README \
 		$(CURDIR)/debian/oscar/opt/oscar
-	mv $(CURDIR)/debian/oscar-tmp/opt/oscar-*/VERSION \
+	mv $(CURDIR)/VERSION \
 		$(CURDIR)/debian/oscar/opt/oscar
-	mv $(CURDIR)/debian/oscar-tmp/opt/oscar-*/lib \
+	mv $(CURDIR)/lib \
+		$(CURDIR)/debian/oscar/usr/lib/perl5/OSCAR/
+	mv $(CURDIR)/dist \
 		$(CURDIR)/debian/oscar/opt/oscar
-	mv $(CURDIR)/debian/oscar-tmp/opt/oscar-*/dist \
+	mv $(CURDIR)/images \
 		$(CURDIR)/debian/oscar/opt/oscar
-	mv $(CURDIR)/debian/oscar-tmp/opt/oscar-*/images \
+	mv $(CURDIR)/oscarsamples \
 		$(CURDIR)/debian/oscar/opt/oscar
-	mv $(CURDIR)/debian/oscar-tmp/opt/oscar-*/oscarsamples \
+	mv $(CURDIR)/scripts \
 		$(CURDIR)/debian/oscar/opt/oscar
-	mv $(CURDIR)/debian/oscar-tmp/opt/oscar-*/scripts \
+	mv $(CURDIR)/share \
 		$(CURDIR)/debian/oscar/opt/oscar
-	mv $(CURDIR)/debian/oscar-tmp/opt/oscar-*/share \
-		$(CURDIR)/debian/oscar/opt/oscar
-	mv $(CURDIR)/debian/oscar-tmp/opt/oscar-*/src \
+	mv $(CURDIR)/src \
 		$(CURDIR)/debian/oscar/opt/oscar
 
-	# Prepare the "oscar-package-base" package
-	mkdir -p $(CURDIR)/debian/oscar-package-base/opt/oscar/packages
-	mv $(CURDIR)/debian/oscar-tmp/opt/oscar-*/packages/base \
-		$(CURDIR)/debian/oscar-package-base/opt/oscar/packages
+	# Prepare the "oscar-base" package
+	mkdir -p $(CURDIR)/debian/oscar-base
 
-	# Prepare the "oscar-package-sis" package
-	mkdir -p $(CURDIR)/debian/oscar-package-sis/opt/oscar/packages
-	mv $(CURDIR)/debian/oscar-tmp/opt/oscar-*/packages/sis \
-		$(CURDIR)/debian/oscar-package-sis/opt/oscar/packages
-	
-	# Prepare the "oscar-package-sis" package
-	mkdir -p $(CURDIR)/debian/oscar-package-c3/opt/oscar/packages
-	mv $(CURDIR)/debian/oscar-tmp/opt/oscar-*/packages/c3 \
-		$(CURDIR)/debian/oscar-package-c3/opt/oscar/packages
-	
-	# Prepare the "oscar-package-rapt" package
-	mkdir -p $(CURDIR)/debian/oscar-package-rapt/opt/oscar/packages
-	mv $(CURDIR)/debian/oscar-tmp/opt/oscar-*/packages/rapt \
-		$(CURDIR)/debian/oscar-package-rapt/opt/oscar/packages
-	
-	# Prepare the "oscar-package-oda" package
-	mkdir -p $(CURDIR)/debian/oscar-package-oda/opt/oscar/packages
-	mv $(CURDIR)/debian/oscar-tmp/opt/oscar-*/packages/oda \
-		$(CURDIR)/debian/oscar-package-oda/opt/oscar/packages
-	
-	# Prepare the "oscar-packages-core" package. Note that this package is
-	# there only to simplify the management of dependencies, it does not
-	# contain any files
-	mkdir -p $(CURDIR)/debian/oscar-packages-core
+	# Prepare the "oscar-base-server" package
+	mkdir -p $(CURDIR)/debian/oscar-base-server
 
+	# Prepare the "oscar-base-client" package
+	mkdir -p $(CURDIR)/debian/oscar-base-client
+	
 # Build architecture-independent files here.
 binary-indep: build install
 # We have nothing to do by default.

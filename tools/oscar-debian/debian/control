@@ -1,14 +1,14 @@
 Source: oscar
-Section: misc
+Section: oscar
 Priority: optional
 Maintainer: Geoffroy Vallee <valleegr@ornl.gov>
-Build-Depends: debhelper (>= 4.0.0), libqt-perl
+Build-Depends: debhelper (>= 4.0.0)
 Standards-Version: 3.7.2.2
 
 Package: oscar
 Architecture: all
 Depends: perl, libqt-perl, oscar-packages-core
-Description: OSCAR (Open Source Cluster Application Resources).
+Description: OSCAR (Open Source Cluster Application Resources)
  OSCAR (Open Source Cluster Application Resources) is a snapshot of the best 
  known methods for building, programming, and using High Performance Computing
  (HPC) clusters. It consists of a fully integrated and easy to install software
@@ -17,44 +17,20 @@ Description: OSCAR (Open Source Cluster Application Resources).
  suite, making it unnecessary to download or even install any individual 
  software packages on your cluster.
 
-Package: oscar-packages-core
+Package: oscar-base-server
 Architecture: all
-Depends: oscar-package-sis, oscar-package-c3, oscar-package-rapt, 
-    oscar-package-oda, oscar-package-base
-Description: Meta-package for core OSCAR packages.
- Meta-package for core OSCAR packages.
+Depends: perl, libqt-perl
+Description: Transitional package for OSCAR (server side)
+ Transitional package for OSCAR (server side)
 
-Package: oscar-package-sis
+Package: oscar-base
 Architecture: all
-Depends: systemconfigurator (>= 2.2.7), 
-    systemimager-bittorrent (>= 3.7.5), systemimager-client (>= 3.7.5),
-    systemimager-common (>= 3.7.5), systemimager-doc (>= 3.7.5),
-    systemimager-flamethrower (>= 3.7.5), 
-    systemimager-i386boot-standard (>= 3.7.5), 
-    systemimager-i386initrd-template (>= 3.7.5),
-    systemimager-server (>= 3.7.5), systeminstaller-oscar (>= 2.3.1),
-    systeminstaller-oscar-x11 (>= 2.3.1)
-Description: OSCAR package for SIS.
- OSCAR package for the SIS suite.
+Depends: perl, libqt-perl
+Description: Transitional package for OSCAR (API side)
+ Transitional package for OSCAR (API side)
 
-Package: oscar-package-c3
+Package: oscar-base-client
 Architecture: all
-Depends: c3 (>= 4.0)
-Description: OSCAR package for C3.
- OSCAR package for C3.
-
-Package: oscar-package-rapt
-Architecture: all
-Depends: rapt
-Description: OSCAR package for RAPT.
- OSCAR package for RAPT.
-
-Package: oscar-package-oda
-Architecture: all
-Description: OSCAR package for ODA.
- OSCAR package for ODA (OSCAR DAtabase).
-
-Package: oscar-package-base
-Architecture: all
-Description: OSCAR package for base
- OSCAR package for base.
+Depends: perl, libqt-perl
+Description: Transitional package for OSCAR (client side)
+ Transitional package for OSCAR (client side)

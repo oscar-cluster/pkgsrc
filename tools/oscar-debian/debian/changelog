@@ -1,4 +1,15 @@
-oscar (svn20060120-0gv1) UNRELEASED; urgency=low
+oscar (svn20070814-0gv1) stable; urgency=low
+
+  * New upstream development release 
+  * Include few new packages needed my OPKGC, currently empty: oscar-base,
+    oscae-base-client, oscar-base-server.
+  * Remove all binary packages when creating the Debian packages (they are
+    not needed).
+  * Install OSCAR libs into /usr/lib/perl5/OSCAR/ instead of /opt/oscar/libs.
+
+ -- Geoffroy Vallee <valleegr@ornl.gov>  Tue, 14 Aug 2007 14:48:05 -0400
+
+oscar (svn20070120-0gv1) stable; urgency=low
 
   * New upstream development release
 
