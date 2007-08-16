@@ -1,4 +1,4 @@
-oscar (svn20070814-0gv1) stable; urgency=low
+oscar (5.1~svn20070814-0gv1) stable; urgency=low
 
   * New upstream development release 
   * Include few new packages needed my OPKGC, currently empty: oscar-base,
@@ -6,10 +6,13 @@ oscar (svn20070814-0gv1) stable; urgency=low
   * Remove all binary packages when creating the Debian packages (they are
     not needed).
   * Install OSCAR libs into /usr/lib/perl5/OSCAR/ instead of /opt/oscar/libs.
+  * Split up OSCAR into different Debian packages: liboscar, oscar-bin, and
+    oscar.
+  * Add a dependency to c-shell | tcsh for the oscar Debian package.
 
  -- Geoffroy Vallee <valleegr@ornl.gov>  Tue, 14 Aug 2007 14:48:05 -0400
 
-oscar (svn20070120-0gv1) stable; urgency=low
+oscar (5.1~svn20070120-0gv1) stable; urgency=low
 
   * New upstream development release
 
