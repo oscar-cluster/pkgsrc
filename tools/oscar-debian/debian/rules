@@ -9,8 +9,8 @@
 # Uncomment this to turn on verbose mode.
 #export DH_VERBOSE=1
 
-
-
+BUILD_DIR = $(CURDIR)
+PATCHES=$(sort $(shell find $(CURDIR)/debian/patches -name "*.patch"))
 
 CFLAGS = -Wall -g
 
@@ -24,7 +24,11 @@ configure: configure-stamp
 configure-stamp:
 	dh_testdir
 	# Add here commands to configure the package.
-
+	@echo -n "Applying patches..."
+	@cd $(BUILD_DIR) && \
+		$(foreach patch, $(PATCHES), \
+				echo -n Applying `basename $(patch)`... && cat $(patch) | \
+		patch -s -p1 && echo done. &&) /bin/true
 	touch configure-stamp
 
 
@@ -71,6 +75,7 @@ install: build
 	# Prepare the "oscar" package
 	mkdir -p $(CURDIR)/debian/oscar/usr/bin
 	mkdir -p $(CURDIR)/debian/oscar/usr/share/doc/oscar
+	mkdir -p $(CURDIR)/debian/oscar/usr/share/oscar/images
 	mkdir -p $(CURDIR)/debian/oscar/usr/lib/perl5/OSCAR/
 	mkdir -p $(CURDIR)/debian/oscar/opt/oscar
 	rm -f `find $(CURDIR) -name "*.deb"`
@@ -81,14 +86,18 @@ install: build
 		$(CURDIR)/debian/oscar/usr/share/doc/oscar
 	mv $(CURDIR)/VERSION \
 		$(CURDIR)/debian/oscar/usr/share/doc/oscar
-	mv $(CURDIR)/dist \
-		$(CURDIR)/debian/oscar/opt/oscar
-	mv $(CURDIR)/images \
-		$(CURDIR)/debian/oscar/opt/oscar
+	# It seems that dist is not needed in a binary package
+	# mv $(CURDIR)/dist \
+	#	$(CURDIR)/debian/oscar/opt/oscar
+	mv $(CURDIR)/images/oscar.gif \
+		$(CURDIR)/debian/oscar/usr/share/oscar/images
 	mv $(CURDIR)/oscarsamples \
 		$(CURDIR)/debian/oscar/opt/oscar
-	mv $(CURDIR)/share \
-		$(CURDIR)/debian/oscar/opt/oscar
+	mv $(CURDIR)/share/* \
+		$(CURDIR)/debian/oscar/usr/share/oscar
+	# We remove stuff we do not yet know how to deal with
+	rm -rf $(CURDIR)/debian/oscar/usr/share/oscar/Makefile.am
+	rm -rf $(CURDIR)/debian/oscar/usr/share/oscar/Makefile.in
 	# We currently do not include what is in 'src'. This directory
 	# needs its proper installation mechanism (e.g. some parts need
 	# to be compiled).

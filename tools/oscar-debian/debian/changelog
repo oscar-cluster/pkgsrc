@@ -9,6 +9,10 @@ oscar (5.1~svn20070814-0gv1) stable; urgency=low
   * Split up OSCAR into different Debian packages: liboscar, oscar-bin, and
     oscar.
   * Add a dependency to c-shell | tcsh for the oscar Debian package.
+  * Relocate the OSCAR logo into /usr/share/oscar/images. A patch has been
+    created to update the OSCAR code for that.
+  * Relocate part of the code in the share directory into /usr/share/oscar.
+    Right now, package_sets, schemas, and machine_sets have been relocated.
 
  -- Geoffroy Vallee <valleegr@ornl.gov>  Tue, 14 Aug 2007 14:48:05 -0400
 

@@ -53,7 +53,7 @@ if (system ($cmd)) {
 }
 
 # We create Debian packages
-$cmd = "cd $packaging_dir/oscar; dpkg-buildpackage -rfakeroot";
+$cmd = "cd $packaging_dir/oscar; dpkg-buildpackage -rfakeroot -us -uc";
 print "Executing: $cmd\n" if ($verbose);
 if (system ($cmd)) {
     croak ("ERROR: Impossible to create Debian packages");
