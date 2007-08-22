@@ -33,16 +33,16 @@ Package: oscar-base-server
 Architecture: all
 Depends: perl, libqt-perl
 Description: Transitional package for OSCAR (server side)
- Transitional package for OSCAR (server side)
+ This is a transitional package for OSCAR (server side).
 
 Package: oscar-base
 Architecture: all
 Depends: perl, libqt-perl
 Description: Transitional package for OSCAR (API side)
- Transitional package for OSCAR (API side)
+ This is a transitional package for OSCAR (API side).
 
 Package: oscar-base-client
 Architecture: all
 Depends: perl, libqt-perl
 Description: Transitional package for OSCAR (client side)
- Transitional package for OSCAR (client side)
+ This is a transitional package for OSCAR (client side).

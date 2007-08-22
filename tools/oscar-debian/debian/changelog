@@ -1,4 +1,4 @@
-oscar (5.1~svn20070814-0gv1) stable; urgency=low
+oscar (5.1~svn20070822-0gv1) stable; urgency=low
 
   * New upstream development release 
   * Include few new packages needed my OPKGC, currently empty: oscar-base,

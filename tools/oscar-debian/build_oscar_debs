@@ -23,7 +23,7 @@ my $cmd;
 my $verbose = 1;
 
 if ($source_location eq "") {
-    croak ("ERROR: Impossible to find OSCAR source ($source_location)\n".
+    croak ("ERROR: Impossible to find OSCAR source ($source_location).\n".
     	   "build_oscar_debs must be used with a parameter that gives the ".
 	   "path to the oscar source");
 }
@@ -53,7 +53,7 @@ if (system ($cmd)) {
 }
 
 # We create Debian packages
-$cmd = "cd $packaging_dir/oscar; dpkg-buildpackage -rfakeroot -us -uc";
+$cmd = "cd $packaging_dir/oscar; dpkg-buildpackage -rfakeroot";
 print "Executing: $cmd\n" if ($verbose);
 if (system ($cmd)) {
     croak ("ERROR: Impossible to create Debian packages");

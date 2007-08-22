@@ -9,6 +9,8 @@
 # WARNING the current script assumes OSCAR source is within a directory named
 # "oscar", all other names will create a failure. In the future we may want to
 # use a tarball.
+# Parameter: OSCAR source path.
+# Return: 0 if success.
 # TODO: find a way to install the repositories (/tftpboot stuff).
 ###############################################################################
 
@@ -20,28 +22,30 @@ my $cmd;
 my $verbose = 1;
 
 if ($source_location eq "") {
-    croak ("Impossible to find OSCAR source ($source_location)");
+    croak ("ERROR: Impossible to find pkgsrc source ($source_location).\n".
+           "build_pkgsrc_debs must be used with a parameter that gives the ".
+	   "path to the pkgsrc source");
 }
 
 # We initialize the packaging environment
 $cmd = "cp Makefile.template " . $source_location . "Makefile";
 print "Executing: $cmd\n" if ($verbose);
 if (system ($cmd)) {
-    croak ("Impossible to initialized the packaging environment");
+    croak ("ERROR: Impossible to initialized the packaging environment");
 }
 
 # We create Debian packages
 $cmd = "cd $source_location; make deb";
 print "Executing: $cmd\n" if ($verbose);
 if (system ($cmd)) {
-    croak ("Impossible to create Debian packages");
+    croak ("ERROR: Impossible to create Debian packages");
 }
 
 # We remove the Makefile we created
 $cmd = "rm -f " . $source_location . "Makefile";
 print "Executing: $cmd\n" if ($verbose);
 if (system ($cmd)) {
-    croak ("Impossible to delete the Makefile");
+    croak ("ERROR: Impossible to delete the Makefile");
 }
 
 print "Done!\n";
