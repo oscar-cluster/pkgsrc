@@ -1,0 +1,233 @@
+#!/usr/bin/perl
+###
+### api-post-clientdef: Executed on server once packages is installed
+###
+### Author: Jean Parpaillon <jean.parpaillon@irisa.fr>
+###
+### Copyright INRIA, 2006
+###
+
+use strict;
+use Carp;
+use FileHandle;
+use File::Basename;
+use File::Find;
+
+use lib '/usr/lib/systeminstaller';
+use SystemInstaller::Machine;
+
+use lib qw(lib /usr/lib/systemconfig);
+use SCConfig;
+use vars qw($config);
+
+###
+### updateSystemConfig
+###
+### Parameters
+###  1. Chroot dir: chrootable path. Config file path is appended to this, but not 
+###                 kernel an initrd ones
+###  2. Config file path
+###  3. Bootloader entry label
+###  4. Kernel path 
+###  5. Initrd path
+###  6. Kernel append line
+###
+sub updateSystemConfig {
+    my ( $chroot, $configPath, $label, $kernelPath, $initrdPath, $append ) = @_;
+
+    trim( $label );
+    trim( $kernelPath );
+    trim( $initrdPath );
+    trim( $append );
+
+    # Open conf file
+    my $conf = new FileHandle;
+    if ( !$conf->open( $chroot.$configPath ) ) {
+	croak "Could not open file ".$chroot.$configPath;
+    }
+
+    # Parse the config file:
+    #  IF $label == existing label THEN
+    #     We update an existing entry
+    #     $entryId: entry to update
+    #  ELSE
+    #     We create a new entry
+    #     $entryId: entry to create
+    #  FI
+
+    # 1 if we modify an existing entry
+    my $newEntry = 1;
+    # id of the entry to create/modify
+    my $entryId = -1;
+
+    my $currentEntry = -1;
+    while ( my $line = $conf->getline() ) {
+	if ( $line =~ /^\[KERNEL([0-9]?)\]/ ) {
+	    $currentEntry = $1;
+	    if ( $newEntry && $currentEntry >= $entryId ) {
+		$entryId = $currentEntry + 1
+	    }
+	} elsif ( $line =~ /^\s*LABEL\s*=\s*([^\s]*)/ ) {
+	    if ( $1 eq $label ) {
+		$newEntry = 0;
+		$entryId = $currentEntry;
+	    }
+	}
+    }
+    $conf->close();
+
+    my $backupPath = uniqueFile( $configPath );
+    rename( $configPath, $backupPath );
+
+    my $backup = new FileHandle;
+    my $conf = new FileHandle;
+    if ( !$backup->open( $chroot.$backupPath, "r" ) ) {
+	croak "Could not open file ".$chroot.$configPath." read only";
+    }
+    if ( !$conf->open( $chroot.$configPath, "w" ) ) {
+	croak "Could not open file ".$chroot.$configPath." write only";
+    }
+
+    # Copy $backup to $conf modifying DEFAULTBOOT and 
+    # KERNEL? entry as needed
+    my $updating = 0;
+    while ( my $line = $backup->getline() ) {
+	if ( $updating ) {
+	    if ( $line =~ /^\[KERNEL([0-9]?)\]/ ) {
+		$updating = 0;
+		$conf->print( $line );
+	    }
+	} else {
+	    if ( $line =~ /^\s*DEFAULTBOOT\s*/) {
+		$conf->print( "\tDEFAULTBOOT = ".$label."\n" );
+	    } elsif ( $line =~ /^\[KERNEL([0-9]?)\]/ ) {
+		if ( $1 == $entryId ) {
+		    $updating = 1;
+		    writeKernelEntry( $conf, $entryId, $label, $kernelPath, $initrdPath, $append );
+		} else {
+		    $conf->print( $line );
+		}
+	    } else {
+		$conf->print( $line );
+	    }
+	}
+    }
+    $conf->print("\n");
+    if ( $newEntry ) {
+	writeKernelEntry( $conf, $entryId, $label, $kernelPath, $initrdPath, $append );
+    }
+    $backup->close();
+    $conf->close();
+}
+
+### 
+### writeKernelEntry
+###
+### Parameters:
+###   1. file handler
+###   2. label
+###   3. kernel path
+###   4. initrd path
+###   5. append
+###
+sub writeKernelEntry {
+    my ( $fh, $entryId, $label, $kernelPath, $initrdPath, $append ) = @_;
+
+    $fh->print("[KERNEL".$entryId."]\n");
+    $fh->print("\tLABEL = ".$label."\n");
+    $fh->print("\tPATH = ".$kernelPath."\n");
+    if ( $initrdPath ) {
+	$fh->print("\tINITRD = ".$initrdPath."\n");	
+    }
+    $fh->print("\tAPPEND = ".$append."\n");
+    $fh->print("\n");
+}
+
+###
+### trim
+###
+### Parameters:
+###   1. a string
+###
+### Return:
+###   the string without trailing spaces
+###
+sub trim {
+    my ( $string ) = @_;
+    return s/^\s*(.*?)\s*$/$1/;
+}
+
+
+###
+### uniqueFile
+###
+### Parameters: 
+###   1. File path
+###
+### Returns:
+###   The file path if no file of this name exists or
+###   the file path appended with a number if the file path exists
+###
+sub uniqueFile {
+  my( $filePath ) = @_;
+  my $counter = 0;
+  my $uniqueFilePath = $filePath;
+
+  $uniqueFilePath = $filePath;
+  while ( -e $uniqueFilePath ) {
+      $counter++;
+      $uniqueFilePath = $filePath.'.'.$counter;
+  }
+  return $uniqueFilePath;
+} 
+
+###
+### findVersion
+###
+### Parameters:
+###
+### Return:
+###   the kerrighed-kernel package version (e.g. 2.6.11.krgr785-1)
+###
+sub findVersion {
+    my $kernelVersion = "";
+    my $packagesDir = dirname( $0 )."/../distro";
+    find( \&wanted, $packagesDir );
+
+    sub wanted {
+	my $file = basename( "$File::Find::name" );
+	if ( $file =~ s/^kerrighed-kernel-([0-9]+.*)\.\w+\.rpm/$1/ ) {
+	    $kernelVersion = $file;
+	}
+    }
+
+    return $kernelVersion;
+}
+
+###
+### main
+###
+### 
+###
+sub main {
+    my ( $siImageName ) = @_;
+
+    my $siImagesDir = "/var/lib/systemimager/images";
+    my $scConfDir = "/etc/systemconfig";
+    my $scConfFile = "systemconfig.conf";
+
+    my %machineListing = get_machine_listing( $siImageName );
+
+    my $kernelVersion = findVersion();
+
+    my $chroot = $siImagesDir."/".$siImageName;
+    my $path = $scConfDir."/".$scConfFile;
+    my $label = "Kerrighed (".$kernelVersion.")";
+    my $kernelPath = "/boot/vmlinuz-".$kernelVersion;
+    my $initrdPath = "/boot/initrd-".$kernelVersion;
+    my $append = "node_id=<HOSTID>, session_id=1, nb_nodes=".scalar( keys( %machineListing ) );
+
+    updateSystemConfig( $chroot, $path, $label, $kernelPath, $initrdPath, $append);
+}
+
+main( @ARGV );

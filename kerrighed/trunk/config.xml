@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<oscar>
+  <name>ssi-oscar</name>
+  <class>included</class>
+  <summary>an SSI for OSCAR</summary>
+  <description>
+    SSI-OSCAR provides Kerrighed. Kerrighed is a Single System Image for
+    cluster, extending the Linux kernel
+  </description>
+  <license>GPL</license>
+  <group>Operating System</group>
+  <uri>http://kerrighed.org/</uri>
+  <authors>
+    <author cat="upstream">
+      <name>Kerrighed Team</name>
+      <email>kerrighed.users@irisa.fr</email>
+    </author>
+    <author cat="maintainer">
+      <name>Jean Parpaillon</name>
+      <email>jean.parpaillon@irisa.fr</email>
+    </author>
+  </authors>
+
+  <clientDeps>
+    <requires>
+      <pkg>kerrighed</pkg>
+    </requires>
+  </clientDeps>
+
+  <changelog>
+    <versionEntry version="2.1.1-1">
+      <changelogEntry authorName="Jean Parpaillon" date="2007-08-30T11:12:06+02:00">
+        <item>First version of Kerrighed for OSCAR with new API</item>
+      </changelogEntry>
+    </versionEntry>
+  </changelog>
+</oscar>
