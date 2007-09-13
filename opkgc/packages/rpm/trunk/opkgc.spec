@@ -13,7 +13,7 @@ BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
 BuildArch:      noarch
 BuildRequires:  python-devel, xmlto
-Requires: 	python-lxml, python-cheetah
+Requires: 	libxslt, python-lxml, python-cheetah
 
 %description
 opkgc transform the description of an OSCAR package into a set of native packages (.deb or RPM).
@@ -47,6 +47,9 @@ rm -rf $RPM_BUILD_ROOT
 %config %{_sysconfdir}/opkgc.conf
 
 %changelog
+* Mon Sept 13 2007 Jean Parpaillon <jean.parpaillon@irisa.fr> 0.3.2-1
+- Update from upstream (0.3.2)
+- Fix dependency (libxslt that provides xsltproc, needed by opkg-convert)
 * Mon Aug 6 2007 Jean Parpaillon <jean.parpaillon@irisa.fr> 0.3.1-1
 - Update from upstream (0.3.1)
 * Wed Jul 18 2007 Jean Parpaillon <jean.parpaillon@irisa.fr> 0.3-1
