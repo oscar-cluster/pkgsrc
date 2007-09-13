@@ -1,7 +1,7 @@
 # $Id$
 Summary: Wrapper to yum for clusters
 Name: yume
-Version: 2.4
+Version: 2.5
 Vendor: NEC HPCE
 Release: 1
 License: GPL
@@ -48,6 +48,7 @@ install -d -o root -g root -m 755 $RPM_BUILD_ROOT%{_mandir}/man8
 install -o root -g root -m 755  yume $RPM_BUILD_ROOT%{_bindir}
 install -o root -g root -m 755  yume-opkg $RPM_BUILD_ROOT%{_bindir}
 install -o root -g root -m 755  yum-repoquery $RPM_BUILD_ROOT%{_bindir}
+install -o root -g root -m 755  yum-repoquery3 $RPM_BUILD_ROOT%{_bindir}
 install -o root -g root -m 755  ptty_try $RPM_BUILD_ROOT%{_bindir}
 install -o root -g root -m 755  *.rpmlist $RPM_BUILD_ROOT%{_datadir}/%{name}
 install -o root -g root -m 755  yume.8 $RPM_BUILD_ROOT%{_mandir}/man8
@@ -62,6 +63,8 @@ rm -rf $RPM_BUILD_ROOT
 %{_mandir}/man8/yume*
 
 %changelog
+* Fri Sep 14 2007 Erich Focht
+- fixed repoquery for newer yum versions
 * Tue Sep 19 2006 Erich Focht
 - Improved scalability by dealing with timeouts when calling distro-query
 - More detailed errors

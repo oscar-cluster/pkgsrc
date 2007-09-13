@@ -147,7 +147,13 @@ if ($repoquery) {
     my $rq = `which repoquery >/dev/null 2>&1`;
     if ($?) {
 	# fall back to included yum-repoquery
-	$rq = "/usr/bin/yum-repoquery";
+	my $yum_version = `yum --version`;
+	$yum_version =~ s/\..*$//g;
+	if ($yum_version < 3) {
+	    $rq = "/usr/bin/yum-repoquery";
+	} else {
+	    $rq = "/usr/bin/yum-repoquery3";
+	}
     } else {
 	$rq = "repoquery";
     }
@@ -195,10 +201,12 @@ if ($repoquery) {
 
     $cmd .= " ".join(" ",@yumargs);
     print STDERR "Executing: $cmd\n" if ($verbose);
+    #EF the following line resets the errno and avoids fake error messages
+    $! = 0;
     $err = system($cmd);
 }
-if ($err) {
-    print STDERR "ERROR while executing \"$cmd\" : $!\n";
+if ($verbose && $err) {
+    print STDERR "ERROR: \"$cmd\" returned $err: $!\n";
 }
 exit $err;
 
