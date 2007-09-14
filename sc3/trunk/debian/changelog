@@ -1,4 +1,4 @@
-sc3 (1.1-2gv1) UNRELEASED; urgency=low
+sc3 (1.1-2gv1) stable; urgency=low
 
   * Fix various issues with the package. Update the version to allow
     automatic update of the package.

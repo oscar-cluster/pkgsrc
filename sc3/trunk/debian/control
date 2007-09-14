@@ -1,5 +1,5 @@
 Source: sc3
-Section: misc
+Section: oscar
 Priority: optional
 Maintainer: Geoffroy Vallee <valleegr@ornl.gov>
 Build-Depends: debhelper (>= 4.0.0)
