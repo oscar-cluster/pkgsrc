@@ -1,4 +1,20 @@
-rapt (1.0-4gv3) UNRELEASED; urgency=low
+rapt (1.1~1gv3) stable; urgency=low
+
+  * Execute "apt-get update" after restoring the /etc/apt/sources.list file.
+    It allows us to avoid annoying apt warnings after using OSCAR.
+  * Include the support of a configuration file (/etc/rapt.conf) for the
+    specification of a Debian mirror (usefull if you have a local Debian 
+    mirror, the image creation is way faster).
+
+ -- gvh <gvh@debian-etch.ornl.gov>  Fri, 24 Aug 2007 17:14:42 -0400
+
+rapt (1.1~1gv2) stable; urgency=low
+
+  * Improve the support online repository, adding the OSCAR online repository.
+
+ -- Geoffroy Vallee <valleegr@ornl.gov>  Tue, 21 Aug 2007 10:58:59 -0400
+
+rapt (1.0-4gv3) stable; urgency=low
 
   * Port to x86_64.
   * Update the code for the use of apache2.

@@ -1,5 +1,5 @@
 Source: rapt
-Section: misc
+Section: oscar
 Priority: optional
 Maintainer   : Erich Focht <efocht@hpce.nec.com>
 Build-Depends: debhelper (>= 4.0.0)
