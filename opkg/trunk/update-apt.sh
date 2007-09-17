@@ -114,7 +114,7 @@ package_success() {
     changefile=$1
     base=`basename $changefile .changes`
     dist=$2
-    to=`sed '/^Maintainer: /!d; s/^Maintainer:\s\+//' < $changefile`
+    to=$MAIL_TO
 
     reportfile=`dirname $changefile`/$base.lintian
 
@@ -132,7 +132,6 @@ package_success() {
 
     log_info "Sending success mail to $to and $MAIL_TO"
     mail -s "$base in $dist: ACCEPTED" \
-	-c "$MAIL_TO" \
 	"$to" < $mailfile
 
     rm -f $mailfile
@@ -147,7 +146,7 @@ package_error() {
     changefile=$1
     base=`basename $changefile .changes`
     dist=$2
-    to=`sed '/^Maintainer: /!d; s/^Maintainer:\s\+//' < $changefile`
+    to=$MAIL_TO
 
     reportfile=`dirname $changefile`/$base.lintian
 
@@ -165,7 +164,6 @@ package_error() {
 
     log_info "Sending error mail to $to and $MAIL_TO"
     mail -s "$base in $dist: REFUSED" \
-	-c "$MAIL_TO" \
 	"$to" < $mailfile
 
     rm -f $mailfile

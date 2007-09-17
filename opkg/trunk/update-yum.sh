@@ -66,7 +66,7 @@ package_success() {
     rpmfile=$1
     base=`basename $rpmfile .rpm`
     dist=$2
-    to=`rpm -qp --qf "%{Packager}" $rpmfile`
+    to=$MAIL_TO
 
     mailfile=/tmp/oscar.mail
     echo "Package $base has been accepted in distribution $dist on OSCAR repositories." > $mailfile
@@ -75,7 +75,6 @@ package_success() {
 
     log_info "Sending success notification to $to and $MAIL_TO"
     mail -s "$base in $dist: ACCEPTED" \
-	-c "$MAIL_TO" \
 	"$to" < $mailfile
     
     rm -f $mailfile
@@ -91,7 +90,7 @@ package_error() {
     base=`basename $rpmfile .rpm`
     dist=$2
     msg=$3
-    to=`rpm -qp --qf "%{Packager}" $rpmfile`
+    to=$MAIL_TO
 
     mailfile=/tmp/oscar.mail
     echo "Package $base inclusion in distribution $dist has been refused." > $mailfile
@@ -103,7 +102,6 @@ package_error() {
 
     log_info "Sending error notification to $to and $MAIL_TO"
     mail -s "$base in $dist: REFUSED" \
-	-c "$MAIL_TO" \
 	"$to" < $mailfile
     
     rm -f $mailfile
