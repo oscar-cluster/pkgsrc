@@ -24,18 +24,18 @@ VALID_RPM_DISTS = ['fc5', 'fc6', 'fc7',
                    'rhel4', 'rhel5',
                    'sles10']
 
-USAGE = """Usage: opkg-upload [options] file ...
+USAGE = """Usage: opkg-upload [options] package1 package2 ...
        -h|--help      print this and exit
        -v|--version   print version and exit
        -d|--debug     more verbose
-       -D|--dist=     list of distributions
+       -D|--dist=     comma separated list of distributions or
+                      'help' to show available distributions
        -u|--username= username for accessing repositories, if different from
                       login. USER env var can also be used.
 
-       file          space-separated list of files to upload:
-                     .rpm for RPMs
-                     .changes for Debian
-                     All files must be of the same type
+       packages       space separated list of source packages to upload:
+                      .src.rpm for RPMs
+                      .changes for Debian
 """
 
 DPUT_CF_TPL = string.Template("""[oscar-$dist]
@@ -218,6 +218,11 @@ def main():
                     print "%s " %d
                 sys.exit(0)
 
+    # Check that at least a dist is given
+    if len(dists) == 0:
+        error("You must specify at least a destination distribution")
+        sys.exit(1)
+
     # Try to get the login from the enviroment, if not set by --username
     if not login:
         if os.environ.has_key('USER'):
@@ -255,7 +260,7 @@ def main():
             if d in VALID_RPM_DISTS:
                 valid_dists.append(d)
             else:
-                error("Unknown distribution .rpm: %s" % d)
+                error("Unknown distribution for .rpm: %s" % d)
                 sys.exit(1)
     else:
         error("Invalid file: %s (nor .changes nor .rpm)" % args[0])
