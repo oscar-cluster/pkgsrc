@@ -25,10 +25,12 @@ VALID_RPM_DISTS = ['fc5', 'fc6', 'fc7',
                    'sles10']
 
 USAGE = """Usage: opkg-upload [options] file ...
-       -h|--help     print this and exit
-       -v|--version  print version and exit
-       -d|--debug    more verbose
-       -D|--dist=    list of distributions
+       -h|--help      print this and exit
+       -v|--version   print version and exit
+       -d|--debug     more verbose
+       -D|--dist=     list of distributions
+       -u|--username= username for accessing repositories, if different from
+                      login. USER env var can also be used.
 
        file          space-separated list of files to upload:
                      .rpm for RPMs
@@ -46,7 +48,7 @@ incoming = $incoming/$dist
 
 dput_conf_file = 'dput.conf.opkg'
 
-login = ''
+login = None
 dists = []
 config = None
 debug_level = 0
@@ -186,8 +188,8 @@ def main():
     # Parse command line options
     try:
         (opts, args) = getopt.getopt(sys.argv[1:],
-                                     'vhdD:',
-                                     ['version', 'help', 'debug', 'dist='])
+                                     'vhdD:u:',
+                                     ['version', 'help', 'debug', 'dist=', 'username='])
     except getopt.error, msg:
         error(msg)
         sys.exit(1)
@@ -201,6 +203,8 @@ def main():
             return
         elif option in ('-d', '--debug'):
             debug_level = 1
+        elif option in ('-u', '--username'):
+            login = arg
         elif option in ('-D', '--dist'):
             dists = string.split(arg, ',')
             # If --dist=help, prints list of supported distributions
@@ -214,12 +218,13 @@ def main():
                     print "%s " %d
                 sys.exit(0)
 
-    # Try to get the login from the enviroment
-    if os.environ.has_key('USER'):
-        login = os.environ['USER']
-    else:
-        # Else use the current username
-        login = pwd.getpwuid(os.getuid( ))[0]
+    # Try to get the login from the enviroment, if not set by --username
+    if not login:
+        if os.environ.has_key('USER'):
+            login = os.environ['USER']
+        else:
+            # Else use the current username
+            login = pwd.getpwuid(os.getuid( ))[0]
     read_config()
 
     # Check now the login and redefine it if needed
