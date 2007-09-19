@@ -267,6 +267,7 @@ EOF
 
 function clean() {
     rm_fstab_entries
+    rm_schroot_entry
 
     i=${#MOUNTPOINTS[@]}
     while let $(( $i > 0 ))
