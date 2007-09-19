@@ -32,7 +32,10 @@ function build() {
     }
 
     echo "I: Create logical volume ${ENV_NAME}_chroot on ${VG_NAME}"
-    lvcreate -L ${ENV_SIZE} -Z y -n ${ENV_NAME}_chroot ${VG_NAME} 2>&1 > /dev/null
+    lvcreate -L ${ENV_SIZE} -Z y -n ${ENV_NAME}_chroot ${VG_NAME} 2>&1 > /dev/null || {
+	echo "E: Can not create ${ENV_NAME}_chroot logical volume (check space)"
+	exit 2
+    }
     echo "I: Create ext3 filesystem on /dev/${VG_NAME}/${ENV_NAME}_chroot"
     mkfs.ext3 -q /dev/${VG_NAME}/${ENV_NAME}_chroot 
 
