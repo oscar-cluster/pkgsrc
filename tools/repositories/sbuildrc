@@ -1,0 +1,47 @@
+#
+#  ~/.sbuildrc for OSCAR repositories
+#
+
+# Directory for chroot symlinks and sbuild logs.  Defaults to the
+# current directory if unspecified.
+$build_dir="$HOME/build";
+
+# Directory for writing build logs to
+$log_dir = "$HOME/logs";
+
+# Mail address where logs are sent to (mandatory, no default!)
+#$mailto = "roman";
+$mailto = "OSCAR Repositories <oscar-package@lists.gforge.inria.fr>";
+
+# Name to use as override in .changes files for the Maintainer: field
+# (mandatory, no default!).
+$maintainer_name='OSCAR Project <oscar-devel@lists.sourceforge.net>';
+
+# Keyid to use in .changes for the current upload.
+# It overrides both $maintainer_name and $uploader_name
+$key_id='OSCAR Project <oscar-devel@lists.sourceforge.net>';
+
+# When to purge the build directory afterwards; possible values are "never",
+# "successful", and "always"
+$purge_build_directory="successful";
+
+# After that time (in minutes) of inactivity a build is terminated. Activity
+# is measured by output to the log file.
+$stalled_pkg_timeout = 90;
+
+# Some packages may exceed the general timeout (e.g. redirecting output to
+# a file) and need a different timeout. Below are some examples.
+#%individual_stalled_pkg_timeout = (
+#    chess => 600,
+#    cint => 300
+#);
+
+# By default, the -s option only includes the .orig.tar.gz when needed
+# (i.e. when the Debian revision is 0 or 1).  By setting this option
+# to 1, the .orig.tar.gz will always be included when -s is used.
+# This is equivalent to --force-orig-source.
+#$force_orig_source = 0;
+
+# don't remove this, Perl needs it:
+1;
+

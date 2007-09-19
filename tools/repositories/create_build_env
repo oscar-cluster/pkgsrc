@@ -4,12 +4,21 @@
 # into /srv/chroot/<name>
 # This environment is suitable for buildd
 #
+# Requirements:
+#   * Common to Debian and RPM
+#     - lvm2
+#
+#   * On Debian systems:
+#     - debootstrap
+#     - sbuild
+#
 # *** WARNING*** 
 # This scripts is not intended for blindly use. It may contain bugs which destroy your system !!!!
 #
 CHROOT_BASE=/srv/chroot
 ENV_SIZE=4G
 MIRROR=http://ftp.fr.debian.org/debian
+USR=oscar
 
 MOUNTPOINTS=( /dev/pts /dev/shm /proc /home /tmp )
 
@@ -20,6 +29,145 @@ function usage() {
     echo -e "\t-v vg_name a volume group name"
     echo -e "\t-c         clean the environment"
 }
+
+function check_sanity() {
+    if [ -e /etc/debian_version ]
+	then
+	echo "I: Detected Debian system"
+	check_debian_sanity
+    elif [ -d /etc/yum.repos.d/ ] 
+	then
+	echo "I: Detected RPM based system"
+	check_rpm_sanity
+    else
+	echo "E: Unknown distribution"
+	exit 1
+    fi
+}
+
+function check_debian_sanity() {
+    which lvcreate > /dev/null || {
+	echo "E: lvm2 is required"
+	exit 1
+    }
+    which debootstrap > /dev/null || {
+	echo "E: debootstrap is required"
+	exit 1
+    }
+    which sbuild > /dev/null || {
+	echo "E: sbuild is required"
+	exit 1
+    }
+}
+
+function check_rpm_sanity() {
+    echo "E: Not supported"
+}
+
+function setup_user() {
+    echo "I: adding $USR to sbuild group"
+    adduser $USR sbuild
+
+    echo "I: copy sudoers to chroot"
+    cp /etc/sudoers ${TARGET}/etc/sudoers
+    
+    echo "I: add $USR to chroot /etc/passwd file"
+    grep -v ^$USR: ${TARGET}/etc/passwd > ${TARGET}/etc/passwd.NEW
+    getent passwd $USR >> ${TARGET}/etc/passwd.NEW
+    mv ${TARGET}/etc/passwd.NEW ${TARGET}/etc/passwd
+    
+    echo "I: add $USR to chroot /etc/group"
+    grep -v ^sbuild: ${TARGET}/etc/group > ${TARGET}/etc/group.NEW
+    getent group sbuild >> ${TARGET}/etc/group.NEW
+    mv ${TARGET}/etc/group.NEW ${TARGET}/etc/group
+
+    echo "I: create chroot work directory for $USR"
+    mkdir -p ${TARGET}/build/$USR
+    chown $USR:sbuild ${TARGET}/build/$USR
+    
+    echo "I: create chroot home directory for $USR"
+    HOMEDIR="${TARGET}$(getent passwd $USR | awk -v FS=":" '{ print $6 }')"
+    mkdir -p $HOMEDIR
+    chown $USR:sbuild $HOMEDIR
+}
+
+function setup_user_sbuild() {
+    USR_HOME=`getent passwd $USR | cut -d':' -f6`
+    [ -d ${USR_HOME}/build/ ] || {
+	echo "I: Create ${USR_HOME}/build"
+	mkdir ${USR_HOME}/build
+    }    
+    [ -d ${USR_HOME}/logs/ ] || {
+	echo "I: Create ${USR_HOME}/logs"
+	mkdir ${USR_HOME}/logs
+    }    
+    echo "I: Create a link from chroot dir to build dir"
+    ln -s ${TARGET} ${USR_HOME}/build/chroot-${ENV_NAME}
+}
+
+function rm_schroot_entry() {
+    if cat /etc/schroot/schroot.conf | egrep '^\['${ENV_NAME}'\]' > /dev/null 
+	then
+	echo "I: Suppress environment entry in schroot.conf"
+
+	mv /etc/schroot/schroot.conf /etc/schroot/schroot.conf.bak
+
+	cat /etc/schroot/schroot.conf.bak | awk 'BEGIN {
+  SECTION = "NO"
+  }
+  {
+    if ( $1 ~ /^\['${ENV_NAME}'\]/ ) {
+      SECTION = "YES"
+    }
+
+    if ( $1 ~ /^\[.*\]/ && $1 !~ /^\['${ENV_NAME}'\]/ ) {
+      SECTION = "NO"
+    }
+
+    if ( SECTION == "NO" ) {
+      print $0
+    }
+  }' > /etc/schroot/schroot.conf
+    fi
+}
+
+function add_schroot_entry() {
+    rm_schroot_entry
+
+    echo "I: Add an entry for this chroot in /etc/schroot/schroot.conf:"
+
+    cat <<EOF >> /etc/schroot/schroot.conf
+
+[${DIST}-${ARCH}]
+type=plain
+description=Debian ${DIST} (${ARCH})
+location=${TARGET}
+priority=2
+groups=root,sbuild
+root-groups=sbuild
+run-setup-scripts=true
+run-session-scripts=true
+EOF
+}
+
+function setup_sbuild() {
+    echo "I: Setup sbuildCreate sbuild dirs in chroot env"
+    mkdir -p ${TARGET}/build
+    chown root:sbuild ${TARGET}/build
+    mkdir -p ${TARGET}/var/lib/sbuild/srcdep-lock
+    chown -R root:sbuild ${TARGET}/var/lib/sbuild
+    chmod -R 02775 ${TARGET}/var/lib/sbuild
+}
+
+function create_dev_nodes() {
+    echo "I: Populate /dev nodes in chroot env"
+    ( 
+	cd ${TARGET}/dev
+	/sbin/MAKEDEV generic
+    )
+    touch ${TARGET}/etc/mtab
+}
+
 
 function build() {
     [ ! -d ${TARGET} ] || {
@@ -65,13 +213,17 @@ function build() {
 	  echo "E: Error mounting ${TARGET}${MOUNTPOINTS[$i]}"
 	  exit 2
       }
+      if ! cat /etc/mtab | grep "${TARGET}${MOUNTPOINTS[$i]}" > /dev/null
+	  then
+	  echo "E: ${TARGET}${MOUNTPOINTS[$i]} is not mounted"
+      fi
       let $(( i++ ))
     done
 
-    /usr/sbin/debootstrap --variant=buildd "${DIST}" "${TARGET}" "${MIRROR}" || exit 2
+    /usr/sbin/debootstrap --variant=buildd --include=debfoster,fakeroot,build-essential,makedev "${DIST}" "${TARGET}" "${MIRROR}" || exit 2
  
     cp /etc/hosts ${TARGET}/etc/hosts
-    cat >> "${TARGET}/etc/apt/sources.list" <<EOF 
+    cat > "${TARGET}/etc/apt/sources.list" <<EOF 
 
 # ${DIST}
 deb ${MIRROR}/ ${DIST} main contrib non-free
@@ -105,6 +257,12 @@ EOF
     mkdir -p "${TARGET}/var/lib/sbuild/srcdep-lock" "${TARGET}/build"
     chown -R "root:sbuild" "${TARGET}/var/lib/sbuild" "${TARGET}/build"
     chmod -R 02775 "${TARGET}/var/lib/sbuild"
+
+    create_dev_nodes
+    setup_user
+    setup_user_sbuild
+    setup_sbuild
+    add_schroot_entry
 }
 
 function clean() {
@@ -127,6 +285,9 @@ function clean() {
 	echo "I: Remove logical volume /dev/${VG_NAME}/${ENV_NAME}_chroot"
 	lvremove -f /dev/${VG_NAME}/${ENV_NAME}_chroot
     }
+
+    echo "I: Remove ~${USR}/build/chroot-${ENV_NAME} symlink"
+    rm -f ~${USR}/build/chroot-${ENV_NAME}
 }
 
 function rm_fstab_entries() {
@@ -163,6 +324,10 @@ CLEAN=false
     exit 1
 }
 
+getent passwd $USR > /dev/null || {
+    echo "E: $USR user does not exists, please create it"
+}
+
 while getopts "a:d:v:c" option
 do
   case $option in
@@ -195,6 +360,8 @@ done
 }
 ENV_NAME=${DIST}_${ARCH}
 TARGET=${CHROOT_BASE}/${ENV_NAME}
+
+check_sanity
 
 if test "$CLEAN" = "true"
 then

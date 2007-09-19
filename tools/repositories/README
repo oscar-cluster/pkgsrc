@@ -1,0 +1,45 @@
+Setting up repositories for OSCAR
+---------------------------------
+
+OSCAR project support several distributions with different packaging system
+(yum or apt), several architectures and several sub-arch (ie i586, i686 for 
+i386 arch).
+
+The full repository system aims at building automatically all the binary packages 
+from the source packages.
+
+Scripts partially automate the installation of the repository mechanisms. 
+Operations which are not automated are documented here in this document.
+
+
+1 - Setting up automatic build system for apt (Debian)
+------------------------------------------------------
+
+1 - Install an etch system with following tools: 
+ - lvm2 
+ - debootstrap 
+ - sbuild
+ - schroot
+
+2 - Create an 'oscar' user from which all build operations will be done.
+Allow oscar user to execute command with sudo without password.
+Add the following lines with visudo:
+
+oscar ALL=NOPASSWD:  ALL
+Defaults:oscar env_keep+="APT_CONFIG DEBIAN_FRONTEND SHELL"
+
+3 - With LVM, create a volume group with enough space to host all chroot environments
+for Debian: 4GB by env (tunable in create_build_env script) + a home partition:
+
+pvcreate /dev/hdaX
+vgcreate vg-hda /dev/hdaX
+
+4 - Create a 'home' logical volume in this volume group:
+
+lvcreate -L 2G -n home vg-hda
+
+5 - Run create_build_env for Debian supported distro/arch couples:
+
+create_build_env -a amd64 -d etch -v vg-hda 
+
+6 - Copy ./sbuildrc to ~oscar/.sbuildrc
