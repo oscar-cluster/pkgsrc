@@ -1,0 +1,202 @@
+#!/bin/bash
+#
+# Create a chrootable env in an LVM volume group and mount it
+# into /srv/chroot/<name>
+# This environment is suitable for buildd
+#
+# *** WARNING*** 
+# This scripts is not intended for blindly use. It may contain bugs which destroy your system !!!!
+#
+CHROOT_BASE=/srv/chroot
+ENV_SIZE=4G
+MIRROR=http://ftp.fr.debian.org/debian
+
+MOUNTPOINTS=( /dev/pts /dev/shm /proc /home /tmp )
+
+function usage() {
+    echo -e "Usage: $0 -a arch -d dist -v vg_name [ -c ]"
+    echo -e "\t-a arch    i386,amd64"
+    echo -e "\t-d dist    etch,lenny,sid"
+    echo -e "\t-v vg_name a volume group name"
+    echo -e "\t-c         clean the environment"
+}
+
+function build() {
+    [ ! -d ${TARGET} ] || {
+	echo "E: ${ENV_NAME} already exists."
+	exit 1
+    }
+    [ -e /dev/${VG_NAME}/home ] || {
+	echo "E: Please create a 'home' logical volume in your volume group"
+	exit 1
+    }
+
+    echo "I: Create logical volume ${ENV_NAME}_chroot on ${VG_NAME}"
+    lvcreate -L ${ENV_SIZE} -Z y -n ${ENV_NAME}_chroot ${VG_NAME} 2>&1 > /dev/null
+    echo "I: Create ext3 filesystem on /dev/${VG_NAME}/${ENV_NAME}_chroot"
+    mkfs.ext3 -q /dev/${VG_NAME}/${ENV_NAME}_chroot 
+
+    # This must be done before other mountpoints to be created
+    echo "I: Create ${TARGET}"
+    mkdir -p ${TARGET}
+    add_fstab_entries
+    echo "I: Mount ${TARGET}"
+    mount ${TARGET}
+
+    i=0
+    while let $(( $i < ${#MOUNTPOINTS[@]} ))
+      do
+      echo "I: Create ${TARGET}${MOUNTPOINTS[$i]}"
+      mkdir -p ${TARGET}${MOUNTPOINTS[$i]} || {
+	  echo "E: Error creating ${TARGET}${MOUNTPOINTS[$i]}"
+	  exit 2
+      }
+      let $(( i++ ))
+    done
+
+    i=0
+    while let $(( $i < ${#MOUNTPOINTS[@]} ))
+      do
+      echo "I: Mount ${TARGET}${MOUNTPOINTS[$i]}"
+      mount ${TARGET}${MOUNTPOINTS[$i]} || {
+	  echo "E: Error mounting ${TARGET}${MOUNTPOINTS[$i]}"
+	  exit 2
+      }
+      let $(( i++ ))
+    done
+
+    /usr/sbin/debootstrap --variant=buildd "${DIST}" "${TARGET}" "${MIRROR}" || exit 2
+ 
+    cp /etc/hosts ${TARGET}/etc/hosts
+    cat >> "${TARGET}/etc/apt/sources.list" <<EOF 
+
+# ${DIST}
+deb ${MIRROR}/ ${DIST} main contrib non-free
+deb-src ${MIRROR}/ ${DIST} main contrib non-free
+
+EOF
+
+    cat > "${TARGET}/etc/passwd" <<EOF
+root:x:0:0:root:/root:/bin/bash
+daemon:x:1:1:daemon:/usr/sbin:/bin/sh
+bin:x:2:2:bin:/bin:/bin/sh
+sys:x:3:3:sys:/dev:/bin/sh
+sync:x:4:65534:sync:/bin:/bin/sync
+games:x:5:60:games:/usr/games:/bin/sh
+man:x:6:12:man:/var/cache/man:/bin/sh
+lp:x:7:7:lp:/var/spool/lpd:/bin/sh
+mail:x:8:8:mail:/var/mail:/bin/sh
+news:x:9:9:news:/var/spool/news:/bin/sh
+uucp:x:10:10:uucp:/var/spool/uucp:/bin/sh
+proxy:x:13:13:proxy:/bin:/bin/sh
+postgres:x:31:32:postgres:/var/lib/postgres:/bin/sh
+www-data:x:33:33:www-data:/var/www:/bin/sh
+backup:x:34:34:backup:/var/backups:/bin/sh
+operator:x:37:37:Operator:/var:/bin/sh
+list:x:38:38:Mailing List Manager:/var/list:/bin/sh
+irc:x:39:39:ircd:/var/run/ircd:/bin/sh
+gnats:x:41:41:Gnats Bug-Reporting System (admin):/var/lib/gnats:/bin/sh
+nobody:x:65534:65534:nobody:/nonexistent:/bin/sh
+EOF
+
+    mkdir -p "${TARGET}/var/lib/sbuild/srcdep-lock" "${TARGET}/build"
+    chown -R "root:sbuild" "${TARGET}/var/lib/sbuild" "${TARGET}/build"
+    chmod -R 02775 "${TARGET}/var/lib/sbuild"
+}
+
+function clean() {
+    rm_fstab_entries
+
+    i=${#MOUNTPOINTS[@]}
+    while let $(( $i > 0 ))
+      do
+      let $(( i-- ))
+      echo "I: Umount ${TARGET}${MOUNTPOINTS[$i]}"
+      umount ${TARGET}${MOUNTPOINTS[$i]} || true
+    done
+    echo "I: Umount ${TARGET}"
+    umount ${TARGET}
+
+    echo "I: Remove ${TARGET}"
+    rm -fr ${TARGET}
+
+    [ -e /dev/${VG_NAME}/${ENV_NAME}_chroot ] && {
+	echo "I: Remove logical volume /dev/${VG_NAME}/${ENV_NAME}_chroot"
+	lvremove -f /dev/${VG_NAME}/${ENV_NAME}_chroot
+    }
+}
+
+function rm_fstab_entries() {
+    if cat /etc/fstab | grep ${ENV_NAME} > /dev/null
+	then
+	echo "I: Backup /etc/fstab"
+	mv /etc/fstab /etc/fstab.bak
+	echo "I: Remove ${ENV_NAME} entries in /etc/fstab"
+	cat /etc/fstab.bak | awk '!/'${ENV_NAME}'/' > /etc/fstab
+    fi
+}
+
+function add_fstab_entries() {
+    rm_fstab_entries
+
+    echo "I: Add ${ENV_NAME} entries in /etc/fstab"
+    cat <<EOF >> /etc/fstab
+/dev/${VG_NAME}/${ENV_NAME}_chroot ${TARGET}   ext3    defaults   0   2
+/dev/pts             ${TARGET}/dev/pts         none    rw,bind    0   0
+tmpfs                ${TARGET}/dev/shm         tmpfs   defaults   0   0
+none                 ${TARGET}/proc            proc    defaults   0   0
+/dev/${VG_NAME}/home ${TARGET}/home            ext3    quota      0   0
+/tmp                 ${TARGET}/tmp             none    rw,bind    0   0
+EOF
+}
+
+ARCH=
+DIST=
+VG_NAME=
+CLEAN=false
+
+[ `id -u` = 0 ] || {
+    echo "E: $0 must be run as root"
+    exit 1
+}
+
+while getopts "a:d:v:c" option
+do
+  case $option in
+      a)
+	  ARCH=$OPTARG
+	  [ "$ARCH" = "i386" -o "$ARCH" = "amd64" ] || {
+	      usage
+	      exit 1
+	  }
+	  ;;
+      d)
+	  DIST=$OPTARG
+	  [ "$DIST" = "sid" -o "$DIST" = "lenny" -o "$DIST" = "etch" ] || { 
+	      usage 1
+	      exit 1 
+	  }
+	  ;;
+      v)
+	  VG_NAME=$OPTARG
+	  ;;
+      c)
+	  CLEAN=true
+	  ;;
+  esac
+done
+
+[ -z "$ARCH" -o -z "$DIST" -o -z "$VG_NAME" ] && {
+    usage
+    exit 1
+}
+ENV_NAME=${DIST}_${ARCH}
+TARGET=${CHROOT_BASE}/${ENV_NAME}
+
+if test "$CLEAN" = "true"
+then
+    clean
+    exit 0
+else
+    build
+fi
