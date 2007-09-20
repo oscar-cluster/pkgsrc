@@ -18,7 +18,8 @@
 CHROOT_BASE=/srv/chroot
 ENV_SIZE=4G
 MIRROR=http://ftp.fr.debian.org/debian
-USR=oscar
+
+[ -z "${USR}" ] && USR=buildd
 
 MOUNTPOINTS=( /dev/pts /dev/shm /proc /home /tmp )
 
@@ -91,20 +92,6 @@ function setup_user() {
     chown $USR:sbuild $HOMEDIR
 }
 
-function setup_user_sbuild() {
-    USR_HOME=`getent passwd $USR | cut -d':' -f6`
-    [ -d ${USR_HOME}/build/ ] || {
-	echo "I: Create ${USR_HOME}/build"
-	mkdir ${USR_HOME}/build
-    }    
-    [ -d ${USR_HOME}/logs/ ] || {
-	echo "I: Create ${USR_HOME}/logs"
-	mkdir ${USR_HOME}/logs
-    }    
-    echo "I: Create a link from chroot dir to build dir"
-    ln -s ${TARGET} ${USR_HOME}/build/chroot-${ENV_NAME}
-}
-
 function rm_schroot_entry() {
     if cat /etc/schroot/schroot.conf | egrep '^\['${ENV_NAME}'\]' > /dev/null 
 	then
@@ -151,7 +138,7 @@ EOF
 }
 
 function setup_sbuild() {
-    echo "I: Setup sbuildCreate sbuild dirs in chroot env"
+    echo "I: Create sbuild dirs in chroot env"
     mkdir -p ${TARGET}/build
     chown root:sbuild ${TARGET}/build
     mkdir -p ${TARGET}/var/lib/sbuild/srcdep-lock
@@ -260,7 +247,6 @@ EOF
 
     create_dev_nodes
     setup_user
-    setup_user_sbuild
     setup_sbuild
     add_schroot_entry
 }
@@ -286,9 +272,6 @@ function clean() {
 	echo "I: Remove logical volume /dev/${VG_NAME}/${ENV_NAME}_chroot"
 	lvremove -f /dev/${VG_NAME}/${ENV_NAME}_chroot
     }
-
-    echo "I: Remove ~${USR}/build/chroot-${ENV_NAME} symlink"
-    rm -f ~${USR}/build/chroot-${ENV_NAME}
 }
 
 function rm_fstab_entries() {
@@ -360,7 +343,7 @@ done
     exit 1
 }
 ENV_NAME=${DIST}_${ARCH}
-TARGET=${CHROOT_BASE}/${ENV_NAME}
+[ -z ${TARGET} ] && TARGET=${CHROOT_BASE}/${ENV_NAME}
 
 check_sanity
 

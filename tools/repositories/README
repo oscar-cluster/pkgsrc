@@ -15,31 +15,29 @@ Operations which are not automated are documented here in this document.
 1 - Setting up automatic build system for apt (Debian)
 ------------------------------------------------------
 
-1 - Install an etch system with following tools: 
- - lvm2 
- - debootstrap 
- - sbuild
- - schroot
+First, many informations can be found on http://www.debian.org/devel/buildd/setting-up
 
-2 - Create an 'oscar' user from which all build operations will be done.
-Allow oscar user to execute command with sudo without password.
-Add the following lines with visudo:
+1 - Install an etch system.
 
-oscar ALL=NOPASSWD:  ALL
-Defaults:oscar env_keep+="APT_CONFIG DEBIAN_FRONTEND SHELL"
-
-3 - With LVM, create a volume group with enough space to host all chroot environments
+2 - With LVM, create a volume group with enough space to host all chroot environments
 for Debian: 4GB by env (tunable in create_build_env script) + a home partition:
 
 pvcreate /dev/hdaX
 vgcreate vg-hda /dev/hdaX
 
-4 - Create a 'home' logical volume in this volume group:
+3 - Create a 'home' logical volume in this volume group:
 
 lvcreate -L 2G -n home vg-hda
 
-5 - Run create_build_env for Debian supported distro/arch couples:
+5 - Run 'make' in this directory. This will install needed packages (buildd and so on),
+create build envs for the distros (set in Makefile) and create good directories.
 
-create_build_env -a amd64 -d etch -v vg-hda 
+*WRNING* This script is run as root, install software, add user and such things which
+can break your system. You're warned.
 
-6 - Copy ./sbuildrc to ~oscar/.sbuildrc
+6 - Allow the buildd user to execute command with sudo without password.
+Add the following lines with visudo:
+
+buildd ALL=NOPASSWD:  ALL
+Defaults:buildd env_keep+="APT_CONFIG DEBIAN_FRONTEND SHELL"
+
