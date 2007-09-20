@@ -144,6 +144,8 @@ function setup_sbuild() {
     mkdir -p ${TARGET}/var/lib/sbuild/srcdep-lock
     chown -R root:sbuild ${TARGET}/var/lib/sbuild
     chmod -R 02775 ${TARGET}/var/lib/sbuild
+    install -d ${TARGET}/var/debbuild/srcdep-lock -o ${USR}
+    install -d ${TARGET}/build/buildd -m 777
 }
 
 function create_dev_nodes() {

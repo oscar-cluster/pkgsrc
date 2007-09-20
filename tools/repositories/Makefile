@@ -35,7 +35,7 @@ all:
 
 apt: check_user_debian $(BUILDD) $(BASEDIR) create_deb_envs
 	@echo "I: Install sbuildrc file in $(USR) homedir"
-	@cp -f ./sbuildrc `getent passwd buildd | cut -d':' -f6`/.sbuildrc
+	@install -o $(USR) -g $(GRP) ./sbuildrc `getent passwd buildd | cut -d':' -f6`/.sbuildrc
 
 $(BUILDD): $(BUILDD_SOURCE)
 	@echo "I: Install buildd"
@@ -50,7 +50,6 @@ $(CHROOTDIR)/%:
 	  arch=$(shell echo $(@F) | cut -d'_' -f2); \
 	  echo "I: Create build env for $${dist} ($${arch}) into $@"; \
 	  ./create_build_env -a $${arch} -d $${dist} -v $(LVM_VG) && \
-	  ln -s $@ $(BASEDIR)/build/chroot-$(@F)
 
 buildd_dirs: check_user_debian
 	@echo "I: Create buildd dirs"

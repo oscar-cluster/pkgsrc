@@ -4,14 +4,14 @@
 
 # Directory for chroot symlinks and sbuild logs.  Defaults to the
 # current directory if unspecified.
-$build_dir="$HOME/build";
+$build_dir="/local/buildd";
 
 # Directory for writing build logs to
-$log_dir = "$HOME/logs";
+$log_dir = "/local/buildd/logs";
 
 # Mail address where logs are sent to (mandatory, no default!)
 #$mailto = "roman";
-$mailto = "OSCAR Repositories <oscar-package@lists.gforge.inria.fr>";
+$mailto = "oscar-package@lists.gforge.inria.fr";
 
 # Name to use as override in .changes files for the Maintainer: field
 # (mandatory, no default!).
