@@ -1,9 +1,13 @@
-opkgc (0.3.2-1) unstable; urgency=low
+opkgc (0.4-1) UNRELEASED; urgency=low
 
-  * Update from upstream (0.3.2).
+  [ Geoffroy Vallee ]
   * Fix a dependency (xsltproc, needed by opkg-convert).
 
- -- Geoffroy Vallee <valleegr@ornl.gov>  Thu, 13 Sep 2007 12:08:25 -0400
+  [ Jean Parpaillon ]
+  * Update from upstream
+  * Add Build-Depends on rsync
+
+ -- Jean Parpaillon <jean.parpaillon@irisa.fr>  Thu, 20 Sep 2007 18:27:30 +0200
 
 opkgc (0.3.1-1) unstable; urgency=low
 
