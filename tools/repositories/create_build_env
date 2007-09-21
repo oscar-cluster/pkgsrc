@@ -255,6 +255,7 @@ CLEAN=false
 
 getent passwd $USR > /dev/null || {
     echo "E: $USR user does not exists, please create it"
+    exit 1
 }
 
 while getopts "a:d:v:c" option
