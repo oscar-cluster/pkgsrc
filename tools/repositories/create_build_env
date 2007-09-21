@@ -258,6 +258,11 @@ getent passwd $USR > /dev/null || {
     exit 1
 }
 
+getent group sbuild > /dev/null || {
+    echo "E: sbuild group does not exists, please create it"
+    exit 1
+}
+
 while getopts "a:d:v:c" option
 do
   case $option in
