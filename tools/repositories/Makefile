@@ -10,7 +10,6 @@ GRP=buildd
 
 # Debian specific
 DEB_DISTS=etch sid
-DEB_ARCHS=i386 amd64
 
 DEB_ENVS=$(foreach dist,$(DEB_DISTS),$(foreach arch,$(DEB_ARCHS),$(CHROOTDIR)/$(dist)_$(arch)))
 
@@ -111,7 +110,7 @@ clean_deb_envs:
 	@for dist in $(DEB_DISTS); do \
 	  for arch in $(DEB_ARCHS); do \
 	    export USR=$(USR); \
-	    export ENV_NAME=$$dist_$$arch; \
+	    export ENV_NAME=$${dist}_$${arch}; \
 	    export TARGET=/srv/chroot/$$ENV_NAME; \
 	    echo "I: Delete build env for $$dist ($$arch) into $$TARGET"; \
 	    ./create_build_env -a $$arch -d $$dist -v $(LVM_VG) -c; \

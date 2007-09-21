@@ -20,12 +20,13 @@ ENV_SIZE=4G
 MIRROR=http://ftp.fr.debian.org/debian
 
 [ -z "${USR}" ] && USR=buildd
+[ -z "${GRP}" ] && GRP=buildd
 
-MOUNTPOINTS=( /dev/pts /dev/shm /proc /home /tmp )
+MOUNTPOINTS=( /dev/pts /dev/shm /proc /tmp )
 
 function usage() {
-    echo -e "Usage: $0 -a arch -d dist -v vg_name [ -c ]"
-    echo -e "\t-a arch    i386,amd64"
+    echo -e "Usage: $0 [ -a arch ] -d dist -v vg_name [ -c ]"
+    echo -e "\t-a arch    i386,amd64, current arch if not specified"
     echo -e "\t-d dist    etch,lenny,sid"
     echo -e "\t-v vg_name a volume group name"
     echo -e "\t-c         clean the environment"
@@ -92,60 +93,13 @@ function setup_user() {
     chown $USR:sbuild $HOMEDIR
 }
 
-function rm_schroot_entry() {
-    if cat /etc/schroot/schroot.conf | egrep '^\['${ENV_NAME}'\]' > /dev/null 
-	then
-	echo "I: Suppress environment entry in schroot.conf"
-
-	mv /etc/schroot/schroot.conf /etc/schroot/schroot.conf.bak
-
-	cat /etc/schroot/schroot.conf.bak | awk 'BEGIN {
-  SECTION = "NO"
-  }
-  {
-    if ( $1 ~ /^\['${ENV_NAME}'\]/ ) {
-      SECTION = "YES"
-    }
-
-    if ( $1 ~ /^\[.*\]/ && $1 !~ /^\['${ENV_NAME}'\]/ ) {
-      SECTION = "NO"
-    }
-
-    if ( SECTION == "NO" ) {
-      print $0
-    }
-  }' > /etc/schroot/schroot.conf
-    fi
-}
-
-function add_schroot_entry() {
-    rm_schroot_entry
-
-    echo "I: Add an entry for this chroot in /etc/schroot/schroot.conf:"
-
-    cat <<EOF >> /etc/schroot/schroot.conf
-
-[${DIST}-${ARCH}]
-type=plain
-description=Debian ${DIST} (${ARCH})
-location=${TARGET}
-priority=2
-groups=root,sbuild
-root-groups=sbuild
-run-setup-scripts=true
-run-session-scripts=true
-EOF
-}
-
 function setup_sbuild() {
     echo "I: Create sbuild dirs in chroot env"
-    mkdir -p ${TARGET}/build
-    chown root:sbuild ${TARGET}/build
-    mkdir -p ${TARGET}/var/lib/sbuild/srcdep-lock
-    chown -R root:sbuild ${TARGET}/var/lib/sbuild
-    chmod -R 02775 ${TARGET}/var/lib/sbuild
-    install -d ${TARGET}/var/debbuild/srcdep-lock -o ${USR}
+    install -d ${TARGET}/build -o ${USR} -g ${GRP}
     install -d ${TARGET}/build/buildd -m 777
+
+    install -d ${TARGET}/var/lib/sbuild/srcdep-lock -o ${USR} -g ${GRP}
+    install -d ${TARGET}/var/debbuild/srcdep-lock -o ${USR}
 }
 
 function create_dev_nodes() {
@@ -161,10 +115,6 @@ function create_dev_nodes() {
 function build() {
     [ ! -d ${TARGET} ] || {
 	echo "E: ${ENV_NAME} already exists."
-	exit 1
-    }
-    [ -e /dev/${VG_NAME}/home ] || {
-	echo "E: Please create a 'home' logical volume in your volume group"
 	exit 1
     }
 
@@ -243,19 +193,13 @@ gnats:x:41:41:Gnats Bug-Reporting System (admin):/var/lib/gnats:/bin/sh
 nobody:x:65534:65534:nobody:/nonexistent:/bin/sh
 EOF
 
-    mkdir -p "${TARGET}/var/lib/sbuild/srcdep-lock" "${TARGET}/build"
-    chown -R "root:sbuild" "${TARGET}/var/lib/sbuild" "${TARGET}/build"
-    chmod -R 02775 "${TARGET}/var/lib/sbuild"
-
     create_dev_nodes
     setup_user
     setup_sbuild
-    add_schroot_entry
 }
 
 function clean() {
     rm_fstab_entries
-    rm_schroot_entry
 
     i=${#MOUNTPOINTS[@]}
     while let $(( $i > 0 ))
@@ -295,7 +239,6 @@ function add_fstab_entries() {
 /dev/pts             ${TARGET}/dev/pts         none    rw,bind    0   0
 tmpfs                ${TARGET}/dev/shm         tmpfs   defaults   0   0
 none                 ${TARGET}/proc            proc    defaults   0   0
-/dev/${VG_NAME}/home ${TARGET}/home            ext3    quota      0   0
 /tmp                 ${TARGET}/tmp             none    rw,bind    0   0
 EOF
 }
@@ -340,7 +283,9 @@ do
   esac
 done
 
-[ -z "$ARCH" -o -z "$DIST" -o -z "$VG_NAME" ] && {
+[ -z "$ARCH" ] && ARCH=`dpkg-architecture | sed '/^DEB_BUILD_ARCH=/!d; s/^.*=//'`
+
+[ -z "$DIST" -o -z "$VG_NAME" ] && {
     usage
     exit 1
 }
