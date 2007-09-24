@@ -1,4 +1,6 @@
 #!/usr/bin/env python
+# coding=utf8
+
 #
 # oreposd: manage OSCAR repositories, fetching packages in incoming queue,
 # launching package build and updating repositories
@@ -12,7 +14,9 @@
 import os, sys, getopt, datetime
 import string, re
 import signal, subprocess
-import ConfigParser
+
+from Oreposd.Config import *
+from Oreposd.Logger import *
 
 VERSION = '0.1'
 
@@ -23,17 +27,10 @@ USAGE = """Usage: oreposd [ -h ] [ -v ] [ -d ] [ -k ]
        -k|--kill      kill an running oreposd process
 """
 
-debug_level = 0
+debug_level = Logger.INFO
 incomingQueue = None
-dateformat = "%b %d %H:%M:%S"
 
 queue_list_name = [ "IncomingQueue", "BuildQueue" ]
-required_configs = { "GENERAL": ["incoming_polltime",
-                                 "build_polltime",
-                                 "local_incoming_dir",
-                                 "dist_incoming_dir",
-                                 "dist_incoming_host",
-                                 "dist_incoming_user"] }
 children = []
 
 #
@@ -50,7 +47,7 @@ class OreposdProcess(object):
     def stop(self, signum):
         for pid in children:
             os.kill(pid, signal.SIGTERM)
-        info("Stopping %s process" % self.name)
+        Logger().info("Stopping %s process" % self.name)
         raise SystemExit(signum)
 
 class PolledProcess(OreposdProcess):
@@ -60,7 +57,7 @@ class PolledProcess(OreposdProcess):
         OreposdProcess.__init__(self, name)
         self.polltime = time
         signal.signal(signal.SIGALRM, lambda signum, frame: self.alarmHandler())
-        debug("Started %s with polling time %d" % (name, time))
+        Logger().debug("Started %s with polling time %d" % (name, time))
        
     def alarmHandler(self):
         self.run()
@@ -77,7 +74,7 @@ class IncomingQueue(PolledProcess):
         PolledProcess.__init__(self, "IncomingQueue", int(Config().get("GENERAL", "incoming_polltime")))
 
     def run(self):
-        info("Pull incoming packages")
+        Logger().info("Pull incoming packages")
         local_dir = "%s/" % Config().get("GENERAL", "local_incoming_dir")
         dist_dir = "%s@%s:%s/" % (Config().get("GENERAL", "dist_incoming_user"),
                                   Config().get("GENERAL", "dist_incoming_host"),
@@ -90,69 +87,10 @@ class BuildQueue(PolledProcess):
         PolledProcess.__init__(self, "BuildQueue", int(Config().get("GENERAL", "build_polltime")))
 
     def run(self):
-        info("Launch incoming packages building")
-
-class Config(object):
-    __instance__ = None
-    __config__ = None
-
-    def __new__ (cls):
-        if cls.__instance__ is None:
-            cls.__instance__ = object.__new__(cls)
-            cls.__instance__.readConfig()
-        return cls.__instance__
-
-    #
-    # Read config file ./oreposd.conf
-    #
-    def readConfig(self):
-        self.__config__ = ConfigParser.ConfigParser()
-
-        config_files = [ os.path.join(os.path.dirname(sys.argv[0]), "oreposd.conf") ]
-        fd = None
-        for config_file in config_files:
-            try:
-                fd = open(config_file)
-            except IOError, e:
-                continue
-            try:
-                self.__config__.readfp(fd)
-                debug("Read config in %s" % config_file)
-            except ConfigParser.ParsingError, e:
-                error("Error parsing config file:\n%s" % str(e))
-                raise SystemExit(1)
-            fd.close()
-
-        if fd == None:
-            error("No config file")
-            raise SystemExit(1)
-
-        # Just to test mandatory options (raise NoOptionError if not found)
-        for section in required_configs.keys():
-            for opt in required_configs[section]:
-                self.__config__.get(section, opt)
-
-    def get(self, section, opt):
-        return self.__config__.get(section, opt)
-    
-#
-# Helper functions
-#
-def debug(msg):
-    if debug_level > 0:
-        print "%s [DEBUG] %s" % (datetime.datetime.now().strftime(dateformat), msg)
-
-def info(msg):
-    print "%s [INFO] %s" % (datetime.datetime.now().strftime(dateformat), msg)
-
-def warn(msg):
-    print "%s [WARN] %s" % (datetime.datetime.now().strftime(dateformat), msg)
-
-def error(msg):
-    print >> sys.stderr, "%s [ERROR] %s" % (datetime.datetime.now().strftime(dateformat), msg)
+        Logger().info("Launch incoming packages building")
 
 def command(command, cwd=os.getcwd()):
-    debug("Execute: %s" % command)
+    Logger().debug("Execute: %s" % command)
     exe = subprocess.Popen(command,
                            cwd=cwd,
                            bufsize=0,
@@ -160,11 +98,11 @@ def command(command, cwd=os.getcwd()):
                            stdout=subprocess.PIPE,
                            stderr=subprocess.PIPE,
                            shell=True)
-    if debug_level > 0:
+    if Logger().isDebug():
         for l in exe.stdout:
-            info(l.strip())
+            Logger().info(l.strip())
     for l in exe.stderr:
-        error(l.strip())
+        Logger().error(l.strip())
     return exe.wait()
 
 def alreadyRunning():
@@ -218,20 +156,20 @@ def main():
     try:
         Config()
     except ConfigParser.NoOptionError, e:
-        error(e)
+        Logger().error(e)
         raise SystemExit(1)
 
     pid = alreadyRunning()
     if pid and killMode:
-        info("Terminate oreposd (pid %d)" % pid)
+        Logger().info("Terminate oreposd (pid %d)" % pid)
         os.kill(pid, signal.SIGTERM)
         rmPid()
         raise SystemExit(0)
     elif not pid and killMode:
-        error("No oreposd process already running")
+        Logger().error("No oreposd process already running")
         raise SystemExit(1)
     elif pid and not killMode:
-        error("An oreposd process is already running (%s exists)" % Config().get("GENERAL", "pidfile"))
+        Logger().error("An oreposd process is already running (%s exists)" % Config().get("GENERAL", "pidfile"))
         raise SystemExit(1)
     savePid()
 
