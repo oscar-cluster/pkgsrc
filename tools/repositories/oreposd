@@ -143,16 +143,6 @@ def main():
                 raise SystemExit(0)
         else:
             raise SystemExit(0)
-        #sys.stdin.close()
-        #sys.stdout.close()
-        #sys.stderr.close()
-        #os.close(0)
-        #os.close(1)
-        #os.close(2)
-        # unix file descriptor allocation ensures that the followin are fd 0,1,2
-        #sys.stdin = open("/dev/null")
-        #sys.stdout = open("/dev/null")
-        #sys.stderr = open("/dev/null")
         Logger().debug("Finished daemonizing (pid %s)" % (os.getpid(),))
         Logger().rmHandler(stderrLogger)
     savePid()

@@ -6,7 +6,7 @@
 # directory of the source
 ###################################################################
 
-import subprocess
+import subprocess, os, logging
 from Logger import *
 
 def command(command, cwd=os.getcwd()):
@@ -18,10 +18,12 @@ def command(command, cwd=os.getcwd()):
                            stdout=subprocess.PIPE,
                            stderr=subprocess.PIPE,
                            shell=True)
-    if Logger().isDebug():
-        for l in exe.stdout:
-            Logger().info(l.strip())
-    for l in exe.stderr:
-        Logger().error(l.strip())
-    return exe.wait()
-
+    stdoutLogger = PipeLogger(exe.stdout, logging.DEBUG)
+    stdoutLogger.start()
+    stderrLogger = PipeLogger(exe.stderr, logging.WARN)
+    stderrLogger.start()
+    
+    ret = exe.wait()
+    stdoutLogger.stop()
+    stderrLogger.stop()
+    return ret

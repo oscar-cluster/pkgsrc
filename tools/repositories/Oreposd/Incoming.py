@@ -33,17 +33,15 @@ class Incoming(threading.Thread):
         # Exit
         Logger().info("%s exit..." % self.getName())
         raise SystemExit(0)
-            
+
     def syncIncoming(self):
         Logger().info("Pull incoming packages")
-        #local_dir = "%s/" % Config().get("GENERAL", "local_incoming_dir")
-        #dist_dir = "%s@%s:%s/" % (Config().get("GENERAL", "dist_incoming_user"),
-        #                          Config().get("GENERAL", "dist_incoming_host"),
-        #                          Config().get("GENERAL", "dist_incoming_dir"))
-        #cmd = "rsync -av %s %s" % (dist_dir, local_dir)
-        #command(cmd)
-        
-        time.sleep(2)
+        local_dir = "%s/" % Config().get("GENERAL", "local_incoming_dir")
+        dist_dir = "%s@%s:%s/" % (Config().get("GENERAL", "dist_incoming_user"),
+                                  Config().get("GENERAL", "dist_incoming_host"),
+                                  Config().get("GENERAL", "dist_incoming_dir"))
+        cmd = "rsync -av %s %s" % (dist_dir, local_dir)
+        command(cmd)
 
     def stop(self):
         if self.__timer:
