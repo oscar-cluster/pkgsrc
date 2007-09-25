@@ -6,55 +6,52 @@
 # directory of the source
 ###################################################################
 
-import os
+import os, logging, logging.handlers
 import datetime
 
 class Logger(object):
     """ Logger 
     """
-    ERROR = 0
-    INFO  = 1
-    DEBUG = 2
-    TRACE = 3
-
     __instance = None
-    __level = ERROR
-
-    __dateformat__ = "%b %d %H:%M:%S"
-
+    __logger = None
+    __level = None
+    
     def __new__ (cls):
         if cls.__instance is None:
             cls.__instance = object.__new__(cls)
         return cls.__instance
 
-    def level(self, lvl):
-        """ Set verbosity level
-        """
+    def init(self, lvl, handlers):
+        logging.raiseExceptions = 0
+        self.__logger = logging.getLogger("oreposd")
         self.__level = lvl
+        self.__logger.setLevel(lvl)
+        for handler in handlers:
+            self.__logger.addHandler(handler)
+
+    def addHandler(self, handler):
+        self.__logger.addHandler(handler)
+
+    def rmHandler(self, handler):
+        self.__logger.removeHandler(handler)
+
+    def shutdown(self):
+        logging.shutdown()
 
     def isError(self):
-        return self.__level >= Logger.ERROR
+        return self.__level >= logging.ERROR
         
     def error(self, msg):
-        print "%s [ERROR] %s" % (datetime.datetime.now().strftime(self.__dateformat__), msg)
+        self.__logger.error(msg)
 
     def isInfo(self):
-        return self.__level >= Logger.INFO
+        return self.__level >= logging.INFO
         
     def info(self, msg):
-        if self.__level >= Logger.INFO:
-            print "%s [INFO] %s" % (datetime.datetime.now().strftime(self.__dateformat__), msg)
+        self.__logger.info(msg)
 
     def isDebug(self):
-        return self.__level >= Logger.DEBUG
+        return self.__level >= logging.DEBUG
         
     def debug(self, msg):
-        if self.__level >= Logger.DEBUG:
-            print "%s [DEBUG] %s" % (datetime.datetime.now().strftime(self.__dateformat__), msg)
-
-    def isTrace(self):
-        return self.__level >= Logger.TRACE
-        
-    def trace(self, msg):
-        if self.__level >= Logger.TRACE:
-            print "%s [TRACE] %s" % (datetime.datetime.now().strftime(self.__dateformat__), msg)
+        self.__logger.debug(msg)

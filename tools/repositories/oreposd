@@ -11,99 +11,30 @@
 #                    Jean Parpaillon <jean.parpaillon@irisa.fr>
 #
 
-import os, sys, getopt, datetime
+import os, sys, getopt
 import string, re
-import signal, subprocess
+import signal
+import logging
 
 from Oreposd.Config import *
 from Oreposd.Logger import *
+from Oreposd.Incoming import *
 
 VERSION = '0.1'
 
-USAGE = """Usage: oreposd [ -h ] [ -v ] [ -d ] [ -k ]
+USAGE = """Usage: oreposd [ -h ] [ -v ] [ -d ] [ -k ] [ -l ]
        -h|--help      print this and exit
        -v|--version   print version and exit
        -d|--debug     add verbosity
        -k|--kill      kill an running oreposd process
+       -b|--batch     don't daemonize
+       -l|--log       set log file
 """
 
-debug_level = Logger.INFO
-incomingQueue = None
+stderrLogger = None
+fileLogger = None
 
-queue_list_name = [ "IncomingQueue", "BuildQueue" ]
-children = []
-
-#
-# Classes 
-#
-class OreposdProcess(object):
-    name = None
-    
-    def __init__(self, name):
-        self.name = name
-        signal.signal(signal.SIGTERM, lambda signum, frame: self.stop(signum))
-        signal.signal(signal.SIGINT, lambda signum, frame: self.stop(signum))
-
-    def stop(self, signum):
-        for pid in children:
-            os.kill(pid, signal.SIGTERM)
-        Logger().info("Stopping %s process" % self.name)
-        raise SystemExit(signum)
-
-class PolledProcess(OreposdProcess):
-    polltime = None
-
-    def __init__(self, name, time):
-        OreposdProcess.__init__(self, name)
-        self.polltime = time
-        signal.signal(signal.SIGALRM, lambda signum, frame: self.alarmHandler())
-        Logger().debug("Started %s with polling time %d" % (name, time))
-       
-    def alarmHandler(self):
-        self.run()
-        signal.alarm(self.polltime)
-
-    def start(self):
-        signal.alarm(self.polltime)
-
-    def run(self):
-        raise NotImplemented
-
-class IncomingQueue(PolledProcess):
-    def __init__(self):
-        PolledProcess.__init__(self, "IncomingQueue", int(Config().get("GENERAL", "incoming_polltime")))
-
-    def run(self):
-        Logger().info("Pull incoming packages")
-        local_dir = "%s/" % Config().get("GENERAL", "local_incoming_dir")
-        dist_dir = "%s@%s:%s/" % (Config().get("GENERAL", "dist_incoming_user"),
-                                  Config().get("GENERAL", "dist_incoming_host"),
-                                  Config().get("GENERAL", "dist_incoming_dir"))
-        cmd = "rsync -av %s %s" % (dist_dir, local_dir)
-        command(cmd)
-
-class BuildQueue(PolledProcess):
-    def __init__(self):
-        PolledProcess.__init__(self, "BuildQueue", int(Config().get("GENERAL", "build_polltime")))
-
-    def run(self):
-        Logger().info("Launch incoming packages building")
-
-def command(command, cwd=os.getcwd()):
-    Logger().debug("Execute: %s" % command)
-    exe = subprocess.Popen(command,
-                           cwd=cwd,
-                           bufsize=0,
-                           stdin=None,
-                           stdout=subprocess.PIPE,
-                           stderr=subprocess.PIPE,
-                           shell=True)
-    if Logger().isDebug():
-        for l in exe.stdout:
-            Logger().info(l.strip())
-    for l in exe.stderr:
-        Logger().error(l.strip())
-    return exe.wait()
+threads = []
 
 def alreadyRunning():
     """ Return pid of an already running process of oreposd, if any.
@@ -123,24 +54,34 @@ def savePid():
 def rmPid():
     os.unlink(Config().get("GENERAL", "pidfile"))
 
+def stop(signum, frame):
+    for t in threads:
+        Logger().debug("Asking %s to stop" % t.getName())
+        t.stop()
+    for t in threads:
+        t.join()
+
+    Logger().info("oreposd main thread exit...")
+    Logger().shutdown()
+    raise SystemExit(0)
+        
 #
 # Main
 #
 def main():
-    global debug_level
-    global queue_list_name
-    global children
-
     # Parse command line options
     try:
         (opts, args) = getopt.getopt(sys.argv[1:],
-                                     'vhdk',
-                                     ['version', 'help', 'debug', 'kill'])
+                                     'vhdkbl:',
+                                     ['version', 'help', 'debug', 'kill', 'batch', 'log='])
     except getopt.error, msg:
         error(msg)
         SystemExit(1)
 
     killMode = False
+    batchMode = False
+    logLevel = logging.INFO
+    logfileName = None
     for option, arg in opts:
         if option in ('-h', '--help'):
             print USAGE
@@ -149,49 +90,86 @@ def main():
             print VERSION
             return
         elif option in ('-d', '--debug'):
-            debug_level += 1
+            logLevel = logging.DEBUG
         elif option in ('-k', '--kill'):
             killMode = True
+        elif option in ('-b', '--batch'):
+            batchMode = True
+        elif option in ('-l', '--log'):
+            logfileName = arg
+
+    stderrLogger = logging.StreamHandler(strm=sys.stderr)
+    stderrLogger.setLevel(logLevel)
+    stderrLogger.setFormatter(logging.Formatter(fmt="%(name)s [%(thread)d] %(levelname)s: %(message)s"))
+    Logger().init(logLevel, [stderrLogger])
 
     try:
         Config()
     except ConfigParser.NoOptionError, e:
         Logger().error(e)
         raise SystemExit(1)
+    
+    if not logfileName and Config().isDefined("GENERAL", "logfile"):
+        logfileName = Config().get("GENERAL", "logfile")
+
+    if logfileName and not killMode:
+        if not os.path.isabs(logfileName):
+            logfileName = os.path.join(os.getcwd(), logfileName)
+        fileLogger = logging.FileHandler(logfileName)
+        fileLogger.setLevel(logLevel)
+        fileLogger.setFormatter(logging.Formatter(fmt="%(asctime)s %(name)s [%(thread)d] %(levelname)s: %(message)s", datefmt="%b %d %H:%M:%S"))
+        Logger().addHandler(fileLogger)
 
     pid = alreadyRunning()
-    if pid and killMode:
-        Logger().info("Terminate oreposd (pid %d)" % pid)
-        os.kill(pid, signal.SIGTERM)
-        rmPid()
-        raise SystemExit(0)
-    elif not pid and killMode:
-        Logger().error("No oreposd process already running")
-        raise SystemExit(1)
-    elif pid and not killMode:
-        Logger().error("An oreposd process is already running (%s exists)" % Config().get("GENERAL", "pidfile"))
-        raise SystemExit(1)
+    if killMode:
+        if pid:
+            Logger().info("Terminate oreposd (pid %d)" % pid)
+            os.kill(pid, signal.SIGTERM)
+            rmPid()
+            raise SystemExit(0)
+        else:
+            Logger().error("No oreposd process already running")
+            raise SystemExit(1)
+    else:
+        if pid:
+            Logger().error("An oreposd process is already running (%s exists)" % Config().get("GENERAL", "pidfile"))
+            raise SystemExit(1)
+
+    if not batchMode:
+        Logger().debug("Daemonizing...")
+        if os.fork() == 0:
+            os.setsid()
+            if os.fork() != 0:
+                raise SystemExit(0)
+        else:
+            raise SystemExit(0)
+        #sys.stdin.close()
+        #sys.stdout.close()
+        #sys.stderr.close()
+        #os.close(0)
+        #os.close(1)
+        #os.close(2)
+        # unix file descriptor allocation ensures that the followin are fd 0,1,2
+        #sys.stdin = open("/dev/null")
+        #sys.stdout = open("/dev/null")
+        #sys.stderr = open("/dev/null")
+        Logger().debug("Finished daemonizing (pid %s)" % (os.getpid(),))
+        Logger().rmHandler(stderrLogger)
     savePid()
 
-    main = OreposdProcess("main")
-    for queue_name in queue_list_name:
-        pid = os.fork()
-        if pid == 0:
-            os.setsid()
-            queue = eval("%s()" % queue_name)
-            queue.start()
-            break
-        else:
-            children.append(pid)
+    incomingThread = Incoming()
+    incomingThread.start()
+    
+    threads.append(incomingThread)
+
+    signal.signal(signal.SIGTERM, stop)
+    signal.signal(signal.SIGINT, stop)
 
     while True:
         signal.pause()
 
 # Main
 if __name__ == '__main__':
-    try:
-        main()
-    except KeyboardInterrupt:
-        print "exiting due to user interrupt."
+    main()
 
 # vim: set expandtab shiftwidth=4 :

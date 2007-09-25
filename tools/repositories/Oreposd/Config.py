@@ -58,3 +58,8 @@ class Config(object):
     def get(self, section, opt):
         return self.__config__.get(section, opt)
     
+    def set(self, section, opt, val):
+        return self.__config__.set(section, opt, val)
+    
+    def isDefined(self, section, opt):
+        return self.__config__.has_option(section, opt)
