@@ -63,6 +63,7 @@ def stop(signum, frame):
 
     Logger().info("oreposd main thread exit...")
     Logger().shutdown()
+    rmPid()
     raise SystemExit(0)
         
 #
@@ -125,7 +126,6 @@ def main():
         if pid:
             Logger().info("Terminate oreposd (pid %d)" % pid)
             os.kill(pid, signal.SIGTERM)
-            rmPid()
             raise SystemExit(0)
         else:
             Logger().error("No oreposd process already running")
