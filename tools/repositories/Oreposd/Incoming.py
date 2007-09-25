@@ -13,7 +13,6 @@ from Tools import *
 class Incoming(threading.Thread):
     __stopEvent__ = threading.Event()
     __queue__ = Queue.Queue()
-    __timer = None
 
     def __init__(self):
         threading.Thread.__init__(self, name="Incoming")
@@ -21,14 +20,10 @@ class Incoming(threading.Thread):
         self.setDaemon(False)
 
     def run(self):
-        self.syncIncoming()
-        while True:
-            if self.__stopEvent__.isSet():
-                break
-            
-            self.__timer = threading.Timer(int(Config().get("GENERAL", "incoming_polltime")), self.syncIncoming)
-            self.__timer.start()
-            self.__timer.join()
+        polltime = int(Config().get("GENERAL", "incoming_polltime"))
+        while not self.__stopEvent__.isSet():
+            self.syncIncoming()
+            self.__stopEvent__.wait(polltime)
         
         # Exit
         Logger().info("%s exit..." % self.getName())
@@ -44,7 +39,5 @@ class Incoming(threading.Thread):
         command(cmd)
 
     def stop(self):
-        if self.__timer:
-            self.__timer.cancel()
         self.__stopEvent__.set()
 
