@@ -27,3 +27,9 @@ def command(command, cwd=os.getcwd()):
     stdoutLogger.stop()
     stderrLogger.stop()
     return ret
+
+def glob2pat(globstr):
+    pat = globstr.replace("\\",r"\\")
+    pat = pat.replace(".",r"\.").replace("?",r".").replace("*",r".*")
+    
+    return "^%s$" % pat

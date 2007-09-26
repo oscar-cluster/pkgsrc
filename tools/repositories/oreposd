@@ -19,16 +19,17 @@ import logging
 from Oreposd.Config import *
 from Oreposd.Logger import *
 from Oreposd.Incoming import *
+from Oreposd.Queues import *
+from Oreposd.Db import *
 
 VERSION = '0.1'
 
-USAGE = """Usage: oreposd [ -h ] [ -v ] [ -d ] [ -k ] [ -l ]
+USAGE = """Usage: oreposd [ -h ] [ -v ] [ -d ] [ -k ]
        -h|--help      print this and exit
        -v|--version   print version and exit
        -d|--debug     add verbosity
        -k|--kill      kill an running oreposd process
        -b|--batch     don't daemonize
-       -l|--log       set log file
 """
 
 stderrLogger = None
@@ -40,19 +41,19 @@ def alreadyRunning():
     """ Return pid of an already running process of oreposd, if any.
     """
     try:
-        fd = open(Config().get("GENERAL", "pidfile"), 'r')
+        fd = open(Config().get("DEFAULT", "pidfile"), 'r')
         pid = int(fd.readline().strip())
         return pid
     except IOError, e:
         return None
 
 def savePid():
-    fd = open(Config().get("GENERAL", "pidfile"), 'w')
+    fd = open(Config().get("DEFAULT", "pidfile"), 'w')
     fd.write("%d" % os.getpid())
     fd.close()
 
 def rmPid():
-    os.unlink(Config().get("GENERAL", "pidfile"))
+    os.unlink(Config().get("DEFAULT", "pidfile"))
 
 def stop(signum, frame):
     for t in threads:
@@ -61,11 +62,16 @@ def stop(signum, frame):
     for t in threads:
         t.join()
 
+    Db().stop()
+
     Logger().info("oreposd main thread exit...")
     Logger().shutdown()
-    rmPid()
     raise SystemExit(0)
-        
+
+def kill(pid):
+    rmPid()
+    os.kill(pid, signal.SIGTERM)
+    
 #
 # Main
 #
@@ -82,7 +88,6 @@ def main():
     killMode = False
     batchMode = False
     logLevel = logging.INFO
-    logfileName = None
     for option, arg in opts:
         if option in ('-h', '--help'):
             print USAGE
@@ -96,45 +101,58 @@ def main():
             killMode = True
         elif option in ('-b', '--batch'):
             batchMode = True
-        elif option in ('-l', '--log'):
-            logfileName = arg
 
+    # Logger initialization
     stderrLogger = logging.StreamHandler(strm=sys.stderr)
     stderrLogger.setLevel(logLevel)
     stderrLogger.setFormatter(logging.Formatter(fmt="%(name)s [%(thread)d] %(levelname)s: %(message)s"))
     Logger().init(logLevel, [stderrLogger])
 
+    # Config initialization
     try:
         Config()
     except ConfigParser.NoOptionError, e:
         Logger().error(e)
         raise SystemExit(1)
-    
-    if not logfileName and Config().isDefined("GENERAL", "logfile"):
-        logfileName = Config().get("GENERAL", "logfile")
 
-    if logfileName and not killMode:
-        if not os.path.isabs(logfileName):
-            logfileName = os.path.join(os.getcwd(), logfileName)
+    # Create basedir
+    basedir = Config().get("DEFAULT", "basedir")
+    if not os.path.isdir(basedir):
+        Logger().info("Creates base dir: %s" % basedir)
+        os.makedirs(basedir)
+
+    # Initialize database
+    Db().init()
+
+    # Once config init'd, can set log file handler
+    logdir = os.path.join(basedir, "logs")
+    if not os.path.isdir(logdir):
+        Logger().info("Creates log dir: %s" % logdir)
+        os.makedirs(logdir)
+    
+    logfileName = os.path.join(logdir, "oreposd.log")
+    if not killMode:
         fileLogger = logging.FileHandler(logfileName)
         fileLogger.setLevel(logLevel)
         fileLogger.setFormatter(logging.Formatter(fmt="%(asctime)s %(name)s [%(thread)d] %(levelname)s: %(message)s", datefmt="%b %d %H:%M:%S"))
         Logger().addHandler(fileLogger)
 
+    # Deal with kill mode 
     pid = alreadyRunning()
     if killMode:
         if pid:
             Logger().info("Terminate oreposd (pid %d)" % pid)
-            os.kill(pid, signal.SIGTERM)
+            kill(pid)
             raise SystemExit(0)
         else:
             Logger().error("No oreposd process already running")
             raise SystemExit(1)
     else:
         if pid:
-            Logger().error("An oreposd process is already running (%s exists)" % Config().get("GENERAL", "pidfile"))
+            Logger().error("An oreposd process is already running (%s exists)" % Config().get("DEFAULT", "pidfile"))
             raise SystemExit(1)
 
+    # Daemonize if not batch mode
     if not batchMode:
         Logger().debug("Daemonizing...")
         if os.fork() == 0:
@@ -147,11 +165,20 @@ def main():
         Logger().rmHandler(stderrLogger)
     savePid()
 
-    incomingThread = Incoming()
-    incomingThread.start()
-    
-    threads.append(incomingThread)
+    # QueueManager initialization
+    QueueManager().init()
 
+    # Start threads
+    try:
+        
+        incomingThread = Incoming()
+        incomingThread.start()
+        
+        threads.append(incomingThread)
+    except SystemExit, e:
+        kill(alreadyRunning())
+
+    # Task of main thread: waiting for stop signal
     signal.signal(signal.SIGTERM, stop)
     signal.signal(signal.SIGINT, stop)
 

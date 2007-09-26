@@ -9,12 +9,12 @@ import os,sys
 from Logger import *
 
 class Config(object):
-    __required_configs__ = { "GENERAL": ["incoming_polltime",
-                                         "build_polltime",
-                                         "local_incoming_dir",
-                                         "dist_incoming_dir",
-                                         "dist_incoming_host",
-                                         "dist_incoming_user"] }
+    __required_configs__ = {"DEFAULT": ["basedir",
+                                        "pidfile"],
+                            "incoming": ["polltime",
+                                          "localdir",
+                                          "distdir",
+                                          "disthost"]}
 
     __instance__ = None
     __config__ = None
@@ -63,3 +63,14 @@ class Config(object):
     
     def isDefined(self, section, opt):
         return self.__config__.has_option(section, opt)
+
+    def getSections(self, type=None):
+        if type:
+            return [ section
+                     for section in self.__config__.sections()
+                     if self.__config__.has_option(section, "type") and self.__config__.get(section, "type") == type ]
+        else:
+             return self.__config__.sections()
+
+    def getUser(self):
+        return os.environ['USER']

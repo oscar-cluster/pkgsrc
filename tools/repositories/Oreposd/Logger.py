@@ -22,7 +22,7 @@ class Logger(object):
             cls.__instance = object.__new__(cls)
         return cls.__instance
 
-    def init(self, lvl, handlers):
+    def init(self, lvl=None, handlers=[]):
         logging.raiseExceptions = 0
         self.__logger = logging.getLogger("oreposd")
         self.__level = lvl
