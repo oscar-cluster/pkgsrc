@@ -15,6 +15,7 @@ Buildroot: %{tmp}/%{name}-%{version}-root
 BuildArch: noarch
 AutoReqProv: no
 Provides: perl(OSCAR::Configbox), perl(OSCAR::Database), perl(OSCAR::Opkg), perl(OSCAR::OCA::OS_Detect), perl(OSCAR::Distro), perl(OSCAR::Package), perl(OSCAR::PackageSmart), perl(OSCAR::Network), perl(OSCAR::Logger), perl(OSCAR::PackagePath), perl(OSCAR::oda)
+Provides: perl(SIS::Client), perl(SIS::DB), perl(SIS::Image)
 
 %description
 Perl libraries for OSCAR
