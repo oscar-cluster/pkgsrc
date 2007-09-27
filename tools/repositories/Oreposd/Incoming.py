@@ -10,6 +10,8 @@ import threading
 from Config import *
 from Tools import *
 from Queues import *
+from Packages import *
+from Db import *
 
 class Incoming(threading.Thread):
     __stopEvent__ = threading.Event()
@@ -56,13 +58,15 @@ class Incoming(threading.Thread):
 
     def fillQueues(self):
         Logger().info("Getting list of incoming packages")
-        qList = QueueManager().getQueueList("source")
+        qList = QueueManager().getQueues("source")
         for basename in os.listdir(self.__localIncomingDir__):
             for q in qList:
                 if q.accept(basename):
-                    # TODO: handle full queue (if maxsize have been setted)
-                    q.put(basename)
-                    Logger().info("Added %s in %s source queue" % (basename, q.getName()))
+                    # TODO: handle full queue (if maxsize have been set)
+                    if not Db().isIn(Db.T_PKG_STATUS, basename):
+                        Db().set(Db.T_PKG_STATUS, basename, "%d" % Package.ST_NEW)
+                        q.put(basename)
+                        Logger().info("Added %s in %s source queue" % (basename, q.getName()))
                     
     def stop(self):
         self.__stopEvent__.set()

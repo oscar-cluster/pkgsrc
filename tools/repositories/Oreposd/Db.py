@@ -14,6 +14,8 @@ from Oreposd.Logger import *
 class Db(object):
     """ Db
     """
+    T_PKG_STATUS = "pkg_status"
+    
     __instance = None
 
     __tables__ = {"pkg_status": None}
@@ -28,10 +30,20 @@ class Db(object):
         if not os.path.isdir(dbdir):
             Logger().info("Create db dir: %s" % dbdir)
             os.makedirs(dbdir)
+
         for t in self.__tables__.keys():
             bt = bsddb.btopen(os.path.join(dbdir, "%s.db" % t), 'c')
             self.__tables__[t] = bt
-            
+
+    def isIn(self, table, name):
+        return name in self.__tables__[table]
+
+    def get(self, table, name):
+        return self.__tables__[table][name]
+
+    def set(self, table, name, value):
+        self.__tables__[table][name] = value
+
     def stop(self):
         Logger().debug("Close db files")
         for t in self.__tables__.keys():

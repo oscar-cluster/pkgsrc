@@ -53,6 +53,7 @@ def savePid():
     fd.close()
 
 def rmPid():
+    Logger().debug("Removing pid file")
     os.unlink(Config().get("DEFAULT", "pidfile"))
 
 def stop(signum, frame):
@@ -64,12 +65,13 @@ def stop(signum, frame):
 
     Db().stop()
 
+    rmPid()
+
     Logger().info("oreposd main thread exit...")
     Logger().shutdown()
     raise SystemExit(0)
 
 def kill(pid):
-    rmPid()
     os.kill(pid, signal.SIGTERM)
     
 #

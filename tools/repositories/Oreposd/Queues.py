@@ -34,7 +34,7 @@ class QueueManager(object):
                 qList.append(q)
             self.__queues__[t] = qList
 
-    def getQueueList(self, type):
+    def getQueues(self, type):
         return self.__queues__[type]
 
 class OQueue(Queue.Queue):
@@ -53,10 +53,12 @@ class OQueue(Queue.Queue):
         return self.__type__
 
 class SourceQueue(OQueue):
+
+    def getPattern(self):
+        return glob2pat("*%s" % Config().get(self.getName(), "ext"))
     
     def accept(self, sourcename):
-        extRe = glob2pat("*%s" % Config().get(self.getName(), "ext"))
-        return re.match(extRe, sourcename)
+        return re.match(self.getPattern(), sourcename)
 
 class QueueFactory(object):
     __instance = None
