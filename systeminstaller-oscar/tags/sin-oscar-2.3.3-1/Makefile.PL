@@ -1,0 +1,112 @@
+use ExtUtils::MakeMaker;
+use lib '/usr/local/lib/systemimager/perl','/usr/lib/systemimager/perl';
+
+# The global version is stored here so that it can be used by 
+# the man page string in rewriting POD2MAN_EXE
+
+my $version = "2.3.3";
+my $release = "1";
+my $releasex = "1";
+
+sub MY::postamble {
+    my $string = <<EOF;
+
+POD2MAN5_EXE = \$(POD2MAN) "--section=5"
+
+deb :: dist
+\tmkdir -p /tmp/scdeb
+\tmv \$(NAME)-$version.tar.gz /tmp/scdeb && cd /tmp/scdeb && tar -xvzf \$(NAME)-$version.tar.gz && cd \$(NAME)-$version && dpkg-buildpackage && rm -rf /tmp/scdeb/\$(NAME)-$version
+\techo "Debian Packages have been built in /tmp/scdeb"
+
+rpm_prep ::
+\tsed -e 's/\%define version\\b.*/\%define version         $version/' \\
+\t-e 's/\%define release\\b.*/\%define release         $release/' \\
+\t-e 's/\%define releasex\\b.*/\%define releasex         $releasex/' sin-oscar.spec.in > sin-oscar.spec
+
+rpm :: srpm
+\trpmbuild -tb --target noarch \$(NAME)-\$(VERSION).tar.gz
+
+srpm :: rpm_prep dist
+\trpmbuild -ts --target noarch --nodeps \$(NAME)-\$(VERSION).tar.gz
+
+ext_install :: conf
+\tmkdir -p \$(DESTDIR)\$(PREFIX)/../var/lib/sis
+\ttouch  \$(DESTDIR)\$(PREFIX)/../var/lib/sis/image
+\ttouch  \$(DESTDIR)\$(PREFIX)/../var/lib/sis/adapter
+\ttouch  \$(DESTDIR)\$(PREFIX)/../var/lib/sis/client
+
+\$(DESTDIR)\$(PREFIX)/../etc/systeminstaller/systeminstaller.conf : samples/systeminstaller.conf \$(DESTDIR)\$(PREFIX)/../etc/systeminstaller
+\tinstall samples/systeminstaller.conf \$(DESTDIR)\$(PREFIX)/../etc/systeminstaller/
+
+\$(DESTDIR)\$(PREFIX)/../etc/systeminstaller/tksis.conf : samples/tksis.conf \$(DESTDIR)\$(PREFIX)/../etc/systeminstaller
+\tinstall samples/tksis.conf \$(DESTDIR)\$(PREFIX)/../etc/systeminstaller/
+
+\$(DESTDIR)\$(PREFIX)/../etc/systeminstaller :
+\tinstall -d \$(DESTDIR)\$(PREFIX)/../etc/systeminstaller
+
+conf: \$(DESTDIR)\$(PREFIX)/../etc/systeminstaller/tksis.conf \$(DESTDIR)\$(PREFIX)/../etc/systeminstaller/systeminstaller.conf
+
+img_install ::
+\tinstall -d \$(DESTDIR)\$(PREFIX)/share/systeminstaller/images
+\tinstall tksis/images/monitor.xpm \$(DESTDIR)\$(PREFIX)/share/systeminstaller/images
+\tinstall tksis/images/image.xpm \$(DESTDIR)\$(PREFIX)/share/systeminstaller/images
+
+distinfo_install ::
+
+\t for file in `find distinfo | grep -v CVS`; do \\
+\t\t if [[ -d \$\$file ]]; then \\
+\t\t\t install -d \$(DESTDIR)\$(PREFIX)/share/systeminstaller/\$\$file; \\
+\t\t else \\
+\t\t\t install \$\$file \$(DESTDIR)\$(PREFIX)/share/systeminstaller/\$\$file; \\
+\t\t fi; \\
+\t done
+
+
+manifest :
+
+\t if [[ -f MANIFEST ]]; then \\
+\t\t mv MANIFEST MANIFEST.bak; \\
+\t fi
+\t cp MANIFEST.stub MANIFEST
+
+manext_install ::
+\tcd doc && \\
+\tinstall -d \$(DESTINSTALLMAN1DIR)/../man5 && \\
+\t\$(POD2MAN5_EXE) systeminstaller.conf.pod \$(DESTINSTALLMAN1DIR)/../man5/systeminstaller.conf.5 && \\
+\t\$(POD2MAN5_EXE) SIS.pod \$(DESTINSTALLMAN1DIR)/../man1/SIS.1 && \\
+\tcd ..
+
+install :: all pure_install doc_install ext_install manext_install img_install distinfo_install
+
+set_ver::
+\tperl -pi.bak -e 's/SIVERSION=.*/SIVERSION="$version";/' ./lib/SystemInstaller/Env.pm
+\tperl -pi.bak -e 's/SIVERSION=.*/SIVERSION="$version";/' ./blib/lib/SystemInstaller/Env.pm
+
+all :: set_ver
+
+EOF
+}
+#all :: set_ver pure_all htmlifypods manifypods
+
+WriteMakefile(
+              'VERSION' => $version,
+              'NAME' => 'systeminstaller-oscar',
+              'EXE_FILES' => [qw(
+				bin/mksiadapter
+				bin/mksidisk
+				bin/mksiimage 
+				bin/mksimachine
+				bin/mksirange
+				bin/mkdhcpconf
+				tksis/tksis
+                bin/scconf_tool
+                bin/scconf_kernel 
+				)],
+              'INSTALLBIN' => "/usr/bin",
+              'INSTALLSITELIB' => "/usr/lib/systeminstaller",
+              'PREREQ_PM' => {
+			      MLDBM => '2',
+                              AppConfig => '1.52',
+                             },
+              'realclean' => {FILES => "*.old *.bak *.spec *.tar.gz Makefile MANIFEST"},
+             );
