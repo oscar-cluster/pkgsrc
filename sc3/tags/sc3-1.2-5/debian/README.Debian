@@ -1,0 +1,29 @@
+sc3 for Debian
+-----------------
+
+Modifications for the Creation of a Debian Package
+--------------------------------------------------
+
+All these modifications are implemented via patches, available
+'debian/patches'.
+
+The "upstream" version of netbootmgr does not include a Makefile that allows
+one to install netbootmgr (no install target), the installation is orginialy
+done via RPM.
+Therefore, a patch has been developed to add an install target to the Makefile.
+This patch is in 'debian/patches'.
+
+Creation of the Debian Package
+------------------------------
+
+The command 'dpkg-buildpackage -rfakeroot -uc -us' should work. Note that we
+use the options -us -uc which do not sign the source package or the .changes
+file, respectively, because we are not Debian developers and we do not have
+valid GPG keys.
+
+TODO List
+---------
+* Lintian still gives some warning: the package includes binaries and man pages
+associated to these binaries are not in the package. 
+
+ -- Geoffroy Vallee <valleegr@ornl.gov>, Thu, 11 May 2007 12:11:23 -0500

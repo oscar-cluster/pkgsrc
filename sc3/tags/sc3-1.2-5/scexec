@@ -1,0 +1,235 @@
+#!/usr/bin/perl
+#
+# Subcluster-wide command execution
+#
+#
+# $Id: scexec,v 1.3 2005/12/01 12:50:35 focht Exp $
+# (c) 2004 NEC EHPCTC, Erich Focht
+
+
+use strict;
+use lib "/usr/lib/systeminstaller";
+use HPCL::Subcluster;
+use SIS::Image;
+use SIS::DB;
+use Getopt::Long;
+use Data::Dumper;
+
+log_entry();
+
+my $progname = $0;
+$progname =~ s:^.*/::g;
+
+# configure command line options parsing
+Getopt::Long::Configure("ignore_case"); # ignore case
+Getopt::Long::Configure("bundling");    # allow -a -b or -ab
+Getopt::Long::Configure("auto_abbrev"); # allow abbreviated input
+
+# set default option values
+my ($verbose, $check, $execimg, $onlyimg) = (0,0,0,0);
+
+# parse command line options
+my %options = ( 'check' => 1 );
+GetOptions( \%options,
+	    'all|a',
+	    'image|i=s@',
+            'domain|d=s@',
+            'nodelist|n=s',
+	    'check|c!',
+            'verbose|v!',
+            'execimg|x',
+            'onlyimg|o',
+	    )
+    || usage(3);
+
+my @xargs = @ARGV;
+if (!scalar(@xargs)) {
+    usage(1,"No command has been passed for execution.");
+}
+
+# save options and delete the simple ones
+$verbose = $options{verbose};
+delete $options{verbose};
+$check = $options{check};
+delete $options{check};
+$execimg = $options{execimg};
+delete $options{execimg};
+$onlyimg = $options{onlyimg};
+delete $options{onlyimg};
+$execimg = 1 if ($onlyimg);
+
+
+# now only the subcluster-defining keys should be left in %options
+
+if (!scalar(keys(%options))) {
+    usage(1,"You must use one of the options --image, --domain, --nodelist or --all");
+}
+if (scalar(keys(%options)) > 1) {
+    usage(1,"You should use only one type of the subcluster selection options");
+}
+
+if (defined($options{image})) {
+    vprint("image:\n".Dumper(@{$options{image}}));
+}
+if (defined($options{domain})) {
+    vprint("domain:\n".Dumper(@{$options{domain}}));
+}
+
+# if --all was chosen, pass all defined images as argument
+if (defined($options{all})) {
+    delete $options{all};
+    $options{image} = ();
+    my @img = list_image();
+    foreach my $i (@img) {
+	push @{$options{image}}, $i->name;
+    }
+}
+
+exec_sc(join("",keys(%options)));
+
+exit 0;
+
+#############################################
+##  Function definitions only below this line
+#############################################
+
+sub usage {
+    my ( $exit, @error ) = @_;
+    print <<USAGE;
+
+Usage: $progname [--image image_name | --domain domain_name | \
+		  --nodelist "nodename nodename ..."]         \
+		 [--[no]check] [--execimg]                   \
+                 -- cmd_to_be_executed [args...]
+
+   Subcluster definition options (use exactly one type!)
+    --image image_name     : all nodes which are assigned to image imagename
+    --all                  : all subclusters defined by all images
+    --domain domain_name   : all nodes which have the given domainname
+    --nodelist "node1 node2 ..." : list of nodes. Don't forget the quotes!
+   Options:
+    --[no]check | -c : don't check for offline nodes (default: check)
+    --execimg | -x  : execute command also in the corresponding image
+                      (with chroot). Works only with the --image option
+    --onlyimg | -o   : execute command only in the image, not on the hosts
+                       works only with the --image option
+    --verbose | -v   : verbose output (default: off)
+
+USAGE
+    if (@error) {
+	print "\n";
+	warn shift @error while @error;
+    }
+    exit $exit;
+}
+
+sub vprint {
+    print @_ if ($verbose);
+}
+
+sub myarch {
+    my $arch = `uname -i`;
+    chop $arch;
+    return $arch;
+}
+
+sub log_entry {
+    my $logfile1 = "/var/log/sc_cmds.log";
+    my $logfile2 = "$ENV{HOME}/.sc_cmds.log";
+    my ($sec,$min,$hour,$mday,$mth,$year) = (localtime)[0..5];
+    $year -= 100;
+    my $o = sprintf("%02d%02d%02d-%02d%02d%02d",$year,$mth+1,$mday+1,
+		       $hour,$min,$sec);
+    $o .= ":" . $0 . " ";
+    for (my $i=0; $i<=$#ARGV; $i++) {
+	my $s = $ARGV[$i];
+	if ($s =~ m/\s/) {
+	    $o .= " \"" . $s . "\"";
+	} else {
+	    $o .= " $s";
+	}
+    }
+    open LOG,">> $logfile1" or open LOG, ">> $logfile2" or return 1;
+    print LOG $o . "\n";
+    close LOG;
+    return 0;
+}
+
+sub exec_sc {
+    my ($type) = @_;
+
+    vprint("Subcluster type: $type !!!\n");
+
+    my @arr;
+    if ($type =~ m/^(image|domain)$/) {
+	@arr = @{$options{$type}};
+    } else {
+	# nodelists are special
+	@arr = ( $options{$type} );
+    }
+
+    foreach my $i (@arr) {
+	print "---------------\n";
+	my $sc = new HPCL::Subcluster( $type => $i );
+	if (!defined($sc)) {
+	    print "Subcluster defined by $type $i wasn't validated!\n";
+	    print "... skipping it ...\n";
+	    next;
+	} else {
+	    vprint("Subcluster $type $i is valid\n");
+	    if ($verbose) {
+		$sc->verbose(1);
+	    }
+	}
+	if (!$onlyimg) {
+	    if ($check) {
+		my %status = $sc->status();
+		vprint("Online: " . $status{online} . "\n");
+		vprint("Offline: " . $status{offline} . "\n");
+		if ($status{offline}) {
+		    print "WARNING: There are offline nodes in subcluster $i\n";
+		    print "Offline: $status{offline}\n";
+		}
+	    }
+	    # remote execute the command
+	    my $sc_cmd = "\"" . join(" ",@xargs) . "\"";
+	    my $fh = $sc->cexec($sc_cmd, "-p");
+	    if ($fh) {
+		while (<$fh>) {
+		    print($_);
+		}
+		close $fh;
+	    }
+	}
+
+	# exec in image, if required
+	if ($type eq "image" && $execimg) {
+	    my $imgdir = $sc->imgpath();
+	    my $imgarch = $sc->imgarch();
+
+	    # if ($imgarch ne myarch()) {
+	    # 	print "ERROR: Architecture is incompatible with target image.\n";
+	    # 	print "... skipping image $i\n";
+	    # }
+	    if (! -d $imgdir) {
+		print "ERROR: Image path $imgdir could not be found!\n";
+		exit 1;
+	    } else {
+		my $cmd = "chroot $imgdir bash -c \"" . join(" ",@xargs) . "\"";
+		vprint("Executing: $cmd\n");
+		my $fh;
+		if ($imgarch ne myarch()) {
+		    print("Executing \"$cmd\" on one of the nodes...\n");
+		    $fh = $sc->execone($cmd);
+		} else {
+		    open $fh, "$cmd |" or undef $fh;
+		}
+		die("Could not execute $cmd!") if (!defined($fh));
+		while (<$fh>) {
+		    print("image $i: " . $_);
+		}
+		close $fh;
+	    }
+	}
+    }
+}
