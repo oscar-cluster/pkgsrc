@@ -154,11 +154,11 @@ sub alive_gstat {
 
     # get node list of this subcluster
     @nodes = $self->nodes();
-
     # get list of hosts which are alive
     local *IN;
-    open IN, "/usr/bin/gstat -a -1 -l -i$gip -p$gpo |" or
-	croak ("Could not run /usr/bin/gstat!");
+    my $cmd = "/usr/bin/gstat -a -1 -l -i$gip -p$gpo";
+    open IN, "$cmd |" or
+	croak ("Could not run $cmd");
     while (<IN>) {
 	m/^(\S+)\s/;
 	my $up = $1;
@@ -250,16 +250,26 @@ sub nodes {
     # check whether c3 config file uses domain names or not
     #
     if (!defined($self->{c3domnames}) && scalar(@nodes)) {
-	# try cnum for first node in list
-	if (`$C3PATH/cnum $nodes[0] | grep -c $nodes[0]` == 1) {
-	    $self->{c3domnames} = 1;
-	} else {
-	    my $sname = strip_domain($nodes[0]);
-	    if (`$C3PATH/cnum $sname | grep -c $sname` == 1) {
+	# if any of the nodes has no domain, strip domains
+	$self->{c3domnames} = 1;
+	for my $n (@nodes) {
+	    if ($n eq strip_domain($n)) {
 		$self->{c3domnames} = 0;
+	    }
+	}
+	# only continue if all nodes had domains
+	if ($self->{c3domnames}) {
+	    # try cnum for first node in list
+	    if (`$C3PATH/cnum $nodes[0] | grep -c $nodes[0]` == 1) {
+		$self->{c3domnames} = 1;
 	    } else {
-		print "WARNING: node $nodes[0] not found in c3 configuration!\n";
-		print "         C3 could be misconfigured!\n";
+		my $sname = strip_domain($nodes[0]);
+		if (`$C3PATH/cnum $sname | grep -c $sname` == 1) {
+		    $self->{c3domnames} = 0;
+		} else {
+		    print "WARNING: node $nodes[0] not found in c3 configuration!\n";
+		    print "         C3 could be misconfigured!\n";
+		}
 	    }
 	}
     }
