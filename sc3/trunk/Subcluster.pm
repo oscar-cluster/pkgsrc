@@ -66,10 +66,15 @@ sub init_nodelist {
     my @nodes = split /\s+/, $self->{nodelist};
     # ... cnum ...
     # validate node names
+    my $ret = 1;
     foreach (@nodes) {
-	return 1 if (scalar(list_client(hostname => $_)));
+	if (!scalar(list_client(hostname => $_)) &&
+	    !scalar(list_client(name => $_))) {
+	    $self->vprint("WARNING: Node $_ not found in cluster!\n");
+	    $ret = 0;	
+	}
     }
-    return 0;
+    return $ret;
 }
 
 sub init_image {

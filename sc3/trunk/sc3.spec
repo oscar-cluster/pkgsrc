@@ -1,7 +1,7 @@
-# $Id: sc3.spec,v 1.13 2005/12/01 13:05:56 focht Exp $
+# $Id$
 Summary: Subcluster command and control tools
 Name: sc3
-Version: 1.1
+Version: 1.2
 Vendor: NEC HPCE
 Release: 5
 License: GPL
