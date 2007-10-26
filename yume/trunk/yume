@@ -147,8 +147,13 @@ if ($repoquery) {
     my $rq = `which repoquery >/dev/null 2>&1`;
     if ($?) {
 	# fall back to included yum-repoquery
-	my $yum_version = `yum --version`;
-	$yum_version =~ s/\..*$//g;
+	my @yum_v = `yum --version`;
+	my $yum_version;
+	for (@yum_v) {
+	    next if (!/^\d.*/);
+	    s/\..*$//g;
+	    $yum_version = $_;
+	}
 	if ($yum_version < 3) {
 	    $rq = "/usr/bin/yum-repoquery";
 	} else {
