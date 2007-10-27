@@ -1,3 +1,9 @@
+yume (2.6-1) UNRELEASED; urgency=low
+
+  * Bugfixes for dealing with newer versions of yum (>=3.0.0)
+
+ -- Erich Focht <efocht@hpce.nec.com>  Sat, 27 Oct 2007 16:35:00 +0100
+
 yume (2.4-1) UNRELEASED; urgency=low
 
   * Initial release 
