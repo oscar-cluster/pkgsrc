@@ -42,12 +42,15 @@ my $ssh_delay = 2;
 
 my ($name, $fh, $verbose, $export, $unexport, $prepare, $listexp, $repoquery);
 my $installroot;
-my @repos;
+my (@repos, @repoadd, @repodel, $repolist);
 my $prog = $0;
 Getopt::Long::Configure("pass_through");
 GetOptions( 
 	    "help"      => \&help,
             "repo=s"    => \@repos,
+            "repoadd=s" => \@repoadd,
+            "repodel=s" => \@repodel,
+            "repolist"  => \$repolist,
 	    "export"    => \$export,
 	    "prepare"   => \$prepare,
 	    "unexport"  => \$unexport,
@@ -82,6 +85,19 @@ if ($export || $unexport || $prepare) {
     $err = del_httpd_conf() if ($unexport);
     $err = prep_repodata() if ($prepare);
     exit $err;
+}
+
+if (scalar(@repoadd) || scalar(@repodel) || $repolist) {
+    if (@repodel) {
+	&oscar_repocmd("repodel", @repodel);
+    }
+    if (@repoadd) {
+	&oscar_repocmd("repoadd", @repoadd);
+    }
+    if ($repolist) {
+	&oscar_repocmd("repolist",);
+    }
+    exit 0;
 }
 
 #####################################
@@ -184,7 +200,7 @@ if ($repoquery) {
 	    # try creating lock directory, if it fails we'll fail in
 	    # other place anyway
 	    system("mkdir -p $installroot/var/lock/rpm");
-	    if (&distro_repos() eq "suse") {
+	    if ((&distro_repos() eq "suse") || (&distro_repos() eq "sles")) {
 		&bootstrap_suse($installroot);
 	    }
 	}
@@ -384,20 +400,28 @@ sub help {
     print "\n";
     print "Call yum or repoquery with _only_ the repositories on the command line configured.\n";
     print "OPTIONS can be:\n";
-    print " --repo URL  : repository which should be included in yum actions\n";
-    print "               (multiple --repo options are possible).\n";
-    print " --export    : create httpd configuration for local repositories\n";
-    print " --unexport  : delete httpd configuration for local repositories\n";
-    print " --listexp   : list exported local repositories\n";
-    print " --prepare   : generate repodata for local repositories\n";
-    print " --help      : this help information\n";
-    print " --repoquery : invoke repoquery command instead of yum\n";
-    print " --verbose   : verbose output\n";
+    print " --repo URL    : repository which should be included in yum actions\n";
+    print "                 (multiple --repo options are possible).\n";
+    print " --export      : create httpd configuration for local repositories\n";
+    print " --unexport    : delete httpd configuration for local repositories\n";
+    print " --listexp     : list exported local repositories\n";
+    print " --prepare     : generate repodata for local repositories\n";
+    print " --help        : this help information\n";
+    print " --repoquery   : invoke repoquery command instead of yum\n";
+    print " --repoadd URL : add URL to the OSCAR repository list for the\n";
+    print "                 local node's distro/architecture.\n";
+    print " --repodel URL : delete URL from the OSCAR repository list for\n";
+    print "                 the local node's distro/architecture.\n";
+    print " --repolist    : list the OSCAR repository URLs\n";
+    print " --verbose     : verbose output\n";
     print "\n";
     print "YUM_OPTIONS are options to be passed to the yum or repoquery command.\n";
     print "Setting the environment variable \$YUME_VERBOSE to a number\n";
     print "between 1 and 10 will generate verbose output like multiple\n";
     print "-v options.\n\n";
+    print "The commands --repolist, --repoadd, --repolist only make sense\n";
+    print "on an OSCAR master node. Multiple --repoadd|--repodel options\n";
+    print "can be used on the command line.\n";
     exit;
 }
 
@@ -411,9 +435,16 @@ sub cleanup {
     }
 }
 
+#
+# We're on an OSCAR master node if $OSCAR_HOME/oscarsamples/ is there.
+#
+sub on_oscar_master {
+    return ($ENV{OSCAR_HOME} && -d $ENV{OSCAR_HOME}."/oscarsamples");
+}
+
 sub get_default_repos {
-    # if OSCAR_HOME is defined, we're probably on a master
-    if ($ENV{OSCAR_HOME} && -d $ENV{OSCAR_HOME}."/oscarsamples") {
+    # if OSCAR_HOME is defined, we're on an OSCAR cluster
+    if (&on_oscar_master()) {
 	my $dquery = "$ENV{OSCAR_HOME}/scripts/distro-query";
 	if (-x $dquery) {
 	    if ($installroot && (-x "$installroot/bin/bash")) {
@@ -437,6 +468,9 @@ sub get_default_repos {
 	}
     } else {
 	my $master = gethostbyname("oscar_server");
+	#
+	# Is there a node called oscar_master? Then we're on a client node
+	#
 	if ($master) {
 	    my $node=`hostname`; chomp $node;
 	    my $cmd = "ssh oscar_server bash -l -c \\\"\\\$OSCAR_HOME/scripts/distro-query --node $node\\\"";
@@ -577,6 +611,38 @@ sub transform_groups {
     push @trans, @groupargs;
 
     return @trans; 
+}
+
+sub oscar_repocmd {
+    my ($cmd, @r) = @_;
+    if (!&on_oscar_master()) {
+	print STDERR "ERROR: You can only do this on an OSCAR master node!\n";
+	exit 1;
+    }
+    if ($cmd !~ m/^(repolist|repoadd|repodel)$/) {
+	print STDERR "ERROR: Wrong command $cmd!\n";
+	exit 1;
+    }
+    if ($installroot) {
+	print STDERR "ERROR: You can't do this with --installroot!\n";
+	exit 1;
+    }
+    eval "use lib \"$ENV{OSCAR_HOME}/lib\"";
+    eval "use OSCAR::PackagePath";
+    my $oscar_url;
+    my $distro_url;
+    my $pkg;
+    eval "(\$oscar_url, \$pkg) = OSCAR::PackagePath::oscar_urlfile()";
+    eval "\$distr_url = OSCAR::PackagePath::distro_urlfile()";
+    if ($cmd eq "repoadd") {
+	eval "OSCAR::PackagePath::repos_add_urlfile(\$oscar_url, \@r)";
+    } elsif ($cmd eq "repodel") {
+	eval "OSCAR::PackagePath::repos_del_urlfile(\$oscar_url, \@r)";
+    }
+    # repolist in any case
+    my @repos;
+    eval "\@repos = OSCAR::PackagePath::repos_list_urlfile(\$oscar_url)";
+    print "Repositories in $oscar_url:\n    ".join("\n    ", @repos)."\n";
 }
 
 sub find_httpdir {

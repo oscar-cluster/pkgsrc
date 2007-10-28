@@ -1,7 +1,7 @@
 # $Id$
 Summary: Wrapper to yum for clusters
 Name: yume
-Version: 2.6
+Version: 2.7
 Vendor: NEC HPCE
 Release: 1
 License: GPL
@@ -63,6 +63,8 @@ rm -rf $RPM_BUILD_ROOT
 %{_mandir}/man8/yume*
 
 %changelog
+* Sun Oct 28 2007 Erich Focht 2.7-1
+- added repoadd, repodel, repolist repository manipulation funtionality for OSCAR headnodes.
 * Fri Oct 26 2007 Erich Focht 2.6-1
 - certain yum versions are too chatty, fixed version detection
 * Fri Sep 14 2007 Erich Focht 2.5-1
