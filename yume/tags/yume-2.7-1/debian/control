@@ -1,0 +1,25 @@
+Source: yume
+Section: misc
+Priority: extra
+Maintainer: Geoffroy Vallee <valleegr@ornl.gov>
+Build-Depends: debhelper (>= 5)
+Standards-Version: 3.7.2
+
+Package: yume
+Architecture: all
+Suggests: createrepo
+Depends: python, yum
+Description: Wrapper to yum for clusters
+ Tool for setting up, exporting yum repositories and executing
+ yum commands for only these repositories. Use it as high level RPM
+ replacement which resolves dependencies automatically. This tool
+ is very useful for clusters. It can:
+   - prepare an rpm repository
+   - export it through apache
+   - execute yum commands applying only to this repository (locally)
+   - execute yum commands on the cluster nodes applying only to this repository.
+ This makes installing packages, creating cluster node images, updating
+ revisions much simpler than with rpm.
+ In addition, yume can just query the specified repositories by invoking
+ repoquery.
+
