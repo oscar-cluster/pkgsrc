@@ -69,9 +69,9 @@ use Switch;
 # add the line below when ready for it
 #use OSCAR::PackMan;
 
-my ($verbose, $export, $unexport, $prepare, $listexp);
+my ($verbose, $export, $unexport, $prepare, $listexp, $repoquery);
 my $installroot;
-my @repos;
+my (@repos, @repoadd, @repodel, $repolist);
 my @delfiles;
 
 my $config_file = "/etc/rapt.conf";
@@ -80,11 +80,15 @@ Getopt::Long::Configure("pass_through");
 GetOptions( 
         "help"      => \&help,
         "repo=s"    => \@repos,
+        "repoadd=s" => \@repoadd,
+        "repodel=s" => \@repodel,
+        "repolist"  => \$repolist,
         "export"    => \$export,
         "prepare"   => \$prepare,
         "unexport"  => \$unexport,
         "listexp"   => \&list_exported,
         "installroot=s" => \$installroot,
+	    "repoquery|rq"  => \$repoquery,
         "verbose|v+"    => \$verbose,
         );
 
@@ -113,6 +117,18 @@ if ($export || $unexport || $prepare) {
     exit $err;
 }
 
+if (scalar(@repoadd) || scalar(@repodel) || $repolist) {
+    if (@repodel) {
+	&oscar_repocmd("repodel", @repodel);
+    }
+    if (@repoadd) {
+	&oscar_repocmd("repoadd", @repoadd);
+    }
+    if ($repolist) {
+	&oscar_repocmd("repolist",);
+    }
+    exit 0;
+}
 
 # chop trailing slashes from repository names
 foreach (@repos) {
@@ -252,9 +268,15 @@ sub help {
     print " --listexp  : list exported local repositories\n";
     print " --prepare  : generate repodata for local repositories\n";
     print " --help     : this help information\n";
+    print " --repoquery   : invoke ???\n";
+    print " --repoadd URL : add URL to the OSCAR repository list for the\n";
+    print "                 local node's distro/architecture.\n";
+    print " --repodel URL : delete URL from the OSCAR repository list for\n";
+    print "                 the local node's distro/architecture.\n";
+    print " --repolist    : list the OSCAR repository URLs\n";
     print " --verbose  : verbose output\n";
     print "\n";
-    print "APT-GET_OPTIONS are options to be passed to the yum command.\n";
+    print "APT-GET_OPTIONS are options to be passed to the apt-get command.\n";
     print "Setting the environment variable \$RAPT_VERBOSE to a number\n";
     print "between 1 and 10 will generate verbose output like multiple\n";
     print "-v options.\n\n";
@@ -678,6 +700,39 @@ sub write_pid {
 
 ###############################################################
 # stuff below this line should be deleted once packman is used!
+
+sub oscar_repocmd {
+    my ($cmd, @r) = @_;
+    if (!&on_oscar_master()) {
+	print STDERR "ERROR: You can only do this on an OSCAR master node!\n";
+	exit 1;
+    }
+    if ($cmd !~ m/^(repolist|repoadd|repodel)$/) {
+	print STDERR "ERROR: Wrong command $cmd!\n";
+	exit 1;
+    }
+    if ($installroot) {
+	print STDERR "ERROR: You can't do this with --installroot!\n";
+	exit 1;
+    }
+    eval "use lib \"$ENV{OSCAR_HOME}/lib\"";
+    eval "use OSCAR::PackagePath";
+    my $oscar_url;
+    my $distro_url;
+    my $pkg;
+    eval "(\$oscar_url, \$pkg) = OSCAR::PackagePath::oscar_urlfile()";
+    eval "\$distr_url = OSCAR::PackagePath::distro_urlfile()";
+    if ($cmd eq "repoadd") {
+	eval "OSCAR::PackagePath::repos_add_urlfile(\$oscar_url, \@r)";
+    } elsif ($cmd eq "repodel") {
+	eval "OSCAR::PackagePath::repos_del_urlfile(\$oscar_url, \@r)";
+    }
+    # repolist in any case
+    my @repos;
+    eval "\@repos = OSCAR::PackagePath::repos_list_urlfile(\$oscar_url)";
+    print "Repositories in $oscar_url:\n    ".join("\n    ", @repos)."\n";
+}
+
 
 sub find_httpdir {
     my $httpdir;
