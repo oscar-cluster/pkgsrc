@@ -157,9 +157,9 @@ $SIG{INT} = \&cleanup;
 
 
 
-#############################
-### go for an apt-get command
-#############################
+##############################
+### go for an aptitude command
+##############################
 
 # if command is "install" into empty image: debootstrap first
 if ($installroot) {
@@ -198,7 +198,7 @@ if ($installroot) {
 &new_aptlist;
 
 # update Packages cache
-my $cmd = "apt-get update";
+my $cmd = "aptitude update";
 if ($installroot) {
     $cmd = "chroot $installroot $cmd";
 }
@@ -220,8 +220,8 @@ if ($installroot) {
     &install_fake_start_stop_daemon($installroot);
 }
 
-# run apt-get command
-my $cmd = "apt-get";
+# run aptitude command
+my $cmd = "aptitude";
 $cmd .= " ".join(" ",@ARGV);
 
 if ($installroot) {
@@ -256,9 +256,9 @@ exit $err;
 #############################################################################
 
 sub help {
-    print "Usage: $0 OPTIONS [APT-GET_OPTIONS]\n";
+    print "Usage: $0 OPTIONS [APTITUDE_OPTIONS]\n";
     print "\n";
-    print "Call apt-get with _only_ the repositories passed on the command line .\n";
+    print "Call aptitude with _only_ the repositories passed on the command line .\n";
     print "OPTIONS can be:\n";
     print " --repo URL : repository which should be included in apt actions\n";
     print "              (multiple --repo options are possible).\n";
@@ -276,7 +276,7 @@ sub help {
     print " --repolist    : list the OSCAR repository URLs\n";
     print " --verbose  : verbose output\n";
     print "\n";
-    print "APT-GET_OPTIONS are options to be passed to the apt-get command.\n";
+    print "APTITUDE_OPTIONS are options to be passed to the aptitude command.\n";
     print "Setting the environment variable \$RAPT_VERBOSE to a number\n";
     print "between 1 and 10 will generate verbose output like multiple\n";
     print "-v options.\n\n";
@@ -648,8 +648,8 @@ sub restore_aptlist {
     if (-e $backup) {
     	!system("mv $backup $file")
 	        or carp("Could not restore $file from $backup: $!");
-        !system("apt-get update")
-            or carp("Could not execute apt-get update");
+        !system("aptitude update")
+            or carp("Could not execute aptitude update");
     }
 }
 
