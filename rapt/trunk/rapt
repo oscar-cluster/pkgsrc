@@ -69,7 +69,7 @@ use Switch;
 # add the line below when ready for it
 #use OSCAR::PackMan;
 
-my ($verbose, $export, $unexport, $prepare, $listexp);
+my ($verbose, $export, $unexport, $prepare, $listexp, $name_only);
 my $installroot;
 my (@repos, @repoadd, @repodel, $repolist);
 my @delfiles;
@@ -78,15 +78,16 @@ my $config_file = "/etc/rapt.conf";
 
 Getopt::Long::Configure("pass_through");
 GetOptions( 
-        "help"      => \&help,
-        "repo=s"    => \@repos,
-#        "repoadd=s" => \@repoadd,
-#        "repodel=s" => \@repodel,
-        "repolist"  => \$repolist,
-        "export"    => \$export,
-        "prepare"   => \$prepare,
-        "unexport"  => \$unexport,
-        "listexp"   => \&list_exported,
+        "help"          => \&help,
+        "repo=s"        => \@repos,
+#        "repoadd=s"    => \@repoadd,
+#        "repodel=s"    => \@repodel,
+        "names-only"    => \$name_only,
+        "repolist"      => \$repolist,
+        "export"        => \$export,
+        "prepare"       => \$prepare,
+        "unexport"      => \$unexport,
+        "listexp"       => \&list_exported,
         "installroot=s" => \$installroot,
         "verbose|v+"    => \$verbose,
         );
@@ -225,6 +226,10 @@ $cmd .= " ".join(" ",@ARGV);
 
 if ($installroot) {
     $cmd = "chroot $installroot $cmd";
+}
+
+if ($ARGV[0] eq "search" && $name_only) {
+    $cmd .= " -F \"%p\"";
 }
 
 # other preparing commands (cf. sin)
@@ -454,7 +459,7 @@ sub shutup_debconf {
 	my $imgpath = shift;
 	my $config = "$imgpath/var/cache/debconf/config.dat";
 
-	print "Configuring debconf to use the Noninteractive interface."
+	print "Configuring debconf to use the Noninteractive interface.\n"
 	    if $verbose;
 	open(NEW_CONFIG, ">>$config") or close OLD_CONFIG and return 1;
 	print NEW_CONFIG << 'EOF';
