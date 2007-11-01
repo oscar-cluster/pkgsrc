@@ -69,7 +69,7 @@ use Switch;
 # add the line below when ready for it
 #use OSCAR::PackMan;
 
-my ($verbose, $export, $unexport, $prepare, $listexp, $repoquery);
+my ($verbose, $export, $unexport, $prepare, $listexp);
 my $installroot;
 my (@repos, @repoadd, @repodel, $repolist);
 my @delfiles;
@@ -80,15 +80,14 @@ Getopt::Long::Configure("pass_through");
 GetOptions( 
         "help"      => \&help,
         "repo=s"    => \@repos,
-        "repoadd=s" => \@repoadd,
-        "repodel=s" => \@repodel,
+#        "repoadd=s" => \@repoadd,
+#        "repodel=s" => \@repodel,
         "repolist"  => \$repolist,
         "export"    => \$export,
         "prepare"   => \$prepare,
         "unexport"  => \$unexport,
         "listexp"   => \&list_exported,
         "installroot=s" => \$installroot,
-	    "repoquery|rq"  => \$repoquery,
         "verbose|v+"    => \$verbose,
         );
 
@@ -246,7 +245,6 @@ if ($installroot) {
     &uninstall_fake_start_stop_daemon($installroot);
 }
 
-
 &restore_aptlist;
 &unlock_aptlist;
 
@@ -268,11 +266,10 @@ sub help {
     print " --listexp  : list exported local repositories\n";
     print " --prepare  : generate repodata for local repositories\n";
     print " --help     : this help information\n";
-    print " --repoquery   : invoke ???\n";
-    print " --repoadd URL : add URL to the OSCAR repository list for the\n";
-    print "                 local node's distro/architecture.\n";
-    print " --repodel URL : delete URL from the OSCAR repository list for\n";
-    print "                 the local node's distro/architecture.\n";
+#    print " --repoadd URL : add URL to the OSCAR repository list for the\n";
+#    print "                 local node's distro/architecture.\n";
+#    print " --repodel URL : delete URL from the OSCAR repository list for\n";
+#    print "                 the local node's distro/architecture.\n";
     print " --repolist    : list the OSCAR repository URLs\n";
     print " --verbose  : verbose output\n";
     print "\n";
@@ -648,8 +645,10 @@ sub restore_aptlist {
     if (-e $backup) {
     	!system("mv $backup $file")
 	        or carp("Could not restore $file from $backup: $!");
-        !system("aptitude update")
-            or carp("Could not execute aptitude update");
+    # GV: WARNING, not executing "aptitude update", it is not possible to 
+    # directly reuse aptitude! Users MUST execute manually "aptitude update"!!
+#        !system("aptitude update")
+#            or carp("Could not execute aptitude update");
     }
 }
 
@@ -672,7 +671,7 @@ sub new_aptlist {
 	    }
 	    print OUT "deb ".join(" ",@data)."\n";
     }
-    print OUT "deb http://oscar.gforge.inria.fr/debian/ stable main oscar";
+#    print OUT "deb http://oscar.gforge.inria.fr/debian/ stable main oscar";
     close OUT;
 }
 
