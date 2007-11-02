@@ -180,7 +180,7 @@ if ($installroot) {
         # kernel packages, the /etc/kernel-img.conf file has to be created
         # manually
         my $cmd = "echo \"do_initrd = Yes\" > $installroot/etc/kernel-img.conf";
-        print ("Executing: $cmd\n");
+        print ("Executing: $cmd\n") if $verbose;
         if (system($cmd)) {
             print ("Impossible to create file $installroot/etc/kernel-img.conf");
         }
@@ -197,8 +197,9 @@ if ($installroot) {
 # create temporary sources.list file with proper repository paths
 &new_aptlist;
 
-# update Packages cache
-my $cmd = "aptitude update";
+# update Packages cache. Note that we turn off all output (including stderr),
+# we are only interested by the return code.
+my $cmd = "aptitude update 1>/dev/null 2>/dev/null";
 if ($installroot) {
     $cmd = "chroot $installroot $cmd";
 }

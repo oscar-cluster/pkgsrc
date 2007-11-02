@@ -1,4 +1,5 @@
 rapt-1.2
+- Clean up the RAPT output.
 - Switch the aptitude instead of apt-get.
 - Fix the bug with the error return code. RAPT was previously always returning
   0.
