@@ -1,16 +1,22 @@
-yume (2.7-1) UNRELEASED; urgency=low
+yume (2.7-2) gutsy; urgency=low
+
+  * Fix a bug in the return code handling.
+
+ -- Geoffroy Vallee <valleegr@ornl.gov>  Thu, 01 Nov 2007 22:46:42 -0400
+
+yume (2.7-1) stable; urgency=low
 
   * added repoadd, repodel, repolist repository manipulation funtionality for OSCAR headnodes.
 
  -- Erich Focht <efocht@hpce.nec.com>  Sun, 28 Oct 2007 19:05:00 +0100
 
-yume (2.6-1) UNRELEASED; urgency=low
+yume (2.6-1) stable; urgency=low
 
   * Bugfixes for dealing with newer versions of yum (>=3.0.0)
 
  -- Erich Focht <efocht@hpce.nec.com>  Sat, 27 Oct 2007 16:35:00 +0100
 
-yume (2.4-1) UNRELEASED; urgency=low
+yume (2.4-1) stable; urgency=low
 
   * Initial release 
 

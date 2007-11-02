@@ -109,7 +109,7 @@ do {$name=tmpnam()} until $fh=IO::File->new($name,O_RDWR|O_CREAT|O_EXCL);
 push @cleanfiles, $name;
 
 # install exit handler which removes the temporary file
-END {cleanup()};
+END {my $rc = $?; cleanup(); exit $rc};
 
 # create yum config file
 print $fh <<EOF;

@@ -3,7 +3,7 @@ Summary: Wrapper to yum for clusters
 Name: yume
 Version: 2.7
 Vendor: NEC HPCE
-Release: 1
+Release: 2
 License: GPL
 Packager: Erich Focht <efocht@hpce.nec.com>
 Source: %{name}.tar.gz
@@ -63,6 +63,8 @@ rm -rf $RPM_BUILD_ROOT
 %{_mandir}/man8/yume*
 
 %changelog
+* Thu Nov 1 2007 Geoffroy Vallee 2.7-2
+- fix a bad handling of the return code.
 * Sun Oct 28 2007 Erich Focht 2.7-1
 - added repoadd, repodel, repolist repository manipulation funtionality for OSCAR headnodes.
 * Fri Oct 26 2007 Erich Focht 2.6-1
