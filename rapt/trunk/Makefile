@@ -1,5 +1,7 @@
 DESTDIR=
 DEBTMP=/tmp/rapt
+BUILDTMP=/tmp/rapt-build
+VERSION=1.2
 
 all:
 
@@ -13,7 +15,22 @@ deb ::
 	rm -rf $(DEBTMP)
 	mkdir -p $(DEBTMP)
 	cp -rf * $(DEBTMP)
-	cd $(DEBTMP); dpkg-buildpackage -b
+	cd $(DEBTMP); rm -rf `find . -name .svn`; dpkg-buildpackage -b
+
+dist: mrproper
+	rm -rf $(BUILDTMP); \
+	mkdir -p $(BUILDTMP)/rapt-$(VERSION); \
+	cp -rf * $(BUILDTMP)/rapt-$(VERSION); \
+	PWD=`pwd`; \
+	cd $(BUILDTMP); rm -rf `find . -name .svn`; \
+	tar czf rapt-$(VERSION).tar.gz rapt-$(VERSION); \
+	cp rapt-$(VERSION).tar.gz $(PWD);
+
+mrproper: clean
+	rm -f build-stamp configure-stamp
+	rm -f debian/files
+	rm -rf debian/rapt
 
 clean:
-
+	rm -f *~
+	rm -f rapt-*.tar.gz

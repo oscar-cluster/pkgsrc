@@ -1,4 +1,9 @@
 rapt-1.2
+- Improve the Makefile: 
+    * 'make dist', creates a tarball that can be used to release RAPT,
+    * 'make clean', deletes junky file (e.g. *~),
+    * 'make mrproper', deletes all files generated during the compilation and
+      the creation of binary packahes.
 - Clean up the RAPT output.
 - Switch the aptitude instead of apt-get.
 - Fix the bug with the error return code. RAPT was previously always returning
