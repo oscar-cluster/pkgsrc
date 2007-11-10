@@ -1,0 +1,63 @@
+packman (2.9.0-1) stable; urgency=low
+
+  * fixed query_installed bugs
+
+  * added whatprovides method to RPM module, this is missing in Debian
+
+  * added check_installed method for checking if a list of packages is installed
+
+  * added search_repo method for searching a repository for packages matching a pattern
+
+  * added clean method implementation for apt caches
+
+  * limited clean method scope to the configured repositories
+
+ -- Erich Focht <efocht@hpce.nec.com>  Thu,  8 Nov 2007 14:24:29 +0100
+
+packman (2.8.1-3gv3) stable; urgency=low
+
+  * Add the option "--allow-unauthenticated" when using "apt-get install".
+    This is needed because of the switch to Etch.
+
+ -- Geoffroy Vallee <valleegr@ornl.gov>  Fri,  8 Jun 2007 01:06:29 -0400
+
+packman (2.8.1-3gv2) UNRELEASED; urgency=low
+
+  * Update the package to make it more compliant with the Debian policy.
+
+ -- Geoffroy Vallee <valleegr@ornl.gov>  Fri, 11 May 2007 10:21:00 -0400
+
+packman (2.8.1-3gv1) UNRELEASED; urgency=low
+
+  * Add debugging information.
+
+ -- Geoffroy Vallee <valleegr@ornl.gov>  Fri, 22 Dec 2006 17:48:41 -0500
+
+packman (2.8.1-2) UNRELEASED; urgency=low
+
+  * Add dependencies to dpkg, apt, and rapt since they are needed when we
+    create a new packman instantiation.
+
+ -- Geoffroy Vallee <valleegr@ornl.gov>  Sun, 23 Jul 2006 02:55:36 -0400
+
+packman (2.8.1-1) UNRELEASED; urgency=low
+
+  * Remove DepMan since it is not any more used.
+
+ -- Geoffroy Vallee <valleegr@ornl.gov>  Sun, 23 Jul 2006 02:20:59 -0400
+
+packman (2.8.1-1) unstable; urgency=low
+
+  * Change the order of preference for backends, it is now (DEB, RPM).
+
+ -- valleegr <valleegr@ornl.gov>  Sun, 16 Jul 2006 12:46:55 -0400
+
+packman (2.8.1) UNRELEASED; urgency=low
+
+  [ Geoffroy Vallee ]
+  * Initial release.
+
+  [ gvallee ]
+  * Modification to be compliant with the Debian policy regarding Perl programs
+
+ -- valleegr <valleegr@ornl.gov>  Fri,  9 Jun 2006 09:22:06 -0400
