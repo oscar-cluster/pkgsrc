@@ -1,11 +1,12 @@
 This package was debianized by Jean Parpaillon <jean.parpaillon@irisa.fr>
 
 Upstream Author: 
-	Jean Parpaillon <jean.parpaillon@irisa.fr>
+	Jean Parpaillon <jean.parpaillon@kerlabs.com>
 	Geoffroy Vallée <valleegr@ornl.gov>
 
 From an original idea of: Erich Focht <efocht@hpce.nec.com>
 
+Copyright 2007 Kerlabs
 Copyright 2007 INRIA-IRISA
 Copyright 2007 ORNL
 
@@ -19,8 +20,8 @@ Copyright 2007 ORNL
  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  General Public License for more details.
 
-The Debian packaging is (C) 2007, Jean Parpaillon <jean.parpaillon@irisa.fr> and
-is licensed under the GPL.
+The Debian packaging is (C) 2007, Kerlabs and is licensed under the
+GPL.
 
 On Debian systems, the complete text of the GNU General Public
 License, version 2, can be found in /usr/share/common-licenses/GPL-2.
