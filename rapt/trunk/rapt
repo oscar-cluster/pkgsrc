@@ -103,29 +103,36 @@ help() if (!scalar(@repos));
 
 my @validarch = qw(i386 x86_64 ia64 ppc64 noarch);
 
-my $archstr = &get_arch_repos(@repos);
-my $march = $archstr;
-$march = "i?86" if ($archstr eq "i386");
-
-chomp(my $hostname=`hostname -s`);
+my @arches = &get_arch_repos(@repos);
+print "Supported architectures: @arches\n" if $verbose;
 
 our $err = 0;
+chomp(my $hostname=`hostname -s`);
+
 if ($export || $unexport || $prepare) {
-    $err = add_httpd_conf() if ($export);
-    $err = del_httpd_conf() if ($unexport);
-    $err = prep_repodata() if ($prepare);
+    if ($prepare) {
+        print "Preparing repos...\n";
+        foreach my $archstr (@arches) {
+            my $march = $archstr;
+            $march = "i?86" if ($archstr eq "i386");
+            $err += prep_repodata($archstr);
+        }
+    }
+
+    $err += add_httpd_conf() if ($export);
+    $err += del_httpd_conf() if ($unexport);
     exit $err;
 }
 
 if (scalar(@repoadd) || scalar(@repodel) || $repolist) {
     if (@repodel) {
-	&oscar_repocmd("repodel", @repodel);
+        &oscar_repocmd("repodel", @repodel);
     }
     if (@repoadd) {
-	&oscar_repocmd("repoadd", @repoadd);
+        &oscar_repocmd("repoadd", @repoadd);
     }
     if ($repolist) {
-	&oscar_repocmd("repolist",);
+        &oscar_repocmd("repolist",);
     }
     exit 0;
 }
@@ -348,55 +355,93 @@ sub get_default_repos {
     }
 }
 
-# guess architectures from repositories' name
-# @param: list of repositories
-# @return: list of architectures
-# GV: this function is weird because we get a list of repos (which may be for
-# different architecture) but we return only one architecture!!.
-# WARNING, currently we do not return a list of architectures
-sub get_arch_repos {
+################################################################################
+# We add an element in a array avoiding duplication. Note that we write these  #
+# functions from scratch, i.e., we do not use OSCAR modules in order to avoid  #
+# bootstrap issues.                                                            #
+#                                                                              #
+# Input: elt, element to add to the array,                                     #
+#        array, array the element has to be added to.                          #
+# Return: a separate array with the element added if the element was not       #
+# therefore before.                                                            #
+################################################################################
+sub add_to_array ($@) {
+    my ($elt, @array) = @_;
+
+    my $found = 0;
+    foreach my $e (@array) {
+        if ($e eq $elt) {
+            $found = 1;
+            last;
+        }
+    }
+    if ($found == 0) {
+        push (@array, $elt);
+    }
+    return @array;
+}
+
+################################################################################
+# Detect architectures from repositories' name.                                #
+# Note that because the Debian repository structure is completely different    #
+# from the yum repositories, we have do little tricks. This is because of two  #
+# reasons:                                                                     #
+#   - An historical reason: OSCAR has been initially designed for RPM-based    #
+#     only systems and therefore some of the basic OSCAR tools are based on    #
+#     RPM stuff and it is a pretty bad idea to want to change them (at least   #
+#     currently the different structures are coherent even if it implies more  #
+#     details to deal with on Debian based systems.                            #
+#   - To make OSCAR coherent, we use OS_Detect for the detection of distros.   #
+#     OS_Detect is pretty powerful, we want to preserve it. However, OS_Detect #
+#     assumes repositories by their structures (common versus distro specific) #
+#     are yum-like repositories.                                               #
+# Based on this context, for common-deb repositories which are completely      #
+# unatural on Debian, we scan for architecture specific pool in                #
+# /tftpboot/oscar, get their architecture and generate the repo for common     #
+# based on EACH of these architectures.                                        #
+#                                                                              #
+# @param: list of repositories.                                                #
+# @return: list of architectures (via an array of strings).                    #
+################################################################################
+sub get_arch_repos (@) {
     my (@repos) = @_;
-    my $arch;
+    my @arch;
     my $varch = join("|",@validarch);
-    for my $r (@repos) {
-	$r =~ s:/$::;
-        if (!index ($r,"/tftpboot/oscar/common",0)) {
-                # if the repo is a repo for comon packages, it is a special 
-                # case since no real architecture is associated. In Debian 
-                # packages are supposed to all be in "pool" and only 
-                # repository metadata is supposed to be organized by 
+    for my $repo (@repos) {
+        my $r = basename($repo);
+        chomp($r);
+        $r =~ s:/$::;
+        if (!index ($r,"common-",0)) {
+                # if the repo is a repo for comon packages, it is a special
+                # case since no real architecture is associated. In Debian
+                # packages are supposed to all be in "pool" and only
+                # repository metadata is supposed to be organized by
                 # architecture.
                 # Therefore in our case, for the common repo, we check
                 # architectures within /tftpboot/oscar/distro and create an
                 # assocaited repo for all of them
-                my @sub_repos = `find /tftpboot/oscar -name \"debian*\"`;
+                my @sub_repos = `find /tftpboot/oscar -name \"debian-*\"`;
                 my $r2;
                 for $r2 (@sub_repos) {
-                        $arch = get_arch_repos ($r2);
-                        chomp ($arch);
+                    chomp ($r2);
+                    my @ret = get_arch_repos ($r2);
+                    foreach my $subrep (@ret) {
+                        @arch = add_to_array($subrep, @arch);
+                    }
                 }
-	} elsif ($r =~ m/-([^-]+)$/) {
-	    my $a = $1;
-	    if ($a =~ /^($varch)$/) {
-		if (!$arch) {
-		    $arch = $a;
-		} else {
-		    if ($arch ne $a) {
-			print "WARNING: multiple architecture repos specified.\n";
-		    }
-		}
-	    } else {
-		print "WARNING: repository name doesn't match any valid architecture\n";
-	    }
-	} 
+        } elsif (($r =~ /(.*)\-(\d+)\-($varch)(|\.url)$/) ||
+                ($r =~ /(.*)\-(\d+.\d+)\-($varch)(|\.url)$/)) {
+            my $a = $3;
+            if ($a eq "x86_64") {
+                @arch = add_to_array ("amd64", @arch);
+            } else {
+                @arch = add_to_array ($a, @arch);
+            }
+        } else {
+            print "WARNING: repository name doesn't match any valid architecture\n";
+        }
     }
-    if ($arch eq "x86_64") {
-    	$arch = "amd64";
-    }
-    if ($arch && $verbose) {
-	print "Architecture: $arch\n";
-    }
-    return $arch;
+    return @arch;
 }
 
 
@@ -712,16 +757,16 @@ sub write_pid {
 sub oscar_repocmd {
     my ($cmd, @r) = @_;
     if (!&on_oscar_master()) {
-	print STDERR "ERROR: You can only do this on an OSCAR master node!\n";
-	exit 1;
+        print STDERR "ERROR: You can only do this on an OSCAR master node!\n";
+        exit 1;
     }
     if ($cmd !~ m/^(repolist|repoadd|repodel)$/) {
-	print STDERR "ERROR: Wrong command $cmd!\n";
-	exit 1;
+        print STDERR "ERROR: Wrong command $cmd!\n";
+        exit 1;
     }
     if ($installroot) {
-	print STDERR "ERROR: You can't do this with --installroot!\n";
-	exit 1;
+        print STDERR "ERROR: You can't do this with --installroot!\n";
+        exit 1;
     }
     eval "use lib \"$ENV{OSCAR_HOME}/lib\"";
     eval "use OSCAR::PackagePath";
@@ -731,9 +776,9 @@ sub oscar_repocmd {
     eval "(\$oscar_url, \$pkg) = OSCAR::PackagePath::oscar_urlfile()";
     eval "\$distr_url = OSCAR::PackagePath::distro_urlfile()";
     if ($cmd eq "repoadd") {
-	eval "OSCAR::PackagePath::repos_add_urlfile(\$oscar_url, \@r)";
+        eval "OSCAR::PackagePath::repos_add_urlfile(\$oscar_url, \@r)";
     } elsif ($cmd eq "repodel") {
-	eval "OSCAR::PackagePath::repos_del_urlfile(\$oscar_url, \@r)";
+        eval "OSCAR::PackagePath::repos_del_urlfile(\$oscar_url, \@r)";
     }
     # repolist in any case
     my @repos;
@@ -759,6 +804,7 @@ sub find_httpdir {
     return $httpdir;
 }
 
+# Exports repositories through httpd (http://$hostname/$pname)
 sub add_httpd_conf {
     my $httpdir = find_httpdir();
     my $changed = 0;
@@ -866,39 +912,43 @@ sub restart_httpd {
     }
 }
 
-sub prep_repodata {
+sub prep_repodata (@) {
+    my @list_arch = @_;
+
     #
     # this routine should be replaced by the gencache call to a
     # packman instance when that will be available
     #
 
     if (system("which dpkg-scanpackages 2>/dev/null")) {
-	print "ERROR: Could not find command dpkg-scanpackages!\n";
-	exit 1;
+        print "ERROR: Could not find command dpkg-scanpackages!\n";
+        exit 1;
     }
-    
-    # detect distribution codename
-    # currently from the master server, should actually come from the pool
-    my $codename = &detect_codename();
-    my $subdir = "dists/$codename/binary-$archstr";
-    my $err = 0;
-    for my $repo (@repos) {
-	next if ($repo =~ /^(http|ftp):/);
-	$repo =~ s/^file://;
-	$repo =~ s/\/$//;
-	next if (($repo !~ m:^/:) || (! -d $repo));
 
-	# create directory for package metadata
-	if (! -d "$repo/subdir") {
-	    !system("mkdir -p $repo/$subdir")
-		or croak "Could not create directory $repo/$subdir";
-	}
+    foreach my $a (@list_arch) {
+        # detect distribution codename
+        # currently from the master server, should actually come from the pool
+        my $codename = &detect_codename();
+        my $subdir = "dists/$codename/binary-$a";
+        my $err = 0;
+        for my $repo (@repos) {
+            next if ($repo =~ /^(http|ftp):/);
+            $repo =~ s/^file://;
+            $repo =~ s/\/$//;
+            next if (($repo !~ m:^/:) || (! -d $repo));
 
-	# now generate the Package.gz file
-	my $cmd = "cd $repo; dpkg-scanpackages ./ /dev/null";
-	$cmd .= "| tee $subdir/Packages | gzip -c9 >$subdir/Packages.gz";
-	print "Executing command: $cmd\n";
-	$err += abs(system($cmd));
+            # create directory for package metadata
+            if (! -d "$repo/subdir") {
+                !system("mkdir -p $repo/$subdir")
+                    or croak "Could not create directory $repo/$subdir";
+            }
+
+            # now generate the Package.gz file
+            my $cmd = "cd $repo; dpkg-scanpackages ./ /dev/null";
+            $cmd .= "| tee $subdir/Packages | gzip -c9 >$subdir/Packages.gz";
+            print "Executing command: $cmd\n";
+            $err += abs(system($cmd));
+        }
     }
     return $err;
 }
