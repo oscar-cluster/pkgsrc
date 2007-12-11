@@ -1,3 +1,8 @@
+rapt-2.0
+- Support multiple architectures.
+- Enable the building of the Debian package as a normal user (no need to be
+  root anymore).
+
 rapt-1.2
 - Improve the Makefile: 
     * 'make dist', creates a tarball that can be used to release RAPT,

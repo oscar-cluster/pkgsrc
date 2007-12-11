@@ -15,7 +15,8 @@ deb ::
 	rm -rf $(DEBTMP)
 	mkdir -p $(DEBTMP)
 	cp -rf * $(DEBTMP)
-	cd $(DEBTMP); rm -rf `find . -name .svn`; dpkg-buildpackage -b
+	cd $(DEBTMP); rm -rf `find . -name .svn`; dpkg-buildpackage -rfakeroot
+	echo "The Debian package is readu in /tmp"
 
 dist: mrproper
 	rm -rf $(BUILDTMP); \
