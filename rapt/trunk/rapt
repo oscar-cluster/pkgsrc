@@ -165,7 +165,7 @@ $SIG{INT} = \&cleanup;
 
 
 ##############################
-### go for an aptitude command
+### go for an apt-get command
 ##############################
 
 # if command is "install" into empty image: debootstrap first
@@ -206,7 +206,7 @@ if ($installroot) {
 
 # update Packages cache. Note that we turn off all output (including stderr),
 # we are only interested by the return code.
-my $cmd = "aptitude update 1>/dev/null 2>/dev/null";
+my $cmd = "apt-get update 1>/dev/null 2>/dev/null";
 if ($installroot) {
     $cmd = "chroot $installroot $cmd";
 }
@@ -231,8 +231,8 @@ if ($installroot) {
     &install_fake_start_stop_daemon($installroot);
 }
 
-# run aptitude command
-my $cmd = "aptitude";
+# run apt-get command
+my $cmd = "apt-get";
 $cmd .= " ".join(" ",@ARGV);
 
 if ($installroot) {
@@ -272,7 +272,7 @@ exit $err;
 sub help {
     print "Usage: $0 OPTIONS [APTITUDE_OPTIONS]\n";
     print "\n";
-    print "Call aptitude with _only_ the repositories passed on the command line .\n";
+    print "Call apt-get with _only_ the repositories passed on the command line .\n";
     print "OPTIONS can be:\n";
     print " --repo URL : repository which should be included in apt actions\n";
     print "              (multiple --repo options are possible).\n";
@@ -289,7 +289,7 @@ sub help {
     print " --repolist    : list the OSCAR repository URLs\n";
     print " --verbose  : verbose output\n";
     print "\n";
-    print "APTITUDE_OPTIONS are options to be passed to the aptitude command.\n";
+    print "APTITUDE_OPTIONS are options to be passed to the apt-get command.\n";
     print "Setting the environment variable \$RAPT_VERBOSE to a number\n";
     print "between 1 and 10 will generate verbose output like multiple\n";
     print "-v options.\n\n";
@@ -699,10 +699,10 @@ sub restore_aptlist {
     if (-e $backup) {
     	!system("mv $backup $file")
 	        or carp("Could not restore $file from $backup: $!");
-    # GV: WARNING, not executing "aptitude update", it is not possible to 
-    # directly reuse aptitude! Users MUST execute manually "aptitude update"!!
-#        !system("aptitude update")
-#            or carp("Could not execute aptitude update");
+    # GV: WARNING, not executing "apt-get update", it is not possible to 
+    # directly reuse apt-get! Users MUST execute manually "apt-get update"!!
+#        !system("apt-get update")
+#            or carp("Could not execute apt-get update");
     }
 }
 
