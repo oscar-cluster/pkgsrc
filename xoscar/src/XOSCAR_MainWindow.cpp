@@ -395,7 +395,7 @@ void XOSCAR_MainWindow::refresh_list_partitions ()
 
     char *ohome = getenv ("OSCAR_HOME");
     const string cmd = (string) ohome 
-                      + "/scripts/oscar-cluster --display-partitions";
+                      + "/scripts/oscar --display-partitions";
 
     listClusterPartitionsWidget->clear();
     ipstream proc(cmd);
@@ -428,7 +428,7 @@ void XOSCAR_MainWindow::refresh_partition_info ()
     /* We display the number of nodes composing the partition */
     char *ohome = getenv ("OSCAR_HOME");
     const string cmd = (string) ohome 
-                        + "/scripts/oscar-cluster --display-partition-nodes "
+                        + "/scripts/oscar --display-partition-nodes "
                         + current_partition.toStdString();
     pstream command(cmd, pstreambuf::pstdout);
     std::string s, tmp;
@@ -468,7 +468,7 @@ void XOSCAR_MainWindow::refresh_partition_info ()
 
     /* We get the Linux distribution on which the partition is based */
     const string cmd3 = (string) ohome 
-            + "/scripts/oscar-cluster --display-partition-distro "
+            + "/scripts/oscar --display-partition-distro "
             + current_partition.toStdString();
     pstream command3(cmd3, pstreambuf::pstdout);
     std::string s2;
@@ -517,8 +517,9 @@ void XOSCAR_MainWindow::save_cluster_info_handler()
     } else {
         char *ohome = getenv ("OSCAR_HOME");
         string cmd = (string) ohome 
-                        + "/scripts/oscar-cluster"
+                        + "/scripts/oscar"
                         + " --add-partition " + partition_name.toStdString()
+                        + " --cluster oscar"
                         + " --distro " + partition_distro.toStdString();
         /* We had now the compute nodes, giving them a default name */
         for (int i=0; i < nb_nodes; i++) {
@@ -594,7 +595,7 @@ void XOSCAR_MainWindow::network_configuration_tab_activated()
     // First we get the list of node names
     char *ohome = getenv ("OSCAR_HOME");
     const string cmd = (string) ohome 
-                        + "/scripts/oscar-cluster --display-partition-nodes "
+                        + "/scripts/oscar --display-partition-nodes "
                         + partition_name.toStdString();
     ipstream proc (cmd);
     string buf;
