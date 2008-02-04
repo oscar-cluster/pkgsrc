@@ -4,7 +4,6 @@
     - Finish the implementation of the "Network Configuration" tab. For a first
       version, we have to:
         * MAC address collection: disable the "Network" and "Manual" options.
-        * query the database to get already defined MAC and IP addresses
     - When selected a file with MAC addresses:
         * allow one to assign a MAC address from the "Unassigned MAC Addresses" 
           widget to a node.
