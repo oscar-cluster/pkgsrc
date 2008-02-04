@@ -603,15 +603,49 @@ void XOSCAR_MainWindow::network_configuration_tab_activated()
         QString nodeName = buf.c_str();
         oscarNodesTreeWidget->setColumnCount(1);
         QTreeWidgetItem *item = new QTreeWidgetItem(oscarNodesTreeWidget);
-        item->setText(0, nodeName);
-        oscarNodesTreeWidget->expandItem (item);
 
+        // Then we display node information if available
+        const string cmd2 = (string) ohome 
+                            + "/scripts/oscar --display-node-info "
+                            + buf
+                            + " --partition "
+                            + partition_name.toStdString();
+        ipstream proc2 (cmd2);
+        string buf2;
+        // This variable is used to know which word we are actually getting
+        // at a given time during output analysis. In other terms, we use
+        // that to skip stuff we are not interesting in (we exactly know the
+        // output format).
+        int i=0;
+        QString hostname;
+        QString mac;
+        QString ip;
+        while (proc2 >> buf2) {
+            if (i == 3) {
+                hostname = buf2.c_str();
+            }
+            if (i == 7) {
+                ip = buf2.c_str();
+            }
+            if (i == 9) {
+                mac = buf2.c_str();
+            }
+            i++;
+        }
+
+        if (hostname.compare ("") != 0) {
+            item->setText(0, hostname);
+        } else {
+            item->setText(0, nodeName);
+        }
+        oscarNodesTreeWidget->expandItem (item);
         QTreeWidgetItem *subitem_mac = new QTreeWidgetItem(item);
-        subitem_mac->setText(0, "MAC @");
+        subitem_mac->setText(0, "MAC @: " + mac);
 
         QTreeWidgetItem *subitem_ip = new QTreeWidgetItem(item);
-        subitem_ip->setText(0, "IP @");
+        subitem_ip->setText(0, "IP @: " + ip);
     }
+
     oscarNodesTreeWidget->update();
 }
 
