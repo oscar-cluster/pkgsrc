@@ -203,7 +203,8 @@ if ($installroot) {
 
 # update Packages cache. Note that we turn off all output (including stderr),
 # we are only interested by the return code.
-my $cmd = "apt-get update 1>/dev/null 2>/dev/null";
+my $cmd = "apt-get update";
+$cmd = $cmd . " 1>/dev/null 2>/dev/null" if $verbose;
 if ($installroot) {
     $cmd = "chroot $installroot $cmd";
 }
@@ -318,7 +319,7 @@ sub get_default_repos {
 		if (/Distro package url : (\S.*)$/) {
 		    push @repos, split(",",$1);
 		} elsif (/OSCAR package pool : (\S.*)$/) {
-		    push @repos, $1;
+		    push @repos, split(",",$1);
 		}
 	    }
 	    close CMD;
@@ -336,9 +337,9 @@ sub get_default_repos {
 	    while (<CMD>) {
 		chomp;
 		if (/Distro package url : (\S+)$/) {
-		    push @repos, $1;
+            push @repos, split(",",$1);
 		} elsif (/OSCAR package pool : (\S+)$/) {
-		    push @repos, $1;
+            push @repos, split(",",$1);
 		}
 	    }
 	    close CMD;
@@ -348,7 +349,7 @@ sub get_default_repos {
 	}
     }
     if ($verbose) {
-	print "Repositories detected:\n\t".join("\n\t",@repos)."\n";
+        print "Repositories detected:\n\t".join("\n\t",@repos)."\n";
     }
 }
 
