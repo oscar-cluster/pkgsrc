@@ -956,6 +956,7 @@ sub prep_repodata (@) {
         my $err = 0;
         for my $repo (@repos) {
             next if ($repo =~ /^(http|ftp):/);
+            next if ($repo =~ /(.url)$/);
             $repo =~ s/^file://;
             $repo =~ s/\/$//;
             die "ERROR: the repository directory does not exists" 
@@ -1138,7 +1139,9 @@ sub get_loal_repository_path ($) {
 
     $repo =~ s/^file://;
 
-    if ( ! -d $repo) {
+    if ($repo =~ /(.url)$/) {
+        print "URL file, looks valid\n" if $verbose;
+    } elsif ( ! -d $repo) {
         die "ERROR: Invalid repo path ($repo)\n";
     }
 
