@@ -390,7 +390,7 @@ sub add_to_array ($@) {
     if ($found == 0) {
         push (@array, $elt);
     }
-    print "New array: [".join(" ", @array)."]\n";
+    print "New array: [".join(" ", @array)."]\n" if $verbose;
     return @array;
 }
 
