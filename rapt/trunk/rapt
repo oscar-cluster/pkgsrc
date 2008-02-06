@@ -103,7 +103,18 @@ help() if (!scalar(@repos));
 
 my @validarch = qw(i386 x86_64 ia64 ppc64 noarch);
 
-my @arches = &get_arch_repos(@repos);
+if (check_repos (@repos)) {
+    die "ERROR: Invalid repo(s)\n";
+}
+
+my @arches = get_arch_repos(@repos);
+if (scalar(@arches) == 0) {
+    print "Warning: Impossible to detect repositories architecture ".
+          "(normal in case of online repo(s)).\n";
+    exit 0;
+}
+
+print "Supported architecture(s): [".join (" ", @arches)."]\n" if $verbose;
 
 our $err = 0;
 chomp(my $hostname=`hostname -s`);
@@ -296,9 +307,9 @@ sub help {
 
 sub cleanup {
     for my $f (@delfiles) {
-	if (-e $f) {
-	    !system("rm -f $f") or print "Couldn't remove file $f : $!\n";
-	}
+        if (-e $f) {
+            !system("rm -f $f") or print "Couldn't remove file $f : $!\n";
+        }
     }
     &restore_aptlist;
 }
@@ -366,6 +377,9 @@ sub get_default_repos {
 sub add_to_array ($@) {
     my ($elt, @array) = @_;
 
+    print "Adding $elt to [".join(" ", @array)."] without duplication\n"
+        if $verbose;
+
     my $found = 0;
     foreach my $e (@array) {
         if ($e eq $elt) {
@@ -376,6 +390,7 @@ sub add_to_array ($@) {
     if ($found == 0) {
         push (@array, $elt);
     }
+    print "New array: [".join(" ", @array)."]\n";
     return @array;
 }
 
@@ -410,11 +425,13 @@ sub get_arch_repos (@) {
     my @arch;
     my $varch = join("|",@validarch);
     for my $repo (@repos) {
+        $repo = get_loal_repository_path ($repo);
         # We skip online repos, which is a bad idea when mixing online and
         # local repos.
-        next if ($repo !~ /^(file|ftp)/);
+        next if (!defined ($repo));
         my $r = basename($repo);
         chomp($r);
+        print "Detecting architecture of $r...\n" if $verbose;
         $r =~ s:/$::;
         if (!index ($r,"common-",0)) {
                 # if the repo is a repo for comon packages, it is a special
@@ -446,6 +463,7 @@ sub get_arch_repos (@) {
             print "WARNING: repository name doesn't match any valid architecture\n";
         }
     }
+    print "Detected architecture(s): ". join (" ", @arch) . "\n" if $verbose;
     return @arch;
 }
 
@@ -453,9 +471,9 @@ sub get_arch_repos (@) {
 # simple check: does image need debootstrap to be installed?
 sub img_needs_bootstrap {
     if (!$installroot || ($installroot eq "/") || (-d "$installroot/etc/apt")) {
-	return 0;
+        return 0;
     } else {
-	return 1;
+        return 1;
     }
 }
 
@@ -940,7 +958,9 @@ sub prep_repodata (@) {
             next if ($repo =~ /^(http|ftp):/);
             $repo =~ s/^file://;
             $repo =~ s/\/$//;
-            next if (($repo !~ m:^/:) || (! -d $repo));
+            die "ERROR: the repository directory does not exists" 
+                if (! -d $repo);
+            next if ($repo !~ m:^/:);
 
             # create directory for package metadata
             if (! -d "$repo/subdir") {
@@ -1070,4 +1090,57 @@ sub detect_codename_dir {
 	close IN;
     }
     return $codename;
+}
+
+################################################################################
+# This function does basic checking about the repos we are supposed to deal    #
+# with.                                                                        #
+#                                                                              #
+# Input: repos, an array with a list of repos path.                            #
+# Return: 0 if repos are valid, -1 else.                                       #
+################################################################################
+sub check_repos (@) {
+    my @repos = @_;
+
+    print "Checking repositories validity...\n" if $verbose;
+    # Currently we only check if the directory of the repo exists (it should!).
+    foreach my $repo (@repos) {
+        print "Checking repo $repo.\n" if $verbose;
+        $repo = get_loal_repository_path ($repo);
+        if ( defined ($repo) ) {
+            print "Repository $repo is valid\n" if $verbose;
+        } else {
+            print "Online repository, we assume the repo is correct\n" 
+                if $verbose;
+        }
+    }
+    print "Repositories are valid.\n" if $verbose;
+    return 0;
+}
+
+################################################################################
+# This function just format the repo path; three cases are possible:           #
+# - the repo path is "file:/tftpboot/...", in that case, we remove "file:",    #
+# - the repo is online and therefore starts by http or ftp, in that case we    #
+#   return undef,                                                              #
+# - the repo is just a normal path (e.g., /tftpboot/oscar/debian-4-x86_64), in #
+#   that case, we check if the directory exists and if so, return the path.    #
+#                                                                              #
+# Input: repo, the repository "path" we need to "clean up".                    #
+# Return: the local directory path for the repo (directly usable by Perl),     #
+#         undef if it is an online repository and die if the local repo does   #
+#         not exist.                                                           #
+################################################################################
+sub get_loal_repository_path ($) {
+    my $repo = shift;
+
+    return undef if ($repo =~ /^(http|ftp)/);
+
+    $repo =~ s/^file://;
+
+    if ( ! -d $repo) {
+        die "ERROR: Invalid repo path ($repo)\n";
+    }
+
+    return $repo;
 }
