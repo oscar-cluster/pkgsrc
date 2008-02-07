@@ -74,8 +74,6 @@ my $installroot;
 my (@repos, @repoadd, @repodel, $repolist);
 my @delfiles;
 
-my $config_file = "/etc/rapt.conf";
-
 Getopt::Long::Configure("pass_through");
 GetOptions( 
         "help"          => \&help,
@@ -180,15 +178,6 @@ $SIG{INT} = \&cleanup;
 # if command is "install" into empty image: debootstrap first
 if ($installroot) {
     if ((scalar(grep /^install$/, @ARGV) == 1) && &img_needs_bootstrap) {
-        my $repo_url = "";
-        if (-f $config_file) {
-            open (FILE, $config_file);
-
-            # The configuration currently only have one line: the mirror URL
-            $repo_url = <FILE>;
-            close (FILE);
-            chomp ($repo_url);
-        }
         # Warning: distro codename is detected from local installation...
         &debootstrap($installroot,&detect_codename);
 
@@ -613,13 +602,46 @@ sub uninstall_fake_start_stop_daemon {
 	"$imgpath/sbin/start-stop-daemon" or return 1;
 }	    
 
-sub debootstrap {
+################################################################################
+# We try to find the mirror we use for the Debian packages when using online   #
+# repos. Unfortunately, we only have a list of repos and we do not know which  #
+# one can be used by debootstrap. Therefore we check if one f them is from a   #
+# file in /tftpboot/distro. If so, we assume this is the mirror we want to use #
+# with debootstrap.                                                            #
+# The code is kind of ugly but there is not a real alternative since in RAPT   #
+# there is currently no way to know the distribution ID (which is a strong     #
+# limitation). The code could be much more simple if instead of dealing with   #
+# an anonymous list of repositories we could just have the distro ID and only  #
+# then we automatically get the list of associated distros (we can already get #
+# such a list).                                                                #
+#                                                                              #
+# Input: None.                                                                 #
+# Return: the mirror URL, empty string if no mirror is found.                  #
+################################################################################
+sub get_debootstrap_mirror () {
+    my $mirror = "";
+
+    foreach my $r (@repos) {
+        my $distro_repo = `grep -r $r /tftpboot/distro`;
+        if ($distro_repo ne "") {
+            my $url_file;
+            ($url_file, $distro_repo) = split (".url:", $distro_repo);
+            my @array = split (/\+/, $distro_repo);
+            $mirror = $array[0];
+        }
+    }
+
+    return $mirror;
+}
+
+sub debootstrap ($$$) {
 # debootstrap is used to install the base system into a chroot
 # Input:      target, suite, mirror
 # Returns:    0 if failure, 1 if ok
     my $target = shift;
     my $suite = shift;
-    my $mirror = shift;
+
+    my $mirror = get_debootstrap_mirror ();
 
     if (system("which debootstrap 2>/dev/null")) {
         print "ERROR: Could not find command debootstrap!\n";

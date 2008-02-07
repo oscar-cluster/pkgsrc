@@ -6,19 +6,21 @@ internaly (bug #455).
 - Improve the error handling. This fixes bug #458.
 - Correctly deal with the different repo location notation (i.e., the location
 can start by http|ftp, file:, or even be an absolute path).
+- Automatically detect the mirror that can be used by debootstrap (when
+possible). This fixes bug #450.
 
 rapt-2.0
 - Support multiple architectures.
 - Enable the building of the Debian package as a normal user (no need to be
-  root anymore).
+root anymore).
 
 rapt-1.2
 - Improve the Makefile: 
-    * 'make dist', creates a tarball that can be used to release RAPT,
-    * 'make clean', deletes junky file (e.g. *~),
-    * 'make mrproper', deletes all files generated during the compilation and
-      the creation of binary packahes.
+* 'make dist', creates a tarball that can be used to release RAPT,
+* 'make clean', deletes junky file (e.g. *~),
+* 'make mrproper', deletes all files generated during the compilation and the
+creation of binary packahes.
 - Clean up the RAPT output.
 - Switch to aptitude instead of apt-get.
 - Fix the bug with the error return code. RAPT was previously always returning
-  0.
+0.
