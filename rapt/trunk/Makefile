@@ -11,6 +11,10 @@ install:
 	install -m 644 rapt.8 $(DESTDIR)/usr/share/man/man8/rapt.8
 	install -m 755 rapt $(DESTDIR)/usr/bin/rapt
 
+uninstall:
+	rm -f $(DESTDIR)/usr/share/man/man8/rapt.8
+	rm -f $(DESTDIR)/usr/bin/rapt
+
 deb ::
 	rm -rf $(DEBTMP)
 	mkdir -p $(DEBTMP)

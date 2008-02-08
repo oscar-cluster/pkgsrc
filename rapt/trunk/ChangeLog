@@ -8,6 +8,7 @@ internaly (bug #455).
 can start by http|ftp, file:, or even be an absolute path).
 - Automatically detect the mirror that can be used by debootstrap (when
 possible). This fixes bug #450.
+- Add a 'uninstall' target to the Makefile.
 
 rapt-2.0
 - Support multiple architectures.
