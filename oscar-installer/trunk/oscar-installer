@@ -1,0 +1,285 @@
+#!/usr/bin/perl
+#
+#   This program is free software; you can redistribute it and/or modify
+#   it under the terms of the GNU General Public License as published by
+#   the Free Software Foundation; either version 2 of the License, or
+#   (at your option) any later version.
+#
+#   This program is distributed in the hope that it will be useful,
+#   but WITHOUT ANY WARRANTY; without even the implied warranty of
+#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#   GNU General Public License for more details.
+#
+#   You should have received a copy of the GNU General Public License
+#   along with this program; if not, write to the Free Software
+#   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+#
+# Tool to install and bootstrap OSCAR. For that, we maintain a list of files to
+# download, we try to download them, we check the md5sum, install the downloaded
+# files (untar tarballs and so on), and bootstrap OSCAR. Then OSCAR is ready to
+# be used. The file that gives the list of files to download is 
+# /etc/oscar-installer/download.conf. 
+# The file /etc/oscar-installer/oscar-installer configures oscar-install.
+#
+# $Id: oscar-installer 6426 2007-11-02 02:48:40Z valleegr $
+#
+# Author and copyright holder:
+# (C)opyright 2008 Geoffroy Vallee <valleegr@ornl.gov>
+#                  All rights reserved. 
+#
+
+use strict;
+use OSCARInstaller::ConfigManager;
+use OSCARInstaller::Installer;
+use Getopt::Long;
+use Carp;
+use warnings "all";
+
+my ($verbose, $start_offline_install, $prepare_offline_install);
+
+Getopt::Long::Configure("pass_through");
+GetOptions(
+        "prepare-offline-install"       => \$prepare_offline_install,
+        "p"                             => \$prepare_offline_install,
+        "start-offline-install=s"       => \$start_offline_install,
+        "s=s"                           => \$start_offline_install,
+        "verbose"                       => \$verbose,
+        "v"                             => \$verbose,
+        );
+
+our $selected_distro = shift;
+
+my $config_obj = OSCARInstaller::ConfigManager->new ();
+our $distros;
+my $oscar_version = "5.0";
+
+my $config = $config_obj->get_config();
+if ( ! defined ($config) ) {
+    die "ERROR: Impossible to load the oscar-installer configuration file";
+}
+$distros = $config->{distros};
+if ( ! defined ($selected_distro) || ($selected_distro eq "") ) {
+    die "ERROR: You must specify a Linux distribution, ".
+        "the one you want to use with OSCAR.\n".
+        "Supported distributions are: @$distros\n";
+}
+if (distro_is_valid ($distros, $selected_distro, $verbose)) {
+    die "ERROR: Invalid Linux distribution ($selected_distro)\n".
+        "Supported distributions are: @$distros\n";
+}
+
+# We have 3 files to download
+my $cmd;
+my $base_url = $config->{base_url};
+my $md5sum_file = "oscar-$oscar_version-MD5SUMS";
+my $dest = $config->{download_dir};
+my $install_dest = $config->{install_dir};
+my $oscar_tarball = "oscar-base-$oscar_version.tar.gz";
+my $common_repo_tarball = "oscar-repo-common-rpms-$oscar_version.tar.gz";
+my $oscar_repo_tarball = "oscar-repo-$selected_distro-$oscar_version.tar.gz";
+my @files_to_download;
+push (@files_to_download, $md5sum_file);
+push (@files_to_download, $oscar_tarball);
+push (@files_to_download, $common_repo_tarball);
+push (@files_to_download, $oscar_repo_tarball);
+my @repos_tarballs;
+push (@repos_tarballs, $common_repo_tarball);
+push (@repos_tarballs, $oscar_repo_tarball);
+
+if ($prepare_offline_install) {
+    print "Preparing offline installation...\n" if $verbose;
+
+    if (OSCARInstaller::Installer::cleanup_downloads (\@files_to_download,
+                                                     "$dest/offline-install",
+                                                     $verbose)) {
+        die "ERROR: Impossible to cleanup previous downloads";
+    }
+
+    if (OSCARInstaller::Installer::download_files (\@files_to_download,
+                                                   $base_url,
+                                                   "$dest/offline-install",
+                                                   $verbose)) {
+        die "ERROR: Impossible to download needed files";
+    }
+
+    if (OSCARInstaller::Installer::check_md5sum (\@files_to_download,
+                                                $md5sum_file,
+                                                "$dest/offline-install",
+                                                $verbose)) {
+        die "ERROR: the md5sum for one of the downloaded file is incorrect";
+    }
+
+    if (OSCARInstaller::Installer::tar_dir ($dest, 
+                                            "offline-install",
+                                            $verbose)) {
+        die "ERROR: Impossible to tar downloaded files";
+    }
+    print "The file $dest/oscar-offline-install.tar.gz is ready for an ".
+          "offline installation. Copy this file to the machine where you want ".
+          "to install OSCAR and execute the command \"oscar-installer ".
+          "$selected_distro -s <location where you saved the tarball>\".\n".
+          "Before to start the installation, be sure you setup the repository".
+          "for the target Linux distribution. For more information on that ".
+          "specific topic, please refer to the OSCAR documentation (".
+          "http://svn.oscar.openclustergroup.org/wiki/oscar:5.0:install_guide:ch3.5_advanced_repo)\n";
+} elsif ($start_offline_install) {
+    # The user only gives the path of the directory that contains the tarball
+    # for offline installation. Therefore we add the file name.
+    $start_offline_install .= "/oscar-offline-install.tar.gz";
+
+    print "Starting offline installation (w/ $start_offline_install)...\n"
+        if $verbose;
+
+    if ($start_offline_install eq "" || ! -f $start_offline_install) {
+        die "ERROR: Invalid file for offline installation";
+    }
+
+    if (OSCARInstaller::Installer::untar_file ($start_offline_install,
+                                               "$dest",
+                                               $verbose)) {
+        die "ERROR: Impossible to untar the file for offline installation";
+    }
+
+    if (OSCARInstaller::Installer::install_files ($oscar_tarball,
+                                                \@repos_tarballs,
+                                                "$dest/offline-install",
+                                                $install_dest,
+                                                $verbose)) {
+        die "ERROR: Impossible to install downloaded files";
+    }
+} else {
+    print "Downloading files for $selected_distro...\n";
+
+    if (OSCARInstaller::Installer::cleanup_downloads (\@files_to_download, 
+                                                    $dest,
+                                                    $verbose)) {
+        die "ERROR: Impossible to cleanup previous downloads";
+    }
+
+    if (OSCARInstaller::Installer::download_files (\@files_to_download,
+                                                $base_url,
+                                                $dest,
+                                                $verbose)) {
+        die "ERROR: Impossible to download needed files";
+    }
+
+    if (OSCARInstaller::Installer::check_md5sum (\@files_to_download,
+                                                $md5sum_file,
+                                                $dest,
+                                                $verbose)) {
+        die "ERROR: the md5sum for one of the downloaded file is incorrect";
+    }
+
+    if (OSCARInstaller::Installer::install_files ($oscar_tarball,
+                                                \@repos_tarballs,
+                                                $dest,
+                                                $install_dest,
+                                                $verbose)) {
+        die "ERROR: Impossible to install downloaded files";
+    }
+
+    print "OSCAR is now ready.\n".
+          "To use OSCAR type \'cd $install_dest/oscar-$oscar_version\' and ".
+          "then use the install_cluster script.\n".
+          "Before to start the installation, be sure you setup the repository".
+          "for the target Linux distribution. For more information on that ".
+          "specific topic, please refer to the OSCAR documentation (".
+          "http://svn.oscar.openclustergroup.org/wiki/oscar:5.0:install_guide:ch3.5_advanced_repo)\n";
+}
+
+exit 0;
+__END__
+
+=head1 NAME
+
+Command shell to install OSCAR: it downloads needed files and installs OSCAR.
+
+=head1 SYNTAX
+
+oscar-installer [option] linux_distribution
+
+=head1 DESCRIPTION
+
+oscar-installer is a tool that installs OSCAR in a transparent manner. Two 
+different modes are available:
+
+=over 2
+
+=item online
+
+the current machine has internet access and while be used as the OSCAR headnode,
+
+=item offline
+
+the current machine is only used to download OSCAR, OSCAR will be installed on 
+another machine.
+
+=back
+
+By default, the online mode is used (i.e., if no option is specified, the online
+mode is used).
+The identifier of the target linux distribution for the headnode must be 
+specified. In order to get the list of supported Linux distributions, just type
+"oscar-installer".
+
+Therefore the following options are available:
+    -p, --prepare-offline-install,
+    -s, --start-offline-install
+    -v, --verbose
+
+Note that oscar-installer does _not_ create the repository for the target Linux
+distribution (used to create images for the deployment of nodes). Please refer
+to the OSCAR documentation for more information on that topic.
+
+=head1 OPTIONS
+
+=over 3
+
+=item -p | --prepare-offline-install
+
+Prepare an offline installation. This is usefull if the OSCAR headnode does not
+have internet access: this option creates a "package" with all needed files for
+a later information on the headnode. You just need to copy the created "package"
+on the headnode and execute the command 'oscar-install -s <package location>'.
+
+=item -s | --start-offline-install <offline_installation_package_path>
+
+Installs OSCAR in the offline mode. The command assumes that a "package" created
+by oscar-installer for offline installation is available. The path of the 
+"package" must be an absolute path (e.g., /home/my_name).
+
+=item -v | --verbose
+
+Verbose mode: display more information while running.
+
+=back
+
+=head1 EXAMPLES
+
+=over 3
+
+=item oscar-installer fc-5-x86_64
+
+will download and install OSCAR for Fedora Core 5 on a x86_64 machine. The
+online mode is used.
+
+=item oscar-installer fc-5-x86_64 -p
+
+will download OSCAR, create a "package" that can be copied on the target
+headnode (a Fedora Core 5 x86_64 machine).
+
+=item oscar-installer fc-5-x86_64 -s /tmp
+
+will installed OSCAR in the offline mode (the current machine does not have
+internet access). The package created for offline installation has been saved in
+/tmp
+
+=head1 AUTHOR
+
+Geoffroy Vallee, valleegr@ornl.gov
+
+=head1 SEE ALSO
+
+perl(1)
+
+=cut

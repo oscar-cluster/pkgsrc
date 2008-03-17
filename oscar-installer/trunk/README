@@ -1,0 +1,31 @@
+Installation
+============
+
++ For the tarball:
+    - Untar the oscar-installer tarball
+      For instance, to install oscar-installer version 1.0, type:
+        tar -xzf ./oscar-install-1.0.tar.gz
+    - Go to the oscar-installer directory
+      For instance, to install oscar-installer version 1.0, type:
+        cd oscar-installer-1.0
+    - Execute the 'perl Makefile.PL && make' command
+    - Execute the 'make install' command
+  You are now ready to use oscar-installer. For more information about 
+  oscar-installer, please refer to the man page ('man oscar-installer').
+
+Creation of a new release
+=========================
+
+To create a tarball for a new release, follow the following actions:
+- update the 'VERSION' file (remeber that the version of oscar-installer
+  must be the same that the OSCAR version oscar-installer is supposed to
+  install),
+- update the list of supported distros in the 'conf/oscar-installer.conf'
+  configuration file,
+- update the md5sum file URL in the 'conf/oscar-installer.conf',
+- check that the file of files that is shipped for the OSCAR installation
+  is still the same; if not you will have to slightly modify the code,
+- execute the 'make manifest' command,
+- execute the 'make dist' command.
+Then you should have a tarball that correspond to the version you want to 
+release (e.g., oscar_installer-5.0.tar.gz).
