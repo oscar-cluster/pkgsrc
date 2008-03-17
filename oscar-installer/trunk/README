@@ -1,7 +1,7 @@
 Installation
 ============
 
-+ For the tarball:
++ From the tarball:
     - Untar the oscar-installer tarball
       For instance, to install oscar-installer version 1.0, type:
         tar -xzf ./oscar-install-1.0.tar.gz
@@ -12,6 +12,9 @@ Installation
     - Execute the 'make install' command
   You are now ready to use oscar-installer. For more information about 
   oscar-installer, please refer to the man page ('man oscar-installer').
++ From the RPM:
+    - download the RPM,
+    - use the command 'rpm -Uvh <rpm_name.rpm>' to actually install the RPM.
 
 Creation of a new release
 =========================
@@ -29,3 +32,11 @@ To create a tarball for a new release, follow the following actions:
 - execute the 'make dist' command.
 Then you should have a tarball that correspond to the version you want to 
 release (e.g., oscar_installer-5.0.tar.gz).
+
+Creation of a new RPM
+=====================
+
+You need first to create a new tarball (for that see the section "Creation of a
+new release"). Copy the created tarball in /usr/src/rpm/SOURCES, then execute
+the command 'rpmbuild -bb ./oscar-installer.spec' from the directory were the
+oscar-installer code is.
