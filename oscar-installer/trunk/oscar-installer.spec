@@ -19,14 +19,14 @@
 Summary:		A tool to ease the OSCAR installation.
 Name:      		oscar-installer
 Version:   		5.0
-Release:   		1
+Release:   		2
 Vendor:			Open Cluster Group <http://OSCAR.OpenClusterGroup.org/>
 Distribution:	OSCAR
 Packager:		Geoffroy Vallee <valleegr@ornl.gov>
 License: 		GPL
 Group:     		Development/Libraries
 Source:			%{name}-%{version}.tar.gz
-BuildRoot: 		/usr/src/rpm/BUILD/%{name}-%{version}
+BuildRoot: 		/usr/src/redhat/BUILD/%{name}-%{version}
 #BuildRoot:      /var/tmp/%{name}-buildroot
 BuildArch:		noarch
 Requires:       perl-AppConfig
@@ -55,15 +55,16 @@ make
 %__rm -rf $RPM_BUILD_ROOT
 make install SITEPREFIX=/usr DESTDIR=$RPM_BUILD_ROOT \
     INSTALLSITEMAN1DIR=/usr/share/man/man1
+# For some reasons weird files are installed. We remove them.
+%__rm -f $RPM_BUILD_ROOT/usr/lib64/perl5/5.8.8/x86_64-linux-thread-multi/perllocal.pod
+%__rm -f $RPM_BUILD_ROOT/usr/lib64/perl5/site_perl/5.8.8/x86_64-linux-thread-multi/auto/oscar-installer/.packlist
 
 %files 
 %defattr(-,root,root)
 /usr/bin/oscar-installer
-/usr/lib/perl/5.8.8/auto/oscar-installer/.packlist
-/usr/lib/perl/5.8.8/perllocal.pod
 /usr/share/man/man1/oscar-installer.1
-/usr/share/perl/5.8.8/OSCARInstaller/ConfigManager.pm
-/usr/share/perl/5.8.8/OSCARInstaller/Installer.pm
+/usr/lib/perl5/site_perl/5.8.8/OSCARInstaller/ConfigManager.pm
+/usr/lib/perl5/site_perl/5.8.8/OSCARInstaller/Installer.pm
 /etc/oscar-installer/oscar-installer.conf
 
 

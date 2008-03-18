@@ -11,7 +11,7 @@ package OSCARInstaller::Installer;
 #
 
 #
-# $Id: Installer.pm 6954 2008-03-14 20:54:25Z valleegr $
+# $Id$
 #
 
 use strict;
@@ -19,6 +19,7 @@ use warnings "all";
 use Carp;
 use base qw(Exporter);
 use vars qw(@EXPORT);
+use OSCARInstaller::ConfigManager;
 @EXPORT = qw(
             distro_is_valid
             download_files
@@ -185,7 +186,7 @@ sub check_md5sum ($$$$) {
             }
         }
     }
-    print "\Success\n" if $verbose;
+    print "\tSuccess\n" if $verbose;
     return 0;
 }
 
@@ -229,8 +230,14 @@ sub install_files ($$$$$) {
     }
 
     # We are now ready to go, we untar what we downloaded.
+    my $config_obj = OSCARInstaller::ConfigManager->new ();
+    if (!defined $config_obj) {
+        carp "ERROR: Impossible to read the oscar-installer config file.";
+        return -1;
+    }
+    my $config = $config_obj->get_config();
 
-    my $repos_path = "/tftpboot";
+    my $repos_path = $config->{repos_dir};
     my $cmd;
     # Untar the repos
     foreach my $repo (@$repos_tarballs) {

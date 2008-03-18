@@ -12,19 +12,12 @@ package OSCARInstaller::ConfigManager;
 
 #
 # The file is the implementation of the ConfigManager class. This class allows
-# the creation of object that represents the content of the OSCAR configuration
-# file
+# the creation of object that represents the content of the oscar-installer
+# configuration file.
 #
 
 #
-# TODO: the current implementation only grabs few information from the 
-# configuration file and therefore we do not have a generic API to access each
-# different values. That could be improved in order to avoid an uncontroled
-# growing the list of functions in the API.
-#
-
-#
-# $Id: ConfigManager.pm 6954 2008-03-14 20:54:25Z valleegr $
+# $Id$
 #
 
 use strict;
@@ -50,6 +43,11 @@ our $base_url;
 our $download_dir;
 # Location where OSCAR is installed (e.g., /opt)
 our $install_dir;
+# URL of the documentation about how to setup a repository for the target Linux
+# distribution
+our $distro_repo_doc_url;
+# Directory where OSCAR repositories are created
+our $repos_dir;
 
 sub new {
     my $invocant = shift;
@@ -81,15 +79,19 @@ sub load_config ($) {
         'INSTALL_DIR'               => { ARGCOUNT => 1 },
         'MD5SUM_FILE'               => { ARGCOUNT => 1 },
         'SUPPORTED_DISTROS'         => { ARGCOUNT => 1 },
+        'DISTRO_REPO_DOC_URL'       => { ARGCOUNT => 1 },
+        'REPOS_DIR'                 => { ARGCOUNT => 1 },
         );
     $config->file ($config_file);
 
     # Load configuration values
-    $base_url           = $config->get('BASE_URL');
-    $download_dir       = $config->get('DOWNLOAD_DIR');
-    $install_dir        = $config->get('INSTALL_DIR');
-    $md5sum_file        = $config->get('MD5SUM_FILE');
-    $supported_distros  = $config->get('SUPPORTED_DISTROS');
+    $base_url               = $config->get('BASE_URL');
+    $download_dir           = $config->get('DOWNLOAD_DIR');
+    $install_dir            = $config->get('INSTALL_DIR');
+    $md5sum_file            = $config->get('MD5SUM_FILE');
+    $supported_distros      = $config->get('SUPPORTED_DISTROS');
+    $distro_repo_doc_url    = $config->get('DISTRO_REPO_DOC_URL');
+    $repos_dir              = $config->get('REPOS_DIR');
     # We clean-up the string we got, the one that gives the list of supported
     # distros
     while (index($supported_distros, " ") != -1) {
@@ -104,11 +106,13 @@ sub load_config ($) {
 sub get_config () {
     my $self = shift;
     my %cfg = (
-                'base_url'          => $base_url,
-                'download_dir'      => $download_dir,
-                'install_dir'       => $install_dir,
-                'md5sum_file'       => $md5sum_file,
-                'distros'           => \@distros,
+                'base_url'              => $base_url,
+                'download_dir'          => $download_dir,
+                'install_dir'           => $install_dir,
+                'md5sum_file'           => $md5sum_file,
+                'distros'               => \@distros,
+                'distro_repo_doc_url'   => $distro_repo_doc_url,
+                'repos_dir'             => $repos_dir,
               );
     return \%cfg;
 }

@@ -21,7 +21,7 @@
 # /etc/oscar-installer/download.conf. 
 # The file /etc/oscar-installer/oscar-installer configures oscar-install.
 #
-# $Id: oscar-installer 6426 2007-11-02 02:48:40Z valleegr $
+# $Id$
 #
 # Author and copyright holder:
 # (C)opyright 2008 Geoffroy Vallee <valleegr@ornl.gov>
@@ -50,6 +50,10 @@ GetOptions(
 our $selected_distro = shift;
 
 my $config_obj = OSCARInstaller::ConfigManager->new ();
+if (!defined $config_obj) {
+    die "ERROR: Impossible to read the oscar-installer configuration file.";
+}
+
 our $distros;
 my $oscar_version = "5.0";
 
@@ -118,10 +122,10 @@ if ($prepare_offline_install) {
           "offline installation. Copy this file to the machine where you want ".
           "to install OSCAR and execute the command \"oscar-installer ".
           "$selected_distro -s <location where you saved the tarball>\".\n".
-          "Before to start the installation, be sure you setup the repository".
+          "Before to start the installation, be sure you setup the repository ".
           "for the target Linux distribution. For more information on that ".
           "specific topic, please refer to the OSCAR documentation (".
-          "http://svn.oscar.openclustergroup.org/wiki/oscar:5.0:install_guide:ch3.5_advanced_repo)\n";
+          "$config->{distro_repo_doc_url})\n";
 } elsif ($start_offline_install) {
     # The user only gives the path of the directory that contains the tarball
     # for offline installation. Therefore we add the file name.
@@ -181,10 +185,10 @@ if ($prepare_offline_install) {
     print "OSCAR is now ready.\n".
           "To use OSCAR type \'cd $install_dest/oscar-$oscar_version\' and ".
           "then use the install_cluster script.\n".
-          "Before to start the installation, be sure you setup the repository".
+          "Before to start the installation, be sure you setup the repository ".
           "for the target Linux distribution. For more information on that ".
           "specific topic, please refer to the OSCAR documentation (".
-          "http://svn.oscar.openclustergroup.org/wiki/oscar:5.0:install_guide:ch3.5_advanced_repo)\n";
+          "$config->{distro_repo_doc_url})\n";
 }
 
 exit 0;

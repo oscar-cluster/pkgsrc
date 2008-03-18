@@ -25,8 +25,10 @@ To create a tarball for a new release, follow the following actions:
   install),
 - update the list of supported distros in the 'conf/oscar-installer.conf'
   configuration file,
+- update in the 'conf/oscar-installer.conf' file the URL for the documentation
+  on how to setup a repository for the target Linux distribution,
 - update the md5sum file URL in the 'conf/oscar-installer.conf',
-- check that the file of files that is shipped for the OSCAR installation
+- check that the list of files that is shipped for the OSCAR installation
   is still the same; if not you will have to slightly modify the code,
 - execute the 'make manifest' command,
 - execute the 'make dist' command.
