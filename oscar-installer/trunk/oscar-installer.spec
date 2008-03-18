@@ -29,6 +29,7 @@ Source:			%{name}-%{version}.tar.gz
 BuildRoot: 		/usr/src/rpm/BUILD/%{name}-%{version}
 #BuildRoot:      /var/tmp/%{name}-buildroot
 BuildArch:		noarch
+Requires:       perl-AppConfig
 
 %description
 oscar-installer is a tool that installs OSCAR in a transparent manner. Two 
@@ -52,16 +53,17 @@ make manifest
 
 make
 %__rm -rf $RPM_BUILD_ROOT
-make install DESTDIR=$RPM_BUILD_ROOT
+make install SITEPREFIX=/usr DESTDIR=$RPM_BUILD_ROOT \
+    INSTALLSITEMAN1DIR=/usr/share/man/man1
 
 %files 
 %defattr(-,root,root)
-/usr/local/bin/oscar-installer
-/usr/local/lib/perl/5.8.8/auto/oscar-installer/.packlist
-/usr/local/lib/perl/5.8.8/perllocal.pod
-/usr/local/man/man1/oscar-installer.1
-/usr/local/share/perl/5.8.8/OSCARInstaller/ConfigManager.pm
-/usr/local/share/perl/5.8.8/OSCARInstaller/Installer.pm
+/usr/bin/oscar-installer
+/usr/lib/perl/5.8.8/auto/oscar-installer/.packlist
+/usr/lib/perl/5.8.8/perllocal.pod
+/usr/share/man/man1/oscar-installer.1
+/usr/share/perl/5.8.8/OSCARInstaller/ConfigManager.pm
+/usr/share/perl/5.8.8/OSCARInstaller/Installer.pm
 /etc/oscar-installer/oscar-installer.conf
 
 
