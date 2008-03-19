@@ -19,6 +19,8 @@
 
 #include "XOSCAR_FileBrowser.h"
 
+using namespace xoscar;
+
 XOSCAR_FileBrowser::XOSCAR_FileBrowser(const QString &filter,
                          QDialog *parent,
                          const char *name)

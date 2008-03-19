@@ -15,6 +15,8 @@
 
 #include "XOSCAR_AboutOscarDialog.h"
 
+using namespace xoscar;
+
 XOSCAR_AboutOscarDialog::XOSCAR_AboutOscarDialog(QDialog *parent)
     : QDialog (parent)
 {

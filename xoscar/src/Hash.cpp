@@ -6,12 +6,20 @@
  *  see the COPYING file in the top level directory of the source
  */
 
+/**
+ * @file Hash.cpp
+ * @brief Actual implementation of the Hash class.
+ * @author Geoffroy Vallee
+ */
+
 #include <iostream>
 #include <stdarg.h>
 #include <cstdlib>
 #include <vector>
 
 #include "Hash.h"
+
+using namespace xoscar;
 
 Hash::Hash (const char* str, ...)
 {
@@ -54,6 +62,18 @@ Hash::~Hash ()
 {
 }
 
+/**
+ * @author Geoffroy Vallee
+ *
+ * A hash is defined by a list of string elements, with the idea that we have
+ * each time a key and a value. It seems that the arguments when defining a new
+ * hash are always even. This function checks this kind of things, to be sure
+ * we can effectively create the hash.
+ *
+ * @param ap List of argument. This list is based on the stdarg library, refer
+ *           to the documentation for more details.
+ * @return 1 is the hash definition is valid, 0 else.
+ */
 int Hash::is_valid (va_list ap)
 {
     int count = 0;
@@ -79,6 +99,13 @@ int Hash::is_valid (va_list ap)
     }
 }
 
+/**
+ * @author Geoffroy Vallee
+ *
+ * Display the content of the hash.
+ *
+ * @return 1 if an error occurs during the display of the hash, 0 else.
+ */
 int Hash::print () {
     cout << "(";
     for (unsigned int i=0; i < hash.size(); i++) {
@@ -92,6 +119,14 @@ int Hash::print () {
     return 0;
 }
 
+/**
+ * @author Geoffroy Vallee
+ *
+ * Add a element to an existing hash.
+ *
+ * @param key Key of the element to add to the hash.
+ * @param value Value of the element to add to the hash.
+ */
 int Hash::add (string key, string value) {
     hash_elt_t elt;
     elt.key = key;
@@ -100,6 +135,14 @@ int Hash::add (string key, string value) {
     return 0;
 }
 
+/**
+ * @author Geoffroy Vallee
+ *
+ * Returns the value of a specific element of a hash, based on the element key.
+ *
+ * @param key Key of the element for which we have to return the value.
+ * @return String representing the value of the element we are looking for.
+ */
 string Hash::value (string key) {
     unsigned int i = 0;
     while (i < hash.size()) {

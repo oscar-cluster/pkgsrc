@@ -1,3 +1,19 @@
+/*
+ *  Copyright (c) 2007 Oak Ridge National Laboratory, 
+ *                     Geoffroy Vallee <valleegr@ornl.gov>
+ *                     All rights reserved
+ *  This file is part of the xorm software, part of the OSCAR software.
+ *  For license information, see the COPYING file in the top level directory
+ *  of the OSCAR source.
+ */
+
+/**
+ * @file XOSCAR_MainWindow.h
+ * @brief Defines the class XOSCAR_MainWindow for the main xoscar widget
+ * @author Geoffroy Vallee
+ *
+ */
+
 #ifndef XOSCAR_MAINWINDOW_H
 #define XOSCAR_MAINWINDOW_H
 
@@ -30,6 +46,13 @@
 using namespace Ui; 
 using namespace std;
 // using namespace redi;
+
+/**
+ * @namespace xoscar
+ * @author Geoffroy Vallee.
+ * @brief The xoscar namespace gathers all classes needed for XOSCAR.
+ */
+namespace xoscar {
 
 class XOSCAR_MainWindow : public QMainWindow, public MainWindow
 {
@@ -79,13 +102,13 @@ private:
     CommandExecutionThread command_thread;
 };
 
-/**
+/*
  * @namespace xoscar
  * @author Geoffroy Vallee.
  * @brief The xoscar namespace gathers all classes needed for XOSCAR.
  */
-namespace xoscar {
-    class XOSCAR_MainWindow: public Ui_MainWindow {};
+/*namespace xoscar {
+    class XOSCAR_MainWindow: public Ui_MainWindow {};*/
 } // namespace xoscar
 
 /**

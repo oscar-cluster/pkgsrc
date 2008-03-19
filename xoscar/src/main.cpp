@@ -32,7 +32,7 @@
 #include "XOSCAR_MainWindow.h"
 
 using namespace std;
-//using namespace xorm;
+using namespace xoscar;
 
 int main(int argc, char *argv[])
 {

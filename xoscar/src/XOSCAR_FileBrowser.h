@@ -4,7 +4,7 @@
 
 /**
  * @file XOSCAR_FileBrowser.h
- * @brief Defines the class XOSCAR_FileBrowser that implements a widget for file selection.
+ * @brief Defines the class XOSCAR_FileBrowser, a widget for file selection.
  * @author Geoffroy Vallee
  *
  * The class provides a portable widget for file selection. For that it 
@@ -20,6 +20,13 @@
 #include <iostream>
 
 using namespace std;
+
+/**
+ * @namespace xoscar
+ * @author Geoffroy Vallee.
+ * @brief The xoscar namespace gathers all classes needed for XOSCAR.
+ */
+namespace xoscar {
 
 class XOSCAR_FileBrowser : public QDialog, public Ui_FileBrowserDialog
 {
@@ -43,13 +50,13 @@ private:
     QString basePath;
 };
 
-/**
+/*
  * @namespace xoscar
  * @author Geoffroy Vallee.
  * @brief The xoscar namespace gathers all classes needed for XOSCAR.
  */
-namespace xoscar {
-    class XOSCAR_FileBrowser: public Ui_FileBrowserDialog {};
+//namespace xoscar {
+//    class XOSCAR_FileBrowser: public Ui_FileBrowserDialog {};
 } // namespace xoscar
 
 #endif // XOSCAR_FILE_BROWSER_H

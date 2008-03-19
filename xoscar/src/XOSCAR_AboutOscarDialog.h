@@ -8,14 +8,10 @@
  */
 
 /**
- * @file ORM_WaitDialog.h
- * @brief Defines the class ORMWaitDialog that implements a widget that asks 
- *        users to wait during the execution of OPD2 commands.
+ * @file XOSCAR_AboutOscarDialog.h
+ * @brief Defines the class XOSCAR_AboutOscarDialog that implements a widget 
+ *        that displays information about OSCAR.
  * @author Geoffroy Vallee
- *
- * The file defines the widget for the dialog which asks for users to wait 
- * during the execution of a OPD2 command. For that it inherents from the 
- * class generated from the .ui file created with QtDesigner.
  */
 
 #ifndef XOSCAR_ABOUTOSCARSDIALOG_H
@@ -29,6 +25,8 @@
 
 using namespace std;
 
+namespace xoscar {
+
 class XOSCAR_AboutOscarDialog : public QDialog, public Ui_AboutOscarDialog
 {
 Q_OBJECT
@@ -39,8 +37,8 @@ public:
 
 };
 
-namespace xoscar {
-    class XOSCAR_AboutOscarDialog: public Ui_AboutOscarDialog {};
+//namespace xoscar {
+//    class XOSCAR_AboutOscarDialog: public Ui_AboutOscarDialog {};
 } // namespace xorm
 
 

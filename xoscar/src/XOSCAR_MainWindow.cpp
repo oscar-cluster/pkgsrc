@@ -9,14 +9,19 @@
 
 /**
  * @file XOSCAR_MainWindow.cpp
- * @brief Actual implementation of the ??? class.
+ * @brief Actual implementation of the XOSCAR_MainWindow class.
  * @author Geoffroy Vallee
  */
 
 #include "XOSCAR_MainWindow.h"
 
+// Only for testing
+#include "Hash.h"
+
+using namespace xoscar;
+
 /**
- * @author Geoffroy Vallee.
+ * @author Geoffroy Vallee
  *
  * Class constructor: initialize the widget, connect signals and slots, and also
  * get the list of default OSCAR repositories.
@@ -25,6 +30,15 @@ XOSCAR_MainWindow::XOSCAR_MainWindow(QMainWindow *parent)
     : QMainWindow(parent) 
 {
     setupUi(this);
+
+    // Just some testing...
+//     Hash my_hash = Hash ("key1", "value1", "key2", "value2", NULL);
+//     cout << "Hash: ";
+//     my_hash.print();
+//     my_hash.add ("key3", "value3");
+//     cout << "New hash: ";
+//     my_hash.print();
+//     cout << "Value of key3: " << my_hash.value ("key3") << endl;
 
     /* Connect slots and signals */
     connect(AddOSCARRepoButton, SIGNAL(clicked()),
