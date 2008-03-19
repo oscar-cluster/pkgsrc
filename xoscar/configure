@@ -17,11 +17,11 @@
 
 use Carp;
 
-my $qmake_path = `whereis qmake-qt4 | awk ' { print \$2 } '`;
+my $qmake_path = `which qmake-qt4 | awk ' { print \$1 } '`;
 chomp ($qmake_path);
 
 if ( $qmake_path eq "" ) {
-    $qmake_path = `whereis qmake | awk ' { print \$2 } '`;
+    $qmake_path = `which qmake | awk ' { print \$1 } '`;
     chomp ($qmake_path);
     if ( $qmake_path eq "" ) {
         my $cmd = "$qmake_path -v | grep \"Using Qt version\" | awk ' { print \$4 } '";
