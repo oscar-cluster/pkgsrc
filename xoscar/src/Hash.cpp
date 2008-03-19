@@ -13,9 +13,6 @@
  */
 
 #include <iostream>
-#include <stdarg.h>
-#include <cstdlib>
-#include <vector>
 
 #include "Hash.h"
 
@@ -60,6 +57,15 @@ Hash::Hash ()
 
 Hash::~Hash ()
 {
+}
+
+unsigned int Hash::size ()
+{
+    return (hash.size());
+}
+
+hash_elt_t Hash::at (unsigned int pos) {
+    return hash.at (pos);
 }
 
 /**

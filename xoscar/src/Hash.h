@@ -18,6 +18,10 @@
 #ifndef HASH_H
 #define HASH_H
 
+#include <stdarg.h>
+#include <cstdlib>
+#include <vector>
+
 using namespace std;
 
 /**
@@ -68,6 +72,8 @@ public:
     int print ();
     int add (string key, string value);
     string value (string key);
+    unsigned int size ();
+    hash_elt_t at (unsigned int);
 
 private:
     vector<hash_elt> hash;
