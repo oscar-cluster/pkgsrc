@@ -435,11 +435,31 @@ sub cleanup {
     }
 }
 
+sub is_ha_running {
+    if (-x "/etc/init.d/heartbeat") {
+	return !system("/etc/init.d/heartbeat status 2>&1 >/dev/null");
+    }
+    return 0;
+}
+
+sub is_failover_mounted {
+    if (-x "/usr/sbin/crm_resource") {
+	my $res = `/usr/sbin/crm_resource -W -r FailoverFS`;
+	my $host = `/bin/hostname -f`;
+	chomp $host;
+	chomp $res;
+	return ($res =~ m/on: $host$/);
+    }
+    return 0;
+	
+}
+
 #
 # We're on an OSCAR master node if $OSCAR_HOME/oscarsamples/ is there.
 #
 sub on_oscar_master {
-    return ($ENV{OSCAR_HOME} && -d $ENV{OSCAR_HOME}."/oscarsamples");
+    return ($ENV{OSCAR_HOME} && -d $ENV{OSCAR_HOME}."/oscarsamples" &&
+	    ((&is_ha_running && &is_failover_mounted) || !&is_ha_running));
 }
 
 sub get_default_repos {

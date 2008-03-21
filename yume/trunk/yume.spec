@@ -1,9 +1,9 @@
 # $Id$
 Summary: Wrapper to yum for clusters
 Name: yume
-Version: 2.7
+Version: 2.8
 Vendor: NEC HPCE
-Release: 2
+Release: 1
 License: GPL
 Packager: Erich Focht <efocht@hpce.nec.com>
 Source: %{name}.tar.gz
@@ -63,6 +63,8 @@ rm -rf $RPM_BUILD_ROOT
 %{_mandir}/man8/yume*
 
 %changelog
+* Mon Mar 17 2008 Erich Focht -> 2.8-1
+- added master recognition for failover case (heartbeat version).
 * Thu Nov 1 2007 Geoffroy Vallee 2.7-2
 - fix a bad handling of the return code.
 * Sun Oct 28 2007 Erich Focht 2.7-1

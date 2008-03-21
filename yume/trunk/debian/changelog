@@ -1,3 +1,9 @@
+yume (2.8-1) gutsy; urgency=low
+
+  * Improved recognition of master node for nodes running heartbeat.
+
+ -- Erich Focht <efocht@hpce.nec.com>  Mon, 17 Mar 2008 22:16:42 +0100
+
 yume (2.7-2) gutsy; urgency=low
 
   * Fix a bug in the return code handling.
