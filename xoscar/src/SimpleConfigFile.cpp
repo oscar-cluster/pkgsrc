@@ -16,6 +16,8 @@
 #include <fstream>
 #include <QFile>
 #include <QTextStream>
+#include <QString>
+#include <QStringList>
 
 #include "SimpleConfigFile.h"
 
@@ -78,9 +80,9 @@ int SimpleConfigFile::load ()
     string line;
     while ( !configFile.eof() ) {
         getline (configFile, line);
-        cout << line << endl;
-        if ( !is_a_comment (line) ) {
+        if ( line.size() > 0 && !is_a_comment (line) ) {
             // the line is not a comment, we can analyse it
+            cout << "We found a line" << endl;
             analyze_line (line);
         }
     }
@@ -93,19 +95,24 @@ int SimpleConfigFile::is_a_comment (string line)
     unsigned int pos = 0;
     string character = " ";
     // We skip the spaces at the beginning of the line
-    while (character.compare(" ") == 0) {
+    while (pos < line.size() && character.compare(" ") == 0) {
         character = line.at(pos);
-        if (pos >= line.size()) {
-            return 1;
-        }
         pos++;
     }
+    // Test if we are at the end of the line (empty lines). For us here, an 
+    // empty line is like a comment
+    if (pos >= line.size()) {
+        return 1;
+    }
+
     character = line.at(pos);
     if (character.compare ("#")) {
         return 1;
     } else {
         return 0;
     }
+
+    return 0;
 }
 
 /**
@@ -114,7 +121,13 @@ int SimpleConfigFile::is_a_comment (string line)
  */
 int SimpleConfigFile::analyze_line (string line)
 {
-    int pos = line.find (" = ");
+    QString str = line.c_str();
+    QStringList list = str.split(" = ");
+    cout << "From config file:" << endl;
+    cout << "\tkey: " << list.at(0).toStdString() << endl;
+    cout << "\tvalue: " << list.at(1).toStdString() << endl;
+
+/*    int pos = line.find (" = ");
     if (pos == -1) {
         // this is not a configuration option
         return 1;
@@ -127,7 +140,7 @@ int SimpleConfigFile::analyze_line (string line)
          << key
          << ", "
          << value
-         << endl;
+         << endl;*/
     return 0;
 }
 
