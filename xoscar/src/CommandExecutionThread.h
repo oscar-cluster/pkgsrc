@@ -16,7 +16,7 @@
  * display widgets and as a runtime for the GUI. Therefore is the "main
  * thread" is used to do important tasks, the GUI becomes very difficult
  * to use for users (slow refresh for instance).
- * To avoid this issue, we create a separate thread to execute OPD2 commands.
+ * To avoid this issue, we create a separate thread to execute OSCAR commands.
  * Note that the current implementation is not perfect, there is not real
  * protection against concurency, we currently assume that only one action
  * can be made at a time with the GUI.
@@ -37,19 +37,26 @@
 #include <QThread>
 #include <QWaitCondition>
 
-//#include "ORM_WaitDialog.h"
-//#include "ui_ORM.h"
 #include "pstream.h"
 
 using namespace std;
 using namespace redi;
 
-#define INACTIVE 0
-#define GET_LIST_REPO 1
-#define GET_LIST_OPKGS 2
-#define GET_SETUP_DISTROS 3
-#define DO_SYSTEM_SANITY_CHECK 4
-#define DO_OSCAR_SANITY_CHECK 5
+#define INACTIVE                0
+#define GET_LIST_REPO           1
+#define GET_LIST_OPKGS          2
+#define GET_SETUP_DISTROS       3
+#define DO_SYSTEM_SANITY_CHECK  4
+#define DO_OSCAR_SANITY_CHECK   5
+#define GET_LIST_DEFAULT_REPOS  6
+#define DISPLAY_PARTITIONS      7
+
+/**
+ * @namespace xoscar
+ * @author Geoffroy Vallee
+ * @brief The xoscar namespace gathers all classes needed for XOSCAR.
+ */
+namespace xoscar {
 
 class CommandExecutionThread : public QThread 
 {
@@ -65,16 +72,23 @@ signals:
     virtual void opd_done (QString, QString);
     virtual void oscar_config_done (QString);
     virtual void sanity_command_done (QString);
+    /** This signal is a generic signal emitted when the thread ends.
+      * @param command_id Unique identifier of the executed command.
+      * @param result Result of the executed command.
+      */
+    virtual void thread_terminated (int command_id, QString result);
 
 protected:
 
 private:
     QString repo_url;
-    int mode;
+    int command_id;
 };
 
 namespace xorm {
     class XORM_CommandExecutionThread: public CommandExecutionThread {};
 } // namespace xorm
+
+} // namespace xoscar
 
 #endif // COMMANDEXECUTIONTHREAD_H

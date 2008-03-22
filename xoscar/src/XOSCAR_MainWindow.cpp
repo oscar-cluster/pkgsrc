@@ -22,8 +22,12 @@ using namespace xoscar;
 /**
  * @author Geoffroy Vallee
  *
- * Class constructor: initialize the widget, connect signals and slots, and also
- * get the list of default OSCAR repositories.
+ * Class constructor: 
+ * - initializes the widget,
+ * - connects signals and slots,
+ * - read the configuration file (~/.xoscar.conf); the file is created with
+ *   default values if it does not already exist,
+ * - gets the list of default OSCAR repositories.
  */
 XOSCAR_MainWindow::XOSCAR_MainWindow(QMainWindow *parent)
     : QMainWindow(parent) 
@@ -84,17 +88,6 @@ XOSCAR_MainWindow::XOSCAR_MainWindow(QMainWindow *parent)
     connect(networkConfigurationTabWidget, SIGNAL(currentChanged (int)),
                     this, SLOT(tab_activated(int)));
 
-    /* Add the default OSCAR repositories */
-    char *ohome = getenv ("OSCAR_HOME");
-    const string cmd = (string) ohome + "/scripts/opd2  --non-interactive --list-default-repos";
-    pstream proc (cmd);
-    string buf;
-    while (proc >> buf) {
-        QString str = buf.c_str();
-        listReposWidget->addItem (str);
-    }
-    listReposWidget->update();
-
     connect(&command_thread, SIGNAL(opd_done(QString, QString)),
         this, SLOT(kill_popup(QString, QString)));
 
@@ -104,17 +97,27 @@ XOSCAR_MainWindow::XOSCAR_MainWindow(QMainWindow *parent)
     connect(&command_thread, SIGNAL(sanity_command_done(QString)),
         this, SLOT(update_check_text_widget(QString)));
 
+    connect(&command_thread, SIGNAL(thread_terminated(int, QString)),
+        this, SLOT(handle_thread_result (int, QString)));
+
     connect (this->listOscarOptionsWidget, 
              SIGNAL(itemSelectionChanged()),
-             this, 
+             this,
              SLOT(newOscarOptionSelected()));
 
     connect (&add_distro_widget, SIGNAL (refreshListDistros()),
             this, SLOT(refresh_list_setup_distros()));
 
+    /* Get the list of Linux distributions that are already setup. */
+    cout << "Get the setup distros" << endl;
     command_thread.init ("", GET_SETUP_DISTROS);
     command_thread.run();
 
+
+    /* Add the default OSCAR repositories */
+    cout << "Get list of of default repos" << endl;
+    command_thread.init("", GET_LIST_DEFAULT_REPOS);
+    command_thread.run();
 }
 
 XOSCAR_MainWindow::~XOSCAR_MainWindow() 
@@ -288,6 +291,12 @@ void XOSCAR_MainWindow::display_opkgs_from_repo()
     command_thread.init(repo, GET_LIST_OPKGS);
 }
 
+/**
+ * @author Geoffroy Vallee
+ *
+ * Slot for the signal emitted when clicking on the buttun that refreshes the
+ * list of OPKGs available from a given repository.
+ */
 void XOSCAR_MainWindow::refresh_display_opkgs_from_repo()
 {
     listOPKGsWidget->clear();
@@ -313,6 +322,17 @@ void XOSCAR_MainWindow::add_repo_to_list()
     command_thread.init(repo_url, GET_LIST_OPKGS);
 }
 
+/**
+ * @author Geoffroy Vallee
+ *
+ * Display the list of setup distros. For that we get the list via a string, 
+ * each distribution identifier being separated by a space. Therefore, we parse
+ * the string and update the widget that shows the setup distros.
+ *
+ * @param list_distros String that represents the list of setup Linux 
+ *                     distributions. Each distribution identifier is separated
+ *                     by a space.
+ */
 void XOSCAR_MainWindow::handle_oscar_config_result(QString list_distros)
 {
     cout << list_distros.toStdString () << endl;
@@ -408,18 +428,8 @@ void XOSCAR_MainWindow::refresh_list_partitions ()
         return;
     }
 
-    char *ohome = getenv ("OSCAR_HOME");
-    const string cmd = (string) ohome 
-                      + "/scripts/oscar --display-partitions";
-
-    listClusterPartitionsWidget->clear();
-    ipstream proc(cmd);
-    string buf, tmp_list;
-    while (proc >> buf) {
-        QString partition_name = buf.c_str();
-        listClusterPartitionsWidget->addItem (partition_name);
-    }
-    listClusterPartitionsWidget->update();
+    command_thread.init("", DISPLAY_PARTITIONS);
+    command_thread.run();
 }
 
 /**
@@ -441,6 +451,8 @@ void XOSCAR_MainWindow::refresh_partition_info ()
     partitonNameEditWidget->setText(current_partition);
 
     /* We display the number of nodes composing the partition */
+        /** @TODO this should be executed in a thread in order to ease the first
+       implementation of a remote manegement mechanism. */
     char *ohome = getenv ("OSCAR_HOME");
     const string cmd = (string) ohome 
                         + "/scripts/oscar --display-partition-nodes "
@@ -463,6 +475,8 @@ void XOSCAR_MainWindow::refresh_partition_info ()
     PartitionNumberNodesSpinBox->setValue(n);
 
     /* We get the list of supported distros */
+    /** @TODO this should be executed in a thread in order to ease the first
+       implementation of a remote manegement mechanism. */
     const string cmd2 = (string) ohome 
         + "/scripts/oscar-config --list-setup-distros";
     ipstream proc2(cmd2);
@@ -482,6 +496,8 @@ void XOSCAR_MainWindow::refresh_partition_info ()
     }
 
     /* We get the Linux distribution on which the partition is based */
+    /** @TODO this should be executed in a thread in order to ease the first
+       implementation of a remote manegement mechanism. */
     const string cmd3 = (string) ohome 
             + "/scripts/oscar --display-partition-distro "
             + current_partition.toStdString();
@@ -608,6 +624,8 @@ void XOSCAR_MainWindow::network_configuration_tab_activated()
     oscarNodesTreeWidget->clear();
 
     // First we get the list of node names
+    /** @TODO this should be executed in a thread in order to ease the first
+       implementation of a remote manegement mechanism. */
     char *ohome = getenv ("OSCAR_HOME");
     const string cmd = (string) ohome 
                         + "/scripts/oscar --display-partition-nodes "
@@ -620,6 +638,8 @@ void XOSCAR_MainWindow::network_configuration_tab_activated()
         QTreeWidgetItem *item = new QTreeWidgetItem(oscarNodesTreeWidget);
 
         // Then we display node information if available
+    /** @TODO this should be executed in a thread in order to ease the first
+       implementation of a remote manegement mechanism. */
         const string cmd2 = (string) ohome 
                             + "/scripts/oscar --display-node-info "
                             + buf
@@ -723,4 +743,29 @@ void XOSCAR_MainWindow::import_macs_from_file ()
             cout << "Line: " << line.toStdString() << endl;
         }
     }
+}
+
+int XOSCAR_MainWindow::handle_thread_result (int command_id, QString result)
+{
+    QStringList list;
+    if (command_id == GET_LIST_DEFAULT_REPOS) {
+        // We parse the result: one URL per line.
+        list = result.split("\n");
+        for (int i = 0; i < list.size(); ++i){
+            listReposWidget->addItem (list.at(i));
+        }
+        listReposWidget->update();
+    } else if (command_id == DISPLAY_PARTITIONS) {
+        // We parse the result: one partition name per line.
+        list = result.split("\n");
+        listClusterPartitionsWidget->clear();
+        for (int i = 0; i < list.size(); ++i){
+            listClusterPartitionsWidget->addItem (list.at(i));
+        }
+        listClusterPartitionsWidget->update();
+    } else {
+        cerr << "ERROR: Unsupported command id: " << command_id << endl;
+        return -1;
+    }
+    return 0;
 }
