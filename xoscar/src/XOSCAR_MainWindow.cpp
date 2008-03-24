@@ -218,6 +218,7 @@ void XOSCAR_MainWindow::kill_popup(QString list_repos, QString list_opkgs)
  * @param str String to slip up.
  * @param tokens Vector of string used to store the slit string.
  * @param delimiters Character used to split the string up. By default a space.
+ *
  * @todo Avoid the code duplication with the ORMAddRepoDialog class.
  */
 void XOSCAR_MainWindow::Tokenize(const string& str,
@@ -558,7 +559,6 @@ void XOSCAR_MainWindow::tab_activated(int tab_num)
  * partition and populate the list of nodes based on that. If no cluster and no
  * partition is selected in the "General Information" tab, we do nothing.
  *
- * @param tab_num Index of the activated tab.
  * @todo OSCAR cmds should be executed in a thread in order to ease the first
  * implementation of a remote manegement mechanism. For that, we have to
  * have an option to the OSCAR script in order to get the detailed info
