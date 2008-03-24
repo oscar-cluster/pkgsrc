@@ -1,0 +1,29 @@
+Supported platforms
+===================
+
+xoscar is designed to work on any platform supporting Qt-3.2.
+xoscar has been tested on the following systems:
+    - Debian Lenny
+    - Ubuntu 7.10
+    - Centos 5
+    - MacOS X
+
+Installation
+============
+
+From the sources directory, execute the following commands (tested on Linux and
+MacOS):
+    ./configure && make
+To install xoscar directly on your system, execute the following command:
+    make install
+
+Generation of the doxygen documentation
+=======================================
+
+To generate the doxygen documentation, simply execute the following commands
+from the source code top-level directory:
+    cd src
+    doxygen ./doxygen_config
+The documentation is generated in the 'doc' directory in the source code 
+top-level directory. For instance, the HTML documentation is in 
+'doc/html/index.html'.
