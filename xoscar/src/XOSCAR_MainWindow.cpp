@@ -176,6 +176,7 @@ void XOSCAR_MainWindow::newOscarOptionSelected()
  * @param list_opkgs List of OSCAR packages available via a specific OSCAR 
  *                   repository; result of the OPD2 command. The list is empty 
  *                   is users request something else than the OPKGs list.
+ * @todo This function can be simplified using the split function from Qt
  */
 void XOSCAR_MainWindow::kill_popup(QString list_repos, QString list_opkgs)
 {
@@ -220,6 +221,8 @@ void XOSCAR_MainWindow::kill_popup(QString list_repos, QString list_opkgs)
  * @param delimiters Character used to split the string up. By default a space.
  *
  * @todo Avoid the code duplication with the ORMAddRepoDialog class.
+ * @todo The code is kind of complex for what it does: Qt provides a split
+ * function that can be used to do the same thing in few lines of code.
  */
 void XOSCAR_MainWindow::Tokenize(const string& str,
                       vector<string>& tokens,
