@@ -110,14 +110,14 @@ XOSCAR_MainWindow::XOSCAR_MainWindow(QMainWindow *parent)
 
     /* Get the list of Linux distributions that are already setup. */
     cout << "Get the setup distros" << endl;
-    command_thread.init ("", GET_SETUP_DISTROS);
-    command_thread.run();
+    command_thread.init (GET_SETUP_DISTROS, QStringList(""));
+    command_thread.run ();
 
 
     /* Add the default OSCAR repositories */
     cout << "Get list of of default repos" << endl;
-    command_thread.init("", GET_LIST_DEFAULT_REPOS);
-    command_thread.run();
+    command_thread.init (GET_LIST_DEFAULT_REPOS, QStringList(""));
+    command_thread.run ();
 }
 
 XOSCAR_MainWindow::~XOSCAR_MainWindow() 
@@ -288,7 +288,7 @@ void XOSCAR_MainWindow::display_opkgs_from_repo()
     wait_popup->show();
     update();
 
-    command_thread.init(repo, GET_LIST_OPKGS);
+    command_thread.init(GET_LIST_OPKGS, QStringList(repo));
 }
 
 /**
@@ -318,8 +318,8 @@ void XOSCAR_MainWindow::add_repo_to_list()
     wait_popup->show();
     update();
 
-    command_thread.init(repo_url, GET_LIST_REPO);
-    command_thread.init(repo_url, GET_LIST_OPKGS);
+    command_thread.init(GET_LIST_REPO, QStringList(repo_url));
+    command_thread.init(GET_LIST_OPKGS, QStringList(repo_url));
 }
 
 /**
@@ -346,30 +346,31 @@ void XOSCAR_MainWindow::handle_oscar_config_result(QString list_distros)
         for(item = distros.begin(); item != distros.end(); item++) {
             string strD = *(item);
             this->listSetupDistrosWidget->addItem (strD.c_str());
+            partitionDistroComboBox->addItem (strD.c_str());
         }
         listSetupDistrosWidget->update();
     }
-    command_thread.init("", INACTIVE);
+    command_thread.init(INACTIVE, QStringList(""));
 }
 
 void XOSCAR_MainWindow::refresh_list_setup_distros()
 {
     listSetupDistrosWidget->clear();
-    command_thread.init ("", GET_SETUP_DISTROS);
+    command_thread.init (GET_SETUP_DISTROS, QStringList(""));
     command_thread.run();
 }
 
 void XOSCAR_MainWindow::do_system_sanity_check()
 {
     sanityCheckTextWidget->clear();
-    command_thread.init ("", DO_SYSTEM_SANITY_CHECK);
+    command_thread.init (DO_SYSTEM_SANITY_CHECK, QStringList(""));
     command_thread.run();
 }
 
 void XOSCAR_MainWindow::do_oscar_sanity_check()
 {
     sanityCheckTextWidget->clear();
-    command_thread.init ("", DO_OSCAR_SANITY_CHECK);
+    command_thread.init (DO_OSCAR_SANITY_CHECK, QStringList(""));
     command_thread.run();
 }
 
@@ -428,7 +429,7 @@ void XOSCAR_MainWindow::refresh_list_partitions ()
         return;
     }
 
-    command_thread.init("", DISPLAY_PARTITIONS);
+    command_thread.init(DISPLAY_PARTITIONS, QStringList(""));
     command_thread.run();
 }
 
@@ -451,64 +452,17 @@ void XOSCAR_MainWindow::refresh_partition_info ()
     partitonNameEditWidget->setText(current_partition);
 
     /* We display the number of nodes composing the partition */
-        /** @TODO this should be executed in a thread in order to ease the first
-       implementation of a remote manegement mechanism. */
-    char *ohome = getenv ("OSCAR_HOME");
-    const string cmd = (string) ohome 
-                        + "/scripts/oscar --display-partition-nodes "
-                        + current_partition.toStdString();
-    pstream command(cmd, pstreambuf::pstdout);
-    std::string s, tmp;
-    while (std::getline(command, tmp)) {
-        s += tmp;
-    }
-    int n = 0;
-    if (s.compare ("") != 0) {
-        vector<string> nodes;
-        Tokenize(s, nodes, " ");
-        vector<string>::iterator v_item;
-        for(v_item = nodes.begin(); v_item != nodes.end(); v_item++) {
-            n++;
-        }
-    }
-    PartitionNumberNodesSpinBox->setMinimum(n);
-    PartitionNumberNodesSpinBox->setValue(n);
+    command_thread.init(DISPLAY_PARTITION_NODES, 
+                        QStringList(current_partition));
+    command_thread.run();
 
     /* We get the list of supported distros */
-    /** @TODO this should be executed in a thread in order to ease the first
-       implementation of a remote manegement mechanism. */
-    const string cmd2 = (string) ohome 
-        + "/scripts/oscar-config --list-setup-distros";
-    ipstream proc2(cmd2);
-    string buf, tmp_list;
-    while (proc2 >> buf) {
-        tmp_list += buf;
-        tmp_list += " ";
-    }
-    if (tmp_list.compare ("") != 0) {
-        vector<string> distros;
-        Tokenize(tmp_list, distros, " ");
-        vector<string>::iterator v_item;
-        for(v_item = distros.begin(); v_item != distros.end(); v_item++) {
-            string strD = *(v_item);
-            partitionDistroComboBox->addItem (strD.c_str());
-        }
-    }
+    command_thread.init(GET_SETUP_DISTROS, QStringList(""));
+    command_thread.run();
 
     /* We get the Linux distribution on which the partition is based */
-    /** @TODO this should be executed in a thread in order to ease the first
-       implementation of a remote manegement mechanism. */
-    const string cmd3 = (string) ohome 
-            + "/scripts/oscar --display-partition-distro "
-            + current_partition.toStdString();
-    pstream command3(cmd3, pstreambuf::pstdout);
-    std::string s2;
-    while (std::getline(command3, tmp)) {
-        s2 += tmp;
-    }
-    QString distro_name = s2.c_str();
-    int index = partitionDistroComboBox->findText(distro_name);
-    partitionDistroComboBox->setCurrentIndex(index);
+    command_thread.init(DISPLAY_PARTITION_DISTRO, QStringList(""));
+    command_thread.run();
 }
 
 /**
@@ -546,20 +500,17 @@ void XOSCAR_MainWindow::save_cluster_info_handler()
         || partition_distro.compare("") == 0) {
         cerr << "ERROR: invalid partition information" << endl;
     } else {
-        char *ohome = getenv ("OSCAR_HOME");
-        string cmd = (string) ohome 
-                        + "/scripts/oscar"
-                        + " --add-partition " + partition_name.toStdString()
-                        + " --cluster oscar"
-                        + " --distro " + partition_distro.toStdString();
+        QStringList args;
+        args << partition_name << partition_distro;
+
         /* We had now the compute nodes, giving them a default name */
+        string tmp;
         for (int i=0; i < nb_nodes; i++) {
-            cmd += " --client ";
-            cmd += partition_name.toStdString() + "_node" + intToStdString(i);
+            tmp = partition_name.toStdString() + "_node" + intToStdString(i);
+            args << tmp.c_str();
         }
-        if (system (cmd.c_str())) {
-            cerr << "ERROR executing: " << cmd << endl;
-        }
+        command_thread.init (ADD_PARTITION, args);
+        command_thread.run ();
     }
     /* We unset the selection of the partition is order to be able to update
        the widget. If we do not do that, a NULL pointer is used and the app
@@ -608,6 +559,12 @@ void XOSCAR_MainWindow::tab_activated(int tab_num)
  * partition is selected in the "General Information" tab, we do nothing.
  *
  * @param tab_num Index of the activated tab.
+ * @todo OSCAR cmds should be executed in a thread in order to ease the first
+ * implementation of a remote manegement mechanism. For that, we have to
+ * have an option to the OSCAR script in order to get the detailed info
+ * about node of a given partition.
+ * For instance, it can be: "oscar--display-partition-nodes partition1 -v"
+ * The "-v" options makes that we get all detailed info for all the nodes.
  */
 void XOSCAR_MainWindow::network_configuration_tab_activated() 
 {
@@ -624,8 +581,6 @@ void XOSCAR_MainWindow::network_configuration_tab_activated()
     oscarNodesTreeWidget->clear();
 
     // First we get the list of node names
-    /** @TODO this should be executed in a thread in order to ease the first
-       implementation of a remote manegement mechanism. */
     char *ohome = getenv ("OSCAR_HOME");
     const string cmd = (string) ohome 
                         + "/scripts/oscar --display-partition-nodes "
@@ -638,7 +593,7 @@ void XOSCAR_MainWindow::network_configuration_tab_activated()
         QTreeWidgetItem *item = new QTreeWidgetItem(oscarNodesTreeWidget);
 
         // Then we display node information if available
-    /** @TODO this should be executed in a thread in order to ease the first
+        /** @TODO this should be executed in a thread in order to ease the first
        implementation of a remote manegement mechanism. */
         const string cmd2 = (string) ohome 
                             + "/scripts/oscar --display-node-info "
@@ -763,6 +718,14 @@ int XOSCAR_MainWindow::handle_thread_result (int command_id, QString result)
             listClusterPartitionsWidget->addItem (list.at(i));
         }
         listClusterPartitionsWidget->update();
+    } else if (command_id == DISPLAY_PARTITION_NODES) {
+        list = result.split(" ");
+        PartitionNumberNodesSpinBox->setMinimum(list.size());
+        PartitionNumberNodesSpinBox->setValue(list.size());
+    } else if (command_id == DISPLAY_PARTITION_DISTRO) {
+        cerr << "ERROR: Not yet implemented" << endl;
+/*        int index = partitionDistroComboBox->findText(distro_name);
+        partitionDistroComboBox->setCurrentIndex(index);*/
     } else {
         cerr << "ERROR: Unsupported command id: " << command_id << endl;
         return -1;
