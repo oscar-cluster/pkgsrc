@@ -1,7 +1,7 @@
 Supported platforms
 ===================
 
-xoscar is designed to work on any platform supporting Qt-3.2.
+xoscar is designed to work on any platform supporting Qt-4.2.
 xoscar has been tested on the following systems:
     - Debian Lenny
     - Ubuntu 7.10
