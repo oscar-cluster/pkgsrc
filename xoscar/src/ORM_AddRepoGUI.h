@@ -2,7 +2,7 @@
  *  Copyright (c) 2007 Oak Ridge National Laboratory, 
  *                     Geoffroy Vallee <valleegr@ornl.gov>
  *                     All rights reserved
- *  This file is part of the xorm software, part of the OSCAR software.
+ *  This file is part of the xoscar software, part of the OSCAR software.
  *  For license information, see the COPYING file in the top level directory
  *  of the OSCAR source.
  */
@@ -31,10 +31,17 @@
 #include <unistd.h>
 
 #include "ui_AddRepoWidget.h"
-#include "pstream.h"
+#include "CommandExecutionThread.h"
 
 using namespace std;
 using namespace redi;
+
+/**
+ * @namespace xoscar
+ * @author Geoffroy Vallee
+ * @brief The xoscar namespace gathers all classes needed for XOSCAR.
+ */
+namespace xoscar {
 
 class ORMAddRepoDialog : public QDialog, public Ui_AddRepoDialog
 {
@@ -44,14 +51,14 @@ public:
     ORMAddRepoDialog(QDialog *parent = 0);
     ~ORMAddRepoDialog();
 
+public slots:
+     int handle_thread_result (int, QString);
+
 private:
-    void Tokenize(const string& str,
-        vector<string>& tokens,
-        const string& delimiters);
+    CommandExecutionThread command_thread;
 };
 
-namespace xorm {
     class XORM_AddRepoDialog: public ORMAddRepoDialog {};
-} // namespace xorm
+} // namespace xoscar
 
 #endif // ORM_ADDREPOGUI_H

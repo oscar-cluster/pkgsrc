@@ -25,9 +25,5 @@
   commandBuilder class which knows how to prepare the command for the target
   management mode (local -> direct execution of the command; remote -> add
   the ssh stuff).
-    - Create a new options for the 'oscar' script that gives detailed info of 
-      all the nodes of a given partition.
-    - Execute all the command in a separate thread (need first the previous
-      point).
-    - Create a commandBuilder class that check the management mode (local vs.
-      remote) and creates the appropriate command.
+    - Write a documentation, especially in order to explain the syntax of the
+      config file.

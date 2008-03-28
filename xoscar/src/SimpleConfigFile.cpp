@@ -2,7 +2,7 @@
  *  Copyright (c) 2008 Oak Ridge National Laboratory, 
  *                     Geoffroy Vallee <valleegr@ornl.gov>
  *                     All rights reserved
- *  This file is part of the KVMs software.  For license information,
+ *  This file is part of the xoscar software.  For license information,
  *  see the COPYING file in the top level directory of the source
  */
 
@@ -28,21 +28,24 @@ SimpleConfigFile::SimpleConfigFile (string config_file_path)
     init_default_config ();
     QFile file (config_file_path.c_str());
     configFilePath = config_file_path;
-    if (file.exists () == true) {
-        // If the config file does exist, we load the content of the file.
-        load ();
-    } else {
+    if (file.exists () == false) {
         cout << "The config file does not exist, we create one: "
              << config_file_path
              << endl;
         // If the config file does not exist, we create it based on default
         save_default_config ();
     }
+    load();
+    cout << "INFO: Config file parsed" << endl;
 }
 
 void SimpleConfigFile::init_default_config ()
 {
-    default_config = Hash ("management_mode", "local", NULL);
+    default_config = Hash ("management_mode", "local",
+                           "command_prefix", "sudo",
+                           "username", "user",
+                           "oscar_server_ip", "192.168.0.1",
+                           NULL);
 }
 
 SimpleConfigFile::~SimpleConfigFile ()
@@ -84,6 +87,8 @@ int SimpleConfigFile::load ()
             // the line is not a comment, we can analyse it
             cout << "We found a line" << endl;
             analyze_line (line);
+        } else {
+            cout << "We found a comment: " << line << endl;
         }
     }
     configFile.close();
@@ -106,7 +111,7 @@ int SimpleConfigFile::is_a_comment (string line)
     }
 
     character = line.at(pos);
-    if (character.compare ("#")) {
+    if (character.compare ("#") == 0) {
         return 1;
     } else {
         return 0;
@@ -127,20 +132,7 @@ int SimpleConfigFile::analyze_line (string line)
     cout << "\tkey: " << list.at(0).toStdString() << endl;
     cout << "\tvalue: " << list.at(1).toStdString() << endl;
 
-/*    int pos = line.find (" = ");
-    if (pos == -1) {
-        // this is not a configuration option
-        return 1;
-    }
-    string key, value;
-    key = line.substr (0, pos);
-    value = line.substr (pos+3, line.size() - (pos+3));
-    config.add (key, value);
-    cout << "A configuration option has been found: "
-         << key
-         << ", "
-         << value
-         << endl;*/
+    config.add (list.at(0).toStdString(), list.at(1).toStdString());
     return 0;
 }
 

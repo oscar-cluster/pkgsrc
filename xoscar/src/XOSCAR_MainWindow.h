@@ -2,7 +2,7 @@
  *  Copyright (c) 2007-2008 Oak Ridge National Laboratory, 
  *                          Geoffroy Vallee <valleegr@ornl.gov>
  *                          All rights reserved
- *  This file is part of the xorm software, part of the OSCAR software.
+ *  This file is part of the xoscar software, part of the OSCAR software.
  *  For license information, see the COPYING file in the top level directory
  *  of the OSCAR source.
  */
@@ -45,7 +45,6 @@
 
 using namespace Ui; 
 using namespace std;
-// using namespace redi;
 
 /**
  * @namespace xoscar
@@ -97,11 +96,9 @@ public slots:
     void update_check_text_widget(QString);
 
 private:
-    void Tokenize(const string& str,
-        vector<string>& tokens,
-        const string& delimiters);
     string intToStdString (int i);
     void network_configuration_tab_activated();
+    int stringToNodesConfig (QString);
 
     XOSCAR_AboutAuthorsDialog about_authors_widget;
     XOSCAR_AboutOscarDialog about_oscar_widget;

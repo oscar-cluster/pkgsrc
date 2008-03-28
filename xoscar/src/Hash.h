@@ -62,6 +62,8 @@ typedef vector<hash_elt>::iterator hash_t;
  *   Hash my_hash = Hash ();
  *   my_hash.add ("key1", "value1");
  *   \endcode
+ *
+ * @todo We should switch to QHash (if possible, the code as to stay simple).
  */
 class Hash 
 {

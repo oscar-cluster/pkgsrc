@@ -26,7 +26,8 @@ SOURCES +=  src/main.cpp \
             src/XOSCAR_AboutOscarDialog.cpp \
             src/XOSCAR_FileBrowser.cpp \
             src/Hash.cpp \
-            src/SimpleConfigFile.cpp
+            src/SimpleConfigFile.cpp \
+            src/CommandBuilder.cpp
 
 HEADERS +=  src/XOSCAR_MainWindow.h \
             src/ORM_AddRepoGUI.h \
@@ -37,6 +38,7 @@ HEADERS +=  src/XOSCAR_MainWindow.h \
             src/XOSCAR_AboutOscarDialog.h \
             src/XOSCAR_FileBrowser.h \
             src/Hash.h \
-            src/SimpleConfigFile.h
+            src/SimpleConfigFile.h \
+            src/CommandBuilder.h
 
 RESOURCES += xoscar_resource.qrc

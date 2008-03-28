@@ -1,8 +1,8 @@
 /*
- *  Copyright (c) 2007 Oak Ridge National Laboratory, 
- *                     Geoffroy Vallee <valleegr@ornl.gov>
- *                     All rights reserved
- *  This file is part of the xorm software, part of the OSCAR software.
+ *  Copyright (c) 2007-2008 Oak Ridge National Laboratory, 
+ *                          Geoffroy Vallee <valleegr@ornl.gov>
+ *                          All rights reserved
+ *  This file is part of the xoscar software, part of the OSCAR software.
  *  For license information, see the COPYING file in the top level directory
  *  of the OSCAR source.
  */
@@ -49,8 +49,9 @@ void CommandExecutionThread::init (int cmd_id, QStringList args)
   *
   * Method to actually start the thread execution. Note that the value of the
   * command_id private variable tells us what we need to do.
-  * @todo we have some code duplication in that function, that should be 
-  * improved.
+  *
+  * @todo we should only use the thread_terminated signal, not the old 
+  *       individual signals (such as opd_done).
   */
 void CommandExecutionThread::run()
 {
@@ -62,60 +63,58 @@ void CommandExecutionThread::run()
         return;
     } else if (command_id == GET_LIST_REPO) {
         /* We refresh the list of available repositories */
-        const string cmd = (string) ohome 
-            + "/scripts/opd2  --non-interactive --list-repos";
+        const string cmd = build_cmd ((string) ohome 
+            + "/scripts/opd2  --non-interactive --list-repos");
         list_repos = get_output_word_by_word (cmd);
         emit (opd_done(list_repos, list_opkgs));
-        return;
     } else if (command_id == GET_LIST_OPKGS) {
         /* We update the list of available OPKGs, based on the new repo */
-        const string cmd = (string) ohome 
+        const string cmd = build_cmd ((string) ohome 
             + "/scripts/opd2  --non-interactive --repo " 
-            + command_args.at(0).toStdString ();
+            + command_args.at(0).toStdString ());
         list_opkgs = get_output_word_by_word (cmd);
         emit (opd_done(list_repos, list_opkgs));
-        return;
     } else if (command_id == GET_SETUP_DISTROS) {
         /* We update the list of available OPKGs, based on the new repo */
-        const string cmd = (string) ohome 
-            + "/scripts/oscar-config --list-setup-distros";
+        const string cmd = build_cmd ((string) ohome 
+            + "/scripts/oscar-config --list-setup-distros");
         result = get_output_word_by_word (cmd);
         emit (oscar_config_done(result));
-        return;
+        emit (thread_terminated(GET_SETUP_DISTROS, result));
     } else if (command_id == DO_SYSTEM_SANITY_CHECK) {
-        const string cmd = (string) ohome + "/scripts/system-sanity";
+        const string cmd = build_cmd ((string) ohome
+            + "/scripts/system-sanity");
         result = get_output_line_by_line (cmd);
         emit (sanity_command_done(result));
-        return;
     } else if (command_id == DO_OSCAR_SANITY_CHECK) {
-        const string cmd = (string) ohome + "/scripts/oscar_sanity_check";
+        const string cmd = build_cmd ((string) ohome 
+           + "/scripts/oscar_sanity_check");
         result = get_output_line_by_line (cmd);
         emit (sanity_command_done(result));
-        return;
     } else if (command_id == GET_LIST_DEFAULT_REPOS) {
-        const string cmd = (string) ohome 
-            + "/scripts/opd2 --non-interactive --list-default-repos";
+        const string cmd = build_cmd ((string) ohome 
+            + "/scripts/opd2 --non-interactive --list-default-repos");
         result = get_output_line_by_line (cmd);
+        cout << "Default repos: " << result.toStdString() << endl;
         emit (thread_terminated(GET_LIST_DEFAULT_REPOS, result));
     } else if (command_id == DISPLAY_PARTITIONS) {
-        const string cmd = (string) ohome 
-            + "/scripts/oscar --display-partitions";
+        const string cmd = build_cmd ((string) ohome 
+            + "/scripts/oscar --display-partitions");
         result = get_output_line_by_line (cmd);
         emit (thread_terminated(DISPLAY_PARTITIONS, result));
     } else if (command_id == DISPLAY_PARTITION_NODES) {
-        const string cmd = (string) ohome 
+        const string cmd = build_cmd ((string) ohome 
             + "/scripts/oscar --display-partition-nodes "
-            + command_args.at(0).toStdString();
+            + command_args.at(0).toStdString());
         result = get_output_line_by_line (cmd);
         emit (thread_terminated(DISPLAY_PARTITION_NODES, result));
     } else if (command_id == DISPLAY_PARTITION_DISTRO) {
-        const string cmd = (string) ohome 
+        const string cmd = build_cmd ((string) ohome 
             + "/scripts/oscar --display-partition-distro "
-            + command_args.at(0).toStdString();
+            + command_args.at(0).toStdString());
         result = get_output_line_by_line (cmd);
         emit (thread_terminated(DISPLAY_PARTITION_DISTRO, result));
     } else if (command_id == ADD_PARTITION) {
-        char *ohome = getenv ("OSCAR_HOME");
         string cmd = (string) ohome 
                         + "/scripts/oscar"
                         + " --add-partition " + command_args.at(0).toStdString()
@@ -125,14 +124,48 @@ void CommandExecutionThread::run()
             cmd += " --client ";
             cmd += command_args.at(i).toStdString();
         }
-    } else {
-        cerr << "ERROR: Unsupported command id: " << command_id << endl;
-        exit (-1);
+        result = get_output_line_by_line (build_cmd (cmd));
+    } else if (command_id == DISPLAY_DETAILS_PARTITION_NODES) {
+        const string cmd = build_cmd ((string) ohome 
+            + "/scripts/oscar --display-partition-nodes "
+            + command_args.at(0).toStdString()
+            + " -v");
+        result = get_output_line_by_line (cmd);
+        emit (thread_terminated(DISPLAY_DETAILS_PARTITION_NODES, result));
+    } else if (command_id == SETUP_DISTRO) {
+        const string cmd = build_cmd ((string) ohome 
+                + "/scripts/oscar-config --setup-distro "
+                + command_args.at(0).toStdString()
+                + " --use-distro-repo "
+                + command_args.at(1).toStdString()
+                + " --use-oscar-repo "
+                + command_args.at(2).toStdString());
+        result = get_output_line_by_line (cmd);
+        emit (thread_terminated(SETUP_DISTRO, result));
+    } else if (command_id == LIST_UNSETUP_DISTROS) {
+        const string cmd = build_cmd ((string) ohome
+                + "/scripts/oscar-config --list-unsetup-distros");
+        result = get_output_word_by_word (cmd);
+        emit (thread_terminated(LIST_UNSETUP_DISTROS, result));
+    } else if (command_id == DISPLAY_DEFAULT_OSCAR_REPO) {
+        const string cmd = build_cmd ((string) ohome 
+                + "/scripts/oscar-config --display-default-oscar-repo "
+                + command_args.at(0).toStdString());
+        result = get_output_word_by_word (cmd);
+        emit (thread_terminated(DISPLAY_DEFAULT_OSCAR_REPO, result));
+    } else if (command_id == DISPLAY_DEFAULT_DISTRO_REPO) {
+        const string cmd = build_cmd ((string) ohome
+                + "/scripts/oscar-config --display-default-distro-repo "
+                + command_args.at(0).toStdString());
+        result = get_output_word_by_word (cmd);
+        emit (thread_terminated(DISPLAY_DEFAULT_DISTRO_REPO, result));
     }
+    // We ignore other command IDs
 }
 
 QString CommandExecutionThread::get_output_line_by_line (string cmd)
 {
+    cout << "Executing: " << cmd << endl;
     pstream proc (cmd, pstreambuf::pstdout);
     string s, buf;
     while (std::getline(proc, s)) {
@@ -150,6 +183,7 @@ QString CommandExecutionThread::get_output_line_by_line (string cmd)
  */
 QString CommandExecutionThread::get_output_word_by_word (string cmd)
 {
+    cout << "Executing: " << cmd << endl;
     ipstream proc(cmd);
     string buf, tmp_list;
     while (proc >> buf) {

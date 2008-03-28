@@ -2,7 +2,7 @@
  *  Copyright (c) 2007 Oak Ridge National Laboratory, 
  *                     Geoffroy Vallee <valleegr@ornl.gov>
  *                     All rights reserved
- *  This file is part of the xorm software, part of the OSCAR software.
+ *  This file is part of the xoscar software, part of the OSCAR software.
  *  For license information, see the COPYING file in the top level directory
  *  of the OSCAR source.
  */
@@ -14,6 +14,8 @@
  */
 
 #include "ORM_AddRepoGUI.h"
+
+using namespace xoscar;
 
 /**
  * @author Geoffroy Vallee.
@@ -37,52 +39,27 @@ ORMAddRepoDialog::ORMAddRepoDialog(QDialog *parent)
     QString list_distros;
 
     setupUi(this);
-    char *ohome = getenv ("OSCAR_HOME");
-    const string cmd = (string) ohome + "/scripts/oscar-config --list-setup-distros";
-    ipstream proc(cmd);
-    string buf, tmp_list;
-    while (proc >> buf) {
-        tmp_list += buf;
-        tmp_list += " ";
-    }
-    vector<string> distros;
-    Tokenize(tmp_list, distros, " ");
-    vector<string>::iterator item;
-    for(item = distros.begin(); item != distros.end(); item++) {
-        string strD = *(item);
-        this->distroComboBox->addItem (strD.c_str());
-    }
+
+    connect(&command_thread, SIGNAL(thread_terminated(int, QString)),
+            this, SLOT(handle_thread_result (int, QString)));
+
+    command_thread.init (GET_SETUP_DISTROS, QStringList(""));
 }
 
 ORMAddRepoDialog::~ORMAddRepoDialog ()
 {
 }
 
-/**
- * Equilvalent to the slip function in Perl: slip a string up, based on a 
- * delimiter which is a space by default.
- *
- * @param str String to slip up.
- * @param tokens Vector of string used to store the slit string.
- * @param delimiters Character used to split the string up. By default a space.
- * @todo Avoid the code duplication with the ORMMainWindow class.
- */
-void ORMAddRepoDialog::Tokenize(const string& str,
-                      vector<string>& tokens,
-                      const string& delimiters = " ")
+int ORMAddRepoDialog::handle_thread_result (int command_id, QString result)
 {
-    // Skip delimiters at beginning.
-    string::size_type lastPos = str.find_first_not_of(delimiters, 0);
-    // Find first "non-delimiter".
-    string::size_type pos     = str.find_first_of(delimiters, lastPos);
-
-    while (string::npos != pos || string::npos != lastPos)
-    {
-        // Found a token, add it to the vector.
-        tokens.push_back(str.substr(lastPos, pos - lastPos));
-        // Skip delimiters.  Note the "not_of"
-        lastPos = str.find_first_not_of(delimiters, pos);
-        // Find next "non-delimiter"
-        pos = str.find_first_of(delimiters, lastPos);
+     if (command_id == GET_SETUP_DISTROS) {
+        /* Once we have the list, we update the widget */
+        QStringList list = result.split(" ");
+        for(int i = 0; i < list.size(); i++) {
+            distroComboBox->addItem (list.at(i));
+        }
+        this->update();
     }
+
+    return 0;
 }

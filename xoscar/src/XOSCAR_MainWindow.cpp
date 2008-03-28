@@ -1,8 +1,8 @@
 /*
- *  Copyright (c) 2007 Oak Ridge National Laboratory, 
- *                     Geoffroy Vallee <valleegr@ornl.gov>
- *                     All rights reserved
- *  This file is part of the xorm software, part of the OSCAR software.
+ *  Copyright (c) 2007-2008 Oak Ridge National Laboratory, 
+ *                          Geoffroy Vallee <valleegr@ornl.gov>
+ *                          All rights reserved
+ *  This file is part of the xoscar software, part of the OSCAR software.
  *  For license information, see the COPYING file in the top level directory
  *  of the OSCAR source.
  */
@@ -16,6 +16,7 @@
 #include <QDir>
 #include "XOSCAR_MainWindow.h"
 #include "SimpleConfigFile.h"
+#include "Hash.h"
 
 using namespace xoscar;
 
@@ -36,14 +37,14 @@ XOSCAR_MainWindow::XOSCAR_MainWindow(QMainWindow *parent)
 
     // We read the xoscar configuration file (~/.xoscar.conf). Note that if the
     // file does not exist, a default configuration file is created.
-    QString home_path = getenv("HOME");
-    QDir dir (home_path);
-    if ( !dir.exists() ) {
-        cout << "ERROR: Impossible to find the home directory" << endl;
-        return;
-    }
-    home_path = home_path + "/.xoscar.conf";
-    SimpleConfigFile confFile = SimpleConfigFile (home_path.toStdString());
+//     QString home_path = getenv("HOME");
+//     QDir dir (home_path);
+//     if ( !dir.exists() ) {
+//         cout << "ERROR: Impossible to find the home directory" << endl;
+//         return;
+//     }
+//     home_path = home_path + "/.xoscar.conf";
+//     SimpleConfigFile confFile = SimpleConfigFile (home_path.toStdString());
 
     /* Connect slots and signals */
     connect(AddOSCARRepoButton, SIGNAL(clicked()),
@@ -111,13 +112,8 @@ XOSCAR_MainWindow::XOSCAR_MainWindow(QMainWindow *parent)
     /* Get the list of Linux distributions that are already setup. */
     cout << "Get the setup distros" << endl;
     command_thread.init (GET_SETUP_DISTROS, QStringList(""));
-    command_thread.run ();
-
-
-    /* Add the default OSCAR repositories */
-    cout << "Get list of of default repos" << endl;
-    command_thread.init (GET_LIST_DEFAULT_REPOS, QStringList(""));
-    command_thread.run ();
+    command_thread.wait();
+    cout << "Init done" << endl;
 }
 
 XOSCAR_MainWindow::~XOSCAR_MainWindow() 
@@ -181,68 +177,24 @@ void XOSCAR_MainWindow::newOscarOptionSelected()
 void XOSCAR_MainWindow::kill_popup(QString list_repos, QString list_opkgs)
 {
     /* We update the list of available OPKGs for the selected OSCAR repo */
-    string str = list_opkgs.toStdString();
-    if (str.compare ("") != 0) {
-        listOPKGsWidget->clear();
-        vector<string> opkgs;
-        Tokenize(str, opkgs, " ");
-        vector<string>::iterator item;
-        for(item = opkgs.begin(); item != opkgs.end(); item++) {
-            string strD = *(item);
-            this->listOPKGsWidget->addItem (strD.c_str());
-        }
-        listOPKGsWidget->update();
+    QStringList list = list_opkgs.split (" ");
+    listOPKGsWidget->clear();
+    for(int i = 0; i < list.size(); i++) {
+        this->listOPKGsWidget->addItem (list.at(i));
     }
+    listOPKGsWidget->update();
 
     /* We update the list of available OSCAR repos */
-    string str2 = list_repos.toStdString ();
-    if (str2.compare ("") != 0) {
-        listReposWidget->clear();
-        vector<string> repos;
-        Tokenize(str2, repos, " ");
-        vector<string>::iterator item;
-        for(item = repos.begin(); item != repos.end(); item++) {
-            string strD = *(item);
-            this->listReposWidget->addItem (strD.c_str());
-        }
-        listReposWidget->update();
+    list = list_repos.split (" ");
+    for(int i = 0; i < list.size(); i++) {
+        this->listReposWidget->addItem (list.at(i));
     }
+    listReposWidget->update();
 
     /* We close the popup window that asks the user to wait */
     wait_popup->close();
 }
 
-/**
- * Equilvalent to the slip function in Perl: slip a string up, based on a 
- * delimiter which is a space by default.
- *
- * @param str String to slip up.
- * @param tokens Vector of string used to store the slit string.
- * @param delimiters Character used to split the string up. By default a space.
- *
- * @todo Avoid the code duplication with the ORMAddRepoDialog class.
- * @todo The code is kind of complex for what it does: Qt provides a split
- * function that can be used to do the same thing in few lines of code.
- */
-void XOSCAR_MainWindow::Tokenize(const string& str,
-                      vector<string>& tokens,
-                      const string& delimiters = " ")
-{
-    // Skip delimiters at beginning.
-    string::size_type lastPos = str.find_first_not_of(delimiters, 0);
-    // Find first "non-delimiter".
-    string::size_type pos     = str.find_first_of(delimiters, lastPos);
-
-    while (string::npos != pos || string::npos != lastPos)
-    {
-        // Found a token, add it to the vector.
-        tokens.push_back(str.substr(lastPos, pos - lastPos));
-        // Skip delimiters.  Note the "not_of"
-        lastPos = str.find_first_not_of(delimiters, pos);
-        // Find next "non-delimiter"
-        pos = str.find_first_of(delimiters, lastPos);
-    }
-}
 
 /**
  * @author Geoffroy Vallee.
@@ -287,12 +239,14 @@ void XOSCAR_MainWindow::display_opkgs_from_repo()
        currently a unique selection. */
     QList<QListWidgetItem *> list = listReposWidget->selectedItems();
     QListIterator<QListWidgetItem *> i(list);
-    repo = i.next()->text();
-    wait_popup = new ORMWaitDialog(0, repo);
-    wait_popup->show();
-    update();
+    if (list.size() > 0) {
+        repo = i.next()->text();
+        wait_popup = new ORMWaitDialog(0, repo);
+        wait_popup->show();
+        update();
 
-    command_thread.init(GET_LIST_OPKGS, QStringList(repo));
+        command_thread.init(GET_LIST_OPKGS, QStringList(repo));
+    }
 }
 
 /**
@@ -340,20 +294,12 @@ void XOSCAR_MainWindow::add_repo_to_list()
 void XOSCAR_MainWindow::handle_oscar_config_result(QString list_distros)
 {
     cout << list_distros.toStdString () << endl;
-    /* We update the list of setup Linux distros */
-    string str = list_distros.toStdString();
-    if (str.compare ("") != 0) {
-        listSetupDistrosWidget->clear();
-        vector<string> distros;
-        Tokenize(str, distros, " ");
-        vector<string>::iterator item;
-        for(item = distros.begin(); item != distros.end(); item++) {
-            string strD = *(item);
-            this->listSetupDistrosWidget->addItem (strD.c_str());
-            partitionDistroComboBox->addItem (strD.c_str());
-        }
-        listSetupDistrosWidget->update();
+    QStringList list = list_distros.split (" ");
+    for(int i = 0; i < list.size(); i++) {
+        this->listSetupDistrosWidget->addItem (list.at(i));
+        partitionDistroComboBox->addItem (list.at(i));
     }
+    listSetupDistrosWidget->update();
     command_thread.init(INACTIVE, QStringList(""));
 }
 
@@ -361,23 +307,28 @@ void XOSCAR_MainWindow::refresh_list_setup_distros()
 {
     listSetupDistrosWidget->clear();
     command_thread.init (GET_SETUP_DISTROS, QStringList(""));
-    command_thread.run();
 }
 
 void XOSCAR_MainWindow::do_system_sanity_check()
 {
     sanityCheckTextWidget->clear();
     command_thread.init (DO_SYSTEM_SANITY_CHECK, QStringList(""));
-    command_thread.run();
 }
 
 void XOSCAR_MainWindow::do_oscar_sanity_check()
 {
     sanityCheckTextWidget->clear();
     command_thread.init (DO_OSCAR_SANITY_CHECK, QStringList(""));
-    command_thread.run();
 }
 
+/**
+ * @author Geoffroy Vallee
+ *
+ * Slot called in order to update the text of the widget that gives the output
+ * of the sanity check command.
+ *
+ * @param text Text with which we have update the widget.
+ */
 void XOSCAR_MainWindow::update_check_text_widget(QString text)
 {
     sanityCheckTextWidget->setText(text);
@@ -434,7 +385,6 @@ void XOSCAR_MainWindow::refresh_list_partitions ()
     }
 
     command_thread.init(DISPLAY_PARTITIONS, QStringList(""));
-    command_thread.run();
 }
 
 /**
@@ -458,15 +408,15 @@ void XOSCAR_MainWindow::refresh_partition_info ()
     /* We display the number of nodes composing the partition */
     command_thread.init(DISPLAY_PARTITION_NODES, 
                         QStringList(current_partition));
-    command_thread.run();
+    command_thread.wait();
 
     /* We get the list of supported distros */
     command_thread.init(GET_SETUP_DISTROS, QStringList(""));
-    command_thread.run();
+    command_thread.wait();
 
     /* We get the Linux distribution on which the partition is based */
     command_thread.init(DISPLAY_PARTITION_DISTRO, QStringList(""));
-    command_thread.run();
+    command_thread.wait();
 }
 
 /**
@@ -514,7 +464,6 @@ void XOSCAR_MainWindow::save_cluster_info_handler()
             args << tmp.c_str();
         }
         command_thread.init (ADD_PARTITION, args);
-        command_thread.run ();
     }
     /* We unset the selection of the partition is order to be able to update
        the widget. If we do not do that, a NULL pointer is used and the app
@@ -583,63 +532,8 @@ void XOSCAR_MainWindow::network_configuration_tab_activated()
     // We clean up the list of nodes
     oscarNodesTreeWidget->clear();
 
-    // First we get the list of node names
-    char *ohome = getenv ("OSCAR_HOME");
-    const string cmd = (string) ohome 
-                        + "/scripts/oscar --display-partition-nodes "
-                        + partition_name.toStdString();
-    ipstream proc (cmd);
-    string buf;
-    while (proc >> buf) {
-        QString nodeName = buf.c_str();
-        oscarNodesTreeWidget->setColumnCount(1);
-        QTreeWidgetItem *item = new QTreeWidgetItem(oscarNodesTreeWidget);
-
-        // Then we display node information if available
-        /** @TODO this should be executed in a thread in order to ease the first
-       implementation of a remote manegement mechanism. */
-        const string cmd2 = (string) ohome 
-                            + "/scripts/oscar --display-node-info "
-                            + buf
-                            + " --partition "
-                            + partition_name.toStdString();
-        ipstream proc2 (cmd2);
-        string buf2;
-        // This variable is used to know which word we are actually getting
-        // at a given time during output analysis. In other terms, we use
-        // that to skip stuff we are not interesting in (we exactly know the
-        // output format).
-        int i=0;
-        QString hostname;
-        QString mac;
-        QString ip;
-        while (proc2 >> buf2) {
-            if (i == 3) {
-                hostname = buf2.c_str();
-            }
-            if (i == 7) {
-                ip = buf2.c_str();
-            }
-            if (i == 9) {
-                mac = buf2.c_str();
-            }
-            i++;
-        }
-
-        if (hostname.compare ("") != 0) {
-            item->setText(0, hostname);
-        } else {
-            item->setText(0, nodeName);
-        }
-        oscarNodesTreeWidget->expandItem (item);
-        QTreeWidgetItem *subitem_mac = new QTreeWidgetItem(item);
-        subitem_mac->setText(0, "MAC @: " + mac);
-
-        QTreeWidgetItem *subitem_ip = new QTreeWidgetItem(item);
-        subitem_ip->setText(0, "IP @: " + ip);
-    }
-
-    oscarNodesTreeWidget->update();
+    command_thread.init(DISPLAY_DETAILS_PARTITION_NODES, 
+                        QStringList(partition_name));
 }
 
 /**
@@ -703,11 +597,21 @@ void XOSCAR_MainWindow::import_macs_from_file ()
     }
 }
 
-int XOSCAR_MainWindow::handle_thread_result (int command_id, QString result)
+int XOSCAR_MainWindow::handle_thread_result (int command_id, 
+    const QString result)
 {
     QStringList list;
+    cout << "MainWindow: result from cmd exec thread received: "
+         << command_id
+         << endl;
     if (command_id == GET_LIST_DEFAULT_REPOS) {
         // We parse the result: one URL per line.
+        if (listReposWidget == NULL) {
+            cerr << "ERROR: Impossible to update the widget that gives "
+                    << "the list of repos, it seems the widget does not exist"
+                    << endl;
+            return -1;
+        }
         list = result.split("\n");
         for (int i = 0; i < list.size(); ++i){
             listReposWidget->addItem (list.at(i));
@@ -729,9 +633,47 @@ int XOSCAR_MainWindow::handle_thread_result (int command_id, QString result)
         cerr << "ERROR: Not yet implemented" << endl;
 /*        int index = partitionDistroComboBox->findText(distro_name);
         partitionDistroComboBox->setCurrentIndex(index);*/
-    } else {
-        cerr << "ERROR: Unsupported command id: " << command_id << endl;
-        return -1;
+    } else if (command_id == DISPLAY_DETAILS_PARTITION_NODES) {
+        string res = result.toStdString();
+        // Now we have a big string with the config and we need to parse it.
+        stringToNodesConfig (result);
+    } else if (command_id == SETUP_DISTRO) {
+        // We could here try to see if the command was successfully executed or
+        // not. Otherwise, nothing to do here.
+    } else if (command_id == GET_SETUP_DISTROS) {
+        command_thread.init (GET_LIST_DEFAULT_REPOS, QStringList (""));
     }
+    return 0;
+}
+
+int XOSCAR_MainWindow::stringToNodesConfig (QString cmd_result)
+{
+    QStringList lines = cmd_result.split ("\n");
+    for (int i=0; i < lines.size(); i++) {
+        QString line = lines.at(i);
+        QTreeWidgetItem *item;
+        if (line.size() > 0 && line.at(0) != QChar('\t')) {
+            cout << "New node configuration: " << line.toStdString() << endl;
+            oscarNodesTreeWidget->setColumnCount(1);
+            item = new QTreeWidgetItem(oscarNodesTreeWidget);
+            item->setText(0, line);
+            oscarNodesTreeWidget->expandItem (item);
+        } else if (line.size() > 0 && line.at(0) == QChar('\t')) {
+            cout << "Analyzing line: " << line.toStdString() << endl;
+            QStringList nodeInfo = line.split (": ");
+            if (nodeInfo.at(0) == QString("\tMAC")) {
+                oscarNodesTreeWidget->expandItem (item);
+                QTreeWidgetItem *subitem_mac = new QTreeWidgetItem(item);
+                QString mac = "MAC @: " + nodeInfo.at(1);
+                subitem_mac->setText(0, mac);
+            } else if (nodeInfo.at(0) == QString("\tIP")) {
+                oscarNodesTreeWidget->expandItem (item);
+                QTreeWidgetItem *subitem_mac = new QTreeWidgetItem(item);
+                QString mac = "IP @: " + nodeInfo.at(1);
+                subitem_mac->setText(0, mac);
+            }
+        }
+    }
+    oscarNodesTreeWidget->update();
     return 0;
 }

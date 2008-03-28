@@ -2,7 +2,7 @@
  *  Copyright (c) 2007 Oak Ridge National Laboratory, 
  *                     Geoffroy Vallee <valleegr@ornl.gov>
  *                     All rights reserved
- *  This file is part of the xorm software, part of the OSCAR software.
+ *  This file is part of the xoscar software, part of the OSCAR software.
  *  For license information, see the COPYING file in the top level directory
  *  of the OSCAR source.
  */
@@ -29,6 +29,8 @@
 
 using namespace std;
 
+namespace xoscar {
+
 class ORMWaitDialog : public QDialog, public Ui_WaitDialog
 {
 Q_OBJECT
@@ -39,9 +41,7 @@ public:
 
 };
 
-namespace xorm {
-    class XORM_WaitDialog: public ORMWaitDialog {};
-} // namespace xorm
+} // namespace xoscar
 
 
 #endif // ORM_WAITDIALOG_H

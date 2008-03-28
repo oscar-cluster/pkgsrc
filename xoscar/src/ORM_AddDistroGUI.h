@@ -2,7 +2,7 @@
  *  Copyright (c) 2007 Oak Ridge National Laboratory, 
  *                     Geoffroy Vallee <valleegr@ornl.gov>
  *                     All rights reserved
- *  This file is part of the xorm software, part of the OSCAR software.
+ *  This file is part of the xoscar software, part of the OSCAR software.
  *  For license information, see the COPYING file in the top level directory
  *  of the OSCAR source.
  */
@@ -31,10 +31,17 @@
 #include <unistd.h>
 
 #include "ui_AddDistroWidget.h"
-#include "pstream.h"
+#include "CommandExecutionThread.h"
 
 using namespace std;
 using namespace redi;
+
+/**
+ * @namespace xoscar
+ * @author Geoffroy Vallee
+ * @brief The xoscar namespace gathers all classes needed for XOSCAR.
+ */
+namespace xoscar {
 
 class ORMAddDistroDialog : public QDialog, public Ui_AddDistroDialog
 {
@@ -46,6 +53,7 @@ public:
     void refresh_list_distros();
 
 public slots:
+     int handle_thread_result (int, QString);
     void newDistroSelected();
     void refresh_repos_url();
 
@@ -53,13 +61,10 @@ signals:
     virtual void refreshListDistros();
 
 private:
-    void Tokenize(const string& str,
-        vector<string>& tokens,
-        const string& delimiters);
+    CommandExecutionThread command_thread;
 };
 
-namespace xorm {
     class XORM_AddDistroDialog: public ORMAddDistroDialog {};
-} // namespace xorm
+} // namespace xoscar
 
 #endif // ORM_ADDDISTROGUI_H
