@@ -1,0 +1,78 @@
+<!DOCTYPE article PUBLIC " -//OASIS//DTD DocBook V3.1//EN" "http://oasis-open.org/docbook/xml/4.2/docbookx.dtd">
+
+<article class="whitepaper" id="documentation" lang="en">
+
+  <artheader> <title>XOSCAR: Qt4/C++ OSCAR Graphical Interface -- Manual</title>
+
+<author>
+
+<firstname>Geoffroy</firstname>
+<surname>Vallee</surname>
+
+<affiliation>
+<address><email>valleegr@ornl.gov</email></address>
+</affiliation>
+</author>
+
+</artheader>
+
+<sect1><title>Configuration File</title>
+
+<sect2><title>Introduction</title>
+<para>
+  The xoscar graphical user interface supports both a local usage of OSCAR (OSCAR is locally installed), but also the remote management of OSCAR (OSCAR is setup on a remote node, the user only executes the GUI locally).
+</para>
+<para>
+  To define the wanted behavior of xoscar, a configuration file if used. The configuration file is typically the file "~/.xoscar.conf". Note that if the configuration file does not exist the first time xoscar is used, a default configuration file is automatically created. A way to create the configuration is therefore to start xoscar, only for configuration file creation, and exit.
+</para>
+</sect2>
+
+<sect2><title>Configuration File Parameters Description</title>
+<para>
+  The following parameters are specified in the configuration file.
+  <itemizedlist>
+    <listitem><para>management_mode: which can have as value local or remote. Local has to be set if the local machine is also the OSCAR server; remote has to be set if users want to management remotely the OSCAR server. Note that in order to use the "remote" option, a pre-requirement is to be able to connect to the OSCAR server without password via ssh.</para></listitem>
+    <listitem><para>command_prefix: this is the prefix command, added to all OSCAR commands. For instance, if the command prefix is set to "sudo", it allows users to use xoscar without root priviledges and to execute automatically OSCAR commands with sudo.</para></listitem>
+    <listitem><para>username: is the username used for remote OSCAR management (implemented via ssh); the parameter is therefore not used for local management.</para></listitem>
+    <listitem><para>oscar_server_ip: is the OSCAR server IP; used for remote management. Note this parameter is not used when using OSCAR locally.</para></listitem>
+  </itemizedlist>
+</para>
+</sect2>
+
+<sect2><title>Example: Configuration for Local OSCAR Management</title>
+
+Let's assume a user wants to use xoscar and OSCAR locally, i.e., on the same machine. We also assume in that example that the user wants to use its own account (whatever is the username) and therefore use "sudo" in order to execute OSCAR (which needs to run with root priviledges). In that case, the xoscar configuration file will look like the following:
+<programlisting role="config">
+  management_mode = local
+  command_prefix = sudo
+  username = toto
+  oscar_server_ip = 192.168.0.1
+</programlisting>
+Note that the parameters "username" and oscar_server_ip are not actually used by xoscar in that specific case.
+</sect2>
+
+<sect2><title>Example: Configuration for Remote OSCAR Management</title>
+
+<para>
+In this example, we assume the following:
+<itemizedlist>
+  <listitem><para>the GUI is running locally using a normal user account,</para></listitem>
+  <listitem><para>the remote OSCAR server has the IP address 192.168.0.1,</para></listitem>
+  <listitem><para>the user wants to use its "toto" account on the OSCAR server and the systems are setup to allow a remote connection to the OSCAR server without password,</para></listitem>
+  <listitem><para>because the user wants to use its remote account which is not a priviledged account, he wants to prefix all OSCAR commands by "sudo".</para></listitem>
+</itemizedlist>
+
+In this example, the configuration file is:
+<programlisting role="config">
+  management_mode = remote
+  command_prefix = sudo
+  username = toto
+  oscar_server_ip = 192.168.0.1
+</programlisting>
+</para>
+
+</sect2>
+</sect1>
+
+</article>
+
