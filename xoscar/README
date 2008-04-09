@@ -27,3 +27,15 @@ from the source code top-level directory:
 The documentation is generated in the 'doc' directory in the source code 
 top-level directory. For instance, the HTML documentation is in 
 'doc/html/index.html'.
+
+Generation of the XOSCAR manual
+===============================
+
+To generate the xoscar manual, simply execute the following commands from the
+source code top-level directory:
+    cd doc
+    make pdf
+The manual is generated i the 'doc' directory (the current directory after
+executing the previous commands) and named xoscar_manual.pdf.
+It is also possible to generate an HTML version of the manual executing 
+'make html' instead of 'make pdf'.
