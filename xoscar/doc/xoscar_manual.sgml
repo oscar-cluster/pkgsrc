@@ -72,6 +72,25 @@ In this example, the configuration file is:
 </para>
 
 </sect2>
+
+<sect2><title>Implementation details</title>
+  <para>
+    xoscar implements a transparent remote OSCAR command execution mechanism 
+    that allows users to use the GUI on their laptop and to give remotely OSCAR.
+    The capability to switch between local and remote management creates a
+    problem: we do not know any more if the commands to execute will take a
+    while or not. The problem here is that if the command is a long running
+    command and executed in the main thread of the application (the Qt thread)
+    the application while freeze the time of the command execution, which
+    creates a weird behavior of the GUI.
+    To address the problem, a solution is to execute _all_ commands in a
+    separate thread. In the thread, when preparing the command, we call a
+    commandBuilder class which knows how to prepare the command for the target
+    management mode (local -> direct execution of the command; remote -> add
+    the ssh stuff).
+  </para>
+</sect2>
+
 </sect1>
 
 </article>
