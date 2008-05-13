@@ -1,0 +1,9 @@
+Makefile:
+    - clean the file up.
+    - generate the doxygen documentation.
+
+General:
+    - include the KVM support.
+
+Netboot Simulation:
+    - find a way to have a smaller image the current one is still way too big.

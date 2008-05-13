@@ -1,0 +1,65 @@
+# $Id: oscar-test-plan.txt 67 2007-04-18 22:15:52Z gvallee $
+# The "PLAN"
+
+Summary:
+
+   + checks
+       |--> copy script(s) to headVM (possibly just mount a test-share.img)
+       |--> start headVM 
+       |--> wait/watch for notification (ready to boot node)
+       |      |--> start nodeVM   (w/ CD-rom)
+       |      |--> wait/watch for notification (change of PID/shutdown)
+       |             |--> start nodeVM (w/o CD-rom)
+       |
+       |--> cleanup/reap children
+       |
+       |--> exit
+
+
+TODO:
+  + write top-level hostOS driver script
+  + write a simple server to run on hostOS to listen for status/notification
+      from headVM to indicate startup of nodeVMs (via --bootscript script)
+  + write script to pass to CLI via '--bootscript' option
+  + add '--version' option to V2M
+  + add '--validate' option to V2M (validate XML, HDD/CD.img file exist, etc)
+  + create tar/img with all the scripts & data (XML,*.img) for automation,
+      to be used/mounted by the headVM...should be structured as
+      hostOS/,  headVM/,  nodeVM/,  etc....
+
+
+-------------------
+0) Sanity check to make sure that v2m is available and at least a
+   a simple '--version' (or similar) works. (NOTE: I think I may
+   need to add this to ArgumentParser.cpp, so that we get a successful (0)
+   return code and not an error (255).
+
+   Do any other prep/checks before starting VM's, etc.  
+      - that we have the necessary profiles (headnode.xml, etc.)
+      - if possible do a quick check of the profiles/validate XML, disk
+        files are available, a "--dry-run" for 'v2m' would be good.
+
+-------------------
+1) Start headVM 
+        v2m headnode.xml --create-vm
+
+1.1) wait/watch for notification (ready to boot node)
+
+
+-------------------
+2) Start nodeVM with bootCD attached  (capture PID)
+
+2.1) Take a fingerprint of "node-virtual-hdd.img" before booting,
+     so that when we get signalled we can tell if it did the install
+     or simply timed out from DHCP and is just rebooting?
+     (Might want to have a MAX_REBOOT threshold so we don't get into
+     infinite loop case.)
+
+2.2) When nodeVM exits, check HDD-fingerprint, if differs, then...
+     Start nodeVM without bootCD attached (capture PID)
+
+2.3) Wait for PID...
+
+-------------------
+3)
+

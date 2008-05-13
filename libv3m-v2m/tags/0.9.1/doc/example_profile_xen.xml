@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<!DOCTYPE profile PUBLIC "" "v3m_profile.dtd">
+<profile>
+	<name>test</name>
+	<type>Xen</type>
+	<image size="50">/home/gvallee/temp/v2m/test_xen.img</image>
+	<nic1>
+		<type>TUN/TAP</type>
+		<mac>00:02:03:04:05:06</mac>
+	</nic1>
+</profile>

@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<!DOCTYPE profile PUBLIC "" "v3m_profile.dtd">
+<profile>
+	<name>krg1</name>
+	<type>Qemu</type>
+	<image size="500">/home/gvallee/temp/v2m/test.img</image>
+	<cdrom>/dev/hdc</cdrom>
+	<nic1>
+		<type>TUN/TAP</type>
+		<mac>00:01:02:03:04:05</mac>
+	</nic1>
+	<nic2>
+		<type>VLAN</type>
+		<mac>00:0A:03:04:05:0A</mac>
+	</nic2>
+</profile>

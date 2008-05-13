@@ -1,0 +1,15 @@
+Source: v2m
+Section: misc
+Priority: extra
+Maintainer: Geoffroy Vallee <valleegr@ornl.gov>
+Build-Depends: debhelper (>= 5), autotools-dev, libv3m-dev
+Standards-Version: 3.7.2
+
+Package: v2m
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Virtual Machine Management (V2M)
+ V2M is a command line interface for libv3m which allows the management and the
+ monitoring of virtual machines based on different system-level virtualization
+ solutions. V2M also provides an interface with OSCAR for the deployment of 
+ virtual clusters.

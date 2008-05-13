@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<!DOCTYPE profiles PUBLIC "" "profiles.dtd">
+<profiles>
+	<profile>
+		<name>test1</name>
+		<type>test2</type>
+		<image>test3</image>
+		<nic1>
+			<type>TUN/TAP</type>
+			<mac>00:01:02:03:04:05</mac>
+		</nic1>
+		<nic2>
+			<type>VLAN</type>
+			<mac>00:01:02:03:04:06</mac>
+		</nic2>
+	</profile>
+</profiles>

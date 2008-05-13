@@ -1,0 +1,8 @@
+* 0.9.1:
+	* Fix a problem with the version number into the documentation generated
+	  by Doxygen.
+	* Add a Makefile target to rebuild the Doxygen documentation ('make
+	  doxygen-build').
+	* Continue the cleaning up of the libv3m code.
+	* Improve versioning control.
+	* Initial release.

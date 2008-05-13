@@ -1,0 +1,23 @@
+#!/bin/bash
+#
+
+# Copyright (c) 2006 Oak Ridge National Laboratory,
+#                    Geoffroy Vallee <valleegr@ornl.gov>
+#                    All rights reserved
+# This file is part of the libv3m software.  For license information,
+# see the COPYING file in the top level directory of the source
+
+# This script download the image for netboot simulation. Note this image is not 
+# in SVN because we do not want to pollute SVN
+
+DESTDIR="../bin"
+BASE_URL="http://bear.csm.ornl.gov/pub/downloads/v2m//oscarboot_image"
+
+if [ ! -f "$DESTDIR/oscar_bootcd.iso" ]; then
+	echo "Downloading the oscarboot image..."
+	wget $BASE_URL/oscar_bootcd.iso
+	mv ./oscar_bootcd.iso $DESTDIR
+	echo "The image is saved in $DESTDIR"
+else
+	echo "The oscarboot image already exists"
+fi

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!--
+DTD for KVMs profiles.
+-->
+
+<!ELEMENT profiles (profile*)>
+
+<!ELEMENT profile (name, type, image, nic1, nic2) >
+
+<!ELEMENT name (#PCDATA)>
+
+<!ELEMENT type (#PCDATA)>
+
+<!ELEMENT image (#PCDATA)>
+
+<!ELEMENT nic1 (type, mac)>
+
+<!ELEMENT nic2 (type, mac)>
+
+<!ELEMENT mac (#PCDATA)>
+

@@ -1,0 +1,53 @@
+Supported Features
+******************
+
+The current version is 0.9.1 (development version to prepare the 1.0 version):
+- Creation of Xen (paravirtualization and full-virtualization) and QEMU virtual
+  machines based on a XML profile.
+- Configuration of a bridged network interface for virtual machines.
+- Support the installation of virtual machines using OSCAR
+  (http://oscar.openclustergroup.org/).
+- Full user documentation.
+- Full developer documentation (based on doxygen).
+
+Roadmap:
+- 1.0.0: stable version of the features described before.
+- 1.0.1: creation of RPM and Debian packages.
+- 1.2: support of virtual machine monitoring for both Xen and QEMU virtual
+       machines
+
+Documentation
+*************
+
+To compile the documentation, please execute the following command:
+    make doc
+The documentation is then available in the 'doc' directory. The documentation
+is composed of:
+- the user documentation in HTML and PDF (user_guided.html and user_guide.pdf),
+- the documentation for developers, both in HTML (html/index.html) and PDF
+  (to compile the latex files, execute from the top directory of libv3m sources
+  'cd doc/latex; make pdf').
+
+Included Software
+*****************
+
+libv3m includes PSTREAM (http://pstreams.sourceforge.net/) via the file 
+pstream.h. PSTREAM is distributed under the LGPL lisence (see the file 
+COPYING.PSTREAM for more details).
+
+Notes for Developers
+***********************
+
+Note about the binaries needed by libv3m
+========================================
+
+The libv3m software uses some pretty big binaries, for instance for the
+implementation of a simulated network boot process.
+If you get sources from the SVN repository, you will not get automatically
+these binaries. In order to get them, please execute the command
+'make get-binaries'.
+
+Creation of Debian package
+==========================
+
+Just run the standard 'dpkg-buildpackage -rfakeroot' command.

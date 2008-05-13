@@ -1,0 +1,260 @@
+<!DOCTYPE article PUBLIC " -//OASIS//DTD DocBook V3.1//EN" "http://oasis-open.org/docbook/xml/4.2/docbookx.dtd">
+
+<article class="whitepaper" id="documentation" lang="en">
+
+<artheader> <title>V3M -  User Guide</title>
+
+<author>
+
+<firstname>Geoffroy</firstname>
+<surname>Vallee</surname>
+
+<affiliation>
+<address><email>valleegr@ornl.gov</email></address>
+</affiliation>
+</author>
+
+</artheader>
+
+<sect1><title>Configuration</title>
+
+<para>
+Before to use libv3m or any software based on libv3m, an XML configuration file
+(/etc/v3m/vm.conf) has to be created. This configuration file specifies all 
+commands needed for the use of virtualization technologies.
+An example of this file:
+<programlisting role="xml">
+<![CDATA[
+<?xml version="1.0"?>
+<config>
+    <qemu>
+        <command>sudo qemu</command>
+        <precommand>sudo modprobe tun</precommand>
+    </qemu>
+    <xen>
+        <command>sudo xm create</command>
+    </xen>
+</config>
+]]>
+</programlisting>
+
+Note that for all virtualization technology (e.g. Qemu), "command" is mandatory.
+"Command" is the string used to create a VM and "Precommand", the command to 
+execute before the creation of a VM. "Command" has to be specified before 
+"Precommand", and they are both mandatory.
+</para>
+
+</sect1>
+
+<sect1><title>Creation of a Profile</title>
+
+<para>
+All VMs are specified through an XML profile. 
+The DTD of this XML profile is available in sources (in the dtd folder) and has
+to be copied to the location where you will write you profile. You need to do
+that because libv3m will automatically check if the format of your profile is
+correct or not.
+Several profile examples are also available with the libv3m documentations. 
+</para>
+
+<sect2><title>Network Configuration</title>
+
+<para>
+Two kind of connections are available:
+<itemizedlist>
+    <listitem><para>TUN/TAP: for a connection with the host OS,</para></listitem>
+    <listitem><para>BRIDGED_TAP: for a connection with the host OS but in that 
+case the connection is automatically bridged with eth0 of the host OS (we 
+assume eth0 is the public network interface, it is not possible currently to 
+change that),</para></listitem>
+	<listitem><para>VLAN: for the creation of a virtual LAN between VMs.</para></listitem>
+</itemizedlist>
+To create a TUN/TAP network interface, just specify the "TUN/TAP" NIC type.
+For example:
+<programlisting role="xml">
+<![CDATA[
+<nic1>
+    <type>TUN/TAP</type>
+    <mac>00:02:03:04:05:06</mac>
+</nic1>
+]]>
+</programlisting>
+To create a VLAN network interface, just specify the "VLAN" NIC type.
+For example:
+<programlisting role="xml">
+<![CDATA[
+<nic1>
+    <type>VLAN</type>
+    <mac>00:02:03:04:05:06</mac>
+</nic1>
+]]>
+</programlisting>
+WARNING! If you want to have two nics, for instance to simulate an headnode
+of a cluster, the current implementation has a limitation, the way you 
+specify your NICS will change the behavior of the network configuration.
+Therefore, if you want two NICs, one for the connection with the host OS and
+another one to connect a virtual network, you should use a specification like
+the following one:
+<programlisting role="xml">
+<![CDATA[
+<nic1>
+    <type>TUN/TAP</type>
+    <mac>00:02:03:04:05:06</mac>
+</nic1>
+<nic2>
+    <type>VLAN</type>
+    <mac>00:02:03:04:05:07</mac>
+</nic2>
+]]>
+</programlisting>
+Moreover, if the VM is a Qemu VM, the VLAN device will be automatically 
+concidered as master on the VLAN (listen for connection of other virtual
+machines on the network).
+</para>
+
+<para>
+Note 1: Even if the global network configuration is done automatically, the 
+user may have to do some last and manual configuration steps. For instance:
+<itemizedlist>
+    <listitem><para>for a none bridged TUN/TAP connection using Xen: the TAP 
+    interface on the host OS does not have an IP assigned automatically.</para>
+    </listitem>
+    <listitem><para>for a none bridged TUN/TAP connection using QEMU, the 
+    default IP of the TAP interface on the host OS is 172.20.0.1.</para>
+    </listitem>
+    <listitem><para>the current prototype supports only one TAP/TUN connection
+    per host OS using QEMU. If users want more TAP/TUN connections, the 
+    configuration has to be done automatically.</para></listitem>
+</itemizedlist>
+</para>
+
+<para>
+Note2: Depending of the virtualization technology, the difference may not
+result to two different network connection at the VM level but this detail
+should be hidden. For instance, a connection to a VLAN using QEMU does not 
+result to a visible virtual network interface on the host OS; but with Xen
+it results to a visible virtual network connection on the host OS (like for
+TAP connections).
+</para>
+
+<para>
+Note3: The MAC address used for the virtual NICs can not begin with "01" or
+"FF", these are reserved addresses for multicast and broadcast,
+respectively.
+</para>
+
+</sect2>
+
+<sect2><title>Virtual Disk Configuration</title>
+
+<para>
+It is possible to add virtual disk within your VM. For instance, you may want to have an hdb virtual hard-drive on the side of your virtual system.
+</para>
+
+<para>
+For instance to add an hbd virtual hard-drive you can do:
+<programlisting role="xml">
+<![CDATA[
+<virtual_disks>
+    <virtual_disk id="hdb">/tmp/images/hdb.img</virtual_disk>
+</virtual_disks>
+]]>
+</programlisting>
+You may define as many virtual hard-drive as you want, but the virtualization
+solution used may have some limitations (for instance Qemu uses hdc for the 
+CDROM therefore it is not possible to have an hdc virtual disk and a virtual
+CDROM at the same time).
+</para>
+
+</sect2>
+</sect1>
+
+<sect1><title>VM Management with OSCAR (OSCAR-V)</title>
+    <para>
+        Since the beginning libv3m aims at being used as a library for the 
+        implementation of VM management tools (i.e. V2M, 
+        http://www.csm.ornl.org/srt/v2m.html) with the idea that this tool will
+        be integrated into OSCAR (http://oscar.openclustergroup.org/) in order
+        to use the management of virtual clusters. This integration has led to
+        the OSCAR-V project (http://www.csm.ornl.gov/srt/oscarv.html).
+    </para>
+    <para>
+        Therefore, libv3m provides an interface for the deployment of VM via 
+        OSCAR. This interface (<emphasis>create_image_with_oscar</emphasis>)
+        allows us to hide technical differences between virtualization 
+        solutions. For instance, using QEMU or the full-virtualization with 
+        Xen, it is possible to boot a VM up and, like for a real machine, use
+        a bootable CDROM. It is therefore possible to use the OSCAR bootable 
+        CDROM to initiate the VM installation via OSCAR. For the Xen 
+        para-virtualization, such a boot method is impossible. Therefore, we 
+        have simulate a network boot in order to initiate the OSCAR 
+        installation. These differences are hidden by libv3m providing a
+        generic interface.
+    </para>
+    <para>
+        At low-level, two different solutions are implemented:
+        <itemizedlist>
+            <listitem>
+                <para>
+                    <emphasis>the OSCAR installation is implemented based on
+                    the OSCAR bootable CDROM</emphasis>. In that case, the 
+                    interface <emphasis>create_image_with_oscar</emphasis>
+                    redirects the execution to 
+                    <emphasis>install_vm_from_cdrom</emphasis>.
+                </para>
+            </listitem>
+            <listitem>
+                <para>
+                    <emphasis>the OSCAR installation is implemented based on
+                    minimal VM image that simulate a network boot</emphasis>.
+                    In that case, the interface 
+                    <emphasis>create_image_with_oscar</emphasis> redirects the
+                    execution to <emphasis>install_vm_from_net</emphasis>. The
+                    solution has been initially developed for Xen-OSCAR which
+                    has been extended to become OSCAR-V. See the following 
+                    paper for more details about the netboot simulation:
+                    Geoffroy Vallee, Stephen L. Scott, <emphasis>Xen-OSCAR for
+                    Cluster Virtualization</emphasis>, 1st Workshop on XEN in 
+                    HPC Cluster and Grid Computing Environments (XHPC), 4-6 
+                    December 2006, Sorrento, Italy.
+                </para>
+            </listitem>
+        </itemizedlist>
+    </para>
+    <para>Reference:
+        <itemizedlist>
+            <listitem>
+                <para>
+                    Geoffroy Vallee, and Stephen L. Scott, <emphasis>Xen-OSCAR 
+                    for Cluster Virtualization</emphasis>, 1st Workshop on XEN 
+                    in HPC Cluster and Grid Computing Environments (XHPC), 4-6
+                    December 2006, Sorrento, Italy.
+                </para>
+            </listitem>
+            <listitem>
+                <para>
+                    Geoffroy Vallee, Thomas Naughton, and Stephen L. Scott,
+                    <emphasis>System Management Software for Virtual 
+                    Environments</emphasis>, ACM International Conference on
+                    Computing Frontiers, May 7-9 2007, Ischia, Italy.
+                </para>
+            </listitem>
+        </itemizedlist>
+    </para>
+</sect1>
+
+<sect1><title>Documentation</title>
+  <para>
+     The libv3m documentation is available in the 'doc' directory. Note that
+the documentation is composed of two different components: (i) the user guide
+that you are currently reading and (ii) the code documentation generated via
+Doxygen.
+  </para>
+  <para>
+    Documentation can be created from sources executing 'make doc' at the top
+directory of the libv3m source code.
+  </para>
+</sect1>
+
+</article>
+

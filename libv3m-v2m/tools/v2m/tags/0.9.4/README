@@ -1,0 +1,83 @@
+
+DESCRIPTION
+-----------
+
+v2m (Virtual Machine Management) is a command line interface (CLI) for
+libv3m.  This CLI allows users to define and manage virtual machines (VMs)
+without having to deal with low-level technical details (network
+configuration, config files for each virtualization technology, etc.).
+
+
+HOW TO INSTALL V2M
+------------------
+
+Please read the INSTALL file.
+
+In order to compile v2m, you will also need to specify the path to the
+libv3m directory via an option to configure, '--with-libv3m'.  
+
+Note, be careful, the libv3m project is under active development. Therefore
+it is highly advised that you provide the path to the libv3m project
+directory to enable v2m to have the most recent project updates.
+For example, use "./configure --with-libv3m=/my/path/to/libv3m/devel/files",
+(for instance "/home/users1/projects/libv3m").
+
+
+HOW TO USE V2M
+--------------
+
+To create/manage a VM, users only have to describe their VM through an XML
+file (a DTD is available in the libv3m project, "dtd/v3m_profile.dtd"). 
+This XML file is referred to as a "profile". After writing a basic VM profile 
+it is possible to boot a VM by just executing: 
+
+    v2m <xml_profile> --boot-vm
+
+Note that the profile will be validated and arguments checked before the
+execution of the command.  
+
+To see other usage information, run "v2m" without any arguments.
+
+
+V2M TESTING
+-----------
+
+If you modify V2M or if you want to test a given version of V2M, we may to use
+the V2M testing mechanism. For that, go to the 'testing' directory and use the
+Makefile (typing 'make').
+Several options are available:
+  * 'make qemu-basic-test', which tries to boot up a basic VM,
+  * 'make qemu-bootcd-test', which tries to start a QEMU VM and boot up from a
+    bootable CDROM. Note that the image used for that test is empty.
+
+
+MISC. SETUP NOTES
+-----------------
+[qemu]
+A few general setup notes relating to Qemu.
+ - V2M has been tested using qemu version(s): 0.8.2
+
+ - Create "/etc/v3m/vm.conf" file to specify commands to run prior
+   to qemu launch or to specify alternate paths to the qemu binary, etc. 
+   see also: "user guide" under 'libv3m/doc/'
+   Example: 
+      <?xml version="1.0"?>
+      <config>
+          <qemu>
+              <command>sudo qemu</command>
+              <precommand>sudo modprobe tun</precommand>
+          </qemu>
+          <xen>
+              <command>sudo xm create</command>
+          </xen>
+      </config>
+
+ - Create "/etc/qemu-ifup" file (remember to make it executable) if you see 
+   error messages about launching network scripts. Example "/etc/qemu-ifup",
+      #!/bin/sh
+      sudo /sbin/ifconfig $1 172.20.0.1
+
+
+[Xen]
+
+# $Id: README 73 2007-04-25 17:20:34Z gvallee $

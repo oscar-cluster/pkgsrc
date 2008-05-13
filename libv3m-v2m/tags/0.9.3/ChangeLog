@@ -1,0 +1,19 @@
+* 0.9.1:
+	* Fix a problem with the version number into the documentation generated
+	  by Doxygen.
+	* Add a Makefile target to rebuild the Doxygen documentation ('make
+	  doxygen-build').
+	* Continue the cleaning up of the libv3m code.
+	* Improve versioning control.
+
+* 0.9:
+	* Add VM monitoring for Xen (implemented by Kulat "Ter" 
+	  Charoenpornwattana.
+	* Add the Doxygen documentation.
+	* Clean-up the code.
+
+* 0.1:
+	* Initial version (still under development).
+	* Support basic mechanisms (VM boot, creation via a bootable CDROM or 
+	  network for QEMU, Xen, VMM-HPC, and XenHVM).
+	* Add basic monitoring capability for Xen VMs.
