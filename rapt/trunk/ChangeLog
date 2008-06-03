@@ -1,13 +1,14 @@
 rapt-2.1
 - Switch back to apt-get instead of aptitude (keyring problems).
 - When detecting repositories architecture, skip online repositories.
-- when using multiple repositories, the list of repos is correctly build
+- When using multiple repositories, the list of repos is correctly build
 internaly (bug #455).
 - Improve the error handling. This fixes bug #458.
 - Correctly deal with the different repo location notation (i.e., the location
 can start by http|ftp, file:, or even be an absolute path).
 - Automatically detect the mirror that can be used by debootstrap (when
 possible). This fixes bug #450.
+- Support the "names-only" option.
 - Add a 'uninstall' target to the Makefile.
 
 rapt-2.0

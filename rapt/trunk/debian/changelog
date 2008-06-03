@@ -1,3 +1,9 @@
+rapt (2.1-1) stable; urgency=low
+
+  * New upstream version.
+
+ -- Geoffroy Vallee <valleegr@ornl.gov>  Wed, 19 Dec 2007 13:44:41 -0500
+
 rapt (2.0-1) stable; urgency=low
 
   * New upstream version.
