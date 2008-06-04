@@ -1,8 +1,8 @@
 Supported platforms
 ===================
 
-xoscar is designed to work on any platform supporting Qt-4.2.
-xoscar has been tested on the following systems:
+XOSCAR is designed to work on any platform supporting Qt-4.2.
+XOSCAR has been tested on the following systems:
     - Debian Lenny
     - Ubuntu 7.10
     - Centos 5
@@ -11,11 +11,42 @@ xoscar has been tested on the following systems:
 Installation
 ============
 
-From the sources directory, execute the following commands (tested on Linux and
-MacOS):
-    ./configure && make
-To install xoscar directly on your system, execute the following command:
-    make install
+Currently XOSCAR is only available via source code. In order to install XOSCAR
+from the source code, please refer to the "How to compile XOSCAR?" section.
+
+How to get the source code?
+===========================
+
+* From SVN:
+  If you are looking for the development code of XOSCAR, the code is available
+  via our SVN repository. You will need both the OSCAR and XOSCAR code.
+  More information about how to check-out the OSCAR related code is available 
+  here: http://oscar.openclustergroup.org/faq.development.svn-howto for more
+
+  Note that the XOSCAR code is under 'pkgsrc/xoscar':
+  (https://svn.oscar.openclustergroup.org/svn/oscar/pkgsrc/xoscar).
+
+How to test the GUI?
+====================
+
+2/ Go into the directory where you checked the code out.
+3/ Export OSCAR_HOME (needed by OSCAR itself): 'export OSCAR_HOME=`pwd`'
+4/ Execute the following command, as root: 
+   './scripts/oscar-config --generate-config-file'
+5/ As root, check that the '/etc/oscar/oscar.conf' file has the following
+   line (if not update): "ODA_TYPE = file"
+
+You are now ready to compile and test XOSCAR.
+
+How to compile XOSCAR?
+======================
+
+To compile the GUI:
+2/ Go into the XOSCAR directory
+3/ Execute: "./configure && make"
+4/ Optionally, we can install XOSCAR, executing as root "make install".
+
+Now you should be ready to play with the GUI.
 
 Generation of the doxygen documentation
 =======================================
