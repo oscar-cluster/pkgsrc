@@ -399,8 +399,16 @@ void XOSCAR_MainWindow::refresh_partition_info ()
         return;
     }
 
+    // do we really need to call selectedItems if the control
+    // only allows one item to be selected at a time anyway?
     QList<QListWidgetItem *> list =
         listClusterPartitionsWidget->selectedItems();
+
+    // if nothing is in the list, we cannot select the next one
+    if (list.count() == 0) {
+        return;
+    }
+
     QListIterator<QListWidgetItem *> i(list);
     QString current_partition = i.next()->text();
     partitonNameEditWidget->setText(current_partition);
@@ -430,6 +438,9 @@ void XOSCAR_MainWindow::refresh_partition_info ()
  */
 void XOSCAR_MainWindow::add_partition_handler()
 {
+    if (listOscarClustersWidget->currentRow() == -1)
+        return;
+
     listClusterPartitionsWidget->addItem ("New_Partition");
     listClusterPartitionsWidget->update ();
 }
@@ -619,7 +630,9 @@ int XOSCAR_MainWindow::handle_thread_result (int command_id,
         listReposWidget->update();
     } else if (command_id == DISPLAY_PARTITIONS) {
         // We parse the result: one partition name per line.
-        list = result.split("\n");
+        // skip empty strings? otherwise we have extra partitions added
+        // could also check result for empty string
+        list = result.split("\n", QString::SkipEmptyParts);
         listClusterPartitionsWidget->clear();
         for (int i = 0; i < list.size(); ++i){
             listClusterPartitionsWidget->addItem (list.at(i));
