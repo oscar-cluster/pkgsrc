@@ -121,7 +121,7 @@ void CommandExecutionThread::run()
                         + " --add-partition " + command_args.at(0).toStdString()
                         + " --cluster oscar"
                         + " --distro " + command_args.at(1).toStdString();
-        for (int i=0; i < command_args.size()-2; i++) {
+        for (int i=2; i < command_args.size(); i++) {
             cmd += " --client ";
             cmd += command_args.at(i).toStdString();
         }
