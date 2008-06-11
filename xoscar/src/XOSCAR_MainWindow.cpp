@@ -644,7 +644,6 @@ int XOSCAR_MainWindow::handle_thread_result (int command_id,
         listClusterPartitionsWidget->update();
     } else if (command_id == DISPLAY_PARTITION_NODES) {
         list = result.split(" ");
-        PartitionNumberNodesSpinBox->setMinimum(list.size());
         PartitionNumberNodesSpinBox->setValue(list.size());
     } else if (command_id == DISPLAY_PARTITION_DISTRO) {
         cerr << "ERROR: Not yet implemented" << endl;
