@@ -99,7 +99,8 @@ void CommandExecutionThread::run()
         emit (thread_terminated(GET_LIST_DEFAULT_REPOS, result));
     } else if (command_id == DISPLAY_PARTITIONS) {
         const string cmd = build_cmd ((string) ohome 
-            + "/scripts/oscar --display-partitions");
+            + "/scripts/oscar --display-partitions "
+            + command_args.at(0).toStdString());
         result = get_output_line_by_line (cmd);
         emit (thread_terminated(DISPLAY_PARTITIONS, result));
     } else if (command_id == DISPLAY_PARTITION_NODES) {

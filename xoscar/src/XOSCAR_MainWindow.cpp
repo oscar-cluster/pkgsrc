@@ -384,7 +384,11 @@ void XOSCAR_MainWindow::refresh_list_partitions ()
         return;
     }
 
-    command_thread.init(DISPLAY_PARTITIONS, QStringList(""));
+	// oscar does not (currently) support multiple clusters so the Perl
+	// scripts have the cluster hard coded. This argument is ignored, but in
+	// the future would be used to indicate which cluster we are requesting
+	// partitions for.
+    command_thread.init(DISPLAY_PARTITIONS, QStringList(listOscarClustersWidget->currentItem()->text()));
 }
 
 /**
