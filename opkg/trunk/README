@@ -1,0 +1,44 @@
+Here are some hints about configuration of OSCAR repositories.
+
+oscar.gforge.inria.fr host the repository and the incoming packages queue.
+Let's call it the 'public' machine.
+2 other machines (one FC and one Debian) fetch incoming packages, update
+repository and rsync the repository on the public machine. Let's call them
+internal machines.
+
+opkg-upload script is used by developpers to upload rpms or debs onto
+the 'incoming' package queue.
+update-apt.sh and update-yum.sh run on internal machines.
+
+update-apt.sh use reprepro to update apt repository while update-yum.sh use
+createrepo.
+
+### reprepro configuration ####
+In the directory containing the repository on internal machine (directory
+containing dists/ and pool/, create a config/ dir.
+In this dir, the 'distributions' file contain the list of available distros.
+It looks like:
+
+Codename: etch
+Suite: stable
+Origin: OSCAR
+Label: OSCAR
+Description: OSCAR packages for stable
+Architectures: i386 amd64 source
+Components: main
+Uploaders: uploaders.oscar
+
+The 'Uploaders' field point to a file in 'conf/' to manage uploaders rights.
+For example, updloaders.oscar may contains:
+
+allow * by unsigned
+
+
+
+
+Please ask me for additional informations. conf/distributions and some other
+conf/ files of reprepro are documented in 'man reprepro' but some other
+features are not well documented. For instance, reprepro can treat itself an
+incoming queue but I don't remember how.
+
+
