@@ -3,9 +3,9 @@ lib_LIBRARIES = libv3m.a
 libv3m_a_SOURCES = libv3m.h vm_status.h nic.h ProfileXMLNode.cpp \
 	ProfileXMLNode.h qemu.h qemu.cpp vm.h vm.cpp VMContainer.h VMSettings.cpp \
 	VMSettings.h xen.h xen.cpp xen-hvm.h xen-hvm.cpp vmware.cpp vmware.h \
-	vmm-hpc.h vmm-hpc.cpp boot.h dtd/v3m_config.dtd dtd/v3m_profile.dtd \
+	vmm-hpc.h vmm-hpc.cpp boot.h etc/v3m_config.dtd etc/v3m_profile.dtd \
 	doxygen_config.in doc/user_guide.sgml doc/example_profile_xen.xml \
-	doc/example_profile_qemu.xml doc/Makefile VMContainer.h
+	doc/example_profile_qemu.xml doc/Makefile
 
 include_HEADERS = vm.h ProfileXMLNode.h VMContainer.h qemu.h xen.h vmware.h \
 				  xen-hvm.h nic.h vmm-hpc.h vm_status.h
@@ -33,6 +33,12 @@ mrproper: clean clean-distrib-tarball docclean clean-autotools
 	rm -f doxygen_config
 
 clean-generic: docclean
+
+install-etc:
+	install -d -m644 $(DESTDIR)/etc/libv3m
+	install etc/*.dtd $(DESTDIR)/etc/libv3m
+
+install-data: install-etc
 
 doxygen-build:
 	echo "Generating documentation with Doxygen...";
