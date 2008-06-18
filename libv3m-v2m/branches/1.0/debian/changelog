@@ -1,3 +1,9 @@
+libv3m (0.9.4-2) gutsy; urgency=low
+
+  * Include DTDs for installation in /etc/libv3m.
+
+ -- Geoffroy Vallee [gvh] <gvh@gvh1.ornl.gov>  Wed, 18 Jun 2008 09:40:24 -0400
+
 libv3m (0.9.4) gutsy; urgency=low
 
   * New upstream version.

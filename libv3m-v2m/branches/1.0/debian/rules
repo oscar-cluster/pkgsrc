@@ -73,6 +73,8 @@ install: build
 
 	# Add here commands to install the package into debian/tmp
 	$(MAKE) DESTDIR=$(CURDIR)/debian/libv3m-dev install
+	# We install configuration files
+	$(MAKE) DESTDIR=$(CURDIR)/debian/libv3m-dev install-etc
 
 
 # Build architecture-independent files here.

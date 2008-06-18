@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!--
+DTD for V3M config file.
+-->
+
+<!ELEMENT config (qemu?, xen?) >
+
+<!ELEMENT qemu (precommand?, command)>
+<!ELEMENT xen (precommand?, command, netboot-image?)>
+
+<!ELEMENT precommand (#PCDATA)>
+
+<!ELEMENT command (#PCDATA)>
+
+<!ELEMENT netboot-image (#PCDATA)>
+

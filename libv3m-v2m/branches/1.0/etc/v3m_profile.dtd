@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!--
+DTD for V2M profiles.
+-->
+
+<!ELEMENT profile (name, type, memory?, image, virtual_disks?, cdrom?, nic1?, nic2?) >
+
+<!ELEMENT name (#PCDATA)>
+
+<!ELEMENT type (#PCDATA)>
+
+<!ELEMENT image (#PCDATA)>
+<!ATTLIST image size CDATA #IMPLIED>
+
+<!ELEMENT memory (#PCDATA)>
+
+<!ELEMENT virtual_disks (virtual_disk+)>
+<!ELEMENT virtual_disk (#PCDATA)>
+<!ATTLIST virtual_disk id CDATA #REQUIRED>
+
+<!ELEMENT cdrom (#PCDATA)>
+
+<!ELEMENT nic1 (type, mac)>
+
+<!ELEMENT nic2 (type, mac)>
+
+<!ELEMENT mac (#PCDATA)>
+
