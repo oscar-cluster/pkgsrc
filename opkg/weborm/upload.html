@@ -1,7 +1,4 @@
-
-
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html>
   <head>
     <title>OSCAR Repository Manager</title>
@@ -17,19 +14,20 @@
   </head>
 <body class="composite">
   <div id="banner">
-    <span id="bannerLeft">
-    </span>
+    <span id="bannerLeft"></span>
     <span id="bannerRight">OSCAR Repository Manager</span>
     <div class="clear">
       <hr/>
     </div>
   </div>
   <div id="breadcrumbs">
-    <div class="xright"><a href="index.html">Home</a>
-    |
-    <a href="upload.html">Upload</a>
-    |
-    <a href="create.html">Create Repo</a>
+    <div class="xright">
+      <a href="index.html">Home</a>
+      |
+      <a href="upload.html">Upload</a>
+      |
+      <a href="create.html">Create Repo</a>
+    </dir>
   </div>
   <div class="clear">
     <hr/>
@@ -51,34 +49,27 @@
   </div>
   <div id="bodyColumn">
     <div id="contentBox">
-<div class="section">
-<h1>
-Upload Binary Packages
-</h1>
+      <div class="section">
+        <h1>Upload Binary Packages</h1>
 
-<form enctype="multipart/form-data" action="process_files.php" method = "post">
-        <!-- The file element -- NOTE: it has an ID -->
-        <input id="my_file_element" type="file" name="file_1" >
-        <input type="submit">
-</form>
-Files (10 maximum):
-</div>
-<!-- This is where the output will appear -->
-<div id="files_list"></div>
-<script>
-        <!-- Create an instance of the multiSelector class, pass it the output targe
-t and the max number of files -->
-        var multi_selector = new MultiSelector( document.getElementById( 'files_list
-' ), 0 );
-        <!-- Pass in the file element -->
-        multi_selector.addElement( document.getElementById( 'my_file_element' ) );
-</script>
-
-</p>
-<div class="section"><p>
-</p></div>
-
-
+        <form enctype="multipart/form-data" action="process_files.php" method = "post">
+          <input id="my_file_element" type="file" name="file_1" >
+          <input type="submit">
+        </form>
+        Files:
+        <div id="files_list"></div>
+        <script>
+          var x = document.getElementsByTagName( 'div' );
+          for (var i=0; i<x.length; i++) {
+            if (x[i].id == "files_list") {
+              var multi_selector = new MultiSelector( x[i], 0 );
+              <!-- Pass in the file element -->
+              multi_selector.addElement( document.getElementById( 'my_file_element' ) );
+            }
+          }
+        </script>
+      </div>
+      <div class="section"><p></p></div>
     </div>
   </div>
   <div class="clear">
@@ -86,13 +77,11 @@ t and the max number of files -->
   </div>
   <div id="footer">
 	<div class="xcenter">
-<a href="http://oscar.openclustergroup.org/"><img alt="OSCAR Logo" src="images/oscar_header.png"/></a>
+      <a href="http://oscar.openclustergroup.org/"><img alt="OSCAR Logo" src="images/oscar_header.png"/></a>
       <div class="clear">
         <hr/>
       </div>
     </div>
-  </div>
-  </div>
   </div>
 </body>
 </html>
