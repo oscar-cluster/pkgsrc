@@ -1,0 +1,56 @@
+h1, h2, h3, h4, h5 {
+    margin: 10px 0px 6px 0px; 
+    color: #044e8e;
+    font-weight: bold;
+}
+h3 { 
+    padding: 4px 4px 4px 24px; 
+    background: #ccc url(../images/h3.jpg) no-repeat left bottom;
+}
+.errormark {
+  background: url(../images/icon_error_sml.gif) no-repeat;
+}
+.warningmark {
+  background-image: url(../images/icon_warning_sml.gif);
+}
+.donemark {
+  background-image: url(../images/icon_success_sml.gif);
+}
+.infomark {
+  background: url(../images/icon_info_sml.gif) no-repeat;
+}
+.errormark, .warningmark, .donemark, .infomark {  
+	padding-left: 25px;  
+	min-height: 15px;  
+}  
+.info {
+	float: left;
+	display: block;
+	border: 1px solid #aaa;
+	background-color: #7EA6D7;
+	margin-bottom:0.8em;
+	-moz-border-radius-topleft:0.8em;
+	-moz-border-radius-topright:0.8em;
+}
+.info p {
+	padding: 0.5em 0.5em 0.5em 0.5em;
+	margin:0;
+}
+.info strong {
+	display:block;
+	width: inherit;
+	background: #6888B0;
+	color: #E5E5E5;
+	padding: 0.2em 0.5em 0.2em 0.5em;
+	-moz-border-radius-topleft:0.6em;
+	-moz-border-radius-topright:0.6em;
+}
+
+.warn {
+	float: left;
+	display: block;
+	margin: 0 1em 2em 2em;
+	padding: 1em;
+	border: 2px solid #474747;
+	background-color: #B8AC30;
+}
