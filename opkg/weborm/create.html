@@ -13,19 +13,20 @@
   </head>
 <body class="composite">
   <div id="banner">
-    <span id="bannerLeft">
-    </span>
+    <span id="bannerLeft"></span>
     <span id="bannerRight">OSCAR Repository Manager</span>
     <div class="clear">
       <hr/>
     </div>
   </div>
   <div id="breadcrumbs">
-    <div class="xright"><a href="index.html">Home</a>
-    |
-    <a href="upload.html">Upload</a>
-    |
-    <a href="create.html">Create Repo</a>
+    <div class="xright">
+      <a href="index.html">Home</a>
+      |
+      <a href="upload.html">Upload</a>
+      |
+      <a href="create.html">Create Repo</a>
+    </dir>
   </div>
   <div class="clear">
     <hr/>
@@ -47,16 +48,26 @@
   </div>
   <div id="bodyColumn">
     <div id="contentBox">
-<div class="section">
-<h1>
-Welcome to the OSCAR Repository Manager!
-</h1>
-<!-- <h2> -->
-
-<div class="section"><p>
-</p></div>
-
-
+      <div class="section" id="section">
+        <h1>Create a New Repository</h1>
+        <br/><br/>
+        <form name="distro_form" action="create_repo.php" method="post">
+        Linux distribution name:
+                <input name="dist_name" />
+        <br/><br/>
+        Distribution version:
+                <input name="dist_version" />
+        <br/><br/>
+        Architecture: 
+            <select name="select1">
+                <option>i386</option>
+                <option>x86_64</option>
+            </select>
+        <br/><br/>
+        <input type="submit"/>
+        </form>
+      </div>
+      <div class="section"><p></p></div>
     </div>
   </div>
   <div class="clear">
@@ -64,14 +75,12 @@ Welcome to the OSCAR Repository Manager!
   </div>
   <div id="footer">
 	<div class="xcenter">
-<a href="http://oscar.openclustergroup.org/"><img alt="OSCAR Logo" src="images/oscar_header.png"/></a><br/>
+      <a href="http://oscar.openclustergroup.org/"><img alt="OSCAR Logo" src="images/oscar_header.png"/></a><br/>
 <a href="license.html" alt="license">License</a>|<a href="authors.html">Authors</a>
       <div class="clear">
         <hr/>
       </div>
     </div>
-  </div>
-  </div>
   </div>
 </body>
 </html>
