@@ -1,0 +1,3 @@
+On Debian Etch, the following packages are required:
+apache2
+libapache2-mod-php5
