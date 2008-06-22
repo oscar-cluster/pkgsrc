@@ -1,3 +1,7 @@
 On Debian Etch, the following packages are required:
 apache2
 libapache2-mod-php5
+
+Repositories:
+All the repositories are created in the 'repos' directory. Make sure the apache
+process as a write access to this directory.
