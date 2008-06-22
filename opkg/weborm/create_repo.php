@@ -9,15 +9,16 @@
 //    echo "<p>You entered {$_SERVER['PHP_AUTH_PW']} as your password.</p>";
 //}
 
-// In PHP versions earlier than 4.1.0, $HTTP_POST_FILES should be used instead
-// of $_FILES.
-
-global $HTTP_POST_VARS;
-reset($HTTP_POST_VARS);
-
 $http_vars = "";
 
-while(list($name, $value) = each($HTTP_POST_VARS))
-    $http_vars .= $name . " = <br />" . $value . "<br /><br />";
+echo "Number of args: " . sizeof($_POST) . "<br/>";
+for ($i=0; $i < sizeof($_POST); $i++) {
+    list($name, $value) = each($_POST);
+    $distro_id = $value;
+    if ($i != sizeof($_POST) - 1) {
+        $distro_id = $distro_id . "-";
+    }
+    echo $distro_id;
+}
 
 ?>
