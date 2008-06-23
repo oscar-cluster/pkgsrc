@@ -1,0 +1,2 @@
+- When uploading packages, we should save the packages in "uploads/$distro_id".
+- Delete file in uploads when needed.
