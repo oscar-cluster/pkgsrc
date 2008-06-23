@@ -15,7 +15,7 @@
 $uploaddir = 'uploads/';
 
 echo '<pre>';
-$file_count = sizeof($_FILES)-1;
+$file_count = sizeof($_FILES);
 echo 'number of files: ' . $file_count . "...\n";
 for ($i=0; $i<$file_count; $i++) {
     $thisfilename = 'file_'. $i;
