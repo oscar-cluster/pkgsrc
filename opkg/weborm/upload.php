@@ -24,7 +24,7 @@
     <div class="xright">
       <a href="index.html">Home</a>
       |
-      <a href="upload.html">Upload</a>
+      <a href="upload.php">Upload</a>
       |
       <a href="create.html">Create Repo</a>
     </dir>
@@ -39,7 +39,7 @@
           <a href="index.html">Home</a>
         </li>
         <li class="none">
-          <a href="upload.html">Upload Packages</a>
+          <a href="upload.php">Upload Packages</a>
         </li>
         <li class="none">
           <a href="create.html">Create a New Repository</a>
