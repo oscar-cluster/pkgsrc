@@ -1,3 +1,4 @@
+B
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html>
   <head>
@@ -9,7 +10,20 @@
     <link rel="stylesheet" href="./css/print.css" type="text/css" media="print"/>
     <meta name="author" content="Geoffroy Vallee" />
     <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1" />
-    <script src="multifile.js"></script>
+<!--    <script src="display_packages.js"></script>-->
+    <script>
+        function newSelection() {
+            var x = document.getElementById ('select1');
+            if (x != null) {
+                var i = x.options.selectedIndex;
+                var str = x.options[i].value;
+                if (str != "") {
+                    var div1 = document.getElementById ('name_repo');
+                    div1.innerHTML = str;
+                }
+            }
+        }
+    </script>
   </head>
 <body class="composite">
   <div id="banner">
@@ -53,20 +67,22 @@
   </div>
   <div id="bodyColumn">
     <div id="contentBox">
-      <div class="section">
+      <div class="section" id="section">
         <h1>Manage an Existing Repository</h1>
         <br/><br/>
-        <form enctype="multipart/form-data" action="manage_repo.php" method = "post">
+        <form action="manage_repo.php" method="post">
           <? include ("list_repos.php"); ?>
-          <input type="submit">
+          <input type="submit" />
         </form>
       </div>
+      <div id="name_repo"></div>
+      <div id="packages_list"></div>
       <div class="section"><p></p></div>
     </div>
   </div>
   <div class="clear">
     <hr/>
-  </div>
+  </diV>
   <div id="footer">
 	<div class="xcenter">
       <a href="http://oscar.openclustergroup.org/"><img alt="OSCAR Logo" src="images/oscar_header.png"/></a><br/>
