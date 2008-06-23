@@ -1,3 +1,7 @@
+rapt-2.2
+- Bug fixes.
+- Manpage improvement.
+
 rapt-2.1
 - Switch back to apt-get instead of aptitude (keyring problems).
 - When detecting repositories architecture, skip online repositories.
