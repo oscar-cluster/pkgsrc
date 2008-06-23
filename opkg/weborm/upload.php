@@ -52,8 +52,8 @@
       <div class="section">
         <h1>Upload Binary Packages</h1>
         <br/><br/>
-        <? include ("list_repos.php"); ?>
         <form enctype="multipart/form-data" action="process_files.php" method = "post">
+          <? include ("list_repos.php"); ?>
           <input id="my_file_element" type="file" name="file_1" >
           <input type="submit">
         </form>

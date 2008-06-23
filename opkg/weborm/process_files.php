@@ -15,25 +15,51 @@
 $uploaddir = 'uploads/';
 
 echo '<pre>';
+echo "Number of args: " . sizeof($_POST) . "<br/>";
+for ($i=0; $i < sizeof($_POST); $i++) {
+    list($name, $value) = each($_POST);
+    $distro_id = $value;
+    if ($i != sizeof($_POST) - 1) {
+        $distro_id = $distro_id . "-";
+    }
+    echo "    Target repository: $distro_id<br/>";
+}
 $file_count = sizeof($_FILES);
-echo 'number of files: ' . $file_count . "...\n";
 for ($i=0; $i<$file_count; $i++) {
     $thisfilename = 'file_'. $i;
     $userfile = $_FILES[$thisfilename]['name'];
-    echo "File id: " . $userfile . "\n";
-    $uploadfile = "./" . $uploaddir . $userfile;
-    if (move_uploaded_file($_FILES[$thisfilename]['tmp_name'], $uploadfile)) {
-        echo "File is valid, and was successfully uploaded.\n";
-        echo "Checking if the file is a valid binary package...<br/>";
-        if (is_a_valid_package ($uploadfile)) {
-            echo "The package is valid.<br/>";
-            
+    if ($userfile != "") {
+        echo "<br/>File id: " . $userfile . "\n";
+        $uploadfile = "./" . $uploaddir . $userfile;
+        if (move_uploaded_file($_FILES[$thisfilename]['tmp_name'], $uploadfile)) {
+            echo "File is valid, and was successfully uploaded.\n";
+            echo "Checking if the file is a valid binary package...<br/>";
+            if (is_a_valid_package ($uploadfile)) {
+                echo "The package is valid.<br/>";
+                $repo_file = "./repos/$distro_id/$userfile";
+                if (rename($uploadfile, $repo_file)) {
+                    echo "Successfully copied $uploadfile to $repo_file<br/>";
+                } else {
+                    echo "ERROR: Impossible to copy the file ($uploadfile) to the repository ($repo_file)<br/>";
+                }
+             } else {
+                echo "The package ($uploadfile) is not valid<br/>";
+            }
         } else {
-            echo "The package ($uploadfile) is not valid<br/>";
+            echo "Possible file upload attack!\n";
         }
-    } else {
-        echo "Possible file upload attack!\n";
     }
+}
+
+echo "<br/>Regenerating the repository's metadata...<br/>";
+$packman_cmd = "/usr/bin/packman --prepare-repo " . getcwd() . "/repos/$distro_id -v";
+echo "    Executing $packman_cmd...<br/>";
+if (exec ($packman_cmd, $output)) {
+    print_full_output ($output);
+    echo "    Successfully regenerate repository's meta-data<br/>";
+} else {
+    print_full_output ($output);
+    echo "    ERROR: Impossible to regenerate repository's meta-data<br/>";
 }
 
 print "</pre>";
@@ -48,6 +74,14 @@ function is_a_valid_package ($file_path) {
         return true;
     } else {
         return false;
+    }
+}
+
+function print_full_output ($output) {
+    $size = sizeof($output);
+    echo "Output:<br/>";
+    for ($i=0; $i<$size; $i++) {
+        echo "    $output[$i]<br/>";
     }
 }
 
