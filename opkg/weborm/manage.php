@@ -8,8 +8,8 @@
     </style>
     <link rel="stylesheet" href="./css/print.css" type="text/css" media="print"/>
     <meta name="author" content="Geoffroy Vallee" />
-    <meta name="keywords" content="ORNL, system, operating system, research" />
     <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1" />
+    <script src="multifile.js"></script>
   </head>
 <body class="composite">
   <div id="banner">
@@ -53,23 +53,12 @@
   </div>
   <div id="bodyColumn">
     <div id="contentBox">
-      <div class="section" id="section">
-        <h1>Create a New Repository</h1>
+      <div class="section">
+        <h1>Manage an Existing Repository</h1>
         <br/><br/>
-        <form name="distro_form" action="create_repo.php" method="post">
-        Linux distribution name:
-                <input name="dist_name" />
-        <br/><br/>
-        Distribution version:
-                <input name="dist_version" />
-        <br/><br/>
-        Architecture: 
-            <select name="select1">
-                <option>i386</option>
-                <option>x86_64</option>
-            </select>
-        <br/><br/>
-        <input type="submit"/>
+        <form enctype="multipart/form-data" action="manage_repo.php" method = "post">
+          <? include ("list_repos.php"); ?>
+          <input type="submit">
         </form>
       </div>
       <div class="section"><p></p></div>

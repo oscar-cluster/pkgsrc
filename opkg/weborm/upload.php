@@ -27,6 +27,8 @@
       <a href="upload.php">Upload</a>
       |
       <a href="create.html">Create Repo</a>
+      |
+      <a href="manage.php">Manage Repo</a>
     </dir>
   </div>
   <div class="clear">
@@ -43,6 +45,9 @@
         </li>
         <li class="none">
           <a href="create.html">Create a New Repository</a>
+        </li>
+        <li class="none">
+          <a href="manage.php">Manage an Existing Repository</a>
         </li>
       </ul>
     </div>
