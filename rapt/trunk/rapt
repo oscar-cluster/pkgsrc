@@ -204,7 +204,7 @@ if ($installroot) {
 # update Packages cache. Note that we turn off all output (including stderr),
 # we are only interested by the return code.
 my $cmd = "apt-get update";
-$cmd = $cmd . " 1>/dev/null 2>/dev/null" if $verbose;
+$cmd = $cmd . " 1>/dev/null 2>/dev/null" if (!$verbose);
 if ($installroot) {
     $cmd = "chroot $installroot $cmd";
 }
@@ -546,7 +546,7 @@ sub openup_debconf {
 
     print "Configuring debconf to use the Dialog interface.\n" if $verbose;
     rename $config, $tmp or return 1;
-	    
+
     open(OLD_CONFIG, "<$tmp") or return 1;
     open(NEW_CONFIG, ">$config") or close OLD_CONFIG and return 1;
     while (<CONFIG>) {
@@ -986,7 +986,7 @@ sub prep_repodata (@) {
             next if ($repo !~ m:^/:);
 
             # create directory for package metadata
-            if (! -d "$repo/subdir") {
+            if (! -d "$repo/$subdir") {
                 !system("mkdir -p $repo/$subdir")
                     or croak "Could not create directory $repo/$subdir";
             }
