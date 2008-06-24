@@ -1,0 +1,8 @@
+AuthUserFile /var/www/apache2-default/.htpasswd
+AuthGroupFile /dev/null
+AuthName "Private Section"
+AuthType Basic
+
+<Limit GET POST>
+require valid-user
+</Limit>
