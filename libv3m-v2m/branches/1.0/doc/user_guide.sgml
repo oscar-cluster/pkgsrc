@@ -19,7 +19,7 @@
 <sect1><title>Configuration</title>
 
 <para>
-Before to use libv3m or any software based on libv3m, an XML configuration file
+Before you use libv3m or any software based on libv3m, an XML configuration file
 (/etc/v3m/vm.conf) has to be created. This configuration file specifies all 
 commands needed for the use of virtualization technologies.
 An example of this file:
