@@ -41,9 +41,12 @@ for ($i=0; $i<$file_count; $i++) {
                     echo "Successfully copied $uploadfile to $repo_file<br/>";
                 } else {
                     echo "ERROR: Impossible to copy the file ($uploadfile) to the repository ($repo_file)<br/>";
+                    return;
                 }
              } else {
                 echo "The package ($uploadfile) is not valid<br/>";
+                unlink ($uploadfile);
+                return;
             }
         } else {
             echo "Possible file upload attack!\n";
