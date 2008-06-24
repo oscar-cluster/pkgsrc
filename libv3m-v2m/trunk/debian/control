@@ -1,7 +1,7 @@
 Source: libv3m
 Priority: extra
 Maintainer: Geoffroy Vallee <valleegr@ornl.gov>
-Build-Depends: debhelper (>= 5), autotools-dev, automake, autoconf, libxml++2.6-dev
+Build-Depends: debhelper (>= 5), autotools-dev, automake, autoconf, libxml++2.6-dev, sgmltools-lite
 Standards-Version: 3.7.2
 Section: libs
 

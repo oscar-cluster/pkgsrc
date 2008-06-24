@@ -33,7 +33,7 @@ The monitoring of virtual machine implies few constraints:
             virtual machine status.
         </para>
     </listitem>
-<itemizedlist>
+</itemizedlist>
 </para>
 </sect1>
 
@@ -44,6 +44,8 @@ Qemu: process ID?
 
 Xen: VM name + domain ID (available through xm).
 </para>
+
+</sect1>
 
 <sect1><title>Output Parsing From External Processes</title>
 
