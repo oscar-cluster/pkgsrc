@@ -62,6 +62,10 @@ if (exec ($packman_cmd, $output)) {
     echo "    ERROR: Impossible to regenerate repository's meta-data<br/>";
 }
 
+echo "<br/><br/>";
+echo "<script>function loadIndex() { document.location.href = \"./index.html\" }</script>";
+echo "<button onclick=\"loadIndex()\" />Ok</button>";
+
 print "</pre>";
 
 function is_a_valid_package ($file_path) {
