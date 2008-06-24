@@ -19,7 +19,7 @@
 <sect1><title>Configuration</title>
 
 <para>
-Before you use libv3m or any software based on libv3m, an XML configuration file
+Before you use libv3m or any software based on libv3m, a XML configuration file
 (/etc/v3m/vm.conf) has to be created. This configuration file specifies all 
 commands needed for the use of virtualization technologies.
 An example of this file:
@@ -39,7 +39,7 @@ An example of this file:
 </programlisting>
 
 Note that for all virtualization technology (e.g. Qemu), "command" is mandatory.
-"Command" is the string used to create a VM and "Precommand", the command to 
+"Command" is the string used to create a VM and "Precommand" is the command to 
 execute before the creation of a VM. "Command" has to be specified before 
 "Precommand", and they are both mandatory.
 </para>
@@ -49,9 +49,9 @@ execute before the creation of a VM. "Command" has to be specified before
 <sect1><title>Creation of a Profile</title>
 
 <para>
-All VMs are specified through an XML profile. 
+All VMs are specified through a XML profile. 
 The DTD of this XML profile is available in sources (in the dtd folder) and has
-to be copied to the location where you will write you profile. You need to do
+to be copied to the location where you will write your profile. You need to do
 that because libv3m will automatically check if the format of your profile is
 correct or not.
 Several profile examples are also available with the libv3m documentations. 
@@ -60,7 +60,7 @@ Several profile examples are also available with the libv3m documentations.
 <sect2><title>Network Configuration</title>
 
 <para>
-Two kind of connections are available:
+Two kinds of connections are available:
 <itemizedlist>
     <listitem><para>TUN/TAP: for a connection with the host OS,</para></listitem>
     <listitem><para>BRIDGED_TAP: for a connection with the host OS but in that 
@@ -89,7 +89,7 @@ For example:
 </nic1>
 ]]>
 </programlisting>
-WARNING! If you want to have two nics, for instance to simulate an headnode
+WARNING! If you want to have two nics, for instance to simulate a headnode
 of a cluster, the current implementation has a limitation, the way you 
 specify your NICS will change the behavior of the network configuration.
 Therefore, if you want two NICs, one for the connection with the host OS and
@@ -129,11 +129,11 @@ user may have to do some last and manual configuration steps. For instance:
 </para>
 
 <para>
-Note2: Depending of the virtualization technology, the difference may not
-result to two different network connection at the VM level but this detail
+Note2: Depending on the virtualization technology, the difference may not
+result in two different network connections at the VM level, but this detail
 should be hidden. For instance, a connection to a VLAN using QEMU does not 
-result to a visible virtual network interface on the host OS; but with Xen
-it results to a visible virtual network connection on the host OS (like for
+result in a visible virtual network interface on the host OS; but with Xen
+it results in a visible virtual network connection on the host OS (like for
 TAP connections).
 </para>
 
@@ -148,11 +148,11 @@ respectively.
 <sect2><title>Virtual Disk Configuration</title>
 
 <para>
-It is possible to add virtual disk within your VM. For instance, you may want to have an hdb virtual hard-drive on the side of your virtual system.
+It is possible to add virtual disks within your VM. For instance, you may want to have an hdb virtual hard-drive on the side of your virtual system.
 </para>
 
 <para>
-For instance to add an hbd virtual hard-drive you can do:
+For instance to add a hbd virtual hard-drive you can do:
 <programlisting role="xml">
 <![CDATA[
 <virtual_disks>
@@ -160,9 +160,9 @@ For instance to add an hbd virtual hard-drive you can do:
 </virtual_disks>
 ]]>
 </programlisting>
-You may define as many virtual hard-drive as you want, but the virtualization
+You may define as many virtual hard-drives as you want, but the virtualization
 solution used may have some limitations (for instance Qemu uses hdc for the 
-CDROM therefore it is not possible to have an hdc virtual disk and a virtual
+CDROM therefore it is not possible to have a hdc virtual disk and a virtual
 CDROM at the same time).
 </para>
 
@@ -176,7 +176,8 @@ CDROM at the same time).
         http://www.csm.ornl.org/srt/v2m.html) with the idea that this tool will
         be integrated into OSCAR (http://oscar.openclustergroup.org/) in order
         to use the management of virtual clusters. This integration has led to
-        the OSCAR-V project (http://www.csm.ornl.gov/srt/oscarv.html).
+        the OSCAR-V project
+        (http://www.csm.ornl.gov/srt/oscarv.html).
     </para>
     <para>
         Therefore, libv3m provides an interface for the deployment of VM via 
@@ -187,7 +188,7 @@ CDROM at the same time).
         a bootable CDROM. It is therefore possible to use the OSCAR bootable 
         CDROM to initiate the VM installation via OSCAR. For the Xen 
         para-virtualization, such a boot method is impossible. Therefore, we 
-        have simulate a network boot in order to initiate the OSCAR 
+        have simulated a network boot in order to initiate the OSCAR 
         installation. These differences are hidden by libv3m providing a
         generic interface.
     </para>
