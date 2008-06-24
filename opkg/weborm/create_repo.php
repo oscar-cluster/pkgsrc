@@ -26,11 +26,24 @@ for ($i=0; $i < sizeof($_POST); $i++) {
 echo $distro_id . "<br/>";
 
 $dir = "./repos/".$distro_id;
+$dir2 = "./uploads/".$distro_id;
+
 echo "Creating " . $dir . "...<br/>";
 if (mkdir($dir)) {
     echo "Repository successfully created<br/>";
 } else {
     echo "ERROR: Impossible to create the repository";
 }
+
+echo "Creating " . $dir2 . "...<br/>";
+if (mkdir($dir2)) {
+    echo "Incoming queue successfully created<br/>";
+} else {
+    echo "ERROR: Impossible to create the incoming queue<br/>";
+}
+
+echo "<br/><br/>";
+echo "<script>function loadIndex() { document.location.href = \"./index.html\" }</script>";
+echo "<button onclick=\"loadIndex()\" />Ok</button>";
 
 ?>
