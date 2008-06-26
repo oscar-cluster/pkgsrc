@@ -7,7 +7,7 @@
 
 Summary:		Library abstracting system virtualization solution such as Xen or QEMU.
 Name:      		libv3m
-Version:   		0.1
+Version:   		0.9.4
 Release:   		1
 Vendor:			Oak Ridge National Laboratory
 Distribution:   	Fedore Core 4

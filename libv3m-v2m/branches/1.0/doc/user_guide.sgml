@@ -44,16 +44,31 @@ execute before the creation of a VM. "Command" has to be specified before
 "Precommand", and they are both mandatory.
 </para>
 
+<para>
+  DTDs are also available for the validation of XML files used for libv3m. 
+  These DTDs are typically installed into /etc/libv3m/. Two DTDs are available:
+  v3m_config.dtd and v3m_profile.dtd. From the source code, they are available
+  in the 'etc' directory.
+</para>
+
+<para>
+  The v3m_config.dtd file is used to validate the v3m configuration file 
+  (typically '/etc/v3m/vm.conf'); and v3m_profile.dtd is used to validate VMs'
+  profile.
+</para>
+
+<para>
+  Only developers should modify those DTDs.
+</para>
+
 </sect1>
 
 <sect1><title>Creation of a Profile</title>
 
 <para>
 All VMs are specified through a XML profile. 
-The DTD of this XML profile is available in sources (in the dtd folder) and has
-to be copied to the location where you will write your profile. You need to do
-that because libv3m will automatically check if the format of your profile is
-correct or not.
+The DTD of this XML profile is available in '/etc/libv3m/'. This DTD is used to
+validate your profiles.
 Several profile examples are also available with the libv3m documentations. 
 </para>
 
@@ -167,6 +182,30 @@ CDROM at the same time).
 </para>
 
 </sect2>
+
+<sect2><title>Examples</title>
+  <para>
+    A profile for a Qemu virtual machine with a single NIC connected to the Host
+    OS will look like:
+    <programlisting role="xml">
+      <![CDATA[
+               <?xml version="1.0"?>
+               <!DOCTYPE profile PUBLIC "" "/etc/libv3m/v3m_profile.dtd">
+               <profile>
+                 <name>etch-x86</name>
+                 <type>Qemu</type>
+                 <memory>512</memory>
+                 <image size="2000">/home/toto/vm_images/Etch/etch-x86.img</image>
+                 <nic1>
+                   <type>TUN/TAP</type>
+                   <mac>00:01:02:03:04:05</mac>
+                 </nic1>
+               </profile>
+      ]]>
+    </programlisting>
+  </para>
+</sect2>
+
 </sect1>
 
 <sect1><title>VM Management with OSCAR (OSCAR-V)</title>
