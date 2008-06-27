@@ -24,6 +24,8 @@
 #include <QString>
 #include <QMainWindow>
 #include <QTextStream>
+#include <QCloseEvent>
+#include <QMessageBox>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -42,6 +44,7 @@
 #include "XOSCAR_AboutAuthorsDialog.h"
 #include "XOSCAR_AboutOscarDialog.h"
 #include "XOSCAR_FileBrowser.h"
+#include "XOSCAR_TabGeneralInformation.h"
 
 using namespace Ui; 
 using namespace std;
@@ -70,7 +73,6 @@ public:
     ~XOSCAR_MainWindow();
 
 public slots:
-    void add_partition_handler();
     void add_repo_to_list ();
     void create_add_distro_window ();
     void create_add_repo_window ();
@@ -89,16 +91,19 @@ public slots:
     void open_mac_file(const QString);
     void refresh_display_opkgs_from_repo();
     void refresh_list_setup_distros();
-    void refresh_list_partitions();
-    void refresh_partition_info();
-    void save_cluster_info_handler();
-    void tab_activated(int);
+    void networkConfigTab_currentChanged_handler(int);
     void update_check_text_widget(QString);
+	void activate_tab(int tab_num);
+	void widgetContentsChanged_handler(QWidget*);
+    void widgetContentsSaved_handler(QWidget*);
+
+protected:
+	void closeEvent(QCloseEvent* event);
 
 private:
-    string intToStdString (int i);
     void network_configuration_tab_activated();
     int stringToNodesConfig (QString);
+	bool prompt_save_changes();
 
     XOSCAR_AboutAuthorsDialog about_authors_widget;
     XOSCAR_AboutOscarDialog about_oscar_widget;
@@ -106,6 +111,10 @@ private:
     ORMAddDistroDialog add_distro_widget;
     ORMWaitDialog*  wait_popup;
     CommandExecutionThread command_thread;
+
+    XOSCAR_TabGeneralInformation* giTab;
+    QWidget* widgetPendingChanges;
+    int oscarOptionsRowPendingChanges;
 };
 
 } // namespace xoscar

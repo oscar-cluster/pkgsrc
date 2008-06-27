@@ -17,6 +17,7 @@
 #include "XOSCAR_MainWindow.h"
 #include "SimpleConfigFile.h"
 #include "Hash.h"
+#include "utilities.h"
 
 using namespace xoscar;
 
@@ -32,9 +33,21 @@ using namespace xoscar;
  */
 XOSCAR_MainWindow::XOSCAR_MainWindow(QMainWindow *parent)
     : QMainWindow(parent) 
+    , widgetPendingChanges(NULL)
+    , oscarOptionsRowPendingChanges(-1)
 {
     setupUi(this);
 
+    giTab = new XOSCAR_TabGeneralInformation(networkConfigurationTabWidget);
+
+    networkConfigurationTabWidget->insertTab(0, giTab, tr("General Information"));
+    networkConfigurationTabWidget->setCurrentIndex(0);
+
+    connect(giTab, SIGNAL(widgetContentsModified(QWidget*)),
+            this, SLOT(widgetContentsChanged_handler(QWidget*)));
+
+    connect(giTab, SIGNAL(widgetContentsSaved(QWidget*)),
+            this, SLOT(widgetContentsSaved_handler(QWidget*))); 
     // We read the xoscar configuration file (~/.xoscar.conf). Note that if the
     // file does not exist, a default configuration file is created.
 //     QString home_path = getenv("HOME");
@@ -53,10 +66,6 @@ XOSCAR_MainWindow::XOSCAR_MainWindow(QMainWindow *parent)
                     this, SLOT(create_add_distro_window()));
     connect(listReposWidget, SIGNAL(itemSelectionChanged ()),
                     this, SLOT(display_opkgs_from_repo()));
-    connect(listOscarClustersWidget, SIGNAL(itemSelectionChanged ()),
-                    this, SLOT(refresh_list_partitions()));
-    connect(listClusterPartitionsWidget, SIGNAL(itemSelectionChanged ()),
-                    this, SLOT(refresh_partition_info()));
     connect(refreshListOPKGsButton, SIGNAL(clicked()),
                     this, SLOT(refresh_display_opkgs_from_repo()));
     connect(refreshListSetupDistrosButton, SIGNAL(clicked()),
@@ -69,12 +78,6 @@ XOSCAR_MainWindow::XOSCAR_MainWindow(QMainWindow *parent)
     /* Connect button sinals */
     connect(QuitButton, SIGNAL(clicked()),
                     this, SLOT(destroy()));
-    connect(addPartitionButton, SIGNAL(clicked()),
-                    this, SLOT(add_partition_handler()));
-    connect(saveClusterInfoButton, SIGNAL(clicked()),
-                    this, SLOT(save_cluster_info_handler()));
-    connect(saveClusterInfoButton, SIGNAL(clicked()),
-                    this, SLOT(refresh_list_partitions()));
     connect(importfilebrowse, SIGNAL(clicked()),
                     this, SLOT(open_file()));
     connect(importmacs, SIGNAL(clicked()),
@@ -87,13 +90,16 @@ XOSCAR_MainWindow::XOSCAR_MainWindow(QMainWindow *parent)
 
     /* signals related to tabs */
     connect(networkConfigurationTabWidget, SIGNAL(currentChanged (int)),
-                    this, SLOT(tab_activated(int)));
+                    this, SLOT(networkConfigTab_currentChanged_handler(int)));
 
     connect(&command_thread, SIGNAL(opd_done(QString, QString)),
         this, SLOT(kill_popup(QString, QString)));
 
     connect(&command_thread, SIGNAL(oscar_config_done(QString)),
         this, SLOT(handle_oscar_config_result(QString)));
+
+    connect(&command_thread, SIGNAL(oscar_config_done(QString)),
+            giTab, SLOT(handle_oscar_config_result(QString)));
 
     connect(&command_thread, SIGNAL(sanity_command_done(QString)),
         this, SLOT(update_check_text_widget(QString)));
@@ -130,11 +136,25 @@ XOSCAR_MainWindow::~XOSCAR_MainWindow()
  */
 void XOSCAR_MainWindow::newOscarOptionSelected() 
 {
+    if(listOscarOptionsWidget->currentRow() == oscarOptionsRowPendingChanges) {
+        return;
+    }
+    if (prompt_save_changes() == false) {
+        listOscarOptionsWidget->setCurrentRow(oscarOptionsRowPendingChanges);
+        return;
+    } 
+    oscarOptionsRowPendingChanges = -1;
+
     QString option;
 
     /* We get the selected repo. Note that the selection widget supports 
        currently a unique selection. */
     QList<QListWidgetItem *> list = listOscarOptionsWidget->selectedItems();
+
+    if(list.count() == 0) {
+        return;
+    }
+
     QListIterator<QListWidgetItem *> i(list);
     option = i.next()->text();
 
@@ -294,10 +314,9 @@ void XOSCAR_MainWindow::add_repo_to_list()
 void XOSCAR_MainWindow::handle_oscar_config_result(QString list_distros)
 {
     cout << list_distros.toStdString () << endl;
-    QStringList list = list_distros.split (" ");
+    QStringList list = list_distros.split (" ", QString::SkipEmptyParts);
     for(int i = 0; i < list.size(); i++) {
         this->listSetupDistrosWidget->addItem (list.at(i));
-        partitionDistroComboBox->addItem (list.at(i));
     }
     listSetupDistrosWidget->update();
     command_thread.init(INACTIVE, QStringList(""));
@@ -350,6 +369,28 @@ void XOSCAR_MainWindow::destroy()
 }
 
 /**
+ *  @author Robert Babilon
+ *
+ *  Qt function called when the application is about to close.
+ *  Allows overriding to continue with the close event or ignore it.
+ *  The idea is to check one last time if any of the tabs were
+ *  modified before closing the application.
+ */
+void XOSCAR_MainWindow::closeEvent(QCloseEvent* event)
+{
+    if(widgetPendingChanges != NULL) { 
+        prompt_save_changes();
+    }
+    
+    if(widgetPendingChanges == NULL) { 
+        event->accept();
+    }
+    else {
+        event->ignore();
+    }
+}
+
+/**
  * @author Geoffroy Vallee
  *
  * Slot called when the menu item to have information of authors is clicked.
@@ -372,135 +413,46 @@ void XOSCAR_MainWindow::handle_about_oscar_action()
 }
 
 /**
- * @author Geoffroy Vallee.
+ *  @author Robert Babilon
  *
- * This function handles the update of OSCAR cluster information when a new 
- * cluster is selected in the "General Information" widget. It displays the list
- * of partitions within the cluster.
+ *  Slot called when a tab that implements the XOSCAR_TabWidgetInterface
+ *  has been modified by the user.
+ *
+ *  @param widget Tab that has been modified.
+ *
  */
-void XOSCAR_MainWindow::refresh_list_partitions ()
+void XOSCAR_MainWindow::widgetContentsChanged_handler(QWidget* widget)
 {
-    if(listOscarClustersWidget->currentRow() == -1) {
+    if(widget == NULL) {
+        cout << "ERROR: widget is NULL" << endl;
         return;
     }
 
-	// oscar does not (currently) support multiple clusters so the Perl
-	// scripts have the cluster hard coded. This argument is ignored, but in
-	// the future would be used to indicate which cluster we are requesting
-	// partitions for.
-    command_thread.init(DISPLAY_PARTITIONS, QStringList(listOscarClustersWidget->currentItem()->text()));
-}
-
-/**
- * @author Geoffroy Vallee.
- *
- * This function handles the update of partition information when a new 
- * partition is selected in the "General Information" widget.
- */
-void XOSCAR_MainWindow::refresh_partition_info ()
-{
-    if(listClusterPartitionsWidget->currentRow() == -1) {
-        return;
+    if(widgetPendingChanges == widget || widgetPendingChanges == NULL) {
+        widgetPendingChanges = widget;
+        oscarOptionsRowPendingChanges = listOscarOptionsWidget->currentRow();
     }
-
-    // do we really need to call selectedItems if the control
-    // only allows one item to be selected at a time anyway?
-    QList<QListWidgetItem *> list =
-        listClusterPartitionsWidget->selectedItems();
-
-    // if nothing is in the list, we cannot select the next one
-    if (list.count() == 0) {
-        return;
+    else {
+        cout << "ERROR: a previous tab has not been saved." << endl;
     }
-
-    QListIterator<QListWidgetItem *> i(list);
-    QString current_partition = i.next()->text();
-    partitonNameEditWidget->setText(current_partition);
-
-    /* We display the number of nodes composing the partition */
-    command_thread.init(DISPLAY_PARTITION_NODES, 
-                        QStringList(current_partition));
-    command_thread.wait();
-
-    /* We get the list of supported distros */
-    command_thread.init(GET_SETUP_DISTROS, QStringList(""));
-    command_thread.wait();
-
-    /* We get the Linux distribution on which the partition is based */
-    command_thread.init(DISPLAY_PARTITION_DISTRO, QStringList(""));
-    command_thread.wait();
 }
 
 /**
- * @author Geoffroy Vallee.
+ *  @author Robert Babilon
  *
- * Slot that handles the click on the "add partition" button.
+ *  Slot called when a widget saves it's content.
  *
- * @todo Find a good name by default that avoids conflicts if the user does not
- * change it.
- * @todo Check if a cluster is selected.
+ *  @param widget Tab that has been saved.
  */
-void XOSCAR_MainWindow::add_partition_handler()
+void XOSCAR_MainWindow::widgetContentsSaved_handler(QWidget* widget)
 {
-    if (listOscarClustersWidget->currentRow() == -1)
-        return;
-
-    listClusterPartitionsWidget->addItem ("New_Partition");
-    listClusterPartitionsWidget->update ();
-}
-
-/**
- * @author Geoffroy Vallee.
- *
- * Slot that handles the click on the "Save Cluster Configuration" button.
- *
- * @todo Check if the partition name already exists or not.
- * @todo Display a dialog is partition information are not valid.
- * @todo Check the return value of the command to add partition information
- *       in the database.
- */
-void XOSCAR_MainWindow::save_cluster_info_handler()
-{
-    int nb_nodes = PartitionNumberNodesSpinBox->value();
-    QString partition_name = partitonNameEditWidget->text();
-    QString partition_distro = partitionDistroComboBox->currentText();
-
-    if (partition_name.compare("") == 0 || nb_nodes == 0 
-        || partition_distro.compare("") == 0) {
-        cerr << "ERROR: invalid partition information" << endl;
-    } else {
-        QStringList args;
-        args << partition_name << partition_distro;
-
-        /* We had now the compute nodes, giving them a default name */
-        string tmp;
-        for (int i=0; i < nb_nodes; i++) {
-            tmp = partition_name.toStdString() + "_node" + intToStdString(i);
-            args << tmp.c_str();
-        }
-        command_thread.init (ADD_PARTITION, args);
+    if(widgetPendingChanges == widget) {
+        widgetPendingChanges = NULL;
+        oscarOptionsRowPendingChanges = -1;
     }
-    /* We unset the selection of the partition is order to be able to update
-       the widget. If we do not do that, a NULL pointer is used and the app
-       crashes. */
-    listClusterPartitionsWidget->setCurrentRow(-1);
-}
-
-/**
- * @author Geoffroy Vallee.
- *
- * Utility function: convert an integer to a standard string.
- *
- * @param i Integer to convert in string.
- * @return Standard string representing the integer.
- */
-string XOSCAR_MainWindow::intToStdString (int i)
-{
-    std::stringstream ss;
-    std::string str;
-    ss << i;
-    ss >> str;
-    return str;
+    else {
+        cout << "ERROR: widget saved is not equal to widget with changes" << endl;
+    }
 }
 
 /**
@@ -511,7 +463,69 @@ string XOSCAR_MainWindow::intToStdString (int i)
  *
  * @param tab_num Index of the activated tab.
  */
-void XOSCAR_MainWindow::tab_activated(int tab_num) 
+void XOSCAR_MainWindow::networkConfigTab_currentChanged_handler(int tab_num) 
+{
+    if(networkConfigurationTabWidget->currentWidget() == widgetPendingChanges) {
+        // ignore
+    }
+    else if(prompt_save_changes() == false) {
+        // if cancel changes, revert to last known tab
+        networkConfigurationTabWidget->setCurrentWidget(widgetPendingChanges);
+    }
+    else {
+        activate_tab(tab_num);
+    }
+}
+
+/**
+ * @author Robert Babilon
+ *
+ * This function calls save() or undo() on the widget that has changes pending.
+ * If the widget does not implement XOSCAR_TabWidgetInterface, then the function
+ * ignores it and returns true.
+ * If changes were made and the user wishes to save, this returns true
+ * If changes were made and the user wishes to undo the changes, this returns
+ * true.
+ * If the user wishes to cancel, this returns false.
+ */
+bool XOSCAR_MainWindow::prompt_save_changes()
+{
+    bool result = true;
+
+    XOSCAR_TabWidgetInterface* tab = reinterpret_cast<XOSCAR_TabWidgetInterface*>(widgetPendingChanges);
+
+    if(tab == NULL) {
+        // ignore
+    }
+    else if(tab->isModified()) {
+        QMessageBox msg(QMessageBox::NoIcon, tr("Save changes?"), tr("The previous tab has been modified.\n")
+                                                                + tr("Would you like to save your changes?"),
+                        QMessageBox::Save|QMessageBox::No|QMessageBox::Cancel, this);
+
+        switch(msg.exec()) {
+            case QMessageBox::Save: 
+                tab->save();
+                widgetPendingChanges = NULL;
+                oscarOptionsRowPendingChanges = -1;
+                break;
+            case QMessageBox::No:
+                tab->undo();
+                widgetPendingChanges = NULL;
+                oscarOptionsRowPendingChanges = -1;
+                break;
+            case QMessageBox::Cancel:
+                result = false;
+        }
+    }
+    else {
+        widgetPendingChanges = NULL;
+        oscarOptionsRowPendingChanges = -1;
+    }
+    
+    return result;
+}
+
+void XOSCAR_MainWindow::activate_tab(int tab_num)
 {
     switch (tab_num) {
         case (1) : network_configuration_tab_activated();
@@ -535,7 +549,7 @@ void XOSCAR_MainWindow::tab_activated(int tab_num)
  */
 void XOSCAR_MainWindow::network_configuration_tab_activated() 
 {
-    if(listOscarClustersWidget->currentRow() == -1
+    /*if(listOscarClustersWidget->currentRow() == -1
         || listClusterPartitionsWidget->currentRow() == -1) {
         cout << "No specific partition selected, nothing to do\n" << endl;
         return;
@@ -548,7 +562,7 @@ void XOSCAR_MainWindow::network_configuration_tab_activated()
     oscarNodesTreeWidget->clear();
 
     command_thread.init(DISPLAY_DETAILS_PARTITION_NODES, 
-                        QStringList(partition_name));
+                        QStringList(partition_name));*/
 }
 
 /**
@@ -627,24 +641,11 @@ int XOSCAR_MainWindow::handle_thread_result (int command_id,
                     << endl;
             return -1;
         }
-        list = result.split("\n");
+        list = result.split("\n", QString::SkipEmptyParts);
         for (int i = 0; i < list.size(); ++i){
             listReposWidget->addItem (list.at(i));
         }
         listReposWidget->update();
-    } else if (command_id == DISPLAY_PARTITIONS) {
-        // We parse the result: one partition name per line.
-        // skip empty strings? otherwise we have extra partitions added
-        // could also check result for empty string
-        list = result.split("\n", QString::SkipEmptyParts);
-        listClusterPartitionsWidget->clear();
-        for (int i = 0; i < list.size(); ++i){
-            listClusterPartitionsWidget->addItem (list.at(i));
-        }
-        listClusterPartitionsWidget->update();
-    } else if (command_id == DISPLAY_PARTITION_NODES) {
-        list = result.split(" ");
-        PartitionNumberNodesSpinBox->setValue(list.size());
     } else if (command_id == DISPLAY_PARTITION_DISTRO) {
         cerr << "ERROR: Not yet implemented" << endl;
 /*        int index = partitionDistroComboBox->findText(distro_name);
