@@ -66,9 +66,11 @@ execute before the creation of a VM. "Command" has to be specified before
 <sect1><title>Creation of a Profile</title>
 
 <para>
-All VMs are specified through a XML profile. 
+All VMs are specified through a "profile". A profile is a XML file that the
+user creates and where the user specifies the charateristics of the VM
+(amount of memory, number of network interfaces, and so on).
 The DTD of this XML profile is available in '/etc/libv3m/'. This DTD is used to
-validate your profiles.
+validate your profiles (and therefore should not be changed by users).
 Several profile examples are also available with the libv3m documentations. 
 </para>
 
@@ -77,7 +79,10 @@ Several profile examples are also available with the libv3m documentations.
 <para>
 Two kinds of connections are available:
 <itemizedlist>
-    <listitem><para>TUN/TAP: for a connection with the host OS,</para></listitem>
+    <listitem><para>TUN/TAP: for a connection with the host OS, which typically
+ means that a virtual NIC will appear on the Host OS and enable a connection
+with the VM. Typically, the host OS will have a tun0 interface with the IP 
+172.20.0.1 and the virtual machine a eth0 interface with 172.20.0.2.</para></listitem>
     <listitem><para>BRIDGED_TAP: for a connection with the host OS but in that 
 case the connection is automatically bridged with eth0 of the host OS (we 
 assume eth0 is the public network interface, it is not possible currently to 
