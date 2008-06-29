@@ -4,7 +4,7 @@ echo '<pre>';
 echo "Number of args: " . sizeof($_POST) . "<br/>";
 for ($i=0; $i < sizeof($_POST); $i++) {
     list($name, $value) = each($_POST);
-    $package = getcwd() . "/repos/$value";
+    $package = getcwd() . "/../repos/$value";
     echo "    Deleting: $package<br/>";
     if (unlink ($package)) {
         echo "    Successfully delete $value<br/>";

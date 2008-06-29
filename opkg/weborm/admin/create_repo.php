@@ -25,14 +25,14 @@ for ($i=0; $i < sizeof($_POST); $i++) {
 }
 echo $distro_id . "<br/>";
 
-$dir = "./repos/".$distro_id;
+$dir = "../repos/".$distro_id;
 $dir2 = "./uploads/".$distro_id;
 
 echo "Creating " . $dir . "...<br/>";
 if (mkdir($dir)) {
     echo "Repository successfully created<br/>";
 } else {
-    echo "ERROR: Impossible to create the repository";
+    echo "ERROR: Impossible to create the repository<br/>";
 }
 
 echo "Creating " . $dir2 . "...<br/>";

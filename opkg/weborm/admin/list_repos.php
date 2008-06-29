@@ -1,8 +1,8 @@
 <?php
    echo "List of available repositories:<br/>";
-   if ($handle = opendir("./repos")) {
+   if ($handle = opendir("../repos")) {
        while (($file = readdir($handle)) !== false) {
-           if (filetype("./repos/".$file) == "dir" 
+           if (filetype("../repos/".$file) == "dir" 
                && $file != "."
                && $file != ".."
                && $file != ".svn") {

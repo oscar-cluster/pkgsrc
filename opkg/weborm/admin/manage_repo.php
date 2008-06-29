@@ -22,9 +22,9 @@ for ($i=0; $i < sizeof($_POST); $i++) {
 
 echo "<br/>Available packages, select package you want to delete:<br/>";
 echo "<form action=\"delete_packages.php\" method=\"post\">";
-if ($handle = opendir("./repos/$distro_id")) {
+if ($handle = opendir("../repos/$distro_id")) {
        while (($file = readdir($handle)) !== false) {
-           if (filetype("./repos/$distro_id/$file") == "file") {
+           if (filetype("../repos/$distro_id/$file") == "file") {
                echo "<input type=\"radio\" name=\"group1\" value=\"$distro_id/$file\" \">$file<br/>";
            }
        }

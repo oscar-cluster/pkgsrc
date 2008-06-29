@@ -20,7 +20,7 @@ WebORM Overview
 o Repositories:
 Repositories have a static configuration: all the repositories are created in
 the 'repos' directory; and each repository has its own incoming directory in the
-'uploads' directory. When users upload binary packages, they are first of all
+'admin/uploads' directory. When users upload binary packages, they are first of all
 copied into the uploads directory, and then WebORM checks them. If they are not
 binary packages, the uploaded files are simply deleted; if they are, they are
 copied into the repository. Finally, the repository meta-data are regenerated.
