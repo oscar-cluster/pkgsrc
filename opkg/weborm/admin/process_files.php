@@ -36,7 +36,7 @@ for ($i=0; $i<$file_count; $i++) {
             echo "Checking if the file is a valid binary package...<br/>";
             if (is_a_valid_package ($uploadfile)) {
                 echo "The package is valid.<br/>";
-                $repo_file = "./repos/$distro_id/$userfile";
+                $repo_file = "../repos/$distro_id/$userfile";
                 if (rename($uploadfile, $repo_file)) {
                     echo "Successfully copied $uploadfile to $repo_file<br/>";
                     prepare_repo ($distro_id);
@@ -61,7 +61,7 @@ print "</pre>";
 
 function prepare_repo ($distro_id) {
     echo "<br/>Regenerating the repository's metadata...<br/>";
-    $packman_cmd = "/usr/bin/packman --prepare-repo " . getcwd() . "/repos/$distro_id -v";
+    $packman_cmd = "/usr/bin/packman --prepare-repo " . getcwd() . "../repos/$distro_id -v";
     echo "    Executing $packman_cmd...<br/>";
     if (exec ($packman_cmd, $output)) {
         print_full_output ($output);
