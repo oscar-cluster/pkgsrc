@@ -48,3 +48,10 @@ License
 
 WebORM is under GPLv3, see the WebORM pages for more details (the license.html
 webpage).
+
+Debian Repositories
+===================
+
+When managing Debian repository, users can use those repositories simply adding
+a new entry into their /etc/apt/sources.list file. The entry will look like:
+deb http://repo_url/repos/debian-4-i386/ etch /
