@@ -16,6 +16,34 @@
 
 </artheader>
 
+<sect1><title>Installation from SVN</title>
+  <para>
+    In order to check the code out from the SVN server, execute the following 
+    command:
+    <programlisting>
+      <![CDATA[
+        svn co https://svn.oscar.openclustergroup.org/svn/oscar/pkgsrc/libv3m-v2m
+        ]]>
+    </programlisting>
+    Go into the directory associated to the version of libv3m you want to
+    install (trunk for instance) and execute:
+    <programlisting>
+      <![CDATA[
+        ./autogen.sh && ./configure && make && sudo make install && sudo make install-etc
+        ]]>
+    </programlisting>
+    Now libv3m is installed on your system. Now, in order to install v2m, go in 
+    the libv3m-v2m/tools/v2m directory, then into the directory associated to the 
+    version of v2m you want to install (the same than the libv3m version you 
+    previously installed) and execute:
+    <programlisting>
+      <![CDATA[
+        ./autogen.sh && ./configure && make && sudo make install
+        ]]>
+    </programlisting>
+  </para>
+</sect1>
+
 <sect1><title>Virtual Machine Monitoring</title>
 
 <para>
