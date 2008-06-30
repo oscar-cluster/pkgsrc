@@ -1,3 +1,18 @@
+/*
+ *  Copyright (c) 2007-2008 Oak Ridge National Laboratory, 
+ *                          Geoffroy Vallee <valleegr@ornl.gov>
+ *                          All rights reserved
+ *  This file is part of the xoscar software, part of the OSCAR software.
+ *  For license information, see the COPYING file in the top level directory
+ *  of the OSCAR source.
+ */
+
+/**
+ * @file XOSCAR_TabGeneralInformation.cpp
+ * @brief Actual implementation of the XOSCAR_TabGeneralInformation class.
+ * @author Robert Babilon
+ */
+
 #include "XOSCAR_TabGeneralInformation.h"
 #include "utilities.h"
 
@@ -46,6 +61,8 @@ XOSCAR_TabGeneralInformation::~XOSCAR_TabGeneralInformation()
  */
 bool XOSCAR_TabGeneralInformation::save()
 {
+    cout << "save()" << endl;
+
 	save_cluster_info_handler();
     refresh_list_partitions();
 
@@ -66,6 +83,8 @@ bool XOSCAR_TabGeneralInformation::save()
  */
 bool XOSCAR_TabGeneralInformation::undo()
 {
+    cout << "undo()" << endl;
+
 	modified = false;
 	emit widgetContentsSaved(this);
 

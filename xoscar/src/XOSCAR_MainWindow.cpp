@@ -492,7 +492,7 @@ bool XOSCAR_MainWindow::prompt_save_changes()
 {
     bool result = true;
 
-    XOSCAR_TabWidgetInterface* tab = reinterpret_cast<XOSCAR_TabWidgetInterface*>(widgetPendingChanges);
+    XOSCAR_TabWidgetInterface* tab = dynamic_cast<XOSCAR_TabWidgetInterface*>(widgetPendingChanges);
 
     if(tab == NULL) {
         // ignore
