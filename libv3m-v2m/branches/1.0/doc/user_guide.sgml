@@ -16,6 +16,31 @@
 
 </artheader>
 
+<sect1><title>Installation</title>
+  <sect2><title>Installation from Sources</title>
+    <para>
+      Download sources (both libv3m and v2m): http://www.csm.ornl.gov/srt/download.html
+    </para>
+    <para>
+      In order to install v2m and libv3m from sources, you need to install
+      libv3m first. In order to do so, untar the libv3m tarball and execute
+      <programlisting>
+        <![CDATA[
+          "./autogen.sh && ./configure && make && sudo make install".
+        ]]>
+      </programlisting>
+    </para>
+    <para>
+      For v2m, untar the V2M tarball and execute the following commands:
+      <programlisting>
+        <![CDATA[
+          "./autogen.sh && ./configure && make && sudo make install".
+          ]]>
+      </programlisting>
+    </para>
+  </sect2>
+</sect1>
+
 <sect1><title>Configuration</title>
 
 <para>
