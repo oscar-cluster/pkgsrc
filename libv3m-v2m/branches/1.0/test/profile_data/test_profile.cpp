@@ -1,8 +1,8 @@
 /*
- *  Copyright (c) 2006 Oak Ridge National Laboratory, 
- *                     Geoffroy Vallee <valleegr@ornl.gov>
- *                     All rights reserved
- *  This file is part of the KVMs software.  For license information,
+ *  Copyright (c) 2006-2008 Oak Ridge National Laboratory, 
+ *                          Geoffroy Vallee <valleegr@ornl.gov>
+ *                          All rights reserved
+ *  This file is part of the libv3m software.  For license information,
  *  see the COPYING file in the top level directory of the source
  */
 
@@ -10,7 +10,9 @@
 #include <libxml++/libxml++.h>
 #include <iostream>
 
-#include "../../libv3m.h"
+#include "vm.h"
+
+using namespace std;
 
 int main(int argc, char **argv)
 {
@@ -26,17 +28,18 @@ int main(int argc, char **argv)
   if(root) {
 
     xmlpp::Node::NodeList list = root->get_children("profile");
-    std::cout << list.size() << "profile(s) found" << std::endl;
+    std::cout << list.size() << " profile(s) found" << std::endl;
 
     for (xmlpp::Node::NodeList::iterator iter = list.begin(); iter != list.end(); ++iter) {
       ProfileXMLNode* profile = new ProfileXMLNode (*iter);
       if (profile == NULL) {
-        std::cout << "FormMainWindow::loadProfile_XML: No profile found" << std::endl;
+        cout << "FormMainWindow::loadProfile_XML: No profile found" << endl;
         return -1;
       }
       profile_data_t profile_data = profile->get_profile_data();
       if ((profile_data.name).compare("test1")!=0) {
-        std::cerr << "Profile name incorrect (" << (profile_data.name).c_str() << ") -> test failed!" << std::endl;
+        cerr << "Profile name incorrect (" << (profile_data.name).c_str() 
+             << ") -> test failed!" << endl;
         return -1;
       }
       else {

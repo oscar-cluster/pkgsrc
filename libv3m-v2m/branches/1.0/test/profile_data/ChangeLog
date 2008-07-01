@@ -1,0 +1,5 @@
+
+* 2008-07-01
+- Include autotools stuff.
+- Update the profile that is used for testing in order to match the current
+DTD.

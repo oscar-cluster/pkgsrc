@@ -1,0 +1,2 @@
+To install the test(s), just execute:
+"./autogen.sh && ./configure && make"

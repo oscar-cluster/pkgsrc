@@ -1,0 +1,7 @@
+Currently, the only available test checks few functionalities associated to
+profile management. To compile install the test, please refer to the INSTALL 
+file.
+Then, you can execute the test executing:
+"./test_profile"
+You should see a "success" message, if not, the libv3m code actually has a
+problem.
