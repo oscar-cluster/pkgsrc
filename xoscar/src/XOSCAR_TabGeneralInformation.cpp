@@ -42,6 +42,9 @@ XOSCAR_TabGeneralInformation::XOSCAR_TabGeneralInformation(QWidget* parent)
     connect(removeClusterButton_2, SIGNAL(clicked()),
             this, SLOT(remove_partition_handler()));
 
+    connect(listOscarClustersWidget, SIGNAL(itemSelectionChanged ()),
+                    this, SLOT(refresh_list_partitions()));
+
     connect(listClusterPartitionsWidget, SIGNAL(currentRowChanged(int)),
             this, SLOT(partition_list_rowChanged_handler(int)));
 
