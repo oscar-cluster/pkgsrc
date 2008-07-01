@@ -31,8 +31,7 @@ FORMS += src/AboutAuthorsDialog.ui \
          src/FileBrowser.ui \
          src/WaitDialog.ui \
          src/xoscar_generalinformation.ui \
-         src/xoscar_mainwindow.ui \
-         src/xoscar_mainwindow_orig.ui
+         src/xoscar_mainwindow.ui 
 SOURCES += src/CommandBuilder.cpp \
            src/CommandExecutionThread.cpp \
            src/Hash.cpp \

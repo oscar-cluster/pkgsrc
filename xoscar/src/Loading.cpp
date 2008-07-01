@@ -14,7 +14,7 @@
  */
 #include "Loading.h"
 
-Loading::Loading(const bool *remoteVar)
+Loading::Loading(bool *remoteVar)
 {
     var = remoteVar;
     *var = true;

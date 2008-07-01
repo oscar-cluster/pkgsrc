@@ -19,7 +19,7 @@ using namespace std;
 class Loading
 {
 public:
-    Loading(const bool *);
+    Loading(bool *);
     ~Loading();
 
 private:
