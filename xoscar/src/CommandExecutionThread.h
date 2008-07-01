@@ -51,6 +51,7 @@ using namespace redi;
 #define LIST_UNSETUP_DISTROS                    14
 #define DISPLAY_DEFAULT_OSCAR_REPO              15
 #define DISPLAY_DEFAULT_DISTRO_REPO             16
+#define REMOVE_PARTITION                        17
 
 /**
  * @namespace xoscar

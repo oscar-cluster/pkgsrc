@@ -504,17 +504,14 @@ bool XOSCAR_MainWindow::prompt_save_changes()
 
         switch(msg.exec()) {
             case QMessageBox::Save: 
-                tab->save();
-                widgetPendingChanges = NULL;
-                oscarOptionsRowPendingChanges = -1;
+                result = tab->save();
                 break;
             case QMessageBox::No:
-                tab->undo();
-                widgetPendingChanges = NULL;
-                oscarOptionsRowPendingChanges = -1;
+                result = tab->undo();
                 break;
             case QMessageBox::Cancel:
                 result = false;
+                break;
         }
     }
     else {

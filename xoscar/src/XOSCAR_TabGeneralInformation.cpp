@@ -15,6 +15,8 @@
 
 #include "XOSCAR_TabGeneralInformation.h"
 #include "utilities.h"
+#include "Loading.h"
+#include <QMessageBox>
 
 using namespace xoscar;
 
@@ -37,6 +39,12 @@ XOSCAR_TabGeneralInformation::XOSCAR_TabGeneralInformation(QWidget* parent)
 	connect(addPartitionButton, SIGNAL(clicked()),
 	        this, SLOT(add_partition_handler()));
 
+    connect(removeClusterButton_2, SIGNAL(clicked()),
+            this, SLOT(remove_partition_handler()));
+
+    connect(listClusterPartitionsWidget, SIGNAL(currentRowChanged(int)),
+            this, SLOT(partition_list_rowChanged_handler(int)));
+
 	connect(listClusterPartitionsWidget, SIGNAL(itemSelectionChanged ()),
             this, SLOT(refresh_partition_info()));
 
@@ -46,6 +54,9 @@ XOSCAR_TabGeneralInformation::XOSCAR_TabGeneralInformation(QWidget* parent)
 	// signals for command execution thread
     connect(&command_thread, SIGNAL(thread_terminated(int, QString)),
         this, SLOT(handle_thread_result (int, QString)));
+
+    enablePartitionInfoWidgets(false);
+    setDefaultPartitionValues();
 }
 
 XOSCAR_TabGeneralInformation::~XOSCAR_TabGeneralInformation()
@@ -101,6 +112,13 @@ bool XOSCAR_TabGeneralInformation::undo()
 void XOSCAR_TabGeneralInformation::partitionName_textEdited_handler(const QString& text)
 {
 	if(loading) return;
+
+    if(listClusterPartitionsWidget->currentItem() == NULL) {
+        cout << "ERROR: no partition selected" << endl;
+        return;
+    }
+    listClusterPartitionsWidget->currentItem()->setText(text);
+
 	modified = true;
 	emit widgetContentsModified(this);
 }
@@ -146,14 +164,67 @@ void XOSCAR_TabGeneralInformation::partitionNodes_valueChanged_handler(int index
  */
 void XOSCAR_TabGeneralInformation::add_partition_handler()
 {
-    if (listOscarClustersWidget->currentRow() == -1)
+    if(modified) {
+        // prompt to save previous changes
+        QMessageBox msg(QMessageBox::NoIcon, tr("Save changes?"), tr("The previously added or modified partition has not been saved.\n")
+                        + tr("Would you like to save your changes?"),
+                        QMessageBox::Save|QMessageBox::No|QMessageBox::Cancel, this);
+
+        switch(msg.exec()) {
+            case QMessageBox::Save: 
+                this->save();
+                break;
+            case QMessageBox::No:
+                this->undo();
+                break;
+            case QMessageBox::Cancel:
+                return;
+                break;
+        }
+    }
+    
+    // must have a cluster selected in order to add a partition to it
+    if (listOscarClustersWidget->currentRow() == -1) {
         return;
+    }
 
     listClusterPartitionsWidget->addItem ("New_Partition");
     listClusterPartitionsWidget->update ();
 
+    listClusterPartitionsWidget->setCurrentRow(listClusterPartitionsWidget->count()-1);
+
 	modified = true;
 	emit widgetContentsModified(this);
+}
+
+void XOSCAR_TabGeneralInformation::remove_partition_handler()
+{
+    if(modified) {
+        // prompt to save previous changes
+        QMessageBox msg(QMessageBox::NoIcon, tr("Save changes?"), tr("The previously added or modified partition has not been saved.\n")
+                        + tr("Would you like to save your changes?"),
+                        QMessageBox::Save|QMessageBox::No|QMessageBox::Cancel, this);
+
+        switch(msg.exec()) {
+            case QMessageBox::Save: 
+                this->save();
+                break;
+            case QMessageBox::No:
+                this->undo();
+                break;
+            case QMessageBox::Cancel:
+                return;
+                break;
+        }
+    }
+
+    if(listClusterPartitionsWidget->currentRow() == -1) {
+        return;
+    }
+
+    QListWidgetItem *tmp = listClusterPartitionsWidget->takeItem(listClusterPartitionsWidget->currentRow());
+    delete tmp;
+    tmp = NULL;
 }
 
 /**
@@ -254,6 +325,56 @@ void XOSCAR_TabGeneralInformation::save_cluster_info_handler()
 /**
  *  @author Robert Babilon
  *
+ *  Sets the default values for the widgets in the partition information group
+ *  box.
+ *
+ */
+void XOSCAR_TabGeneralInformation::setDefaultPartitionValues()
+{
+    partitionNameEditWidget->setText(tr(""));
+    partitionNumberNodesSpinBox->setValue(0);
+    partitionDistroComboBox->setCurrentIndex(0);
+}
+
+/**
+ *  @author Robert Babilon
+ *
+ *  Enables or disables the widgets in the partition information group box.
+ *
+ *  @param enable true to enable the widgets in the partition information
+ *  group box; otherwise false.
+ */
+void XOSCAR_TabGeneralInformation::enablePartitionInfoWidgets(bool enable)
+{
+    partitionNameEditWidget->setEnabled(enable);
+    partitionNumberNodesSpinBox->setEnabled(enable);
+    partitionDistroComboBox->setEnabled(enable);
+}
+
+/**
+ *  @author Robert Babilon
+ *
+ *  Slot called when the row has changed in the partition list widget.
+ *  Sets the default values to the partition info widgets and disables them if
+ *  the row is -1. Otherwise the partition info widgets are enabled.
+ *
+ *  @param row Index of the newly selected row in the list widget. -1 if no row
+ *  is currently selected.
+ */
+void XOSCAR_TabGeneralInformation::partition_list_rowChanged_handler(int row)
+{
+    if(row == -1) {
+        setDefaultPartitionValues();
+        enablePartitionInfoWidgets(false);
+    }
+    else {
+        enablePartitionInfoWidgets(true);
+    }
+}
+
+/**
+ *  @author Robert Babilon
+ *
  *  Slot called when the command thread has finished executing a command.
  *
  *  @param command_id The command that has completed. The list of values
@@ -309,7 +430,7 @@ int XOSCAR_TabGeneralInformation::handle_thread_result (int command_id,
  */
 void XOSCAR_TabGeneralInformation::handle_oscar_config_result(QString list_distros)
 {
-	loading = true;
+    Loading loader(&loading);
 
     cout << list_distros.toStdString () << endl;
     QStringList list = list_distros.split (" ", QString::SkipEmptyParts);
@@ -319,6 +440,4 @@ void XOSCAR_TabGeneralInformation::handle_oscar_config_result(QString list_distr
     for(int i = 0; i < list.size(); i++) {
         partitionDistroComboBox->addItem (list.at(i));
     }
-	
-	loading = false;
 }

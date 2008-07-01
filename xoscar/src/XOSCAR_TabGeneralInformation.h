@@ -38,13 +38,17 @@ public slots:
     void partitionDistro_currentIndexChanged_handler(int);
 	void partitionNodes_valueChanged_handler(int);
 	void add_partition_handler();
+    void remove_partition_handler();
 	void save_cluster_info_handler();
 	void refresh_list_partitions();
     void refresh_partition_info();
+    void setDefaultPartitionValues();
+    void enablePartitionInfoWidgets(bool enable);
      int handle_thread_result (int command_id, const QString result);
     void handle_oscar_config_result(QString list_distros);
 	bool save();
 	bool undo();
+    void partition_list_rowChanged_handler(int);
 
 signals:
     void widgetContentsModified(QWidget* widget);

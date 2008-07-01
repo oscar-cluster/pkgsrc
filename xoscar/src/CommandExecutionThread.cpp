@@ -126,6 +126,8 @@ void CommandExecutionThread::run()
             cmd += command_args.at(i).toStdString();
         }
         result = get_output_line_by_line (build_cmd (cmd));
+    } else if (command_id == REMOVE_PARTITION) {
+        cout << "ERROR: not yet implemented." << endl;
     } else if (command_id == DISPLAY_DETAILS_PARTITION_NODES) {
         const string cmd = build_cmd ((string) ohome 
             + "/scripts/oscar --display-partition-nodes "
