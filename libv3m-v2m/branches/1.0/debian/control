@@ -8,8 +8,7 @@ Section: libs
 Package: libv3m-dev
 Section: libdevel
 Architecture: any
-Depends: libxml++2.6-dev
-#Depends: libv3mBROKEN (= ${Source-Version})
+Depends: libxml++2.6-dev, bridge-utils
 Description: Library for virtual machine management and monitoring
  libv3m provides an abstraction for different system-level virtualization
  solutions such as Xen or QEMU. For that, libv3m defines the notion of
@@ -17,11 +16,4 @@ Description: Library for virtual machine management and monitoring
  This profile is a simple XML file and libv3m provides mechanisms to parse
  profiles and based on that, generates configuration files for the execution
  of virtual machines. Libv3m also provide a monitoring capability.
-
-#Package: libv3mBROKEN
-#Section: libs
-#Architecture: any
-#Depends: ${shlibs:Depends}, ${misc:Depends}
-#Description: <insert up to 60 chars description>
-# <insert long description, indented with spaces>
 

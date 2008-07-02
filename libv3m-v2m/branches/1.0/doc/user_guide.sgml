@@ -112,7 +112,9 @@ with the VM. Typically, the host OS will have a tun0 interface with the IP
 case the connection is automatically bridged with eth0 of the host OS (we 
 assume eth0 is the public network interface, it is not possible currently to 
 change that),</para></listitem>
+<!--
 	<listitem><para>VLAN: for the creation of a virtual LAN between VMs.</para></listitem>
+-->
 </itemizedlist>
 To create a TUN/TAP network interface, just specify the "TUN/TAP" NIC type.
 For example:

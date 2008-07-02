@@ -50,7 +50,7 @@ private:
 						   for instance in order to launch the tun kernel module */
 	Glib::ustring getCommand();			/* get the command to create a qemu VM */
 	Glib::ustring getPreVMCommand(); 		/* set the command to execute before the creation of a qemu VM */
-    int generate_bridged_network_config_file ();
+    int generate_network_config_file ();
 
 	
 	void openConfigFile ();			

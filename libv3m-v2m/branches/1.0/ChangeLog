@@ -1,3 +1,7 @@
+* 0.9.5:
+	* Fix the setup of a TUN/TAP interface when using QEMU.
+	* Fix the spec file (includes headers and DTDs).
+
 * 0.9.1:
 	* Fix a problem with the version number into the documentation generated
 	  by Doxygen.
