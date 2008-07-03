@@ -1,0 +1,182 @@
+<ui version="4.0" >
+ <class>SoftwareConfigurationForm</class>
+ <widget class="QWidget" name="SoftwareConfigurationForm" >
+  <property name="geometry" >
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>999</width>
+    <height>686</height>
+   </rect>
+  </property>
+  <property name="windowTitle" >
+   <string>Software Configuration</string>
+  </property>
+  <widget class="QWidget" name="horizontalLayout_11" >
+   <property name="geometry" >
+    <rect>
+     <x>20</x>
+     <y>80</y>
+     <width>271</width>
+     <height>28</height>
+    </rect>
+   </property>
+   <layout class="QHBoxLayout" >
+    <property name="margin" >
+     <number>0</number>
+    </property>
+    <property name="spacing" >
+     <number>6</number>
+    </property>
+    <item>
+     <widget class="QLabel" name="label_10" >
+      <property name="text" >
+       <string>Partition Name:</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QLineEdit" name="lineEdit_4" />
+    </item>
+   </layout>
+  </widget>
+  <widget class="QTableWidget" name="tableWidget" >
+   <property name="geometry" >
+    <rect>
+     <x>300</x>
+     <y>31</y>
+     <width>721</width>
+     <height>341</height>
+    </rect>
+   </property>
+   <column>
+    <property name="text" >
+     <string>Selected</string>
+    </property>
+   </column>
+   <column>
+    <property name="text" >
+     <string>Package Name</string>
+    </property>
+   </column>
+  </widget>
+  <widget class="QWidget" name="horizontalLayout_8" >
+   <property name="geometry" >
+    <rect>
+     <x>20</x>
+     <y>40</y>
+     <width>271</width>
+     <height>28</height>
+    </rect>
+   </property>
+   <layout class="QHBoxLayout" >
+    <property name="margin" >
+     <number>0</number>
+    </property>
+    <property name="spacing" >
+     <number>6</number>
+    </property>
+    <item>
+     <widget class="QLabel" name="label_12" >
+      <property name="text" >
+       <string>Cluster Name:</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QLineEdit" name="lineEdit_5" />
+    </item>
+   </layout>
+  </widget>
+  <widget class="QTabWidget" name="tabWidget_4" >
+   <property name="geometry" >
+    <rect>
+     <x>300</x>
+     <y>380</y>
+     <width>721</width>
+     <height>291</height>
+    </rect>
+   </property>
+   <property name="currentIndex" >
+    <number>0</number>
+   </property>
+   <widget class="QWidget" name="tab_20" >
+    <attribute name="title" >
+     <string>Information</string>
+    </attribute>
+    <widget class="QTextBrowser" name="textBrowser_11" >
+     <property name="geometry" >
+      <rect>
+       <x>10</x>
+       <y>10</y>
+       <width>701</width>
+       <height>241</height>
+      </rect>
+     </property>
+    </widget>
+   </widget>
+   <widget class="QWidget" name="tab_21" >
+    <attribute name="title" >
+     <string>Provides</string>
+    </attribute>
+    <widget class="QTextBrowser" name="textBrowser_12" >
+     <property name="geometry" >
+      <rect>
+       <x>10</x>
+       <y>10</y>
+       <width>861</width>
+       <height>241</height>
+      </rect>
+     </property>
+    </widget>
+   </widget>
+   <widget class="QWidget" name="tab_22" >
+    <attribute name="title" >
+     <string>Conflicts</string>
+    </attribute>
+    <widget class="QTextBrowser" name="textBrowser_13" >
+     <property name="geometry" >
+      <rect>
+       <x>10</x>
+       <y>10</y>
+       <width>861</width>
+       <height>241</height>
+      </rect>
+     </property>
+    </widget>
+   </widget>
+   <widget class="QWidget" name="tab_23" >
+    <attribute name="title" >
+     <string>Requires</string>
+    </attribute>
+    <widget class="QTextBrowser" name="textBrowser_14" >
+     <property name="geometry" >
+      <rect>
+       <x>10</x>
+       <y>10</y>
+       <width>861</width>
+       <height>241</height>
+      </rect>
+     </property>
+    </widget>
+   </widget>
+   <widget class="QWidget" name="tab_24" >
+    <attribute name="title" >
+     <string>Packager</string>
+    </attribute>
+    <widget class="QTextBrowser" name="textBrowser_15" >
+     <property name="geometry" >
+      <rect>
+       <x>10</x>
+       <y>10</y>
+       <width>861</width>
+       <height>241</height>
+      </rect>
+     </property>
+    </widget>
+   </widget>
+  </widget>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
