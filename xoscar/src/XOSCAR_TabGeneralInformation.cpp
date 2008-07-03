@@ -72,6 +72,9 @@ XOSCAR_TabGeneralInformation::~XOSCAR_TabGeneralInformation()
  *  Resets the modified flag and emits the signal that this widget
  *  has been saved.
  *  This method is overriden from the interface.
+ *
+ *  @todo return false if the save fails to inform caller they should revert
+ *  back to this tab.
  */
 bool XOSCAR_TabGeneralInformation::save()
 {
@@ -94,6 +97,11 @@ bool XOSCAR_TabGeneralInformation::save()
  *
  *  @todo emit a signal that changes were undone/ignored
  *  @todo reset the widgets to a last known state.
+ *        if the partition was added (not saved), remove it from the list
+ *        if the partition was modified, could call the command to get the list
+ *        of partitions for the current cluster.
+ *  @todo return false if the undo fails to inform the caller to revert back to
+ *  this tab.
  */
 bool XOSCAR_TabGeneralInformation::undo()
 {
@@ -164,6 +172,7 @@ void XOSCAR_TabGeneralInformation::partitionNodes_valueChanged_handler(int index
  * @todo Find a good name by default that avoids conflicts if the user does not
  * change it.
  * @todo Check if a cluster is selected.
+ * @todo make a function to handle the prompt save dialog
  */
 void XOSCAR_TabGeneralInformation::add_partition_handler()
 {
@@ -200,6 +209,13 @@ void XOSCAR_TabGeneralInformation::add_partition_handler()
 	emit widgetContentsModified(this);
 }
 
+/**
+ *  @author Robert Babilon
+ *
+ *  Slot that handles the click signal on the "remove partition" button.
+ *
+ *  @todo make a function to handle the prompt save dialog
+ */
 void XOSCAR_TabGeneralInformation::remove_partition_handler()
 {
     if(modified) {
@@ -236,6 +252,10 @@ void XOSCAR_TabGeneralInformation::remove_partition_handler()
  * This function handles the update of OSCAR cluster information when a new 
  * cluster is selected in the "General Information" widget. It displays the list
  * of partitions within the cluster.
+ *
+ * @todo currently has a bug when cluster changes the list of partitions is
+ * cleared out without checking for any pending changes. we need to add a check
+ * for such changes in here and then execute DISPLAY_PARTITIONS.
  */
 void XOSCAR_TabGeneralInformation::refresh_list_partitions ()
 {
@@ -273,6 +293,10 @@ void XOSCAR_TabGeneralInformation::refresh_partition_info()
     QListIterator<QListWidgetItem *> i(list);
     QString current_partition = i.next()->text();
     partitionNameEditWidget->setText(current_partition);
+
+    // here we can check if this entry is modified or newly added
+    // if added/modified, we would avoid calling the DISPLAY_PARTITION_NODES
+    // since that would overwrite existing modifications
 
     /* We display the number of nodes composing the partition */
     command_thread.init(DISPLAY_PARTITION_NODES, 

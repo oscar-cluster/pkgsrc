@@ -38,9 +38,19 @@ XOSCAR_MainWindow::XOSCAR_MainWindow(QMainWindow *parent)
 {
     setupUi(this);
 
-    giTab = new XOSCAR_TabGeneralInformation(networkConfigurationTabWidget);
+    // The QTabWidget widget will not allow 0 tabs via the designer method so
+    // it will have a "dummy" tab that needs to be removed.
+    networkConfigurationTabWidget->removeTab(0);
 
+    giTab = new XOSCAR_TabGeneralInformation(networkConfigurationTabWidget);
+    networkTab = new XOSCAR_TabNetworkConfiguration(networkConfigurationTabWidget);
+    softwareTab = new XOSCAR_TabSoftwareConfiguration(networkConfigurationTabWidget);
+
+    // Add the tabs dynamically
     networkConfigurationTabWidget->insertTab(0, giTab, tr("General Information"));
+    networkConfigurationTabWidget->insertTab(1, networkTab, tr("Network Configuration"));
+    networkConfigurationTabWidget->insertTab(2, softwareTab, tr("Software Configuration"));
+
     networkConfigurationTabWidget->setCurrentIndex(0);
 
     connect(giTab, SIGNAL(widgetContentsModified(QWidget*)),
@@ -78,10 +88,6 @@ XOSCAR_MainWindow::XOSCAR_MainWindow(QMainWindow *parent)
     /* Connect button sinals */
     connect(QuitButton, SIGNAL(clicked()),
                     this, SLOT(destroy()));
-    connect(importfilebrowse, SIGNAL(clicked()),
-                    this, SLOT(open_file()));
-    connect(importmacs, SIGNAL(clicked()),
-                    this, SLOT(import_macs_from_file()));
 
     connect(actionAboutXOSCAR, SIGNAL(triggered()),
                     this, SLOT(handle_about_authors_action()));
@@ -562,67 +568,6 @@ void XOSCAR_MainWindow::network_configuration_tab_activated()
                         QStringList(partition_name));*/
 }
 
-/**
- * @author Geoffroy Vallee.
- *
- * Slot called when the user click the "browse" button when the user wants to
- * import MAC addresses from a file. This slot creates a XOSCAR_FileBrowser
- * widget.
- */
-void XOSCAR_MainWindow::open_file()
-{
-    cout << "File selection" << endl;
-    XOSCAR_FileBrowser *file_browser = new XOSCAR_FileBrowser("");
-    connect(file_browser, SIGNAL(fileSelected(const QString)),
-            this, SLOT(open_mac_file(const QString)));
-    file_browser->show();
-}
-
-/**
- * @author Geoffroy Vallee.
- *
- * Slot handling the selection of a file for MAC addresses importation.
- *
- * @param file_path Path of the file from which MAC addresses have to be 
- *                  imported. Note that this path is provided by a signal from
- *                  XOSCAR_FileBrowser.
- */
-void XOSCAR_MainWindow::open_mac_file(const QString file_path)
-{
-    cout << "We need to open: " << file_path.toStdString() << endl;
-    importmacfile->setText(file_path);
-}
-
-/**
- * @author Geoffroy Vallee.
- *
- * This slot is called when the user clicks the "import MAC addresses from file"
- * button. The file path is supposed to be in the importmacfile widget (if empty
- * we do nothing).
- *
- * @todo Avoid MAC addresses duplication in the widget which grathers all 
- *       unassigned MAC addresses, when importing MAC addresses.
- * @todo Avoid MAC addresses duplication in the widget which grathers all 
- *       unassigned MAC addresses, when MAC addresses are already assigned to
- *       nodes.
- */
-void XOSCAR_MainWindow::import_macs_from_file ()
-{
-    QString file_path = importmacfile->text();
-    if (file_path.compare("") != 0) {
-        cout << "Importing MACs from " << file_path.toStdString() << endl;
-        QFile file (file_path);
-        if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
-            return;
-        QTextStream in(&file);
-        while (!in.atEnd()) {
-            QString line = in.readLine();
-            listNoneAssignedMacWidget->addItem (line);
-            cout << "Line: " << line.toStdString() << endl;
-        }
-    }
-}
-
 int XOSCAR_MainWindow::handle_thread_result (int command_id, 
     const QString result)
 {
@@ -647,47 +592,11 @@ int XOSCAR_MainWindow::handle_thread_result (int command_id,
         cerr << "ERROR: Not yet implemented" << endl;
 /*        int index = partitionDistroComboBox->findText(distro_name);
         partitionDistroComboBox->setCurrentIndex(index);*/
-    } else if (command_id == DISPLAY_DETAILS_PARTITION_NODES) {
-        string res = result.toStdString();
-        // Now we have a big string with the config and we need to parse it.
-        stringToNodesConfig (result);
     } else if (command_id == SETUP_DISTRO) {
         // We could here try to see if the command was successfully executed or
         // not. Otherwise, nothing to do here.
     } else if (command_id == GET_SETUP_DISTROS) {
         command_thread.init (GET_LIST_DEFAULT_REPOS, QStringList (""));
     }
-    return 0;
-}
-
-int XOSCAR_MainWindow::stringToNodesConfig (QString cmd_result)
-{
-    QStringList lines = cmd_result.split ("\n");
-    for (int i=0; i < lines.size(); i++) {
-        QString line = lines.at(i);
-        QTreeWidgetItem *item;
-        if (line.size() > 0 && line.at(0) != QChar('\t')) {
-            cout << "New node configuration: " << line.toStdString() << endl;
-            oscarNodesTreeWidget->setColumnCount(1);
-            item = new QTreeWidgetItem(oscarNodesTreeWidget);
-            item->setText(0, line);
-            oscarNodesTreeWidget->expandItem (item);
-        } else if (line.size() > 0 && line.at(0) == QChar('\t')) {
-            cout << "Analyzing line: " << line.toStdString() << endl;
-            QStringList nodeInfo = line.split (": ");
-            if (nodeInfo.at(0) == QString("\tMAC")) {
-                oscarNodesTreeWidget->expandItem (item);
-                QTreeWidgetItem *subitem_mac = new QTreeWidgetItem(item);
-                QString mac = "MAC @: " + nodeInfo.at(1);
-                subitem_mac->setText(0, mac);
-            } else if (nodeInfo.at(0) == QString("\tIP")) {
-                oscarNodesTreeWidget->expandItem (item);
-                QTreeWidgetItem *subitem_mac = new QTreeWidgetItem(item);
-                QString mac = "IP @: " + nodeInfo.at(1);
-                subitem_mac->setText(0, mac);
-            }
-        }
-    }
-    oscarNodesTreeWidget->update();
     return 0;
 }

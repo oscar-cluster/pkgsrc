@@ -45,6 +45,8 @@
 #include "XOSCAR_AboutOscarDialog.h"
 #include "XOSCAR_FileBrowser.h"
 #include "XOSCAR_TabGeneralInformation.h"
+#include "XOSCAR_TabNetworkConfiguration.h"
+#include "XOSCAR_TabSoftwareConfiguration.h"
 
 using namespace Ui; 
 using namespace std;
@@ -84,11 +86,8 @@ public slots:
     void handle_about_oscar_action();
     void handle_oscar_config_result (QString);
      int handle_thread_result (int, QString);
-    void import_macs_from_file ();
     void kill_popup (QString, QString);
     void newOscarOptionSelected ();
-    void open_file();
-    void open_mac_file(const QString);
     void refresh_display_opkgs_from_repo();
     void refresh_list_setup_distros();
     void networkConfigTab_currentChanged_handler(int);
@@ -102,7 +101,6 @@ protected:
 
 private:
     void network_configuration_tab_activated();
-    int stringToNodesConfig (QString);
 	bool prompt_save_changes();
 
     XOSCAR_AboutAuthorsDialog about_authors_widget;
@@ -113,6 +111,9 @@ private:
     CommandExecutionThread command_thread;
 
     XOSCAR_TabGeneralInformation* giTab;
+    XOSCAR_TabNetworkConfiguration* networkTab;
+    XOSCAR_TabSoftwareConfiguration* softwareTab;
+
     QWidget* widgetPendingChanges;
     int oscarOptionsRowPendingChanges;
 };
