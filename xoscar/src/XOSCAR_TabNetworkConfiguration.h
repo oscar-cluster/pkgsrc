@@ -30,6 +30,10 @@ using namespace Ui;
 
 namespace xoscar {
 
+const QString oscarChildNodeSplitter = QString(" @: ");
+const QString macChildNodeName = QString("MAC");
+const QString ipChildNodeName = QString("IP");
+
 class XOSCAR_TabNetworkConfiguration : public QWidget, public NetworkConfigurationForm
 {
 Q_OBJECT
@@ -48,6 +52,13 @@ public slots:
     void assignmac_clicked_handler();
     void unassignmac_clicked_handler();
     void assignallmacs_clicked_handler();
+
+protected:
+    bool isMacUnassigned(QString & mac);
+    bool isMacAssigned(QString & mac);
+    bool isItemMacAddress(QTreeWidgetItem* item, QString& mac);
+    bool assignMacAddress(QTreeWidgetItem*, QString&);
+    bool unassignMacAddress(QTreeWidgetItem*, QString&);
 
 private:
    CommandExecutionThread command_thread;

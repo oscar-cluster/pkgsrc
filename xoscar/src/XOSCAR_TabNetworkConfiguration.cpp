@@ -98,9 +98,10 @@ void XOSCAR_TabNetworkConfiguration::import_macs_from_file ()
             return;
         QTextStream in(&file);
         while (!in.atEnd()) {
-            QString line = in.readLine();
+            QString line = in.readLine().trimmed();
+            if(line.isEmpty()) return;
             // This part avoids duplicate MAC addresses in the unassigned list widget
-            if(listNoneAssignedMacWidget->findItems(line, Qt::MatchFixedString).count() == 0) {
+            if(isMacUnassigned(line) == false && isMacAssigned(line) == false) {
                 listNoneAssignedMacWidget->addItem (line);
                 cout << "Line: " << line.toStdString() << endl;
             }
@@ -122,6 +123,13 @@ void XOSCAR_TabNetworkConfiguration::assignmac_clicked_handler()
     }
 
     cout << "assigning mac address" << endl;
+
+    QTreeWidgetItem* nodeItem = oscarNodesTreeWidget->currentItem();
+    QString macAddress = listNoneAssignedMacWidget->currentItem()->text();
+
+    if(assignMacAddress(nodeItem, macAddress)) {
+        delete listNoneAssignedMacWidget->takeItem(listNoneAssignedMacWidget->currentRow());
+    }
 }
 
 /**
@@ -137,6 +145,11 @@ void XOSCAR_TabNetworkConfiguration::unassignmac_clicked_handler()
     }
 
     cout << "unassigning mac address" << endl;
+
+    QString unassignedMac;
+    if(unassignMacAddress(oscarNodesTreeWidget->currentItem(), unassignedMac)) {
+        listNoneAssignedMacWidget->addItem(unassignedMac);
+    }
 }
 
 /**
@@ -147,6 +160,174 @@ void XOSCAR_TabNetworkConfiguration::unassignmac_clicked_handler()
 void XOSCAR_TabNetworkConfiguration::assignallmacs_clicked_handler()
 {
     cout << "auto assigning mac addresses" << endl;
+
+    int topLevelCount = oscarNodesTreeWidget->topLevelItemCount();
+    // loop through the top level items
+    for(int i = 0; i < topLevelCount; i++) {
+        QTreeWidgetItem *item = oscarNodesTreeWidget->topLevelItem(i);
+        int childCount = item->childCount();
+        // loop through the child nodes for each top level item
+        for(int j = 0; j < childCount; j++) {
+            QString assignedMac;
+            // check if child node is a MAC address node
+            if(isItemMacAddress(item->child(j), assignedMac)) {
+                // check if no MAC address is already assigned
+                if(assignedMac.isEmpty()) {
+                    if(listNoneAssignedMacWidget->count() == 0) {
+                        // we ran out of available MAC addresses
+                        return;
+                    }
+                    QString mac = listNoneAssignedMacWidget->item(0)->text();
+                    // assign the MAC address to the node
+                    if(assignMacAddress(item->child(j), mac)) {
+                        delete listNoneAssignedMacWidget->takeItem(0);
+                    }
+                }
+                // break from inner loop (over child nodes) since only one child
+                // can be a MAC address node
+                break;
+            }
+        }
+    }
+}
+
+/**
+ *  @author Robert Babilon
+ *
+ *  Function checks if the given MAC address is in the unassigned pool.
+ *  Returns true if the MAC address is in the unassigned pool; otherwise false.
+ *
+ *  @param mac The MAC address to lookup in the pool of unassigned MAC addresses
+ */
+bool XOSCAR_TabNetworkConfiguration::isMacUnassigned(QString& mac)
+{
+    if(listNoneAssignedMacWidget->findItems(mac, Qt::MatchFixedString).count() == 0) {
+        return false;
+    }
+    else {
+        return true;
+    }
+}
+
+/**
+ *  @author Robert Babilon
+ *
+ *  Function checks if the given MAC address is assigned to one of the nodes in
+ *  the oscar nodes list widget.
+ *  Returns true if the MAC address is assigned to one of the oscar nodes;
+ *  otherwise false.
+ *
+ *  @param mac The MAC address to lookup in the list of oscar nodes.
+ */
+bool XOSCAR_TabNetworkConfiguration::isMacAssigned(QString& mac)
+{
+    // get top level items, check the child items that have MAC in them?
+    int topLevelCount = oscarNodesTreeWidget->topLevelItemCount();
+
+    for(int i = 0; i < topLevelCount; i++) {
+        QTreeWidgetItem *item = oscarNodesTreeWidget->topLevelItem(i);
+
+        int childCount = item->childCount();
+        for(int j = 0; j < childCount; j++) {
+            QString assignedMac;
+            if(isItemMacAddress(item->child(j), assignedMac)) {
+                if(mac == assignedMac) {
+                    return true;
+                }
+                break;
+            }
+        }
+    }
+
+    return false;
+}
+
+/**
+ *  @author Robert Babilon
+ *
+ *  Function to assign a given MAC address to a given node.
+ *  Returns true if the MAC address was assigned to the node; otherwise false.
+ *
+ *  @param item The QTreeWidgetItem to assign the MAC address to.
+ *  @param mac The MAC address to be assigned to the item.
+ */
+bool XOSCAR_TabNetworkConfiguration::assignMacAddress(QTreeWidgetItem* item, QString& mac)
+{
+    if(item == NULL) { 
+        return false;
+    }
+
+    QString oldMac;
+    if(isItemMacAddress(item, oldMac)) {
+        if(oldMac.isEmpty()) {
+            item->setText(0, item->text(0) + mac);
+            return true;
+        }
+    }
+
+    return false;
+}
+
+/**
+ *  @author Robert Babilon
+ *
+ *  Function to unassign a MAC address from a given node.
+ *  Returns true if the MAC address was unassigned from the node; otherwise
+ *  false.
+ *
+ *  @param item The QTreeWidgetItem to remove the MAC address from.
+ *  @param mac The MAC address that has been removed. This parameter is output
+ *  only.
+ */
+bool XOSCAR_TabNetworkConfiguration::unassignMacAddress(QTreeWidgetItem* item, QString& mac)
+{
+    if(item == NULL) {
+        return false;
+    }
+
+    if(isItemMacAddress(item, mac)) {
+        if(mac.isEmpty()) {
+            return false;
+        }
+
+        item->setText(0, macChildNodeName + oscarChildNodeSplitter);
+        return true;
+    }
+
+    return false;
+}
+
+/**
+ *  @author Robert Babilon
+ *
+ *  @param item The QTreeWidgetItem to check if it is holding a MAC address
+ *  @param mac The MAC address the item is holding. If the item is not holding a
+ *  MAC address, this param holds the empty string. Otherwise it holds the MAC
+ *  address. This param is output only.
+ */
+bool XOSCAR_TabNetworkConfiguration::isItemMacAddress(QTreeWidgetItem* item, QString& mac)
+{
+    mac = tr("");
+
+    QString text = item->text(0);
+    if(text.indexOf(oscarChildNodeSplitter) == -1) {
+        return false;
+    }
+
+    QStringList list = text.split(oscarChildNodeSplitter, QString::SkipEmptyParts);
+    if(list.count() == 0) {
+        return false;
+    }
+
+    if(list.first() != macChildNodeName) {
+        return false;
+    }
+    else {
+        if(list.count() == 2) {
+            mac = list.last();
+        }
+        return true;
+    }
 }
 
 /**
@@ -226,12 +407,12 @@ int XOSCAR_TabNetworkConfiguration::stringToNodesConfig (QString cmd_result)
             if (nodeInfo.at(0) == QString("\tMAC")) {
                 oscarNodesTreeWidget->expandItem (item);
                 QTreeWidgetItem *subitem_mac = new QTreeWidgetItem(item);
-                QString mac = "MAC @: " + nodeInfo.at(1);
+                QString mac = macChildNodeName + oscarChildNodeSplitter + nodeInfo.at(1);
                 subitem_mac->setText(0, mac);
             } else if (nodeInfo.at(0) == QString("\tIP")) {
                 oscarNodesTreeWidget->expandItem (item);
                 QTreeWidgetItem *subitem_mac = new QTreeWidgetItem(item);
-                QString mac = "IP @: " + nodeInfo.at(1);
+                QString mac = ipChildNodeName + oscarChildNodeSplitter + nodeInfo.at(1);
                 subitem_mac->setText(0, mac);
             }
         }
