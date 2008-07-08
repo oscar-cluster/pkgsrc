@@ -100,7 +100,6 @@ protected:
 	void closeEvent(QCloseEvent* event);
 
 private:
-    void network_configuration_tab_activated();
 	bool prompt_save_changes();
 
     XOSCAR_AboutAuthorsDialog about_authors_widget;

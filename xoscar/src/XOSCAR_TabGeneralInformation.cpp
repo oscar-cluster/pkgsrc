@@ -393,9 +393,13 @@ void XOSCAR_TabGeneralInformation::partition_list_rowChanged_handler(int row)
     if(row == -1) {
         setDefaultPartitionValues();
         enablePartitionInfoWidgets(false);
+
+        emit partition_name_changed(tr(""));
     }
     else {
         enablePartitionInfoWidgets(true);
+
+        emit partition_name_changed(listClusterPartitionsWidget->item(row)->text());
     }
 }
 

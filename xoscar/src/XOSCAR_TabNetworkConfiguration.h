@@ -46,12 +46,14 @@ public slots:
     int stringToNodesConfig(QString);
     void open_mac_file(const QString);
     void import_macs_from_file();
+    void partition_name_changed(QString);
     void network_configuration_tab_activated();
      int handle_thread_result (int command_id, const QString result);
     void open_file();
     void assignmac_clicked_handler();
     void unassignmac_clicked_handler();
     void assignallmacs_clicked_handler();
+    void importmanualmac_clicked_handler();
 
 protected:
     bool isMacUnassigned(QString & mac);
@@ -59,9 +61,11 @@ protected:
     bool isItemMacAddress(QTreeWidgetItem* item, QString& mac);
     bool assignMacAddress(QTreeWidgetItem*, QString&);
     bool unassignMacAddress(QTreeWidgetItem*, QString&);
+    bool isValidMacAddress(QString mac);
 
 private:
    CommandExecutionThread command_thread;
+   QString partition_name;
 };
 
 }

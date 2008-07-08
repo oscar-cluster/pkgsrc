@@ -686,6 +686,9 @@
              <height>30</height>
             </size>
            </property>
+           <property name="inputMask" >
+            <string>HH:HH:HH:HH:HH:HH;_</string>
+           </property>
            <property name="maxLength" >
             <number>17</number>
            </property>

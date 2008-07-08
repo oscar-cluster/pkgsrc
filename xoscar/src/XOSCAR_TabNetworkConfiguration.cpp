@@ -16,6 +16,8 @@
 #include "XOSCAR_TabNetworkConfiguration.h"
 
 #include <QDir>
+#include <QRegExp>
+#include <QRegExpValidator>
 
 using namespace xoscar;
 
@@ -36,8 +38,17 @@ XOSCAR_TabNetworkConfiguration::XOSCAR_TabNetworkConfiguration(QWidget* parent)
     connect(assignallmacs, SIGNAL(clicked()),
             this, SLOT(assignallmacs_clicked_handler()));
 
+    connect(importmanualmac, SIGNAL(clicked()),
+            this, SLOT(importmanualmac_clicked_handler()));
+    connect(manualmac, SIGNAL(returnPressed()),
+            importmanualmac, SIGNAL(clicked()));
+    connect(importmacfile, SIGNAL(returnPressed()),
+            importmacs, SIGNAL(clicked()));
     connect(clearmacs, SIGNAL(clicked()),
             listNoneAssignedMacWidget, SLOT(clear()));
+
+    connect(&command_thread, SIGNAL(thread_terminated(int, QString)),
+        this, SLOT(handle_thread_result (int, QString)));
 
     // *** Test Code ***
     stringToNodesConfig(tr("New_Partition_0\n\tMAC: \n\tIP: 172.20.0.2\n") +
@@ -107,12 +118,29 @@ void XOSCAR_TabNetworkConfiguration::import_macs_from_file ()
             QString line = in.readLine().trimmed();
             if(line.isEmpty()) return;
             // This part avoids duplicate MAC addresses in the unassigned list widget
-            if(isMacUnassigned(line) == false && isMacAssigned(line) == false) {
-                listNoneAssignedMacWidget->addItem (line);
+            if(isValidMacAddress(line) && isMacUnassigned(line) == false && isMacAssigned(line) == false) {
+                listNoneAssignedMacWidget->addItem(line);
                 cout << "Line: " << line.toStdString() << endl;
             }
         }
     }
+}
+
+/**
+ *  @author Robert Babilon
+ *  
+ *  Function to check if a given MAC address is valid.
+ *  Returns true if the MAC address is valid; otherwise false.
+ *
+ *  @param mac The MAC address to validate
+ */
+bool XOSCAR_TabNetworkConfiguration::isValidMacAddress(QString mac)
+{
+    QRegExp regex("^[0-9A-Fa-f]{2}:[0-9A-Fa-f]{2}:[0-9A-Fa-f]{2}:[0-9A-Fa-f]{2}:[0-9A-Fa-f]{2}:[0-9A-Fa-f]{2}$");
+    QRegExpValidator macvalidator(regex, this);
+
+    int pos = 0;
+    return macvalidator.validate(mac, pos) == QValidator::Acceptable ? true : false;
 }
 
 /**
@@ -200,6 +228,20 @@ void XOSCAR_TabNetworkConfiguration::assignallmacs_clicked_handler()
 /**
  *  @author Robert Babilon
  *
+ *  Slot called when the importmanualmac button is clicked.
+ */
+void XOSCAR_TabNetworkConfiguration::importmanualmac_clicked_handler()
+{
+    QString mac = manualmac->text();
+
+    if(isValidMacAddress(mac) && isMacUnassigned(mac) == false && isMacAssigned(mac) == false) {
+        listNoneAssignedMacWidget->addItem(mac);
+    }
+}
+
+/**
+ *  @author Robert Babilon
+ *
  *  Function checks if the given MAC address is in the unassigned pool.
  *  Returns true if the MAC address is in the unassigned pool; otherwise false.
  *
@@ -207,12 +249,7 @@ void XOSCAR_TabNetworkConfiguration::assignallmacs_clicked_handler()
  */
 bool XOSCAR_TabNetworkConfiguration::isMacUnassigned(QString& mac)
 {
-    if(listNoneAssignedMacWidget->findItems(mac, Qt::MatchFixedString).count() == 0) {
-        return false;
-    }
-    else {
-        return true;
-    }
+    return listNoneAssignedMacWidget->findItems(mac, Qt::MatchFixedString).count() == 0 ? false : true;
 }
 
 /**
@@ -337,6 +374,18 @@ bool XOSCAR_TabNetworkConfiguration::isItemMacAddress(QTreeWidgetItem* item, QSt
 }
 
 /**
+ *  @author Robert Babilon
+ *
+ *  Slot called when the selected partition has changed.
+ *
+ *  @param name The name of the partition that has been selected.
+ */
+void XOSCAR_TabNetworkConfiguration::partition_name_changed(QString name)
+{
+    partition_name = name;
+}
+
+/**
  * @author Geoffroy Vallee.
  *
  * Slot called when the "Network Configuration" tab is activated.
@@ -353,20 +402,15 @@ bool XOSCAR_TabNetworkConfiguration::isItemMacAddress(QTreeWidgetItem* item, QSt
  */
 void XOSCAR_TabNetworkConfiguration::network_configuration_tab_activated() 
 {
-    /*if(listOscarClustersWidget->currentRow() == -1
-        || listClusterPartitionsWidget->currentRow() == -1) {
-        cout << "No specific partition selected, nothing to do\n" << endl;
+    if(partition_name.isEmpty()) {
         return;
     }
-    QString partition_name = partitonNameEditWidget->text();
-    cout << "Display nodes info of the partition: " 
-         << partition_name.toStdString() << endl;
 
     // We clean up the list of nodes
     oscarNodesTreeWidget->clear();
 
     command_thread.init(DISPLAY_DETAILS_PARTITION_NODES, 
-                        QStringList(partition_name));*/
+                        QStringList(partition_name));
 }
 
 /**

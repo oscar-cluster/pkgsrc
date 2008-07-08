@@ -53,6 +53,7 @@ public slots:
 signals:
     void widgetContentsModified(QWidget* widget);
 	void widgetContentsSaved(QWidget* widget);
+    void partition_name_changed(QString);
 
 private:
    CommandExecutionThread command_thread;

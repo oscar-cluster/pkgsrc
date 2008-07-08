@@ -53,6 +53,9 @@ XOSCAR_MainWindow::XOSCAR_MainWindow(QMainWindow *parent)
 
     networkConfigurationTabWidget->setCurrentIndex(0);
 
+    connect(giTab, SIGNAL(partition_name_changed(QString)),
+            networkTab, SLOT(partition_name_changed(QString)));
+
     connect(giTab, SIGNAL(widgetContentsModified(QWidget*)),
             this, SLOT(widgetContentsChanged_handler(QWidget*)));
 
@@ -531,41 +534,8 @@ bool XOSCAR_MainWindow::prompt_save_changes()
 void XOSCAR_MainWindow::activate_tab(int tab_num)
 {
     switch (tab_num) {
-        case (1) : network_configuration_tab_activated();
+        case (1) : networkTab->network_configuration_tab_activated();
     }
-}
-
-/**
- * @author Geoffroy Vallee.
- *
- * Slot called when the "Network Configuration" tab is activated.
- * This function grabs the name of the selected cluster and the selected 
- * partition and populate the list of nodes based on that. If no cluster and no
- * partition is selected in the "General Information" tab, we do nothing.
- *
- * @todo OSCAR cmds should be executed in a thread in order to ease the first
- * implementation of a remote manegement mechanism. For that, we have to
- * have an option to the OSCAR script in order to get the detailed info
- * about node of a given partition.
- * For instance, it can be: "oscar--display-partition-nodes partition1 -v"
- * The "-v" options makes that we get all detailed info for all the nodes.
- */
-void XOSCAR_MainWindow::network_configuration_tab_activated() 
-{
-    /*if(listOscarClustersWidget->currentRow() == -1
-        || listClusterPartitionsWidget->currentRow() == -1) {
-        cout << "No specific partition selected, nothing to do\n" << endl;
-        return;
-    }
-    QString partition_name = partitonNameEditWidget->text();
-    cout << "Display nodes info of the partition: " 
-         << partition_name.toStdString() << endl;
-
-    // We clean up the list of nodes
-    oscarNodesTreeWidget->clear();
-
-    command_thread.init(DISPLAY_DETAILS_PARTITION_NODES, 
-                        QStringList(partition_name));*/
 }
 
 int XOSCAR_MainWindow::handle_thread_result (int command_id, 
