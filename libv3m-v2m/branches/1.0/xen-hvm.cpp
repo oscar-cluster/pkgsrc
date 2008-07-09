@@ -35,7 +35,7 @@ xen_hvm::xen_hvm(ProfileXMLNode* p)
 {
     profile = p;
 
-    // We load configuration information from /etc/v3m/vm.conf
+    // We load configuration information from configuration file.
     cout << "Creating a new Xen VM\n" << endl;
     VMSettings settings;
     xenCommand = settings.getXenCommand();

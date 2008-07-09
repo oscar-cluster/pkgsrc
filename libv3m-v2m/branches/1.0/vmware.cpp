@@ -41,7 +41,7 @@ vmware::vmware(ProfileXMLNode* p)
 {
   profile = p;
 
-  // We load configuration information from /etc/v3m/vm.conf
+  // We load configuration information from configuration file.
   VMSettings settings;
   vmwareCommand = settings.getVmwareCommand();
   preVMCommand = settings.getVmwarePrecommand();

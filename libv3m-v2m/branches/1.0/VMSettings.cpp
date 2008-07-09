@@ -20,7 +20,7 @@ using namespace std;
   */
 VMSettings::VMSettings ()
 {
-    Glib::ustring filepath = "/etc/v3m/vm.conf";
+    Glib::ustring filepath = "/etc/libv3m/vm.conf";
     cout << "Analyzing V3M configuration file..." << endl;
     ifstream myfile (filepath.c_str());
     if (myfile.is_open()) {

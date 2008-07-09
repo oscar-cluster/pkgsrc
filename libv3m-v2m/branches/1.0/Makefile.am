@@ -37,6 +37,7 @@ clean-generic: docclean
 install-etc:
 	install -d -m644 $(DESTDIR)/etc/libv3m
 	install etc/*.dtd $(DESTDIR)/etc/libv3m
+	install etc/*.conf $(DESTDIR)/etc/libv3m
 
 install-data: install-etc
 

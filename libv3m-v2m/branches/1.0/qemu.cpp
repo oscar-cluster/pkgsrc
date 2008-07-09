@@ -43,7 +43,7 @@ qemuVM::qemuVM(ProfileXMLNode* p)
 {
     profile = p;
 
-    // We load configuration information from /etc/v3m/vm.conf
+    // We load configuration information from configuration file.
     VMSettings settings;
     cout << "Creation of a new VM instantiation, settings loaded" << endl;
     qemuCommand = settings.getQemuCommand();

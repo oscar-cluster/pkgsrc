@@ -36,7 +36,7 @@ vmm_hpc::vmm_hpc(ProfileXMLNode* p)
 {
   profile = p;
 
-  // We load configuration information from /etc/v3m/vm.conf
+  // We load configuration information from configuration file.
   std::cout << "Creating a new VMM-HPC VM\n" << std::endl;
   VMSettings settings;
   vmmhpcCommand = settings.getVMMHPCCommand();
