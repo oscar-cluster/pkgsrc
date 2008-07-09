@@ -52,6 +52,7 @@ using namespace redi;
 #define DISPLAY_DEFAULT_OSCAR_REPO              15
 #define DISPLAY_DEFAULT_DISTRO_REPO             16
 #define REMOVE_PARTITION                        17
+#define DISPLAY_DEFAULT_OPKGS                   18
 
 /**
  * @namespace xoscar

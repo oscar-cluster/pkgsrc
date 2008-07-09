@@ -380,7 +380,7 @@ bool XOSCAR_TabNetworkConfiguration::isItemMacAddress(QTreeWidgetItem* item, QSt
  *
  *  @param name The name of the partition that has been selected.
  */
-void XOSCAR_TabNetworkConfiguration::partition_name_changed(QString name)
+void XOSCAR_TabNetworkConfiguration::partition_selection_changed(QString name)
 {
     partition_name = name;
 }
@@ -428,7 +428,7 @@ int XOSCAR_TabNetworkConfiguration::handle_thread_result (int command_id,
     const QString result)
 {
     QStringList list;
-    cout << "MainWindow: result from cmd exec thread received: "
+    cout << "NetworkConfiguration: result from cmd exec thread received: "
          << command_id
          << endl;
 
@@ -437,6 +437,8 @@ int XOSCAR_TabNetworkConfiguration::handle_thread_result (int command_id,
         // Now we have a big string with the config and we need to parse it.
         stringToNodesConfig (result);
     }
+
+    return 0;
 }
 
 int XOSCAR_TabNetworkConfiguration::stringToNodesConfig (QString cmd_result)

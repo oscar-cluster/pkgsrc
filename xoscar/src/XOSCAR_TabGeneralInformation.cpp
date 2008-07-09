@@ -45,6 +45,9 @@ XOSCAR_TabGeneralInformation::XOSCAR_TabGeneralInformation(QWidget* parent)
     connect(listOscarClustersWidget, SIGNAL(itemSelectionChanged ()),
                     this, SLOT(refresh_list_partitions()));
 
+    connect(listOscarClustersWidget, SIGNAL(currentRowChanged(int)),
+            this, SLOT(clusters_list_rowChanged_handler(int)));
+
     connect(listClusterPartitionsWidget, SIGNAL(currentRowChanged(int)),
             this, SLOT(partition_list_rowChanged_handler(int)));
 
@@ -381,6 +384,23 @@ void XOSCAR_TabGeneralInformation::enablePartitionInfoWidgets(bool enable)
 /**
  *  @author Robert Babilon
  *
+ *  @param row The row index of the selected cluster
+ */
+void XOSCAR_TabGeneralInformation::clusters_list_rowChanged_handler(int row)
+{
+    if(row == -1) {
+        listClusterPartitionsWidget->setCurrentRow(-1);
+
+        emit cluster_selection_changed(tr(""));
+    }
+    else {
+        emit cluster_selection_changed(listOscarClustersWidget->item(row)->text());
+    }
+}
+
+/**
+ *  @author Robert Babilon
+ *
  *  Slot called when the row has changed in the partition list widget.
  *  Sets the default values to the partition info widgets and disables them if
  *  the row is -1. Otherwise the partition info widgets are enabled.
@@ -394,12 +414,12 @@ void XOSCAR_TabGeneralInformation::partition_list_rowChanged_handler(int row)
         setDefaultPartitionValues();
         enablePartitionInfoWidgets(false);
 
-        emit partition_name_changed(tr(""));
+        emit partition_selection_changed(tr(""));
     }
     else {
         enablePartitionInfoWidgets(true);
 
-        emit partition_name_changed(listClusterPartitionsWidget->item(row)->text());
+        emit partition_selection_changed(listClusterPartitionsWidget->item(row)->text());
     }
 }
 
@@ -418,7 +438,7 @@ int XOSCAR_TabGeneralInformation::handle_thread_result (int command_id,
     const QString result)
 {
     QStringList list;
-    cout << "MainWindow: result from cmd exec thread received: "
+    cout << "GeneralInformation: result from cmd exec thread received: "
          << command_id
          << endl;
 

@@ -46,7 +46,7 @@ public slots:
     int stringToNodesConfig(QString);
     void open_mac_file(const QString);
     void import_macs_from_file();
-    void partition_name_changed(QString);
+    void partition_selection_changed(QString);
     void network_configuration_tab_activated();
      int handle_thread_result (int command_id, const QString result);
     void open_file();

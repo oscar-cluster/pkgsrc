@@ -49,11 +49,13 @@ public slots:
 	bool save();
 	bool undo();
     void partition_list_rowChanged_handler(int);
+    void clusters_list_rowChanged_handler(int);
 
 signals:
     void widgetContentsModified(QWidget* widget);
 	void widgetContentsSaved(QWidget* widget);
-    void partition_name_changed(QString);
+    void cluster_selection_changed(QString);
+    void partition_selection_changed(QString);
 
 private:
    CommandExecutionThread command_thread;

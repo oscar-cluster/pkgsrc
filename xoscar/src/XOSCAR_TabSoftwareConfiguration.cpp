@@ -15,14 +15,97 @@
 
 #include "XOSCAR_TabSoftwareConfiguration.h"
 
+#include <iostream>
+
+using namespace std;
 using namespace xoscar;
 
 XOSCAR_TabSoftwareConfiguration::XOSCAR_TabSoftwareConfiguration(QWidget* parent)
     : QWidget(parent)
 {
     setupUi(this);
+
+    connect(&command_thread, SIGNAL(thread_terminated(int, QString)),
+        this, SLOT(handle_thread_result (int, QString)));
 }
 
 XOSCAR_TabSoftwareConfiguration::~XOSCAR_TabSoftwareConfiguration()
 {
+}
+
+/**
+ *  @author Robert Babilon
+ *
+ *  Slot called when a new cluster on the general information tab is selected.
+ *  This slot is connected via the main window to maintain independence between
+ *  the tabs.
+ *
+ *  @param name The name of the newly selected cluster.
+ */
+void XOSCAR_TabSoftwareConfiguration::cluster_selection_changed(QString name)
+{
+    cluster_name = name;
+
+    lineEdit_5->setText(cluster_name);
+}
+
+/**
+ *  @author Robert Babilon
+ *
+ *  Slot called when a new partition on the general information tab is selected.
+ *  This slot is connected via the main window to maintain independence between
+ *  the tabs.
+ *
+ *  @param name The name of the newly selected partition.
+ */
+void XOSCAR_TabSoftwareConfiguration::partition_selection_changed(QString name)
+{
+    partition_name = name;
+
+    lineEdit_4->setText(partition_name);
+}
+
+/**
+ *  @author Robert Babilon
+ *
+ *  Slot called when the software configuration tab is selected and needs to
+ *  update its information.
+ */
+void XOSCAR_TabSoftwareConfiguration::software_configuration_tab_activated()
+{
+    if(partition_name.isEmpty() || cluster_name.isEmpty()) {
+        cout << "ERROR: no cluster and/or no partition selected" << endl;
+        return;
+    }
+
+    command_thread.init(DISPLAY_DEFAULT_OPKGS,
+                        QStringList(partition_name));
+}
+
+/**
+ *  @author Robert Babilon
+ *
+ *  Slot called when the command thread has finished executing a command.
+ *
+ *  @param command_id The command that has completed. The list of values
+ *  are in CommandExecutionThread.h.
+ *
+ *  @param result Holds the return value of the command.
+ */
+int XOSCAR_TabSoftwareConfiguration::handle_thread_result (int command_id, 
+    const QString result)
+{
+    QStringList list;
+    cout << "SoftwareConfiguration: result from cmd exec thread received: "
+         << command_id
+         << endl;
+
+    if (command_id == DISPLAY_DEFAULT_OPKGS) {
+        QStringList pkgs = result.split("\n", QString::SkipEmptyParts);
+        for(int i = 0; i < pkgs.count(); i++) {
+            // add to list
+        }
+    }
+
+    return 0;
 }

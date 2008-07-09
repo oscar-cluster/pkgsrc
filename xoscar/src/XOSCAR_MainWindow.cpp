@@ -53,8 +53,13 @@ XOSCAR_MainWindow::XOSCAR_MainWindow(QMainWindow *parent)
 
     networkConfigurationTabWidget->setCurrentIndex(0);
 
-    connect(giTab, SIGNAL(partition_name_changed(QString)),
-            networkTab, SLOT(partition_name_changed(QString)));
+    connect(giTab, SIGNAL(partition_selection_changed(QString)),
+            networkTab, SLOT(partition_selection_changed(QString)));
+
+    connect(giTab, SIGNAL(partition_selection_changed(QString)),
+            softwareTab, SLOT(partition_selection_changed(QString)));
+    connect(giTab, SIGNAL(cluster_selection_changed(QString)),
+            softwareTab, SLOT(cluster_selection_changed(QString)));
 
     connect(giTab, SIGNAL(widgetContentsModified(QWidget*)),
             this, SLOT(widgetContentsChanged_handler(QWidget*)));
@@ -535,6 +540,9 @@ void XOSCAR_MainWindow::activate_tab(int tab_num)
 {
     switch (tab_num) {
         case (1) : networkTab->network_configuration_tab_activated();
+            break;
+        case (2) : softwareTab->software_configuration_tab_activated();
+            break;
     }
 }
 

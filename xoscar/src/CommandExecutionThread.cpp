@@ -162,6 +162,12 @@ void CommandExecutionThread::run()
                 + command_args.at(0).toStdString());
         result = get_output_word_by_word (cmd);
         emit (thread_terminated(DISPLAY_DEFAULT_DISTRO_REPO, result));
+    } else if (command_id == DISPLAY_DEFAULT_OPKGS) {
+        const string cmd = build_cmd ((string) ohome
+                + "/scripts/opd2 --non-interactive --default-opkgs "
+                + command_args.at(0).toStdString());
+        result = get_output_line_by_line (cmd);
+        emit (thread_terminated(DISPLAY_DEFAULT_OPKGS, result));
     }
     // We ignore other command IDs
 }

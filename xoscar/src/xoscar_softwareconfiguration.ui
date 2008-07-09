@@ -36,7 +36,11 @@
      </widget>
     </item>
     <item>
-     <widget class="QLineEdit" name="lineEdit_4" />
+     <widget class="QLineEdit" name="lineEdit_4" >
+      <property name="readOnly" >
+       <bool>true</bool>
+      </property>
+     </widget>
     </item>
    </layout>
   </widget>
@@ -84,7 +88,11 @@
      </widget>
     </item>
     <item>
-     <widget class="QLineEdit" name="lineEdit_5" />
+     <widget class="QLineEdit" name="lineEdit_5" >
+      <property name="readOnly" >
+       <bool>true</bool>
+      </property>
+     </widget>
     </item>
    </layout>
   </widget>

@@ -19,6 +19,8 @@
 
 #include "ui_xoscar_softwareconfiguration.h"
 
+#include "CommandExecutionThread.h"
+
 #include <QWidget>
 
 using namespace Ui;
@@ -32,6 +34,17 @@ Q_OBJECT
 public:
     XOSCAR_TabSoftwareConfiguration(QWidget* parent);
     ~XOSCAR_TabSoftwareConfiguration();
+
+public slots:
+    void software_configuration_tab_activated();
+    void partition_selection_changed(QString);
+    void cluster_selection_changed(QString);
+    int handle_thread_result (int command_id, const QString result);
+
+private:
+    CommandExecutionThread command_thread;
+    QString cluster_name;
+    QString partition_name;
 };
 
 }
