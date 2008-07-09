@@ -45,8 +45,16 @@
 
 <para>
 Before you use libv3m or any software based on libv3m, a XML configuration file
-(/etc/libv3m/vm.conf) has to be created. This configuration file specifies all 
-commands needed for the use of virtualization technologies.
+(/etc/libv3m/vm.conf) has to be created. This file is automatically created 
+based on a template when installing libv3m, for instance when executing the 
+command:
+<programlisting>
+  <![CDATA[
+           make install-etc
+           ]]>
+</programlisting>
+This configuration file specifies all commands needed for the use of 
+virtualization technologies.
 An example of this file:
 <programlisting role="xml">
 <![CDATA[
@@ -63,10 +71,11 @@ An example of this file:
 ]]>
 </programlisting>
 
-Note that for all virtualization technology (e.g. Qemu), "command" is mandatory.
+Note that for all virtualization technology (e.g., Qemu), "command" is
+mandatory.
 "Command" is the string used to create a VM and "Precommand" is the command to 
 execute before the creation of a VM. "Command" has to be specified before 
-"Precommand", and they are both mandatory.
+"Precommand", and "Precommand" is optional.
 </para>
 
 <para>
@@ -102,93 +111,106 @@ Several profile examples are also available with the libv3m documentations.
 <sect2><title>Network Configuration</title>
 
 <para>
-Two kinds of connections are available:
+The following network configurations are available:
 <itemizedlist>
-    <listitem><para>TUN/TAP: for a connection with the host OS, which typically
- means that a virtual NIC will appear on the Host OS and enable a connection
-with the VM. Typically, the host OS will have a tun0 interface with the IP 
-172.20.0.1 and the virtual machine a eth0 interface with 172.20.0.2.</para></listitem>
+    <listitem><para>
+        TUN/TAP: for a connection with the host OS, which typically means that a
+        virtual NIC will appear on the Host OS and enable a connection with the
+        VM. Typically, the host OS will have a tun0 interface with the IP  
+        172.20.0.1 and the virtual machine a eth0 interface with
+        172.20.0.2.
+        For example:
+        <programlisting role="xml">
+          <![CDATA[
+                   <nic1>
+                     <type>TUN/TAP</type>
+                     <mac>00:02:03:04:05:06</mac>
+                   </nic1>
+                   ]]>
+        </programlisting>
+    </para></listitem>
+    <listitem><para>TUN/TAP+NAT: for a connection with the host OS, which
+        typically means that a virtual NIC will appear on the Host OS and enable
+        a connection with the VM. Typically, the host OS will have a tun0 
+        interface with the IP 172.20.0.1 and the virtual machine a eth0
+        interface with 172.20.0.2. <emphasis>Compared to the "TUN/TAP" mode,
+        this mode automatically setup NAT on the hostOS, i.e., packets from the
+        VM are automatically forwarded by the HostOS. In order to specify which
+        network interface of the HostOS must be used for the NAT, the type tag
+        of a given NIC must have an "option" attribute.</emphasis> For instance:
+        <programlisting role="xml">
+          <![CDATA[
+                 <nic1>
+                   <type option="eth1">TUN/TAP+NAT</type>
+                   <mac>00:02:03:04:05:06</mac>
+                 </nic1>
+                 ]]>
+        </programlisting>
+    </para></listitem>
     <listitem><para>BRIDGED_TAP: for a connection with the host OS but in that 
 case the connection is automatically bridged with eth0 of the host OS (we 
 assume eth0 is the public network interface, it is not possible currently to 
 change that),</para></listitem>
 <!--
 	<listitem><para>VLAN: for the creation of a virtual LAN between VMs.</para></listitem>
+    To create a VLAN network interface, just specify the "VLAN" NIC type.
+    For example:
+    <programlisting role="xml">
+      <![CDATA[
+               <nic1>
+                 <type>VLAN</type>
+                 <mac>00:02:03:04:05:06</mac>
+               </nic1>
+               ]]>
+             </programlisting>
+             WARNING! If you want to have two nics, for instance to simulate a headnode
+             of a cluster, the current implementation has a limitation, the way you 
+             specify your NICS will change the behavior of the network configuration.
+             Therefore, if you want two NICs, one for the connection with the host OS and
+             another one to connect a virtual network, you should use a specification like
+             the following one:
+             <programlisting role="xml">
+               <![CDATA[
+                        <nic1>
+                          <type>TUN/TAP</type>
+                          <mac>00:02:03:04:05:06</mac>
+                        </nic1>
+                        <nic2>
+                          <type>VLAN</type>
+                          <mac>00:02:03:04:05:07</mac>
+                        </nic2>
+                        ]]>
+                      </programlisting>
+                      Moreover, if the VM is a Qemu VM, the VLAN device will be automatically 
+                      concidered as master on the VLAN (listen for connection of other virtual
+                      machines on the network).
 -->
 </itemizedlist>
-To create a TUN/TAP network interface, just specify the "TUN/TAP" NIC type.
-For example:
-<programlisting role="xml">
-<![CDATA[
-<nic1>
-    <type>TUN/TAP</type>
-    <mac>00:02:03:04:05:06</mac>
-</nic1>
-]]>
-</programlisting>
-To create a VLAN network interface, just specify the "VLAN" NIC type.
-For example:
-<programlisting role="xml">
-<![CDATA[
-<nic1>
-    <type>VLAN</type>
-    <mac>00:02:03:04:05:06</mac>
-</nic1>
-]]>
-</programlisting>
-WARNING! If you want to have two nics, for instance to simulate a headnode
-of a cluster, the current implementation has a limitation, the way you 
-specify your NICS will change the behavior of the network configuration.
-Therefore, if you want two NICs, one for the connection with the host OS and
-another one to connect a virtual network, you should use a specification like
-the following one:
-<programlisting role="xml">
-<![CDATA[
-<nic1>
-    <type>TUN/TAP</type>
-    <mac>00:02:03:04:05:06</mac>
-</nic1>
-<nic2>
-    <type>VLAN</type>
-    <mac>00:02:03:04:05:07</mac>
-</nic2>
-]]>
-</programlisting>
-Moreover, if the VM is a Qemu VM, the VLAN device will be automatically 
-concidered as master on the VLAN (listen for connection of other virtual
-machines on the network).
 </para>
 
 <para>
 Note 1: Even if the global network configuration is done automatically, the 
-user may have to do some last and manual configuration steps. For instance:
-<itemizedlist>
-    <listitem><para>for a none bridged TUN/TAP connection using Xen: the TAP 
-    interface on the host OS does not have an IP assigned automatically.</para>
-    </listitem>
-    <listitem><para>for a none bridged TUN/TAP connection using QEMU, the 
-    default IP of the TAP interface on the host OS is 172.20.0.1.</para>
-    </listitem>
-    <listitem><para>the current prototype supports only one TAP/TUN connection
-    per host OS using QEMU. If users want more TAP/TUN connections, the 
-    configuration has to be done automatically.</para></listitem>
-</itemizedlist>
+user may have to do some last and manual configuration steps. For instance, the
+current prototype supports only one TAP/TUN connection per host OS using QEMU.
+If users want more TAP/TUN connections, the configuration has to be done 
+manually.
 </para>
 
 <para>
-Note2: Depending on the virtualization technology, the difference may not
-result in two different network connections at the VM level, but this detail
-should be hidden. For instance, a connection to a VLAN using QEMU does not 
-result in a visible virtual network interface on the host OS; but with Xen
-it results in a visible virtual network connection on the host OS (like for
-TAP connections).
+Note2: The MAC address used for the virtual NICs cannot begin with "01" or
+"FF", those are reserved addresses for multicast and broadcast, respectively.
 </para>
 
-<para>
-Note3: The MAC address used for the virtual NICs can not begin with "01" or
-"FF", these are reserved addresses for multicast and broadcast,
-respectively.
-</para>
+<!--
+    <para>
+      Note2: Depending on the virtualization technology, the difference may not
+      result in two different network connections at the VM level, but this detail
+      should be hidden. For instance, a connection to a VLAN using QEMU does not 
+      result in a visible virtual network interface on the host OS; but with Xen
+      it results in a visible virtual network connection on the host OS (like for
+      TAP connections).
+    </para>
+    -->s
 
 </sect2>
 
