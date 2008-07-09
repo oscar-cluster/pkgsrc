@@ -1,6 +1,6 @@
 /*
- *  Copyright (c) 2006-2007 Oak Ridge National Laboratory, 
- *                          Geoffroy Vallee <valleegr@ornl.gov>
+ *  Copyright (c) 2006-2008 Oak Ridge National Laboratory, 
+ *                          Geoffroy Vallee <valleegr at ornl dot gov>
  *                          All rights reserved
  *  This file is part of the KVMs software.  For license information,
  *  see the COPYING file in the top level directory of the source
@@ -140,10 +140,11 @@ ProfileXMLNode::~ProfileXMLNode ()
   * @return NIC_TYPE_VALID if the type is N/A, TUN/TAP or VLAN.
   * @return NIC_TYPE_UNVALID if the type is something else.
   */
-#define NB_NIC_TYPES 5
+#define NB_NIC_TYPES 6
 std::string valid_nic_types[NB_NIC_TYPES] = {"", 
                                              "N/A",
                                              "TUN/TAP",
+                                             "TUN/TAP+NAT",
                                              "VLAN",
                                              "BRIDGED_TAP"};
 int ProfileXMLNode::check_nic_type (Glib::ustring type)
@@ -636,6 +637,41 @@ Glib::ustring ProfileXMLNode::load_nic_type (const xmlpp::Node* node)
 /**
   * @author Geoffroy Vallee.
   *
+  * Load NIC's option from the XML node.
+  *
+  * @param node XML node representing NIC data for a profile.
+  * @return NIC option (which is "N/A" in case of problem).
+  */
+Glib::ustring ProfileXMLNode::load_nic_option (xmlpp::Node* node)
+{
+    Glib::ustring option = "N/A";
+
+    if (node == NULL) {
+        cerr << "ProfileXMLNode::load_nic_option: unknown node (NULL)" 
+             << endl;
+        return "N/A";
+    }
+
+    Glib::ustring str = "";
+    xmlpp::Node::NodeList list1 = node->get_children("type");
+    for (xmlpp::Node::NodeList::iterator iter = list1.begin(); 
+         iter != list1.end(); ++iter) {
+        xmlpp::Element *el = new xmlpp::Element ((*iter)->cobj());
+        xmlpp::Attribute *attr = el->get_attribute ("option");
+        if (attr) {
+            option = attr->get_value();
+        }
+
+        cout << "NIC option: " << option.c_str() << endl;
+        return (option);
+    }
+    return "N/A";
+}
+
+
+/**
+  * @author Geoffroy Vallee.
+  *
   * Load virtual disk ID from XML node. The id is an attribute of the "virtual
   * disk" XML node.
   *
@@ -747,19 +783,21 @@ int ProfileXMLNode::load_virtual_disks_info_from_node ()
 int ProfileXMLNode::load_profile_nics_info_from_node ()
 {
     /* a revoir, interface trop bas niveau pour la classe ProfileXMLNode */
-    Glib::ustring str1, str2, str3, str4;
+    Glib::ustring str1, str2, str3, str4, str5, str6;
 
     xmlpp::Node::NodeList list1 = profile_node->get_children("nic1");
     for (xmlpp::Node::NodeList::iterator iter = list1.begin(); 
          iter != list1.end(); ++iter) {
         str1 = load_nic_mac (*iter);
         str2 = load_nic_type (*iter);
+       str5 = load_nic_option (*iter);
     }
     xmlpp::Node::NodeList list2 = profile_node->get_children("nic2");
     for (xmlpp::Node::NodeList::iterator iter = list2.begin(); 
          iter != list2.end(); ++iter) {
         str3 = load_nic_mac (*iter);
         str4 = load_nic_type (*iter);
+       str6 = load_nic_option (*iter);
     }
 
     /* We check loaded dara */
@@ -774,8 +812,10 @@ int ProfileXMLNode::load_profile_nics_info_from_node ()
 
     data.nic1_mac = str1.c_str();
     data.nic1_type = str2.c_str();
+    data.nic1_option = str5.c_str();
     data.nic2_mac = str3.c_str();
     data.nic2_type = str4.c_str();
+    data.nic2_option = str6.c_str();
 
     return 0;
 }

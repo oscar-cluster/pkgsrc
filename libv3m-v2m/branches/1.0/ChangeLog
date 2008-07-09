@@ -1,3 +1,6 @@
+* 0.9.6:
+	* Add the TUN/TAP+NAT NIC type for QEMU.
+
 * 0.9.5:
 	* Fix the setup of a TUN/TAP interface when using QEMU.
 	* Fix the spec file (includes headers and DTDs).

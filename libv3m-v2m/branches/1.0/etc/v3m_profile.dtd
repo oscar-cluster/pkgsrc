@@ -8,6 +8,7 @@ DTD for V2M profiles.
 <!ELEMENT name (#PCDATA)>
 
 <!ELEMENT type (#PCDATA)>
+<!ATTLIST type option CDATA #IMPLIED>
 
 <!ELEMENT image (#PCDATA)>
 <!ATTLIST image size CDATA #IMPLIED>

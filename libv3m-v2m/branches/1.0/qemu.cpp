@@ -323,6 +323,16 @@ int qemuVM::generate_network_config_file ()
         file_op << "#!/bin/sh\n";
         file_op << "sudo -p \"Password for $0:\" /sbin/ifconfig $1 172.20.0.1\n";
     }
+    if (((data.nic1_type).compare("TUN/TAP+NAT") == 0)
+        || ((data.nic2_type).compare("TUN/TAP+NAT") == 0)) {
+        file_op << "#!/bin/sh\n";
+        file_op << "sudo -p \"Password for $0:\" /sbin/ifconfig $1 172.20.0.1\n";
+        file_op << "IF=" << data.nic1_option << "\n";
+        file_op << "echo \"1\" | sudo tee -a /proc/sys/net/ipv4/ip_forward\n";
+        file_op << "sudo echo \"iptables -t nat -A POSTROUTING -o $IF -j MASQUERADE\"\n";
+        file_op << "sudo /sbin/iptables -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT\n";
+        file_op << "sudo /sbin/iptables -t nat -A POSTROUTING -o $IF -j MASQUERADE\n";
+    }
     file_op.close();
     cmd = "chmod a+x " + filename;
     if (system(cmd.c_str())) {
@@ -413,6 +423,11 @@ int qemuVM::__boot_vm ()
             cmd += data.name;
             cmd += "-ifup.sh";
         }
+        if ((data.nic1_type).compare("TUN/TAP+NAT") == 0) {
+            cmd += " -net nic -net tap,script=/tmp/qemu-";
+            cmd += data.name;
+            cmd += "-ifup.sh";
+        }
         if ((data.nic1_type).compare("VLAN") == 0) {
             cmd += " -net nic,macaddr=";
             cmd += data.nic1_mac;
@@ -421,12 +436,17 @@ int qemuVM::__boot_vm ()
     }
     if ((data.nic2_type).compare("N/A") != 0 
         && (data.nic2_type).compare("") != 0) {
+        if ((data.nic2_type).compare("BRIDGED_TAP") == 0) {
+            cmd += " -net nic -net tap,script=/tmp/qemu-";
+            cmd += data.name;
+            cmd += "-ifup.sh";
+        }
         if ((data.nic2_type).compare("TUN/TAP") == 0) {
             cmd += " -net nic -net tap,script=/tmp/qemu-";
             cmd += data.name;
             cmd += "-ifup.sh";
         }
-        if ((data.nic2_type).compare("BRIDGED_TAP") == 0) {
+        if ((data.nic2_type).compare("TUN/TAP+NAT") == 0) {
             cmd += " -net nic -net tap,script=/tmp/qemu-";
             cmd += data.name;
             cmd += "-ifup.sh";

@@ -7,7 +7,7 @@
 
 Summary:		Library abstracting system virtualization solution such as Xen or QEMU.
 Name:      		libv3m
-Version:   		0.9.5
+Version:   		0.9.6
 Release:   		1
 Vendor:			Oak Ridge National Laboratory
 Distribution:   	Fedore Core 4
@@ -55,6 +55,8 @@ make install-etc DESTDIR=${RPM_BUILD_ROOT}
 /etc/libv3m/v3m_config.dtd
 
 %changelog
+* Wed Jul 09 2008 Geoffroy Vallee <valleegr@ornl.gov> 0.9.6-1
+- New upstream version.
 * Tue Jul 02 2008 Geoffroy Vallee <valleegr@ornl.gov> 0.9.5-1
 - New upstream version.
 * Fri Sep 01 2006 Geoffroy Vallee <valleegr@ornl.gov>

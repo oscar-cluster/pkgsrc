@@ -52,6 +52,12 @@ typedef struct profile_data{
     /** Profile's type of the second NIC */
     Glib::ustring nic2_type;
 
+    /** Option associated to the first NIC */
+    Glib::ustring nic1_option;
+
+    /** Option associated to the second NIC */
+    Glib::ustring nic2_option;
+
     /** Profile's name */
     Glib::ustring cdrom;
 
@@ -91,6 +97,7 @@ private:
   int load_profile_memory_from_node ();
   Glib::ustring load_nic_mac (const xmlpp::Node* node);
   Glib::ustring load_nic_type (const xmlpp::Node* node);
+  Glib::ustring load_nic_option (xmlpp::Node* node);
   int load_profile_nics_info_from_node ();
   int load_virtual_disk_info_from_node (const xmlpp::Node* node);
   string load_virtual_disk_id (xmlpp::Node* node);
