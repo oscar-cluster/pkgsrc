@@ -64,8 +64,6 @@ XOSCAR_MainWindow::XOSCAR_MainWindow(QMainWindow *parent)
     connect(giTab, SIGNAL(widgetContentsModified(QWidget*)),
             this, SLOT(widgetContentsChanged_handler(QWidget*)));
 
-    connect(giTab, SIGNAL(widgetContentsSaved(QWidget*)),
-            this, SLOT(widgetContentsSaved_handler(QWidget*))); 
     // We read the xoscar configuration file (~/.xoscar.conf). Note that if the
     // file does not exist, a default configuration file is created.
 //     QString home_path = getenv("HOME");
@@ -150,14 +148,14 @@ XOSCAR_MainWindow::~XOSCAR_MainWindow()
  */
 void XOSCAR_MainWindow::newOscarOptionSelected() 
 {
-    if(listOscarOptionsWidget->currentRow() == oscarOptionsRowPendingChanges) {
+    if(isWidgetContentsModified(widgetPendingChanges) && 
+        listOscarOptionsWidget->currentRow() == oscarOptionsRowPendingChanges) {
         return;
     }
     if (prompt_save_changes() == false) {
         listOscarOptionsWidget->setCurrentRow(oscarOptionsRowPendingChanges);
         return;
     } 
-    oscarOptionsRowPendingChanges = -1;
 
     QString option;
 
@@ -392,11 +390,11 @@ void XOSCAR_MainWindow::destroy()
  */
 void XOSCAR_MainWindow::closeEvent(QCloseEvent* event)
 {
-    if(widgetPendingChanges != NULL) { 
+    if(isWidgetContentsModified(widgetPendingChanges) == true) { 
         prompt_save_changes();
     }
     
-    if(widgetPendingChanges == NULL) { 
+    if(isWidgetContentsModified(widgetPendingChanges) == false) { 
         event->accept();
     }
     else {
@@ -442,30 +440,12 @@ void XOSCAR_MainWindow::widgetContentsChanged_handler(QWidget* widget)
         return;
     }
 
-    if(widgetPendingChanges == widget || widgetPendingChanges == NULL) {
+    if(isWidgetContentsModified(widgetPendingChanges) == false) {
         widgetPendingChanges = widget;
         oscarOptionsRowPendingChanges = listOscarOptionsWidget->currentRow();
     }
     else {
         cout << "ERROR: a previous tab has not been saved." << endl;
-    }
-}
-
-/**
- *  @author Robert Babilon
- *
- *  Slot called when a widget saves it's content.
- *
- *  @param widget Tab that has been saved.
- */
-void XOSCAR_MainWindow::widgetContentsSaved_handler(QWidget* widget)
-{
-    if(widgetPendingChanges == widget) {
-        widgetPendingChanges = NULL;
-        oscarOptionsRowPendingChanges = -1;
-    }
-    else {
-        cout << "ERROR: widget saved is not equal to widget with changes" << endl;
     }
 }
 
@@ -479,7 +459,8 @@ void XOSCAR_MainWindow::widgetContentsSaved_handler(QWidget* widget)
  */
 void XOSCAR_MainWindow::networkConfigTab_currentChanged_handler(int tab_num) 
 {
-    if(networkConfigurationTabWidget->currentWidget() == widgetPendingChanges) {
+    if(isWidgetContentsModified(widgetPendingChanges) && 
+        networkConfigurationTabWidget->currentWidget() == widgetPendingChanges) {
         // ignore
     }
     else if(prompt_save_changes() == false) {
@@ -508,10 +489,7 @@ bool XOSCAR_MainWindow::prompt_save_changes()
 
     XOSCAR_TabWidgetInterface* tab = dynamic_cast<XOSCAR_TabWidgetInterface*>(widgetPendingChanges);
 
-    if(tab == NULL) {
-        // ignore
-    }
-    else if(tab->isModified()) {
+    if(tab != NULL && tab->isModified()) {
         QMessageBox msg(QMessageBox::NoIcon, tr("Save changes?"), tr("The previous tab has been modified.\n")
                                                                 + tr("Would you like to save your changes?"),
                         QMessageBox::Save|QMessageBox::No|QMessageBox::Cancel, this);
@@ -527,10 +505,6 @@ bool XOSCAR_MainWindow::prompt_save_changes()
                 result = false;
                 break;
         }
-    }
-    else {
-        widgetPendingChanges = NULL;
-        oscarOptionsRowPendingChanges = -1;
     }
     
     return result;
@@ -577,4 +551,10 @@ int XOSCAR_MainWindow::handle_thread_result (int command_id,
         command_thread.init (GET_LIST_DEFAULT_REPOS, QStringList (""));
     }
     return 0;
+}
+
+bool XOSCAR_MainWindow::isWidgetContentsModified(QWidget* widget)
+{
+    XOSCAR_TabWidgetInterface* tab = dynamic_cast<XOSCAR_TabWidgetInterface*>(widget);
+    return (tab != NULL && tab->isModified()) ? true : false; 
 }

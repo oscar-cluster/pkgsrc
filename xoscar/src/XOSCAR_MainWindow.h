@@ -94,13 +94,13 @@ public slots:
     void update_check_text_widget(QString);
 	void activate_tab(int tab_num);
 	void widgetContentsChanged_handler(QWidget*);
-    void widgetContentsSaved_handler(QWidget*);
 
 protected:
 	void closeEvent(QCloseEvent* event);
 
 private:
 	bool prompt_save_changes();
+    bool isWidgetContentsModified(QWidget* widget);
 
     XOSCAR_AboutAuthorsDialog about_authors_widget;
     XOSCAR_AboutOscarDialog about_oscar_widget;

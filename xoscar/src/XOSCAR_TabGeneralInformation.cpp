@@ -87,7 +87,6 @@ bool XOSCAR_TabGeneralInformation::save()
     refresh_list_partitions();
 
 	modified = false;
-	emit widgetContentsSaved(this);
 
 	return true;
 }
@@ -111,7 +110,6 @@ bool XOSCAR_TabGeneralInformation::undo()
     cout << "undo()" << endl;
 
 	modified = false;
-	emit widgetContentsSaved(this);
 
 	return true;
 }

@@ -53,7 +53,6 @@ public slots:
 
 signals:
     void widgetContentsModified(QWidget* widget);
-	void widgetContentsSaved(QWidget* widget);
     void cluster_selection_changed(QString);
     void partition_selection_changed(QString);
 
