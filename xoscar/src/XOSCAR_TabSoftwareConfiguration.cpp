@@ -75,6 +75,7 @@ void XOSCAR_TabSoftwareConfiguration::software_configuration_tab_activated()
 {
     if(partition_name.isEmpty() || cluster_name.isEmpty()) {
         cout << "ERROR: no cluster and/or no partition selected" << endl;
+        opkgsListWidget->clear();
         return;
     }
 
@@ -101,9 +102,15 @@ int XOSCAR_TabSoftwareConfiguration::handle_thread_result (int command_id,
          << endl;
 
     if (command_id == DISPLAY_DEFAULT_OPKGS) {
+        opkgsListWidget->clear();
+
         QStringList pkgs = result.split("\n", QString::SkipEmptyParts);
         for(int i = 0; i < pkgs.count(); i++) {
             // add to list
+            QListWidgetItem *item = new QListWidgetItem(pkgs.at(i));
+            item->setFlags(item->flags()|Qt::ItemIsUserCheckable);
+            item->setCheckState(Qt::Unchecked);
+            opkgsListWidget->addItem(item);
         }
     }
 

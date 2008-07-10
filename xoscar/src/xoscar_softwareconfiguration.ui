@@ -44,26 +44,6 @@
     </item>
    </layout>
   </widget>
-  <widget class="QTableWidget" name="tableWidget" >
-   <property name="geometry" >
-    <rect>
-     <x>300</x>
-     <y>31</y>
-     <width>721</width>
-     <height>341</height>
-    </rect>
-   </property>
-   <column>
-    <property name="text" >
-     <string>Selected</string>
-    </property>
-   </column>
-   <column>
-    <property name="text" >
-     <string>Package Name</string>
-    </property>
-   </column>
-  </widget>
   <widget class="QWidget" name="horizontalLayout_8" >
    <property name="geometry" >
     <rect>
@@ -183,6 +163,29 @@
      </property>
     </widget>
    </widget>
+  </widget>
+  <widget class="QListWidget" name="opkgsListWidget" >
+   <property name="geometry" >
+    <rect>
+     <x>300</x>
+     <y>31</y>
+     <width>721</width>
+     <height>341</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label" >
+   <property name="geometry" >
+    <rect>
+     <x>300</x>
+     <y>10</y>
+     <width>111</width>
+     <height>17</height>
+    </rect>
+   </property>
+   <property name="text" >
+    <string>OSCAR Packages</string>
+   </property>
   </widget>
  </widget>
  <resources/>
