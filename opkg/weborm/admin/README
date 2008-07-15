@@ -32,7 +32,7 @@ Installation
 
 1/ Setup a virtual host (it can be the default one, i.e., /var/www most of the
 time).
-2/ Copy (or check-out) WebORM into that location.
+2/ Copy (or check-out) WebORM into that location (not in a sub-directory!).
 3/ Configure a restricted access to the webpage:
     a/ Be sure that the configuration for your virtual host as "AllowOverride 
        AuthConfig". Please refer to the apache documentation for more details.

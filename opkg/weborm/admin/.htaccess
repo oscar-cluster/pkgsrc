@@ -1,4 +1,4 @@
-AuthUserFile /var/www/apache2-default/admin/.htpasswd
+AuthUserFile /var/www/admin/.htpasswd
 AuthGroupFile /dev/null
 AuthName "Private Section"
 AuthType Basic

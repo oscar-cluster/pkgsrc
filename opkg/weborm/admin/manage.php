@@ -4,10 +4,10 @@ B
   <head>
     <title>OSCAR Repository Manager</title>
     <style type="text/css" media="all">
-      @import url("css/base.css");
-      @import url("css/site.css");
+      @import url("/Admin/css/base.css");
+      @import url("/admin/css/site.css");
     </style>
-    <link rel="stylesheet" href="./css/print.css" type="text/css" media="print"/>
+    <link rel="stylesheet" href="/admin/css/print.css" type="text/css" media="print"/>
     <meta name="author" content="Geoffroy Vallee" />
     <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1" />
 <!--    <script src="display_packages.js"></script>-->
@@ -35,13 +35,13 @@ B
   </div>
   <div id="breadcrumbs">
     <div class="xright">
-      <a href="index.html">Home</a>
+      <a href="/admin/index.html">Home</a>
       |
-      <a href="upload.php">Upload</a>
+      <a href="/admin/upload.php">Upload</a>
       |
-      <a href="create.html">Create Repo</a>
+      <a href="/admin/create.html">Create Repo</a>
       |
-      <a href="manage.php">Manage Repo</a>
+      <a href="/admin/manage.php">Manage Repo</a>
     </dir>
   </div>
   <div class="clear">
@@ -51,16 +51,16 @@ B
     <div id="navcolumn">
       <ul>
         <li class="none">
-          <a href="index.html">Home</a>
+          <a href="/admin/index.html">Home</a>
         </li>
         <li class="none">
-          <a href="upload.php">Upload Packages</a>
+          <a href="/admin/upload.php">Upload Packages</a>
         </li>
         <li class="none">
-          <a href="create.html">Create a New Repository</a>
+          <a href="/admin/create.html">Create a New Repository</a>
         </li>
         <li class="none">
-          <a href="manage.php">Manage an Existing Repository</a>
+          <a href="/admin/manage.php">Manage an Existing Repository</a>
         </li>
       </ul>
     </div>
@@ -70,7 +70,7 @@ B
       <div class="section" id="section">
         <h1>Manage an Existing Repository</h1>
         <br/><br/>
-        <form action="manage_repo.php" method="post">
+        <form action="/admin/manage_repo.php" method="post">
           <? include ("list_repos.php"); ?>
           <input type="submit" />
         </form>
@@ -85,8 +85,8 @@ B
   </diV>
   <div id="footer">
 	<div class="xcenter">
-      <a href="http://oscar.openclustergroup.org/"><img alt="OSCAR Logo" src="images/oscar_header.png"/></a><br/>
-<a href="license.html" alt="license">License</a>|<a href="authors.html">Authors</a>
+      <a href="http://oscar.openclustergroup.org/"><img alt="OSCAR Logo" src="/admin/images/oscar_header.png"/></a><br/>
+<a href="/admin/license.html" alt="license">License</a>|<a href="/admin/authors.html">Authors</a>
       <div class="clear">
         <hr/>
       </div>
