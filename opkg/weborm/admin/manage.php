@@ -4,7 +4,7 @@ B
   <head>
     <title>OSCAR Repository Manager</title>
     <style type="text/css" media="all">
-      @import url("/Admin/css/base.css");
+      @import url("/admin/css/base.css");
       @import url("/admin/css/site.css");
     </style>
     <link rel="stylesheet" href="/admin/css/print.css" type="text/css" media="print"/>
