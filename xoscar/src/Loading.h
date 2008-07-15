@@ -19,9 +19,9 @@ using namespace std;
 class Loading
 {
 public:
-    Loading(bool *);
+    Loading(int *);
     ~Loading();
 
 private:
-    bool *var;
+    int *var;
 };

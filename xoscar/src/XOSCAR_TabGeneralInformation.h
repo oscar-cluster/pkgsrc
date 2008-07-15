@@ -50,6 +50,8 @@ public slots:
 	bool undo();
     void partition_list_rowChanged_handler(int);
     void clusters_list_rowChanged_handler(int);
+    void virtualMachinesCheckBox_stateChanged_handler(int state);
+    void virtualMachinesComboBox_currentIndexChanged_handler(int index);
 
 signals:
     void widgetContentsModified(QWidget* widget);
@@ -59,7 +61,8 @@ signals:
 private:
    CommandExecutionThread command_thread;
 
-   bool loading;
+   int loading;
+   bool v2mpkg;
 };
 
 }

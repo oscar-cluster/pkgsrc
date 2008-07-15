@@ -440,7 +440,7 @@ void XOSCAR_MainWindow::widgetContentsChanged_handler(QWidget* widget)
         return;
     }
 
-    if(isWidgetContentsModified(widgetPendingChanges) == false) {
+    if(widgetPendingChanges == widget || isWidgetContentsModified(widgetPendingChanges) == false) {
         widgetPendingChanges = widget;
         oscarOptionsRowPendingChanges = listOscarOptionsWidget->currentRow();
     }
@@ -459,8 +459,7 @@ void XOSCAR_MainWindow::widgetContentsChanged_handler(QWidget* widget)
  */
 void XOSCAR_MainWindow::networkConfigTab_currentChanged_handler(int tab_num) 
 {
-    if(isWidgetContentsModified(widgetPendingChanges) && 
-        networkConfigurationTabWidget->currentWidget() == widgetPendingChanges) {
+    if(networkConfigurationTabWidget->currentWidget() == widgetPendingChanges) {
         // ignore
     }
     else if(prompt_save_changes() == false) {
@@ -487,12 +486,12 @@ bool XOSCAR_MainWindow::prompt_save_changes()
 {
     bool result = true;
 
-    XOSCAR_TabWidgetInterface* tab = dynamic_cast<XOSCAR_TabWidgetInterface*>(widgetPendingChanges);
-
-    if(tab != NULL && tab->isModified()) {
+    if(isWidgetContentsModified(widgetPendingChanges)) {
         QMessageBox msg(QMessageBox::NoIcon, tr("Save changes?"), tr("The previous tab has been modified.\n")
                                                                 + tr("Would you like to save your changes?"),
                         QMessageBox::Save|QMessageBox::No|QMessageBox::Cancel, this);
+
+        XOSCAR_TabWidgetInterface* tab = dynamic_cast<XOSCAR_TabWidgetInterface*>(widgetPendingChanges);
 
         switch(msg.exec()) {
             case QMessageBox::Save: 

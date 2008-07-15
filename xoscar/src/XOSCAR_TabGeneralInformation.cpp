@@ -22,6 +22,8 @@ using namespace xoscar;
 
 XOSCAR_TabGeneralInformation::XOSCAR_TabGeneralInformation(QWidget* parent)
     : QWidget(parent)
+    , v2mpkg(false)
+    , loading(0)
 {
 	setupUi(this);
 
@@ -53,6 +55,12 @@ XOSCAR_TabGeneralInformation::XOSCAR_TabGeneralInformation(QWidget* parent)
 
 	connect(listClusterPartitionsWidget, SIGNAL(itemSelectionChanged ()),
             this, SLOT(refresh_partition_info()));
+
+    connect(virtualMachinesCheckBox, SIGNAL(stateChanged(int)),
+            this, SLOT(virtualMachinesCheckBox_stateChanged_handler(int)));
+
+    connect(virtualMachinesComboBox, SIGNAL(currentIndexChanged(int)),
+            this, SLOT(virtualMachinesComboBox_currentIndexChanged_handler(int)));
 
 	connect(saveClusterInfoButton, SIGNAL(clicked()),
 	        this, SLOT(save()));
@@ -145,9 +153,13 @@ void XOSCAR_TabGeneralInformation::partitionName_textEdited_handler(const QStrin
  */
 void XOSCAR_TabGeneralInformation::partitionDistro_currentIndexChanged_handler(int index)
 {
-	if(loading) return;
-	modified = true;
-	emit widgetContentsModified(this);
+	if(!loading) {
+	    modified = true;
+	    emit widgetContentsModified(this);
+    }
+
+    command_thread.init(DISPLAY_DEFAULT_OPKGS, QStringList(""));
+    command_thread.wait();
 }
 
 /**
@@ -163,6 +175,46 @@ void XOSCAR_TabGeneralInformation::partitionNodes_valueChanged_handler(int index
 	if(loading) return;
 	modified = true;
 	emit widgetContentsModified(this);
+}
+
+/**
+ *  @author Robert Babilon
+ *
+ *  Slot called when the user (or program) checks or unchecks the "virtual
+ *  machines based on" check box. 
+ *
+ *  This function checks the "loading" boolean in order to distinguish between
+ *  user and program changes.
+ *
+ *  @param state The current state of the check box.
+ */
+void XOSCAR_TabGeneralInformation::virtualMachinesCheckBox_stateChanged_handler(int state)
+{
+    if(!loading) {
+        modified = true;
+        emit widgetContentsModified(this);
+        
+        virtualMachinesComboBox->setEnabled(state == Qt::Checked);
+    }
+}
+
+/**
+ *  @author Robert Babilon
+ *
+ *  Slot called when the user (or program) changes the selection in the virtual machine
+ *  combobox.
+ *
+ *  This function checks the "loading" boolean in order to distinguish between
+ *  user and program changes.
+ *
+ *  @param index The index of the selected item in the combobox.
+ */
+void XOSCAR_TabGeneralInformation::virtualMachinesComboBox_currentIndexChanged_handler(int index)
+{
+    if(!loading) { 
+        modified = true;
+        emit widgetContentsModified(this);
+    }
 }
 
 /**
@@ -203,6 +255,8 @@ void XOSCAR_TabGeneralInformation::add_partition_handler()
 
     listClusterPartitionsWidget->addItem ("New_Partition");
     listClusterPartitionsWidget->update ();
+
+    setDefaultPartitionValues();
 
     listClusterPartitionsWidget->setCurrentRow(listClusterPartitionsWidget->count()-1);
 
@@ -356,12 +410,18 @@ void XOSCAR_TabGeneralInformation::save_cluster_info_handler()
  *  Sets the default values for the widgets in the partition information group
  *  box.
  *
+ *  This function will set the "loading" boolean.
  */
 void XOSCAR_TabGeneralInformation::setDefaultPartitionValues()
 {
+    Loading loader(&loading);
+
     partitionNameEditWidget->setText(tr(""));
     partitionNumberNodesSpinBox->setValue(0);
     partitionDistroComboBox->setCurrentIndex(0);
+
+    virtualMachinesCheckBox->setCheckState(Qt::Unchecked);
+    virtualMachinesComboBox->setCurrentIndex(0);
 }
 
 /**
@@ -377,6 +437,9 @@ void XOSCAR_TabGeneralInformation::enablePartitionInfoWidgets(bool enable)
     partitionNameEditWidget->setEnabled(enable);
     partitionNumberNodesSpinBox->setEnabled(enable);
     partitionDistroComboBox->setEnabled(enable);
+
+    virtualMachinesCheckBox->setEnabled(enable ? v2mpkg : false);
+    virtualMachinesComboBox->setEnabled(enable ? (v2mpkg && virtualMachinesCheckBox->checkState() == Qt::Checked) : false);
 }
 
 /**
@@ -441,6 +504,7 @@ int XOSCAR_TabGeneralInformation::handle_thread_result (int command_id,
          << endl;
 
     if (command_id == DISPLAY_PARTITIONS) {
+        Loading loader(&loading);
         // We parse the result: one partition name per line.
         // skip empty strings? otherwise we have extra partitions added
         // could also check result for empty string
@@ -451,6 +515,7 @@ int XOSCAR_TabGeneralInformation::handle_thread_result (int command_id,
         }
         listClusterPartitionsWidget->update();
     } else if (command_id == DISPLAY_PARTITION_NODES) {
+        Loading loader(&loading);
         list = result.split(" ", QString::SkipEmptyParts);
         partitionNumberNodesSpinBox->setValue(list.size());
     } else if (command_id == DISPLAY_PARTITION_DISTRO) {
@@ -462,6 +527,27 @@ int XOSCAR_TabGeneralInformation::handle_thread_result (int command_id,
         // not. Otherwise, nothing to do here.
     } else if (command_id == GET_SETUP_DISTROS) {
         command_thread.init (GET_LIST_DEFAULT_REPOS, QStringList (""));
+        // @todo This GET_LIST_DEFAULT_REPOS is not handled in this class. It
+        // was originally in XOSCAR_MainWindow and may or may not need to be
+        // ported into this class.
+    } else if(command_id == DISPLAY_DEFAULT_OPKGS) {
+        Loading loader(&loading);
+        virtualMachinesComboBox->clear();
+
+        list = result.split("\n", QString::SkipEmptyParts);
+        int count = list.size();
+        int index = list.indexOf("v2m");
+
+        v2mpkg = (index != -1);
+        if(v2mpkg) {
+            list.removeAt(index);
+            count--;
+        }
+        for(int i = 0; i < count; ++i) {
+            virtualMachinesComboBox->addItem(list.at(i));
+        }
+        virtualMachinesCheckBox->setEnabled(v2mpkg);
+        virtualMachinesComboBox->setEnabled(v2mpkg && virtualMachinesCheckBox->checkState() == Qt::Checked);
     }
     return 0;
 }

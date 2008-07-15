@@ -14,15 +14,15 @@
  */
 #include "Loading.h"
 
-Loading::Loading(bool *remoteVar)
+Loading::Loading(int *remoteVar)
 {
     var = remoteVar;
-    *var = true;
+    *var += 1;
 }
 
 Loading::~Loading()
 {
-    *var = false;
+    *var -= 1;
     var = NULL;
 }
 
