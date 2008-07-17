@@ -3,7 +3,7 @@
 DTD for V3M config file.
 -->
 
-<!ELEMENT config (qemu?, xen?) >
+<!ELEMENT config (qemu?, kvm?, lguest?, vmware?, xen?) >
 
 <!ELEMENT qemu (precommand?, command)>
 <!ELEMENT xen (precommand?, command, netboot-image?)>

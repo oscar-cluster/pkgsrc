@@ -20,6 +20,22 @@ public:
     /** Class destructor */
     ~VMSettings();
 
+    /** Get the Lguest command for the creation of a virtual machine
+      * (the configuration file has been parsed previously) */
+    std::string getLguestCommand();
+
+    /** Get the command to execute before the creation of a Lguest VM
+      * (the configuration file has been parsed previously) */
+    std::string getLguestPrecommand();
+
+    /** Get the KVM command for the creation of a virtual machine
+      * (the configuration file has been parsed previously) */
+    std::string getKvmCommand();
+
+    /** Get the command to execute before the creation of a KVM 
+      * (the configuration file has been parsed previously) */
+    std::string getKvmPrecommand();
+
     /** Get the QEMU command for the creation of a virtual machine
       * (the configuration file has been parsed previously) */
     std::string getQemuCommand();
@@ -59,6 +75,10 @@ public:
 private:
     Glib::ustring get_node_content (const xmlpp::Node*);
 
+    std::string lguestCommand;
+    std::string lguestPrecommand;
+    std::string kvmCommand;
+    std::string kvmPrecommand;
     std::string qemuCommand;
     std::string qemuPrecommand;
     std::string xenCommand;

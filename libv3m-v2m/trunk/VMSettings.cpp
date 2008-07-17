@@ -17,6 +17,7 @@ using namespace std;
 
 /**
   * @author Geoffroy Vallee.
+  * @author Panyong Zhang.
   */
 VMSettings::VMSettings ()
 {
@@ -51,6 +52,64 @@ VMSettings::VMSettings ()
                     iter2 = list2.begin();
                     qemuPrecommand = get_node_content (*iter2);
                     cout << "Qemu precommand = " << qemuPrecommand << endl;
+                }
+            }
+            /*KVM Part*/
+            list = pNode->get_children("kvm");
+            iter = list.begin();
+            if (list.size () > 0) {
+                /* We get first the xen command */
+                xmlpp::Node::NodeList list2 = (*iter)->get_children("command");
+                if (list2.size() > 0) {
+                    xmlpp::Node::NodeList::iterator iter2 = list2.begin();
+                    kvmCommand = get_node_content (*iter2);
+                    std::cout << "KVM command = " << kvmCommand << std::endl;
+                } else {
+                    cerr << "ERROR: Impossible to get the KVM command" << endl;
+                    exit (-1);
+                }
+                /* Then we get the xen precammnd */
+                list2 = (*iter)->get_children("precommand");
+                if (list2.size() > 0) {
+                    iter2 = list2.begin();
+                    kvmPrecommand = get_node_content (*iter2);
+                    cout << "KVM precommand = " << kvmPrecommand << endl;
+                }
+                /* Then we check if we want to use a network emulation image */
+                list2 = (*iter)->get_children("netboot-image");
+                if (list2.size() > 0) {
+                    iter2 = list2.begin();
+                    netboot = get_node_content (*iter2);
+                    cout << "Image for netboot emulation = " << netboot << endl;
+                }
+            }
+            /*Lguest Part*/
+            list = pNode->get_children("lguest");
+            iter = list.begin();
+            if (list.size () > 0) {
+                /* We get first the Lguest command */
+                xmlpp::Node::NodeList list2 = (*iter)->get_children("command");
+                if (list2.size() > 0) {
+                    xmlpp::Node::NodeList::iterator iter2 = list2.begin();
+                    lguestCommand = get_node_content (*iter2);
+                    std::cout << "Lguest command = " << lguestCommand << std::endl;
+                } else {
+                    cerr << "ERROR: Impossible to get the Lguest command" << endl;
+                    exit (-1);
+                }
+                /* Then we get the Lguest precammnd */
+                list2 = (*iter)->get_children("precommand");
+                if (list2.size() > 0) {
+                    iter2 = list2.begin();
+                    lguestPrecommand = get_node_content (*iter2);
+                    cout << "Lguest precommand = " << lguestPrecommand << endl;
+                }
+                /* Then we check if we want to use a network emulation image */
+                list2 = (*iter)->get_children("netboot-image");
+                if (list2.size() > 0) {
+                    iter2 = list2.begin();
+                    netboot = get_node_content (*iter2);
+                    cout << "Image for netboot emulation = " << netboot << endl;
                 }
             }
             list = pNode->get_children("xen");
@@ -138,6 +197,34 @@ Glib::ustring VMSettings::get_node_content (const xmlpp::Node* node)
         str = nodeText->get_content();
     }
     return str;
+}
+
+/**
+  * @author Panyong Zhang.
+  */
+string VMSettings::getKvmCommand() {
+    return kvmCommand;
+}
+
+/**
+  * @author Panyong Zhang.
+  */
+string VMSettings::getKvmPrecommand () {
+    return kvmPrecommand;
+}
+
+/**
+  * @author Panyong Zhang.
+  */
+string VMSettings::getLguestCommand() {
+    return lguestCommand;
+}
+
+/**
+  * @author Panyong Zhang.
+  */
+string VMSettings::getLguestPrecommand () {
+    return lguestPrecommand;
 }
 
 /**

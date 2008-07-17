@@ -40,6 +40,7 @@ cmd);
 	int migrate (string node_id);
 	int pause ();
 	int unpause ();
+    int reboot ();
 	int status ();
 
 private:
@@ -67,7 +68,12 @@ before the creation of a vmware VM,
 						   vmware VM */
 	Glib::ustring getNetbootImage();	/* get the image location for 
 						   emulation of a netboot */
-	
+
+	int generate_config_file ();/*generate config file for vmware*/
+    int generate_config_file_for_bootable_cdrom();/*generate config file to boot from cdrom*/
+
+    int __boot_vm (Glib::ustring config_file);/*boot the vm using the specificed config file*/
+
 	void openConfigFile ();			/* open the configuration file (~/.v2m/vmwarerc)
 */
 	void closeConfigFile ();		/* close the configuration file (~/.v2m/vmwarerc)

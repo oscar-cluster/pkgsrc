@@ -399,6 +399,29 @@ int xen::unpause ()
     return 0;
 }
 
+/**
+ * @author Panyong Zhang.
+ *
+ * reboot the virtual machine.
+ *
+ * @return 0 is success, -1 else.
+ */
+int xen::reboot ()
+{
+    cout << "Reboot a VM" << endl;
+
+    /* we get the VM's name */
+    profile_data_t data = profile->get_profile_data ();
+
+    /* we then reboot the VM */
+    string cmd = "xm reboot " + data.name;
+    if (system (cmd.c_str())) {
+        cerr << "ERROR executing " << cmd << endl;
+        return -1;
+    }
+
+    return 0;
+}
 
 /**
   * @author Geoffroy Vallee.

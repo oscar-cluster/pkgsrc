@@ -26,7 +26,7 @@ int main(int argc, char **argv)
   if(root) {
 
     xmlpp::Node::NodeList list = root->get_children("profile");
-    std::cout << list.size() << "profile(s) found" << std::endl;
+    std::cout << list.size() << " profile(s) found" << std::endl;
 
     for (xmlpp::Node::NodeList::iterator iter = list.begin(); iter != list.end(); ++iter) {
       ProfileXMLNode* profile = new ProfileXMLNode (*iter);

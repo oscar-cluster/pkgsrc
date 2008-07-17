@@ -41,6 +41,7 @@ cmd);
     int migrate (string destination_id);
     int pause ();
     int unpause ();
+    int reboot ();
     int status ();
 
     /** unbridge_nic1 is a flag to know if the nic1 has to be bridged or not.
