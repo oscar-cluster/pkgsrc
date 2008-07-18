@@ -53,9 +53,10 @@ public:
     void refresh_list_distros();
 
 public slots:
-     int handle_thread_result (int, QString);
+     int handle_thread_result (CommandTask::CommandTasks, QString);
     void newDistroSelected();
     void refresh_repos_url();
+    void command_thread_finished();
 
 signals:
     virtual void refreshListDistros();

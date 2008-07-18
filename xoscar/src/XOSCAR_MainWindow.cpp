@@ -116,8 +116,11 @@ XOSCAR_MainWindow::XOSCAR_MainWindow(QMainWindow *parent)
     connect(&command_thread, SIGNAL(sanity_command_done(QString)),
         this, SLOT(update_check_text_widget(QString)));
 
-    connect(&command_thread, SIGNAL(thread_terminated(int, QString)),
-        this, SLOT(handle_thread_result (int, QString)));
+    connect(&command_thread, SIGNAL(thread_terminated(CommandTask::CommandTasks, QString)),
+        this, SLOT(handle_thread_result (CommandTask::CommandTasks, QString)));
+
+    connect(&command_thread, SIGNAL(finished()),
+            this, SLOT(command_thread_finished()));
 
     connect (this->listOscarOptionsWidget, 
              SIGNAL(itemSelectionChanged()),
@@ -129,8 +132,7 @@ XOSCAR_MainWindow::XOSCAR_MainWindow(QMainWindow *parent)
 
     /* Get the list of Linux distributions that are already setup. */
     cout << "Get the setup distros" << endl;
-    command_thread.init (GET_SETUP_DISTROS, QStringList(""));
-    command_thread.wait();
+    command_thread.init (CommandTask::GET_SETUP_DISTROS, QStringList(""));
     cout << "Init done" << endl;
 }
 
@@ -277,7 +279,7 @@ void XOSCAR_MainWindow::display_opkgs_from_repo()
         wait_popup->show();
         update();
 
-        command_thread.init(GET_LIST_OPKGS, QStringList(repo));
+        command_thread.init(CommandTask::GET_LIST_OPKGS, QStringList(repo));
     }
 }
 
@@ -308,8 +310,8 @@ void XOSCAR_MainWindow::add_repo_to_list()
     wait_popup->show();
     update();
 
-    command_thread.init(GET_LIST_REPO, QStringList(repo_url));
-    command_thread.init(GET_LIST_OPKGS, QStringList(repo_url));
+    command_thread.init(CommandTask::GET_LIST_REPO, QStringList(repo_url));
+    command_thread.init(CommandTask::GET_LIST_OPKGS, QStringList(repo_url));
 }
 
 /**
@@ -331,25 +333,25 @@ void XOSCAR_MainWindow::handle_oscar_config_result(QString list_distros)
         this->listSetupDistrosWidget->addItem (list.at(i));
     }
     listSetupDistrosWidget->update();
-    command_thread.init(INACTIVE, QStringList(""));
+    command_thread.init(CommandTask::INACTIVE, QStringList(""));
 }
 
 void XOSCAR_MainWindow::refresh_list_setup_distros()
 {
     listSetupDistrosWidget->clear();
-    command_thread.init (GET_SETUP_DISTROS, QStringList(""));
+    command_thread.init (CommandTask::GET_SETUP_DISTROS, QStringList(""));
 }
 
 void XOSCAR_MainWindow::do_system_sanity_check()
 {
     sanityCheckTextWidget->clear();
-    command_thread.init (DO_SYSTEM_SANITY_CHECK, QStringList(""));
+    command_thread.init (CommandTask::DO_SYSTEM_SANITY_CHECK, QStringList(""));
 }
 
 void XOSCAR_MainWindow::do_oscar_sanity_check()
 {
     sanityCheckTextWidget->clear();
-    command_thread.init (DO_OSCAR_SANITY_CHECK, QStringList(""));
+    command_thread.init (CommandTask::DO_OSCAR_SANITY_CHECK, QStringList(""));
 }
 
 /**
@@ -519,14 +521,14 @@ void XOSCAR_MainWindow::activate_tab(int tab_num)
     }
 }
 
-int XOSCAR_MainWindow::handle_thread_result (int command_id, 
+int XOSCAR_MainWindow::handle_thread_result (CommandTask::CommandTasks command_id, 
     const QString result)
 {
     QStringList list;
     cout << "MainWindow: result from cmd exec thread received: "
          << command_id
          << endl;
-    if (command_id == GET_LIST_DEFAULT_REPOS) {
+    if (command_id == CommandTask::GET_LIST_DEFAULT_REPOS) {
         // We parse the result: one URL per line.
         if (listReposWidget == NULL) {
             cerr << "ERROR: Impossible to update the widget that gives "
@@ -539,17 +541,26 @@ int XOSCAR_MainWindow::handle_thread_result (int command_id,
             listReposWidget->addItem (list.at(i));
         }
         listReposWidget->update();
-    } else if (command_id == DISPLAY_PARTITION_DISTRO) {
+    } else if (command_id == CommandTask::DISPLAY_PARTITION_DISTRO) {
         cerr << "ERROR: Not yet implemented" << endl;
 /*        int index = partitionDistroComboBox->findText(distro_name);
         partitionDistroComboBox->setCurrentIndex(index);*/
-    } else if (command_id == SETUP_DISTRO) {
+    } else if (command_id == CommandTask::SETUP_DISTRO) {
         // We could here try to see if the command was successfully executed or
         // not. Otherwise, nothing to do here.
-    } else if (command_id == GET_SETUP_DISTROS) {
-        command_thread.init (GET_LIST_DEFAULT_REPOS, QStringList (""));
+    } else if (command_id == CommandTask::GET_SETUP_DISTROS) {
+        command_thread.init (CommandTask::GET_LIST_DEFAULT_REPOS, QStringList (""));
     }
+
+    command_thread.wakeThread();
     return 0;
+}
+
+void XOSCAR_MainWindow::command_thread_finished()
+{
+    if(!command_thread.isEmpty()) { 
+        command_thread.start();
+    }
 }
 
 bool XOSCAR_MainWindow::isWidgetContentsModified(QWidget* widget)

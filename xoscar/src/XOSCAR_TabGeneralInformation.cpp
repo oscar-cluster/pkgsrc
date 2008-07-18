@@ -66,8 +66,11 @@ XOSCAR_TabGeneralInformation::XOSCAR_TabGeneralInformation(QWidget* parent)
 	        this, SLOT(save()));
 
 	// signals for command execution thread
-    connect(&command_thread, SIGNAL(thread_terminated(int, QString)),
-        this, SLOT(handle_thread_result (int, QString)));
+    connect(&command_thread, SIGNAL(thread_terminated(CommandTask::CommandTasks, QString)),
+        this, SLOT(handle_thread_result (CommandTask::CommandTasks, QString)));
+
+    connect(&command_thread, SIGNAL(finished()),
+            this, SLOT(command_thread_finished()));
 
     enablePartitionInfoWidgets(false);
     setDefaultPartitionValues();
@@ -158,8 +161,7 @@ void XOSCAR_TabGeneralInformation::partitionDistro_currentIndexChanged_handler(i
 	    emit widgetContentsModified(this);
     }
 
-    command_thread.init(DISPLAY_DEFAULT_OPKGS, QStringList(""));
-    command_thread.wait();
+    command_thread.init(CommandTask::DISPLAY_DEFAULT_OPKGS, QStringList(""));
 }
 
 /**
@@ -247,11 +249,20 @@ void XOSCAR_TabGeneralInformation::add_partition_handler()
                 break;
         }
     }
-    
+
     // must have a cluster selected in order to add a partition to it
     if (listOscarClustersWidget->currentRow() == -1) {
         return;
     }
+
+    // this is still a problem dispite any fancy thread management system. here
+    // we'll need to "pause" the GUI by using a dialog and wait until the thread
+    // has finished all of it's pending tasks.
+    QMessageBox msg(QMessageBox::NoIcon,
+                    QString("Test Message Box"), 
+                    QString("This is a temporary pausing mechanism.\nClick OK when you feel the thread has finished it's duties."),
+                    QMessageBox::Ok);
+    msg.exec();
 
     listClusterPartitionsWidget->addItem ("New_Partition");
     listClusterPartitionsWidget->update ();
@@ -322,7 +333,7 @@ void XOSCAR_TabGeneralInformation::refresh_list_partitions ()
 	// scripts have the cluster hard coded. This argument is ignored, but in
 	// the future would be used to indicate which cluster we are requesting
 	// partitions for.
-    command_thread.init(DISPLAY_PARTITIONS, QStringList(listOscarClustersWidget->currentItem()->text()));
+    command_thread.init(CommandTask::DISPLAY_PARTITIONS, QStringList(listOscarClustersWidget->currentItem()->text()));
 }
 
 /**
@@ -354,17 +365,14 @@ void XOSCAR_TabGeneralInformation::refresh_partition_info()
     // since that would overwrite existing modifications
 
     /* We display the number of nodes composing the partition */
-    command_thread.init(DISPLAY_PARTITION_NODES, 
+    command_thread.init(CommandTask::DISPLAY_PARTITION_NODES, 
                         QStringList(current_partition));
-    command_thread.wait();
 
     /* We get the list of supported distros */
-    command_thread.init(GET_SETUP_DISTROS, QStringList(""));
-    command_thread.wait();
+    command_thread.init(CommandTask(CommandTask::GET_SETUP_DISTROS, QStringList("")));
 
     /* We get the Linux distribution on which the partition is based */
-    command_thread.init(DISPLAY_PARTITION_DISTRO, QStringList(""));
-    command_thread.wait();
+    command_thread.init(CommandTask(CommandTask::DISPLAY_PARTITION_DISTRO, QStringList("")));
 }
 
 /**
@@ -396,7 +404,7 @@ void XOSCAR_TabGeneralInformation::save_cluster_info_handler()
             tmp = partition_name.toStdString() + "_node" + Utilities::intToStdString(i);
             args << tmp.c_str();
         }
-        command_thread.init (ADD_PARTITION, args);
+        command_thread.init (CommandTask::ADD_PARTITION, args);
     }
     /* We unset the selection of the partition is order to be able to update
        the widget. If we do not do that, a NULL pointer is used and the app
@@ -495,7 +503,7 @@ void XOSCAR_TabGeneralInformation::partition_list_rowChanged_handler(int row)
  *  @param result Holds the return value of the command.
  *
  */
-int XOSCAR_TabGeneralInformation::handle_thread_result (int command_id, 
+int XOSCAR_TabGeneralInformation::handle_thread_result (CommandTask::CommandTasks command_id, 
     const QString result)
 {
     QStringList list;
@@ -503,7 +511,7 @@ int XOSCAR_TabGeneralInformation::handle_thread_result (int command_id,
          << command_id
          << endl;
 
-    if (command_id == DISPLAY_PARTITIONS) {
+    if (command_id == CommandTask::DISPLAY_PARTITIONS) {
         Loading loader(&loading);
         // We parse the result: one partition name per line.
         // skip empty strings? otherwise we have extra partitions added
@@ -514,23 +522,23 @@ int XOSCAR_TabGeneralInformation::handle_thread_result (int command_id,
             listClusterPartitionsWidget->addItem (list.at(i));
         }
         listClusterPartitionsWidget->update();
-    } else if (command_id == DISPLAY_PARTITION_NODES) {
+    } else if (command_id == CommandTask::DISPLAY_PARTITION_NODES) {
         Loading loader(&loading);
         list = result.split(" ", QString::SkipEmptyParts);
         partitionNumberNodesSpinBox->setValue(list.size());
-    } else if (command_id == DISPLAY_PARTITION_DISTRO) {
+    } else if (command_id == CommandTask::DISPLAY_PARTITION_DISTRO) {
         cerr << "ERROR: Not yet implemented" << endl;
 /*        int index = partitionDistroComboBox->findText(distro_name);
         partitionDistroComboBox->setCurrentIndex(index);*/
-    } else if (command_id == SETUP_DISTRO) {
+    } else if (command_id == CommandTask::SETUP_DISTRO) {
         // We could here try to see if the command was successfully executed or
         // not. Otherwise, nothing to do here.
-    } else if (command_id == GET_SETUP_DISTROS) {
-        command_thread.init (GET_LIST_DEFAULT_REPOS, QStringList (""));
+    } else if (command_id == CommandTask::GET_SETUP_DISTROS) {
+        //command_thread.init (CommandTask::GET_LIST_DEFAULT_REPOS, QStringList (""));
         // @todo This GET_LIST_DEFAULT_REPOS is not handled in this class. It
         // was originally in XOSCAR_MainWindow and may or may not need to be
         // ported into this class.
-    } else if(command_id == DISPLAY_DEFAULT_OPKGS) {
+    } else if(command_id == CommandTask::DISPLAY_DEFAULT_OPKGS) {
         Loading loader(&loading);
         virtualMachinesComboBox->clear();
 
@@ -549,7 +557,17 @@ int XOSCAR_TabGeneralInformation::handle_thread_result (int command_id,
         virtualMachinesCheckBox->setEnabled(v2mpkg);
         virtualMachinesComboBox->setEnabled(v2mpkg && virtualMachinesCheckBox->checkState() == Qt::Checked);
     }
+
+    // wake the thread up so it can exit run() and be ready for another command
+    command_thread.wakeThread();
     return 0;
+}
+
+void XOSCAR_TabGeneralInformation::command_thread_finished()
+{
+    if(!command_thread.isEmpty()) { 
+        command_thread.start();
+    }
 }
 
 /**

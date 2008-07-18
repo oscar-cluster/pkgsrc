@@ -85,7 +85,7 @@ public slots:
     void handle_about_authors_action();
     void handle_about_oscar_action();
     void handle_oscar_config_result (QString);
-     int handle_thread_result (int, QString);
+     int handle_thread_result (CommandTask::CommandTasks, QString);
     void kill_popup (QString, QString);
     void newOscarOptionSelected ();
     void refresh_display_opkgs_from_repo();
@@ -94,6 +94,7 @@ public slots:
     void update_check_text_widget(QString);
 	void activate_tab(int tab_num);
 	void widgetContentsChanged_handler(QWidget*);
+    void command_thread_finished();
 
 protected:
 	void closeEvent(QCloseEvent* event);

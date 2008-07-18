@@ -39,7 +39,8 @@ public slots:
     void software_configuration_tab_activated();
     void partition_selection_changed(QString);
     void cluster_selection_changed(QString);
-    int handle_thread_result (int command_id, const QString result);
+    int handle_thread_result (CommandTask::CommandTasks command_id, const QString result);
+    void command_thread_finished();
 
 private:
     CommandExecutionThread command_thread;

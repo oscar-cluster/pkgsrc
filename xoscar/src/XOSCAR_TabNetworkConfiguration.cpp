@@ -47,8 +47,11 @@ XOSCAR_TabNetworkConfiguration::XOSCAR_TabNetworkConfiguration(QWidget* parent)
     connect(clearmacs, SIGNAL(clicked()),
             listNoneAssignedMacWidget, SLOT(clear()));
 
-    connect(&command_thread, SIGNAL(thread_terminated(int, QString)),
-        this, SLOT(handle_thread_result (int, QString)));
+    connect(&command_thread, SIGNAL(thread_terminated(CommandTask::CommandTasks, QString)),
+        this, SLOT(handle_thread_result (CommandTask::CommandTasks, QString)));
+
+    connect(&command_thread, SIGNAL(finished()),
+            this, SLOT(command_thread_finished()));
 
     // *** Test Code ***
     stringToNodesConfig(tr("New_Partition_0\n\tMAC: \n\tIP: 172.20.0.2\n") +
@@ -409,7 +412,7 @@ void XOSCAR_TabNetworkConfiguration::network_configuration_tab_activated()
     // We clean up the list of nodes
     oscarNodesTreeWidget->clear();
 
-    command_thread.init(DISPLAY_DETAILS_PARTITION_NODES, 
+    command_thread.init(CommandTask::DISPLAY_DETAILS_PARTITION_NODES, 
                         QStringList(partition_name));
 }
 
@@ -424,7 +427,7 @@ void XOSCAR_TabNetworkConfiguration::network_configuration_tab_activated()
  *  @param result Holds the return value of the command.
  *
  */
-int XOSCAR_TabNetworkConfiguration::handle_thread_result (int command_id, 
+int XOSCAR_TabNetworkConfiguration::handle_thread_result (CommandTask::CommandTasks command_id, 
     const QString result)
 {
     QStringList list;
@@ -432,13 +435,21 @@ int XOSCAR_TabNetworkConfiguration::handle_thread_result (int command_id,
          << command_id
          << endl;
 
-    if (command_id == DISPLAY_DETAILS_PARTITION_NODES) {
+    if (command_id == CommandTask::DISPLAY_DETAILS_PARTITION_NODES) {
         string res = result.toStdString();
         // Now we have a big string with the config and we need to parse it.
         stringToNodesConfig (result);
     }
 
+    command_thread.wakeThread();
     return 0;
+}
+
+void XOSCAR_TabNetworkConfiguration::command_thread_finished()
+{
+    if(!command_thread.isEmpty()) { 
+        command_thread.start();
+    }
 }
 
 int XOSCAR_TabNetworkConfiguration::stringToNodesConfig (QString cmd_result)

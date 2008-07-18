@@ -25,8 +25,11 @@ XOSCAR_TabSoftwareConfiguration::XOSCAR_TabSoftwareConfiguration(QWidget* parent
 {
     setupUi(this);
 
-    connect(&command_thread, SIGNAL(thread_terminated(int, QString)),
-        this, SLOT(handle_thread_result (int, QString)));
+    connect(&command_thread, SIGNAL(thread_terminated(CommandTask::CommandTasks, QString)),
+        this, SLOT(handle_thread_result (CommandTask::CommandTasks, QString)));
+
+    connect(&command_thread, SIGNAL(finished()),
+            this, SLOT(command_thread_finished()));
 }
 
 XOSCAR_TabSoftwareConfiguration::~XOSCAR_TabSoftwareConfiguration()
@@ -79,7 +82,7 @@ void XOSCAR_TabSoftwareConfiguration::software_configuration_tab_activated()
         return;
     }
 
-    command_thread.init(DISPLAY_DEFAULT_OPKGS,
+    command_thread.init(CommandTask::DISPLAY_DEFAULT_OPKGS,
                         QStringList(partition_name));
 }
 
@@ -93,7 +96,7 @@ void XOSCAR_TabSoftwareConfiguration::software_configuration_tab_activated()
  *
  *  @param result Holds the return value of the command.
  */
-int XOSCAR_TabSoftwareConfiguration::handle_thread_result (int command_id, 
+int XOSCAR_TabSoftwareConfiguration::handle_thread_result (CommandTask::CommandTasks command_id, 
     const QString result)
 {
     QStringList list;
@@ -101,7 +104,7 @@ int XOSCAR_TabSoftwareConfiguration::handle_thread_result (int command_id,
          << command_id
          << endl;
 
-    if (command_id == DISPLAY_DEFAULT_OPKGS) {
+    if (command_id == CommandTask::DISPLAY_DEFAULT_OPKGS) {
         opkgsListWidget->clear();
 
         QStringList pkgs = result.split("\n", QString::SkipEmptyParts);
@@ -114,5 +117,13 @@ int XOSCAR_TabSoftwareConfiguration::handle_thread_result (int command_id,
         }
     }
 
+    command_thread.wakeThread();
     return 0;
+}
+
+void XOSCAR_TabSoftwareConfiguration::command_thread_finished()
+{
+    if(!command_thread.isEmpty()) { 
+        command_thread.start();
+    }
 }

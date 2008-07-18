@@ -40,19 +40,21 @@ ORMAddRepoDialog::ORMAddRepoDialog(QDialog *parent)
 
     setupUi(this);
 
-    connect(&command_thread, SIGNAL(thread_terminated(int, QString)),
-            this, SLOT(handle_thread_result (int, QString)));
+    connect(&command_thread, SIGNAL(thread_terminated(CommandTask::CommandTasks, QString)),
+            this, SLOT(handle_thread_result (CommandTask::CommandTasks, QString)));
+    connect(&command_thread, SIGNAL(finished()),
+            this, SLOT(command_thread_finished()));
 
-    command_thread.init (GET_SETUP_DISTROS, QStringList(""));
+    command_thread.init (CommandTask::GET_SETUP_DISTROS, QStringList(""));
 }
 
 ORMAddRepoDialog::~ORMAddRepoDialog ()
 {
 }
 
-int ORMAddRepoDialog::handle_thread_result (int command_id, QString result)
+int ORMAddRepoDialog::handle_thread_result (CommandTask::CommandTasks command_id, QString result)
 {
-     if (command_id == GET_SETUP_DISTROS) {
+     if (command_id == CommandTask::GET_SETUP_DISTROS) {
         /* Once we have the list, we update the widget */
         QStringList list = result.split(" ");
         for(int i = 0; i < list.size(); i++) {
@@ -61,5 +63,13 @@ int ORMAddRepoDialog::handle_thread_result (int command_id, QString result)
         this->update();
     }
 
+    command_thread.wakeThread();
     return 0;
+}
+
+void ORMAddRepoDialog::command_thread_finished()
+{
+    if(!command_thread.isEmpty()) { 
+        command_thread.start();
+    }
 }

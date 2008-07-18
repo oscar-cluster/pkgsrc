@@ -44,7 +44,7 @@ public slots:
     void refresh_partition_info();
     void setDefaultPartitionValues();
     void enablePartitionInfoWidgets(bool enable);
-     int handle_thread_result (int command_id, const QString result);
+     int handle_thread_result (CommandTask::CommandTasks command_id, const QString result);
     void handle_oscar_config_result(QString list_distros);
 	bool save();
 	bool undo();
@@ -52,6 +52,7 @@ public slots:
     void clusters_list_rowChanged_handler(int);
     void virtualMachinesCheckBox_stateChanged_handler(int state);
     void virtualMachinesComboBox_currentIndexChanged_handler(int index);
+    void command_thread_finished();
 
 signals:
     void widgetContentsModified(QWidget* widget);

@@ -28,31 +28,14 @@
 #include <QThread>
 #include <QWaitCondition>
 #include <QStringList>
+#include <QMutex>
 
 #include "pstream.h"
 #include "CommandBuilder.h"
+#include "CommandTask.h"
 
 using namespace std;
 using namespace redi;
-
-#define INACTIVE                                0
-#define GET_LIST_REPO                           1
-#define GET_LIST_OPKGS                          2
-#define GET_SETUP_DISTROS                       3
-#define DO_SYSTEM_SANITY_CHECK                  4
-#define DO_OSCAR_SANITY_CHECK                   5
-#define GET_LIST_DEFAULT_REPOS                  6
-#define DISPLAY_PARTITIONS                      7
-#define DISPLAY_PARTITION_NODES                 9
-#define DISPLAY_PARTITION_DISTRO                10
-#define ADD_PARTITION                           11
-#define DISPLAY_DETAILS_PARTITION_NODES         12
-#define SETUP_DISTRO                            13
-#define LIST_UNSETUP_DISTROS                    14
-#define DISPLAY_DEFAULT_OSCAR_REPO              15
-#define DISPLAY_DEFAULT_DISTRO_REPO             16
-#define REMOVE_PARTITION                        17
-#define DISPLAY_DEFAULT_OPKGS                   18
 
 /**
  * @namespace xoscar
@@ -85,10 +68,21 @@ class CommandExecutionThread : public QThread, public xoscar::CommandBuilder
     Q_OBJECT
 
 public:
+    enum StatusFlags {Normal, // thread is in normal state
+                      Sleeping, // thread is sleeping or about to sleep
+                      CancelRequest // not yet implemented
+                     };
+
     CommandExecutionThread(QObject *parent = 0);
     ~CommandExecutionThread();
-    void init (int, QStringList);
-    void run();
+
+    void init (CommandTask::CommandTasks, QStringList);
+    void init(CommandTask cmd_task);
+    void init(QList<CommandTask> cmd_tasks);
+
+    void wakeThread();
+    bool isEmpty();
+    QList<CommandTask> commandTasks() const;
 
 signals:
     virtual void opd_done (QString, QString);
@@ -98,18 +92,47 @@ signals:
       * @param command_id Unique identifier of the executed command.
       * @param result Result of the executed command.
       */
-    virtual void thread_terminated (int command_id, QString result);
+    virtual void thread_terminated (CommandTask::CommandTasks command_id, QString result);
 
 protected:
+    void run();
+    void run_command(CommandTask::CommandTasks command_id, QStringList command_args);
+
+    void appendCommandTask(CommandTask cmd_task);
+    void appendCommandTask(QList<CommandTask> cmd_tasks);
 
 private:
-    /** Parameter of the command to execute */
-    QStringList command_args;
     /**
-      * Identifier to the command to execute. These ids are defined in
-      * CommandExecutionThread.h 
-      */
-    int command_id;
+     * Mutex used to lock the QList of CommandTasks.
+     */
+    QMutex commandTasksLocker;
+    /**
+     * Mutex used by the QWaitCondition "resultProcessed".
+     */
+    QMutex statusFlagMutex;
+    /**
+     * Causes this worker thread to wait until signaled to continue.
+     * This wait condition is to allow the main thread in the GUI to process the
+     * result and inform the worker thread when the GUI is ready to process more
+     * data from the worker thread.
+     */
+    QWaitCondition resultProcessed;
+    /**
+     * The list of CommandTask to execute
+     */
+    QList<CommandTask> command_tasks;
+    /**
+     * Indicates the status of this thread.
+     * Normal - thread is doing it's job
+     * Sleeping - thread is sleeping or will be sleeping very soon
+     * CancelRequest - not yet implemented (would indicate that a request to
+     * cancel the current task was made; stop the thread ASAP)
+     */
+    StatusFlags status_flag;
+
+    void resetStatusFlag();
+    void setSleepFlag();
+    void sleepThread();
 
     QString get_output_line_by_line (string);
     QString get_output_word_by_word (string);

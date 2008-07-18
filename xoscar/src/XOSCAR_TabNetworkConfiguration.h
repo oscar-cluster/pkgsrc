@@ -48,12 +48,13 @@ public slots:
     void import_macs_from_file();
     void partition_selection_changed(QString);
     void network_configuration_tab_activated();
-     int handle_thread_result (int command_id, const QString result);
+     int handle_thread_result (CommandTask::CommandTasks command_id, const QString result);
     void open_file();
     void assignmac_clicked_handler();
     void unassignmac_clicked_handler();
     void assignallmacs_clicked_handler();
     void importmanualmac_clicked_handler();
+    void command_thread_finished();
 
 protected:
     bool isMacUnassigned(QString & mac);
