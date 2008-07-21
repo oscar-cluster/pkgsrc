@@ -52,6 +52,17 @@ ORMAddRepoDialog::~ORMAddRepoDialog ()
 {
 }
 
+/**
+ *  @author Robert Babilon
+ *
+ *  Slot called when the command thread has finished executing a command.
+ *  Calls CommandExecutionThread::wakeThread() before returning to ensure the
+ *  thread exits CommandExecutionThread::run().
+ *
+ *  @param command_id The command that has completed. The list of values
+ *  are in CommandTask.h.
+ *  @param result Holds the return value of the command.
+ */
 int ORMAddRepoDialog::handle_thread_result (CommandTask::CommandTasks command_id, QString result)
 {
      if (command_id == CommandTask::GET_SETUP_DISTROS) {
@@ -67,6 +78,12 @@ int ORMAddRepoDialog::handle_thread_result (CommandTask::CommandTasks command_id
     return 0;
 }
 
+/**
+ * @author Robert Babilon
+ *
+ * Slot called when the QThread signal finished() is emitted.
+ * Starts the command thread again only if it has tasks left.
+ */
 void ORMAddRepoDialog::command_thread_finished()
 {
     if(!command_thread.isEmpty()) { 

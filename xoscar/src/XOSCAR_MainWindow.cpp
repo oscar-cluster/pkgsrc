@@ -521,6 +521,17 @@ void XOSCAR_MainWindow::activate_tab(int tab_num)
     }
 }
 
+/**
+ * @author Robert Babilon
+ *
+ * Slot called when the command thread has finished executing a command.
+ * Calls CommandExecutionThread::wakeThread() before returning to ensure the
+ * thread exits CommandExecutionThread::run().
+ *
+ * @param command_id The command that has completed. The list of values
+ * are in CommandTask.h.
+ * @param result Holds the return value of the command.
+ */
 int XOSCAR_MainWindow::handle_thread_result (CommandTask::CommandTasks command_id, 
     const QString result)
 {
@@ -556,6 +567,12 @@ int XOSCAR_MainWindow::handle_thread_result (CommandTask::CommandTasks command_i
     return 0;
 }
 
+/**
+ * @author Robert Babilon
+ *
+ * Slot called when the QThread signal finished() is emitted.
+ * Starts the command thread again only if it has tasks left.
+ */
 void XOSCAR_MainWindow::command_thread_finished()
 {
     if(!command_thread.isEmpty()) { 
@@ -563,6 +580,15 @@ void XOSCAR_MainWindow::command_thread_finished()
     }
 }
 
+/**
+ * @author Robert Babilon
+ *
+ * Checks if the QWidget is modified. If the QWidget does not implement
+ * the XOSCAR_TabWidgetInterface interface, this function returns false.
+ *
+ * @param widget QWidget pointer to check for modifications.
+ * @return true if the widget is modified; otherwise false.
+ */
 bool XOSCAR_MainWindow::isWidgetContentsModified(QWidget* widget)
 {
     XOSCAR_TabWidgetInterface* tab = dynamic_cast<XOSCAR_TabWidgetInterface*>(widget);

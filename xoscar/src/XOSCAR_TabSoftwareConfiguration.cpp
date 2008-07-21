@@ -90,9 +90,11 @@ void XOSCAR_TabSoftwareConfiguration::software_configuration_tab_activated()
  *  @author Robert Babilon
  *
  *  Slot called when the command thread has finished executing a command.
+ *  Calls CommandExecutionThread::wakeThread() before returning to ensure the
+ *  thread exits CommandExecutionThread::run().
  *
  *  @param command_id The command that has completed. The list of values
- *  are in CommandExecutionThread.h.
+ *  are in CommandTask.h.
  *
  *  @param result Holds the return value of the command.
  */
@@ -121,6 +123,12 @@ int XOSCAR_TabSoftwareConfiguration::handle_thread_result (CommandTask::CommandT
     return 0;
 }
 
+/**
+ * @author Robert Babilon
+ *
+ * Slot called when the QThread signal finished() is emitted.
+ * Starts the command thread again only if it has tasks left.
+ */
 void XOSCAR_TabSoftwareConfiguration::command_thread_finished()
 {
     if(!command_thread.isEmpty()) { 

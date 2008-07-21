@@ -89,6 +89,8 @@ XOSCAR_TabGeneralInformation::~XOSCAR_TabGeneralInformation()
  *
  *  @todo return false if the save fails to inform caller they should revert
  *  back to this tab.
+ *
+ *  @return true if changes were saved successfully; otherwise false.
  */
 bool XOSCAR_TabGeneralInformation::save()
 {
@@ -115,6 +117,8 @@ bool XOSCAR_TabGeneralInformation::save()
  *        of partitions for the current cluster.
  *  @todo return false if the undo fails to inform the caller to revert back to
  *  this tab.
+ *
+ *  @return true if changes were reversed successfully; otherwise false.
  */
 bool XOSCAR_TabGeneralInformation::undo()
 {
@@ -185,7 +189,7 @@ void XOSCAR_TabGeneralInformation::partitionNodes_valueChanged_handler(int index
  *  Slot called when the user (or program) checks or unchecks the "virtual
  *  machines based on" check box. 
  *
- *  This function checks the "loading" boolean in order to distinguish between
+ *  This function checks the "loading" variable in order to distinguish between
  *  user and program changes.
  *
  *  @param state The current state of the check box.
@@ -206,7 +210,7 @@ void XOSCAR_TabGeneralInformation::virtualMachinesCheckBox_stateChanged_handler(
  *  Slot called when the user (or program) changes the selection in the virtual machine
  *  combobox.
  *
- *  This function checks the "loading" boolean in order to distinguish between
+ *  This function checks the "loading" variable in order to distinguish between
  *  user and program changes.
  *
  *  @param index The index of the selected item in the combobox.
@@ -307,9 +311,7 @@ void XOSCAR_TabGeneralInformation::remove_partition_handler()
         return;
     }
 
-    QListWidgetItem *tmp = listClusterPartitionsWidget->takeItem(listClusterPartitionsWidget->currentRow());
-    delete tmp;
-    tmp = NULL;
+    delete listClusterPartitionsWidget->takeItem(listClusterPartitionsWidget->currentRow());
 }
 
 /**
@@ -496,9 +498,11 @@ void XOSCAR_TabGeneralInformation::partition_list_rowChanged_handler(int row)
  *  @author Robert Babilon
  *
  *  Slot called when the command thread has finished executing a command.
+ *  Calls CommandExecutionThread::wakeThread() before returning to ensure the
+ *  thread exits CommandExecutionThread::run().
  *
  *  @param command_id The command that has completed. The list of values
- *  are in CommandExecutionThread.h.
+ *  are in CommandTask.h.
  *
  *  @param result Holds the return value of the command.
  *
@@ -563,6 +567,12 @@ int XOSCAR_TabGeneralInformation::handle_thread_result (CommandTask::CommandTask
     return 0;
 }
 
+/**
+ * @author Robert Babilon
+ *
+ * Slot called when the QThread signal finished() is emitted.
+ * Starts the command thread again only if it has tasks left.
+ */
 void XOSCAR_TabGeneralInformation::command_thread_finished()
 {
     if(!command_thread.isEmpty()) { 

@@ -14,12 +14,28 @@
  */
 #include "Loading.h"
 
+using namespace xoscar;
+
+/**
+ * @author Robert Babilon
+ * 
+ * Stores the pointer to this member's variable and then increments the
+ * dereferenced value by one.
+ *
+ * @param remoteVar Pointer to the loading variable stored in another class.
+ */
 Loading::Loading(int *remoteVar)
 {
     var = remoteVar;
     *var += 1;
 }
 
+/**
+ * @author Robert Babilon
+ *
+ * Decrements the dereferenced value by one and assigns NULL to the member
+ * pointer.
+ */
 Loading::~Loading()
 {
     *var -= 1;

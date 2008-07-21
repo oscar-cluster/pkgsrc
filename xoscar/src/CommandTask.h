@@ -69,6 +69,4 @@ private:
 
 } // namespace xoscar
 
-//Q_DECLARE_METATYPE(xoscar::CommandTask::CommandTasks)
-
 #endif // COMMANDTASK_H

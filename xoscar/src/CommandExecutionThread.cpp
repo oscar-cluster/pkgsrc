@@ -53,7 +53,7 @@ CommandExecutionThread::~CommandExecutionThread()
   * @param args Repository URL that has to be used by the thread when running.
   * @param cmd_id Query mode. For instance, get the list of repositories or 
   *          the list of OSCAR packages for the specified repository. The 
-  *          different modes are defined in CommandExecutionThread.h
+  *          different modes are defined in CommandTask.h
   */
 void CommandExecutionThread::init (CommandTask::CommandTasks cmd_id, QStringList args)
 {
@@ -126,7 +126,7 @@ void CommandExecutionThread::appendCommandTask(QList<CommandTask> cmd_tasks)
  *  @author Robert Babilon
  *
  *  Function to check if the QList of CommandTask is empty.
- *  Returns true if the list is empty; otherwise false.
+ *  @return true if the list is empty; otherwise false.
  */
 bool CommandExecutionThread::isEmpty()
 {

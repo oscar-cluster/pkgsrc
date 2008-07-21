@@ -18,6 +18,8 @@
 #define XOSCAR_TABWIDGETINTERFACE_H
 #include <QWidget>
 
+namespace xoscar { 
+
 class XOSCAR_TabWidgetInterface
 {
 
@@ -37,5 +39,7 @@ protected:
 	virtual void setModified(const bool mod) { modified = mod; }
     bool modified;
 };
+
+} // namespace xoscar
 
 #endif // XOSCAR_TABWIDGETINTERFACE_H

@@ -62,12 +62,20 @@ namespace xoscar {
  *    command_thread.init (DO_OSCAR_SANITY_CHECK, QStringList(""));
  *    command_thread.wait();
  * \endcode
+ * 
+ * The new implementation of this class as of r7135 will allow multiple calls to
+ * init() and queue the commands up in a QList. Correct implementation requires
+ * some work on the caller side (connecting to the thread_terminated() and
+ * finished() signals).
  */
 class CommandExecutionThread : public QThread, public xoscar::CommandBuilder
 {
     Q_OBJECT
 
 public:
+    /**
+     * Flags to inidicate the sate of the thread.
+     */
     enum StatusFlags {Normal, // thread is in normal state
                       Sleeping, // thread is sleeping or about to sleep
                       CancelRequest // not yet implemented

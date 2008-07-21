@@ -133,9 +133,9 @@ void XOSCAR_TabNetworkConfiguration::import_macs_from_file ()
  *  @author Robert Babilon
  *  
  *  Function to check if a given MAC address is valid.
- *  Returns true if the MAC address is valid; otherwise false.
  *
  *  @param mac The MAC address to validate
+ *  @return true if the MAC address is valid; otherwise false.
  */
 bool XOSCAR_TabNetworkConfiguration::isValidMacAddress(QString mac)
 {
@@ -246,9 +246,9 @@ void XOSCAR_TabNetworkConfiguration::importmanualmac_clicked_handler()
  *  @author Robert Babilon
  *
  *  Function checks if the given MAC address is in the unassigned pool.
- *  Returns true if the MAC address is in the unassigned pool; otherwise false.
  *
  *  @param mac The MAC address to lookup in the pool of unassigned MAC addresses
+ *  @return true if the MAC address is in the unassigned pool; otherwise false.
  */
 bool XOSCAR_TabNetworkConfiguration::isMacUnassigned(QString& mac)
 {
@@ -260,10 +260,10 @@ bool XOSCAR_TabNetworkConfiguration::isMacUnassigned(QString& mac)
  *
  *  Function checks if the given MAC address is assigned to one of the nodes in
  *  the oscar nodes list widget.
- *  Returns true if the MAC address is assigned to one of the oscar nodes;
- *  otherwise false.
  *
  *  @param mac The MAC address to lookup in the list of oscar nodes.
+ *  @return true if the MAC address is assigned to one of the oscar nodes;
+ *  otherwise false.
  */
 bool XOSCAR_TabNetworkConfiguration::isMacAssigned(QString& mac)
 {
@@ -292,10 +292,10 @@ bool XOSCAR_TabNetworkConfiguration::isMacAssigned(QString& mac)
  *  @author Robert Babilon
  *
  *  Function to assign a given MAC address to a given node.
- *  Returns true if the MAC address was assigned to the node; otherwise false.
  *
  *  @param item The QTreeWidgetItem to assign the MAC address to.
  *  @param mac The MAC address to be assigned to the item.
+ *  @return true if the MAC address was assigned to the node; otherwise false.
  */
 bool XOSCAR_TabNetworkConfiguration::assignMacAddress(QTreeWidgetItem* item, QString& mac)
 {
@@ -318,12 +318,11 @@ bool XOSCAR_TabNetworkConfiguration::assignMacAddress(QTreeWidgetItem* item, QSt
  *  @author Robert Babilon
  *
  *  Function to unassign a MAC address from a given node.
- *  Returns true if the MAC address was unassigned from the node; otherwise
- *  false.
  *
  *  @param item The QTreeWidgetItem to remove the MAC address from.
- *  @param mac The MAC address that has been removed. This parameter is output
- *  only.
+ *  @param [out] mac The MAC address that has been removed. 
+ *  @return true if the MAC address was unassigned from the node; otherwise
+ *  false.
  */
 bool XOSCAR_TabNetworkConfiguration::unassignMacAddress(QTreeWidgetItem* item, QString& mac)
 {
@@ -347,9 +346,10 @@ bool XOSCAR_TabNetworkConfiguration::unassignMacAddress(QTreeWidgetItem* item, Q
  *  @author Robert Babilon
  *
  *  @param item The QTreeWidgetItem to check if it is holding a MAC address
- *  @param mac The MAC address the item is holding. If the item is not holding a
+ *  @param [out] mac The MAC address the item is holding. If the item is not holding a
  *  MAC address, this param holds the empty string. Otherwise it holds the MAC
- *  address. This param is output only.
+ *  address. 
+ *  @return true if item is holding a MAC address; otherwise false.
  */
 bool XOSCAR_TabNetworkConfiguration::isItemMacAddress(QTreeWidgetItem* item, QString& mac)
 {
@@ -420,9 +420,11 @@ void XOSCAR_TabNetworkConfiguration::network_configuration_tab_activated()
  *  @author Robert Babilon
  *
  *  Slot called when the command thread has finished executing a command.
+ *  Calls CommandExecutionThread::wakeThread() before returning to ensure the
+ *  thread exits CommandExecutionThread::run().
  *
  *  @param command_id The command that has completed. The list of values
- *  are in CommandExecutionThread.h.
+ *  are in CommandTask.h.
  *
  *  @param result Holds the return value of the command.
  *
@@ -445,6 +447,12 @@ int XOSCAR_TabNetworkConfiguration::handle_thread_result (CommandTask::CommandTa
     return 0;
 }
 
+/**
+ * @author Robert Babilon
+ *
+ * Slot called when the QThread signal finished() is emitted.
+ * Starts the command thread again only if it has tasks left.
+ */
 void XOSCAR_TabNetworkConfiguration::command_thread_finished()
 {
     if(!command_thread.isEmpty()) { 

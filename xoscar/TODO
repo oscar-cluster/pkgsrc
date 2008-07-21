@@ -17,3 +17,7 @@
     - Check if OSCAR_HOME is set only if we run xoscar for a local management
     - instead of checking if OSCAR_HOME is set, we should look for the OSCAR
       configuration file and get the location of the OSCAR scripts.
+* Look into Qt 4.4 new classes: QFuture and QFutureWatcher for thread management
+* Display a prompt dialog box when sudo permissions are required to block GUI.
+    - Thread will continue execution in background waiting for authorization
+      even after the GUI is closed.

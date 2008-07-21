@@ -15,6 +15,8 @@
 
 #include "XOSCAR_TabWidgetInterface.h"
 
+using namespace xoscar;
+
 XOSCAR_TabWidgetInterface::XOSCAR_TabWidgetInterface()
     : modified(false)
 {

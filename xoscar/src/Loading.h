@@ -16,6 +16,8 @@
 #include <iostream>
 using namespace std;
 
+namespace xoscar {
+
 class Loading
 {
 public:
@@ -25,3 +27,5 @@ public:
 private:
     int *var;
 };
+
+} // namespace xoscar
