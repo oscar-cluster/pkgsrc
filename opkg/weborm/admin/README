@@ -27,6 +27,47 @@ copied into the repository. Finally, the repository meta-data are regenerated.
 
 Note: Make sure the apache process as a write access to this directory.
 
+The creation of the repositories' meta-data is done using packman. Packman is
+part of the OSCAR core and provides a nice abstraction of the underlying binary
+package management tools. Typically, you do not have to know anything about
+the repository you want to create, packman identify the binary package format
+and call the appropriate tools.
+
+The WebORM architecture can despicted as:
+
+                        -----------------------
+                        |     Web Browser     |
+                        | (HTML + Javascript) |
+                        -----------------------
+                                   |
+                                   V
+                        -----------------------
+                        | Web Server (Apache) |
+                        |        (PHP 5)      |
+                        -----------------------
+                                   |
+                                   V
+                        -----------------------
+                        |      Packman        |
+                        -----------------------
+                                   /\
+(RPM Based Systems)-----------------  -------------- (Debian Based Systems)
+                   |                               |
+               --------                        --------
+               | yume |                        | rapt |
+               --------                        --------
+                   |                               |
+                   V                               V
+          ---------------------            ---------------------
+          |  Yum Repository   |            |  APT Repository   |
+          | Management Tools  |            | Management Tools  |
+          | (yum, createrepo) |            |    (apt, dpkg,    |
+          ---------------------            | dpkg-scanpackage) |
+                                           ---------------------
+
+The advantage of such an approach is that we avoid code duplication: the core
+component for the management of repositories is PackMan, already used in OSCAR.
+
 Installation
 ============
 
@@ -48,6 +89,11 @@ License
 
 WebORM is under GPLv3, see the WebORM pages for more details (the license.html
 webpage).
+
+Author
+======
+
+Geoffroy Vallee, Oak Ridge National Laboratory <valleegr at ornl dot gov>
 
 Debian Repositories
 ===================
