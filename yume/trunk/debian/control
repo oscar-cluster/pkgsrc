@@ -8,7 +8,7 @@ Standards-Version: 3.7.2
 Package: yume
 Architecture: all
 Suggests: createrepo
-Depends: python, yum
+Depends: python, yum, createrepo
 Description: Wrapper to yum for clusters
  Tool for setting up, exporting yum repositories and executing
  yum commands for only these repositories. Use it as high level RPM
