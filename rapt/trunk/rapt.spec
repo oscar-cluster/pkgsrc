@@ -1,12 +1,12 @@
 # $Id$
 Summary: Wrapper to apt-get for clusters
 Name: rapt
-Version: 1.0
+Version: 2.3
 Vendor: NEC HPCE
 Release: 1
 License: GPL
 Packager: Erich Focht <efocht@hpce.nec.com>
-Source: %{name}.tar.gz
+Source: %{name}-%{version}.tar.gz
 Group: System Environment/Tools
 BuildArch: noarch
 BuildRoot: %{_tmppath}/%{name}
@@ -26,7 +26,7 @@ apt-get commands for only these repositories.
 - execute apt-get commands inside a chrooted image.
 
 %prep
-%setup -n %{name}
+%setup -n %{name}-%{version}
 
 
 %build
@@ -34,10 +34,7 @@ apt-get commands for only these repositories.
 
 %install
 
-install -d -o root -g root -m 755 $RPM_BUILD_ROOT%{_bindir}
-install -d -o root -g root -m 755 $RPM_BUILD_ROOT%{_mandir}/man8
-install -o root -g root -m 755  rapt $RPM_BUILD_ROOT%{_bindir}
-install -o root -g root -m 644  rapt.8 $RPM_BUILD_ROOT%{_mandir}/man8
+make install DESTDIR=$RPM_BUILD_ROOT
 
 %clean
 rm -rf $RPM_BUILD_ROOT
@@ -48,5 +45,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_mandir}/man8/rapt*
 
 %changelog
+* Fri Jul 25 2008 Geoffroy Vallee - 2.3-1
+- New upstream version (see ChangeLog file for more details).
 * Wed May 10 2006 Erich Focht
 - initial RPM
