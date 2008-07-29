@@ -55,8 +55,8 @@ XOSCAR_TabNetworkConfiguration::XOSCAR_TabNetworkConfiguration(QWidget* parent)
 
     // *** Test Code ***
     stringToNodesConfig(tr("New_Partition_0\n\tMAC: \n\tIP: 172.20.0.2\n") +
-                        tr("New_Partition_1\n\tMAC: 00:aa:bb:cc:02\n\tIP: 172.20.0.3\n") +
-                        tr("New_Partition_2\n\tMAC: 00:aa:bb:cc:03\n\tIP: 172.20.0.4\n"));
+                        tr("New_Partition_1\n\tMAC: 00:aa:bb:cc:dd:02\n\tIP: 172.20.0.3\n") +
+                        tr("New_Partition_2\n\tMAC: 00:aa:bb:cc:dd:03\n\tIP: 172.20.0.4\n"));
     // *** End Test Code ***
 }
 
