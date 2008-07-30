@@ -61,7 +61,7 @@ print "</pre>";
 
 function prepare_repo ($distro_id) {
     echo "<br/>Regenerating the repository's metadata...<br/>";
-    $packman_cmd = "/usr/bin/packman --prepare-repo " . getcwd() . "/../repos/$distro_id -v";
+    $packman_cmd = "sudo /usr/bin/packman --prepare-repo " . getcwd() . "/../repos/$distro_id -v";
     echo "    Executing $packman_cmd...<br/>";
     if (exec ($packman_cmd, $output)) {
         print_full_output ($output);

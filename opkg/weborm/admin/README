@@ -13,6 +13,7 @@ packman
 rapt
 yume
 liboscar
+sudo
 
 WebORM Overview
 ===============
@@ -81,6 +82,8 @@ time).
        WebORM. To add a user, assuming you are in the directory where WebORM is
        installed, you can simply type: "htpasswd ./.htpasswd <username>".
 4/ Restart apache (e.g., "/etc/init.d/apache2 reload").
+5/ Setup sudo to have the apache use account not using password when using 
+   sudo.
 
 WebORM is now ready to go. :-)
 

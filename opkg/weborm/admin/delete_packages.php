@@ -14,7 +14,7 @@ for ($i=0; $i < sizeof($_POST); $i++) {
 }
 
 echo "<br/>Regenerating the repository's metadata...<br/>\n";
-$packman_cmd = "/usr/bin/packman --prepare-repo " . dirname ($package) . " -v";
+$packman_cmd = "sudo /usr/bin/packman --prepare-repo " . dirname ($package) . " -v";
 echo "    Executing $packman_cmd...<br/>\n";
 if (exec ($packman_cmd, $output)) {
     echo "    Successfully regenerate repository's meta-data<br/>\n";
