@@ -109,7 +109,6 @@ my @arches = get_arch_repos(@repos);
 if (scalar(@arches) == 0) {
     print "Warning: Impossible to detect repositories architecture ".
           "(normal in case of online repo(s)).\n";
-    exit 0;
 }
 
 print "Supported architecture(s): [".join (" ", @arches)."]\n" if $verbose;
@@ -268,7 +267,7 @@ exit $err;
 #############################################################################
 
 sub help {
-    print "Usage: $0 OPTIONS [APTITUDE_OPTIONS]\n";
+    print "Usage: $0 OPTIONS [APT_GET_OPTIONS]\n";
     print "\n";
     print "Call apt-get with _only_ the repositories passed on the command line .\n";
     print "OPTIONS can be:\n";
@@ -287,7 +286,7 @@ sub help {
     print " --repolist    : list the OSCAR repository URLs\n";
     print " --verbose  : verbose output\n";
     print "\n";
-    print "APTITUDE_OPTIONS are options to be passed to the apt-get command.\n";
+    print "APT_GET_OPTIONS are options to be passed to the apt-get command.\n";
     print "Setting the environment variable \$RAPT_VERBOSE to a number\n";
     print "between 1 and 10 will generate verbose output like multiple\n";
     print "-v options.\n\n";
@@ -305,29 +304,33 @@ sub cleanup {
 
 sub get_default_repos {
     # if OSCAR_HOME is defined, we're probably on a master
+    my $dquery;
     if ($ENV{OSCAR_HOME}) {
-	my $dquery = "$ENV{OSCAR_HOME}/scripts/distro-query";
+        $dquery = "$ENV{OSCAR_HOME}/scripts/distro-query";
+    } else {
+        $dquery = "/usr/bin/distro-query";
+    }
+
 	if (-x $dquery) {
 	    if ($installroot && (-x "$installroot/bin/bash")) {
-		$dquery = $dquery . " --image $installroot";
+	        $dquery = $dquery . " --image $installroot";
 	    }
 	    print "Executing: $dquery\n" if ($verbose);
 	    local *CMD;
 	    open CMD, "$dquery |" or die "Could not run $dquery: $!";
 	    while (<CMD>) {
-		chomp;
-		if (/Distro package url : (\S.*)$/) {
-		    push @repos, split(",",$1);
-		} elsif (/OSCAR package pool : (\S.*)$/) {
-		    push @repos, split(",",$1);
-		}
+	        chomp;
+	        if (/Distro package url : (\S.*)$/) {
+	            push @repos, split(",",$1);
+	        } elsif (/OSCAR package pool : (\S.*)$/) {
+	            push @repos, split(",",$1);
+	        }
 	    }
 	    close CMD;
 	} else {
-	    print "Command $ENV{OSCAR_HOME}/scripts/distro-query not found\n";
+	    print "distro-query not found ($dquery)\n";
 	    print "Unable to detect default repositories.\n";
-	}
-    } else {
+    }
 	my $master = gethostbyname("oscar_server");
 	if ($master) {
 	    my $node=`hostname`; chomp $node;
@@ -343,11 +346,10 @@ sub get_default_repos {
 		}
 	    }
 	    close CMD;
-	} else {
-	    print "You are not on an OSCAR cluster. You must specify a repository!\n";
-	    help();
-	}
-    }
+	} #else {
+# 	    print "You are not on an OSCAR cluster. You must specify a repository!\n";
+# 	    help();
+# 	}
     if ($verbose) {
         print "Repositories detected:\n\t".join("\n\t",@repos)."\n";
     }
@@ -992,6 +994,12 @@ sub prep_repodata (@) {
             }
 
             # now generate the Package.gz file
+            my $path = "$repo/$subdir/Packages*";
+            if ( -f "$path" ) {
+                require File::Path;
+                print "Deleting $path...\n" if $verbose;
+                File::Path::rmtree ("$path", 0, 0);
+            }
             my $cmd = "cd $repo; dpkg-scanpackages ./ /dev/null";
             $cmd .= "| tee $subdir/Packages | gzip -c9 >$subdir/Packages.gz";
             print "Executing command: $cmd\n";

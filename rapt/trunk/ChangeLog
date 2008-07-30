@@ -1,3 +1,15 @@
+rapt-2.5:
+- * Bug fix (#490): repo's meta-data are regenerated even when they already
+exist.
+
+rapt-2.4
+- Bug fix: rapt does not exist if the repos architecture cannot be detacted
+(which is often the case with Debian systems when all OSCAR repos are online
+repos).
+- Minor modifications of RAPT output.
+- Enable the usage of distro_query when distro_query is installed in
+(/usr/bin).
+
 rapt-2.3
 - Include the Ubuntu support.
 
