@@ -11,7 +11,6 @@
 
 #include "ArgumentParser.h"
 #include "vm.h"
-//#include "version.h"
 #include "vm_status.h"
 #include "debug.h"
 char* debug = getenv("V2M_DEBUG");
