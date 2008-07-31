@@ -284,6 +284,7 @@ int qemuVM::generate_network_config_file ()
     profile_data_t data = profile->get_profile_data ();
     string filename = "/tmp/qemu-" + data.name + "-ifup.sh";
     string cmd;
+    string nic_id;
     ofstream file_op;
     file_op.open(filename.c_str());
     if (((data.nic1_type).compare("BRIDGED_TAP") == 0)
@@ -301,21 +302,32 @@ int qemuVM::generate_network_config_file ()
                 << "only one bridge\"\n";
         file_op << "\texit -1\n";
         file_op << "fi\n";
-        file_op << "# test if eth0 is a wireless connection or not\n";
-        file_op << "WIRELESS=`grep eth0 /proc/net/wireless`\n";
+        if ((data.nic1_option).compare("") == 0) {
+            nic_id = "eth0";
+        } else {
+            nic_id = data.nic1_option;
+        }
+        file_op << "# test if " 
+                << nic_id
+                << " is a wireless connection or not\n";
+        file_op << "WIRELESS=`grep " << nic_id << " /proc/net/wireless`\n";
         file_op << "if [ x$WIRELESS != \"x\" ]\nthen\n";
-        file_op << "\techo \"The bridge tries to use a wireless interface, it is "
+        file_op << "\t" 
+                << nic_id 
+                << " echo \"The bridge tries to use a wireless interface, it is "
                 << "not supported\"\n";
         file_op << "\t exit -1;\n";
         file_op << "fi\n\n";
-        file_op << "# get the eth0's IP\n";
-        file_op << "IP=`/sbin/ifconfig eth0 | grep \"inet addr\" | awk ' { print "
+        file_op << "# get the " << nic_id << "'s IP\n";
+        file_op << "IP=`/sbin/ifconfig " 
+                << nic_id 
+                << " | grep \"inet addr\" | awk ' { print "
                 << "$2 } ' | sed -e 's/addr://'`\n";
         file_op << "sudo /sbin/ifconfig $1 0.0.0.0\n";
-        file_op << "sudo /sbin/ifconfig eth0 0.0.0.0\n";
+        file_op << "sudo /sbin/ifconfig " << nic_id << " 0.0.0.0\n";
         file_op << "sudo /usr/sbin/brctl addbr qemubr0\n";
         file_op << "sudo /sbin/ifconfig qemubr0 $IP\n";
-        file_op << "sudo /usr/sbin/brctl addif qemubr0 eth0\n";
+        file_op << "sudo /usr/sbin/brctl addif qemubr0 " << nic_id << "\n";
         file_op << "sudo /usr/sbin/brctl addif qemubr0 $1\n"; 
     }
     if (((data.nic1_type).compare("TUN/TAP") == 0)

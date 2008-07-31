@@ -661,8 +661,6 @@ Glib::ustring ProfileXMLNode::load_nic_option (xmlpp::Node* node)
         if (attr) {
             option = attr->get_value();
         }
-
-        cout << "NIC option: " << option.c_str() << endl;
         return (option);
     }
     return "N/A";
@@ -816,6 +814,14 @@ int ProfileXMLNode::load_profile_nics_info_from_node ()
     data.nic2_mac = str3.c_str();
     data.nic2_type = str4.c_str();
     data.nic2_option = str6.c_str();
+
+    cout << "Nic1 type: " << data.nic1_type << endl;
+    cout << "Nic1 MAC: " << data.nic1_mac << endl;
+    cout << "Nic1 option: " << data.nic1_option << endl;
+
+    cout << "Nic2 type: " << data.nic2_type << endl;
+    cout << "Nic2 MAC: " << data.nic2_mac << endl;
+    cout << "Nic2 option: " << data.nic2_option << endl;
 
     return 0;
 }
