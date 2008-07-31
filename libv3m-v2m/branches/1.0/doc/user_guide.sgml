@@ -137,7 +137,7 @@ The following network configurations are available:
         this mode automatically setup NAT on the hostOS, i.e., packets from the
         VM are automatically forwarded by the HostOS. In order to specify which
         network interface of the HostOS must be used for the NAT, the type tag
-        of a given NIC must have an "option" attribute.</emphasis> For instance:
+        of a given NIC must have an "option" attribute</emphasis>. For instance:
         <programlisting role="xml">
           <![CDATA[
                  <nic1>
@@ -147,10 +147,21 @@ The following network configurations are available:
                  ]]>
         </programlisting>
     </para></listitem>
-    <listitem><para>BRIDGED_TAP: for a connection with the host OS but in that 
-case the connection is automatically bridged with eth0 of the host OS (we 
-assume eth0 is the public network interface, it is not possible currently to 
-change that),</para></listitem>
+    <listitem>
+      <para>BRIDGED_TAP: for a connection with the host OS but in that 
+        case the connection is automatically bridged with a physical network interface of the host OS (eth0 by default, otherwise you must specify the option element of the nic1 or nic2 tag). The network interface on the host OS is typically the one connected to the local network.
+        For instance:
+        <programlisting role="xml">
+          <![CDATA[
+                   <nic1>
+                     <type option="eth1">BRIDGED_TAP</type>
+                     <mac>00:02:03:04:05:06</mac>
+                   </nic1>
+                   ]]>
+        </programlisting>
+        creates a bridge with eth1.
+      </para>
+    </listitem>
 <!--
 	<listitem><para>VLAN: for the creation of a virtual LAN between VMs.</para></listitem>
     To create a VLAN network interface, just specify the "VLAN" NIC type.
