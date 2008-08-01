@@ -361,5 +361,38 @@ directory of the libv3m source code.
   </para>
 </sect1>
 
+
+<sect1><title>Usage</title>
+  <para>
+    libv3m is a library that can be used by many tools. As a proof-of-concept,
+    and in order to provide to users a minimal tool, V2M has been developed
+    which enables the management of virtual machines, based on libv3m.
+  </para>
+  <para>
+    V2M provides the following option, we can execute 
+    <emphasis>v2m &ndash;&ndash;help</emphasis> for more details:
+    <programlisting role="xml">
+      <![CDATA[
+               $ v2m --help
+               v2m usage:
+               v2m <xml_profile> [OPTION]
+
+                 v2m [OPTION]:
+                 --boot-vm: boot a VM instantiation based on the profile.
+                 --create-vm-image-from-cdrom: create an image for a VM
+                    using a bootable CDROM
+                 --install-vm-with-oscar: create an image for a 
+                    VM using a network installation with OSCAR
+                 --migrate-vm <destination_node>: migrate a VM on a remote node 
+                    (EXPERIMENTAL)
+                 --pause-vm: pause a VM (EXPERIMENTAL)
+                 --unpause-vm: unpause a VM (EXPERIMENTAL)
+                 --validate-profile: validate the VM's profile
+                 --version: give the V2M version
+               ]]>
+    </programlisting>
+  </para>
+</sect1>
+
 </article>
 
