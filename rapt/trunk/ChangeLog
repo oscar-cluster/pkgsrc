@@ -1,5 +1,8 @@
+rapt-2.6:
+- Bug fix: the return code should now be correct all the time.
+
 rapt-2.5:
-- * Bug fix (#490): repo's meta-data are regenerated even when they already
+- Bug fix (#490): repo's meta-data are regenerated even when they already
 exist.
 
 rapt-2.4

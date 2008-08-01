@@ -164,7 +164,7 @@ for my $repo (@repos) {
 
 # install exit handler which removes the temporary
 # files and releases the lock
-END {my $rc = $?; cleanup(); exit $rc};
+END {my $rc = $?; cleanup(); exit $rc >> 8};
 
 $SIG{INT} = \&cleanup;
 
