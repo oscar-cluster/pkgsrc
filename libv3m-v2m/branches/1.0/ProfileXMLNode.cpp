@@ -426,7 +426,7 @@ int ProfileXMLNode::load_profile_cpu_from_node ()
     if (list.size() <= 0) {
         /* No CPU information is specified into the profile */
         /* We assign a value by default */
-        data.memory = "1";
+        data.cpu = "1";
         return 0;
     } else {
         xmlpp::Node::NodeList::iterator iter = list.begin();
