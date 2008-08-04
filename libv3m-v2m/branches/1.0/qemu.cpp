@@ -300,35 +300,51 @@ int qemuVM::generate_network_config_file ()
         file_op << "if [ x$BRIDGE_MAC != \"x\" ]\nthen\n";
         file_op << "\techo \"The bridge already exists and we support currently "
                 << "only one bridge\"\n";
-        file_op << "\texit -1\n";
+        file_op << "\texit 1\n";
         file_op << "fi\n";
         if ((data.nic1_option).compare("") == 0) {
             nic_id = "eth0";
         } else {
             nic_id = data.nic1_option;
         }
-        file_op << "# test if " 
+        file_op << "echo \"Test if " 
                 << nic_id
-                << " is a wireless connection or not\n";
-        file_op << "WIRELESS=`grep " << nic_id << " /proc/net/wireless`\n";
-        file_op << "if [ x$WIRELESS != \"x\" ]\nthen\n";
-        file_op << "\t" 
-                << nic_id 
-                << " echo \"The bridge tries to use a wireless interface, it is "
-                << "not supported\"\n";
-        file_op << "\t exit -1;\n";
+                << " is a wireless connection or not\"\n";
+        file_op << "WIRELESS=`grep " << nic_id << " /proc/net/wireless"
+                << " | awk ' { print $1 } '`\n";
+        file_op << "if [ \"x$WIRELESS\" != \"x\" ]\nthen\n";
+        file_op << "\techo \"The bridge tries to use a wireless interface, it "
+                << "is not supported\"\n";
+        file_op << "\texit 1\n";
         file_op << "fi\n\n";
         file_op << "# get the " << nic_id << "'s IP\n";
         file_op << "IP=`/sbin/ifconfig " 
                 << nic_id 
                 << " | grep \"inet addr\" | awk ' { print "
                 << "$2 } ' | sed -e 's/addr://'`\n";
-        file_op << "sudo /sbin/ifconfig $1 0.0.0.0\n";
-        file_op << "sudo /sbin/ifconfig " << nic_id << " 0.0.0.0\n";
+        file_op << "echo \"Detected IP: $IP\"\n";
+        file_op << "echo \"This script bridges " << nic_id << " and tap0. "
+                << "First take eth0 down, then bring it up with IP "
+                << "0.0.0.0\"\n";
+        file_op << "sudo /sbin/ifconfig "
+                << nic_id
+                << " down\n";
+        file_op << "sudo /sbin/ifconfig "
+                << nic_id
+                << " 0.0.0.0 up\n";
+        file_op << "echo \"Bring up tap0 with IP 0.0.0.0, create bridge "
+                << "qemubr0 and add interfaces " << nic_id 
+                << "and tap0\"\n";
+        file_op << "sudo /sbin/ifconfig $1 0.0.0.0 promisc up\n";
         file_op << "sudo /usr/sbin/brctl addbr qemubr0\n";
-        file_op << "sudo /sbin/ifconfig qemubr0 $IP\n";
         file_op << "sudo /usr/sbin/brctl addif qemubr0 " << nic_id << "\n";
         file_op << "sudo /usr/sbin/brctl addif qemubr0 $1\n"; 
+        file_op << "echo \"As we have only a single bridge and loops are "
+                << "not possible, turn spanning tree protocol off\"\n";
+        file_op << "sudo /usr/sbin/brctl stp qemubr0 off\n";
+        file_op << "echo \"Bring up the bridge\"\n";
+        file_op << "sudo /sbin/ifconfig qemubr0 $IP up\n";
+        file_op << "sudo route add default gw 192.168.1.254\n";
     }
     if (((data.nic1_type).compare("TUN/TAP") == 0)
         || ((data.nic2_type).compare("TUN/TAP") == 0)) {
