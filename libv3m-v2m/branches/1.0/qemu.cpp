@@ -444,17 +444,23 @@ int qemuVM::__boot_vm ()
     if ((data.nic1_type).compare("N/A") != 0 
         && (data.nic1_type).compare("") != 0) {
         if ((data.nic1_type).compare("BRIDGED_TAP") == 0) {
-            cmd += " -net nic -net tap,script=/tmp/qemu-";
+            cmd += " -net nic,macaddr=";
+            cmd += data.nic1_mac;
+            cmd += " -net tap,script=/tmp/qemu-";
             cmd += data.name;
             cmd += "-ifup.sh";
         }
         if ((data.nic1_type).compare("TUN/TAP") == 0) {
-            cmd += " -net nic -net tap,script=/tmp/qemu-";
+            cmd += " -net nic,macaddr=";
+            cmd += data.nic1_mac;
+            cmd += " -net tap,script=/tmp/qemu-";
             cmd += data.name;
             cmd += "-ifup.sh";
         }
         if ((data.nic1_type).compare("TUN/TAP+NAT") == 0) {
-            cmd += " -net nic -net tap,script=/tmp/qemu-";
+            cmd += " -net nic,macaddr=";
+            cmd += data.nic1_mac;
+            cmd += " -net tap,script=/tmp/qemu-";
             cmd += data.name;
             cmd += "-ifup.sh";
         }
@@ -467,17 +473,23 @@ int qemuVM::__boot_vm ()
     if ((data.nic2_type).compare("N/A") != 0 
         && (data.nic2_type).compare("") != 0) {
         if ((data.nic2_type).compare("BRIDGED_TAP") == 0) {
-            cmd += " -net nic -net tap,script=/tmp/qemu-";
+            cmd += " -net nic,macaddr=";
+            cmd += data.nic2_mac;
+            cmd += " -net tap,script=/tmp/qemu-";
             cmd += data.name;
             cmd += "-ifup.sh";
         }
         if ((data.nic2_type).compare("TUN/TAP") == 0) {
-            cmd += " -net nic -net tap,script=/tmp/qemu-";
+            cmd += " -net nic,macaddr=";
+            cmd += data.nic2_mac;
+            cmd += " -net tap,script=/tmp/qemu-";
             cmd += data.name;
             cmd += "-ifup.sh";
         }
         if ((data.nic2_type).compare("TUN/TAP+NAT") == 0) {
-            cmd += " -net nic -net tap,script=/tmp/qemu-";
+            cmd += " -net nic,macaddr=";
+            cmd += data.nic2_mac;
+            cmd += " -net tap,script=/tmp/qemu-";
             cmd += data.name;
             cmd += "-ifup.sh";
         }
