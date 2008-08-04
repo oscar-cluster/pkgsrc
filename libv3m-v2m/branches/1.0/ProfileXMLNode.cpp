@@ -412,6 +412,33 @@ int ProfileXMLNode::load_profile_memory_from_node ()
 /**
   * @author Geoffroy Vallee.
   *
+  * Load the profile's ammount of memory from the XML node.
+  *
+  * @return 0 if success, -1 else.
+  */
+int ProfileXMLNode::load_profile_cpu_from_node ()
+{
+    xmlpp::Node::NodeList list = profile_node->get_children("cpu");
+    if (list.size() >= 2) {
+        data.cpu = "Error";
+        return -1;
+    }
+    if (list.size() <= 0) {
+        /* No CPU information is specified into the profile */
+        /* We assign a value by default */
+        data.memory = "1";
+        return 0;
+    } else {
+        xmlpp::Node::NodeList::iterator iter = list.begin();
+        data.cpu = get_node_content (*iter);
+    }
+    cout << "\tProfile CPU(s): " << data.cpu << endl;
+    return 0;
+}
+
+/**
+  * @author Geoffroy Vallee.
+  *
   * Load the profile's type from the XML node.
   *
   * @return: 0 if success, -1 else.
@@ -513,6 +540,8 @@ int ProfileXMLNode::load_profile_data()
     if (load_virtual_disks_info_from_node ())
         return -1;
     if (load_profile_memory_from_node ())
+        return -1;
+    if (load_profile_cpu_from_node ())
         return -1;
     if (load_profile_nics_info_from_node ())
         return -1;

@@ -34,6 +34,9 @@ typedef struct profile_data{
     /** Profile's image size */
     Glib::ustring image_size;
 
+    /** Profile's number of CPUs */
+    Glib::ustring cpu;
+
     /** Profile's amount of memory */
     Glib::ustring memory;
 
@@ -94,6 +97,7 @@ private:
   int load_image_size_from_node (xmlpp::Node *node);
   int load_profile_type_from_node ();
   int load_profile_name_from_node ();
+  int load_profile_cpu_from_node ();
   int load_profile_memory_from_node ();
   Glib::ustring load_nic_mac (const xmlpp::Node* node);
   Glib::ustring load_nic_type (const xmlpp::Node* node);

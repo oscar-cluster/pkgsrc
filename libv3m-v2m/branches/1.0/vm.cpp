@@ -29,7 +29,7 @@ VM::VM (string file) {
          << endl;
     xmlpp::DomParser parser;
     parser.set_validate();
-      parser.parse_file(file);
+    parser.parse_file(file);
     if (!parser) {
         cerr << "Error, profile not valid. Check your profile." << endl;
         return;

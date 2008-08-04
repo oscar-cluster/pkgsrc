@@ -3,7 +3,7 @@
 DTD for V2M profiles.
 -->
 
-<!ELEMENT profile (name, type, memory?, image, virtual_disks?, cdrom?, nic1?, nic2?) >
+<!ELEMENT profile (name, type, cpu?, memory?, image, virtual_disks?, cdrom?, nic1?, nic2?) >
 
 <!ELEMENT name (#PCDATA)>
 
@@ -12,6 +12,8 @@ DTD for V2M profiles.
 
 <!ELEMENT image (#PCDATA)>
 <!ATTLIST image size CDATA #IMPLIED>
+
+<!ELEMENT cpu (#PCDATA)>
 
 <!ELEMENT memory (#PCDATA)>
 

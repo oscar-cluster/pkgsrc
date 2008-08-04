@@ -10,3 +10,6 @@ General:
 
 Netboot Simulation:
     - find a way to have a smaller image the current one is still way too big.
+
+Profiles:
+    - add the support of CPU specification for Xen.
