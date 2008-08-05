@@ -11,9 +11,9 @@
 
 #include "vm.h"
 
-#define NB_VIRT_TECHNO 5
+#define NB_VIRT_TECHNO 6
 /** List of supported virtualization solutions */
-string virt_techno[NB_VIRT_TECHNO] = {"Qemu", "Xen", "XenHVM", "VMWare",
+string virt_techno[NB_VIRT_TECHNO] = {"Qemu", "Kvm", "Xen", "XenHVM", "VMWare",
                                       "VMM-HPC"};
 
 /**
@@ -60,6 +60,8 @@ profile(s) in your file, you should have only one" <<     endl;
         }
         if ((data_profile.type).compare ("Qemu") == 0) 
             qemu_vm = new VMContainer<qemuVM> (profile);
+        if ((data_profile.type).compare ("Kvm") == 0) 
+            kvm_vm = new VMContainer<kvmVM> (profile);
         if ((data_profile.type).compare ("Xen") == 0)
             xen_vm = new VMContainer<xen> (profile);
         if ((data_profile.type).compare ("XenHVM") == 0)
@@ -124,6 +126,18 @@ int VM::boot_vm() {
             return 0;
         }
         cerr << "ERROR creating the Qemu VM" << endl;
+        return -1;
+    }
+    if ((data_profile.type).compare("Kvm") == 0) {
+        cout << "Creating a KVM VM" << endl;
+        if (kvm_vm) {
+            if (kvm_vm->boot_vm()) {
+                cerr << "ERROR creating the KVM VM" << endl;
+                return -1;
+            }
+            return 0;
+        }
+        cerr << "ERROR creating the KVM VM" << endl;
         return -1;
     }
     if ((data_profile.type).compare("Xen") == 0) {

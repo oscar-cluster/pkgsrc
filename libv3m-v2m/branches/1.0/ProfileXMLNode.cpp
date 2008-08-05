@@ -2,7 +2,7 @@
  *  Copyright (c) 2006-2008 Oak Ridge National Laboratory, 
  *                          Geoffroy Vallee <valleegr at ornl dot gov>
  *                          All rights reserved
- *  This file is part of the KVMs software.  For license information,
+ *  This file is part of the libv3m software.  For license information,
  *  see the COPYING file in the top level directory of the source
  */
 

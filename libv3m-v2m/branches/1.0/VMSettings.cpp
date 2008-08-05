@@ -103,6 +103,36 @@ VMSettings::VMSettings ()
                     cout << "VMWare precommand = " << vmwarePrecommand << endl;
                 }
             }
+            /*KVM Part*/
+            list = pNode->get_children("kvm");
+            iter = list.begin();
+            if (list.size () > 0) {
+                /* We get first the xen command */
+                xmlpp::Node::NodeList list2 = (*iter)->get_children("command");
+                if (list2.size() > 0) {
+                    xmlpp::Node::NodeList::iterator iter2 = list2.begin();
+                    kvmCommand = get_node_content (*iter2);
+                    std::cout << "KVM command = " << kvmCommand << std::endl;
+                } else {
+                    cerr << "ERROR: Impossible to get the KVM command" << endl;
+                    exit (-1);
+                }
+                /* Then we get the xen precammnd */
+                list2 = (*iter)->get_children("precommand");
+                if (list2.size() > 0) {
+                    iter2 = list2.begin();
+                    kvmPrecommand = get_node_content (*iter2);
+                    cout << "KVM precommand = " << kvmPrecommand << endl;
+                }
+                /* Then we check if we want to use a network emulation image */
+                list2 = (*iter)->get_children("netboot-image");
+                if (list2.size() > 0) {
+                    iter2 = list2.begin();
+                    netboot = get_node_content (*iter2);
+                    cout << "Image for netboot emulation = " << netboot << endl;
+                }
+            }
+
         }
     } else {
         cerr << "ERROR: Impossible to open the configuration file." << endl;
@@ -138,6 +168,20 @@ Glib::ustring VMSettings::get_node_content (const xmlpp::Node* node)
         str = nodeText->get_content();
     }
     return str;
+}
+
+/**
+  * @author Panyong Zhang.
+  */
+string VMSettings::getKvmCommand() {
+    return kvmCommand;
+}
+
+/**
+  * @author Panyong Zhang.
+  */
+string VMSettings::getKvmPrecommand () {
+    return kvmPrecommand;
 }
 
 /**

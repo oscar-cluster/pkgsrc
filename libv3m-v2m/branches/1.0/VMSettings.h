@@ -2,7 +2,7 @@
  *  Copyright (c) 2006 Oak Ridge National Laboratory, 
  *                     Geoffroy Vallee <valleegr@ornl.gov>
  *                     All rights reserved
- *  This file is part of the KVMs software.  For license information,
+ *  This file is part of the libv3m software.  For license information,
  *  see the COPYING file in the top level directory of the source
  */
 
@@ -19,6 +19,14 @@ public:
 
     /** Class destructor */
     ~VMSettings();
+
+    /** Get the KVM command for the creation of a virtual machine
+      * (the configuration file has been parsed previously) */
+    std::string getKvmCommand();
+
+    /** Get the command to execute before the creation of a KVM 
+      * (the configuration file has been parsed previously) */
+    std::string getKvmPrecommand();
 
     /** Get the QEMU command for the creation of a virtual machine
       * (the configuration file has been parsed previously) */
@@ -59,6 +67,8 @@ public:
 private:
     Glib::ustring get_node_content (const xmlpp::Node*);
 
+    std::string kvmCommand;
+    std::string kvmPrecommand;
     std::string qemuCommand;
     std::string qemuPrecommand;
     std::string xenCommand;

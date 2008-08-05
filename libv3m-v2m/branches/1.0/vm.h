@@ -6,6 +6,7 @@
 #include "ProfileXMLNode.h"
 #include "VMContainer.h"
 #include "qemu.h"
+#include "kvm.h"
 #include "xen.h"
 #include "vmware.h"
 #include "xen-hvm.h"
@@ -29,6 +30,7 @@ public:
 private:
     ProfileXMLNode *profile;
     profile_data_t data_profile;
+    VMContainer<kvmVM> *kvm_vm;
     VMContainer<qemuVM> *qemu_vm;
     VMContainer<xen> *xen_vm;
     VMContainer<xen_hvm> *xenhvm_vm;
