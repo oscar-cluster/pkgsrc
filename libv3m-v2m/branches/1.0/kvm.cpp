@@ -486,6 +486,8 @@ int kvmVM::__boot_vm ()
     /* We manage the amount of memory */
     cmd += " -m ";
     cmd += data.memory;
+    cmd += " -smp ";
+    cmd += data.cpu;
     if (boot_mode == CDROM_BOOT) {
         cmd += " -cdrom ";
         cmd += data.cdrom;
