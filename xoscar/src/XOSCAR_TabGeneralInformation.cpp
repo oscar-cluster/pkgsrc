@@ -22,9 +22,15 @@ using namespace xoscar;
 
 XOSCAR_TabGeneralInformation::XOSCAR_TabGeneralInformation(QWidget* parent)
     : QWidget(parent)
-    , v2mpkg(false)
-    , loading(0)
 {
+    v2mpkg = false;
+    loading = 0;
+    currentPartitionRow = -1;
+
+    // register the PartitionState enum with Qt in order to use it with the
+    // QListWidgetItem::data() property
+    qRegisterMetaType<PartitionState>("PartitionState");
+
 	setupUi(this);
 
 	// signals for widgets when they are modified
@@ -36,6 +42,12 @@ XOSCAR_TabGeneralInformation::XOSCAR_TabGeneralInformation(QWidget* parent)
 
 	connect(partitionNumberNodesSpinBox, SIGNAL(valueChanged(int)),
 	        this, SLOT(partitionNodes_valueChanged_handler(int)));
+
+    connect(virtualMachinesCheckBox, SIGNAL(stateChanged(int)),
+            this, SLOT(virtualMachinesCheckBox_stateChanged_handler(int)));
+
+    connect(virtualMachinesComboBox, SIGNAL(currentIndexChanged(int)),
+            this, SLOT(virtualMachinesComboBox_currentIndexChanged_handler(int)));
 
 	// signals for control widgets
 	connect(addPartitionButton, SIGNAL(clicked()),
@@ -55,12 +67,6 @@ XOSCAR_TabGeneralInformation::XOSCAR_TabGeneralInformation(QWidget* parent)
 
 	connect(listClusterPartitionsWidget, SIGNAL(itemSelectionChanged ()),
             this, SLOT(refresh_partition_info()));
-
-    connect(virtualMachinesCheckBox, SIGNAL(stateChanged(int)),
-            this, SLOT(virtualMachinesCheckBox_stateChanged_handler(int)));
-
-    connect(virtualMachinesComboBox, SIGNAL(currentIndexChanged(int)),
-            this, SLOT(virtualMachinesComboBox_currentIndexChanged_handler(int)));
 
 	connect(saveClusterInfoButton, SIGNAL(clicked()),
 	        this, SLOT(save()));
@@ -83,25 +89,25 @@ XOSCAR_TabGeneralInformation::~XOSCAR_TabGeneralInformation()
 /**
  *  @author Robert Babilon
  *
- *  Resets the modified flag and emits the signal that this widget
- *  has been saved.
- *  This method is overriden from the interface.
+ *  Saves changes to current partition item and refreshes the list of partitions
+ *  based on current cluster selection; then resets the modified flag.
  *
- *  @todo return false if the save fails to inform caller they should revert
- *  back to this tab.
+ *  This method is overriden from the interface.
  *
  *  @return true if changes were saved successfully; otherwise false.
  */
 bool XOSCAR_TabGeneralInformation::save()
 {
-    cout << "save()" << endl;
+    //cout << "DEBUG: save()" << endl;
 
-	save_cluster_info_handler();
-    refresh_list_partitions();
+    bool result = true;
+    result = save_cluster_info_handler();
+    if(result) {
+        refresh_list_partitions();
+        modified = false;
+    }
 
-	modified = false;
-
-	return true;
+    return result;
 }
 
 /**
@@ -122,9 +128,37 @@ bool XOSCAR_TabGeneralInformation::save()
  */
 bool XOSCAR_TabGeneralInformation::undo()
 {
-    cout << "undo()" << endl;
+    //cout << "DEBUG: undo()" << endl;
 
 	modified = false;
+
+    if(currentPartitionRow == -1) {
+        //cout << "DEBUG: undo: currentPartitionRow == -1" << endl;
+        return true;
+    }
+    //cout << "DEBUG: undo: currentPartitionRow != -1" << endl;
+    
+    // get the state flag, if modified, then undo the changes by calling
+    // refresh on this partition; if created, remove the item
+    if(partitionItemState(currentPartitionRow) == Created) {
+        //cout << "DEBUG: undo: current row was created" << endl;
+        int temp = currentPartitionRow;
+        currentPartitionRow = -1;
+        delete listClusterPartitionsWidget->takeItem(temp);
+    }
+    else { 
+        //cout << "DEBUG: undo: current row was modified or saved; setting status to saved" << endl;
+
+        QListWidgetItem *pItem = listClusterPartitionsWidget->item(currentPartitionRow);
+        if(pItem != NULL) {
+            pItem->data(Qt::UserRole).setValue(Saved);
+        }
+
+        //cout << "DEBUG: undo: setting current row to: " << currentPartitionRow << endl;
+        int temp = currentPartitionRow;
+        currentPartitionRow = -1;
+        listClusterPartitionsWidget->setCurrentRow(temp);
+    }
 
 	return true;
 }
@@ -147,6 +181,7 @@ void XOSCAR_TabGeneralInformation::partitionName_textEdited_handler(const QStrin
     listClusterPartitionsWidget->currentItem()->setText(text);
 
 	modified = true;
+    setPartitionItemState(currentPartitionRow, Modified);
 	emit widgetContentsModified(this);
 }
 
@@ -161,8 +196,9 @@ void XOSCAR_TabGeneralInformation::partitionName_textEdited_handler(const QStrin
 void XOSCAR_TabGeneralInformation::partitionDistro_currentIndexChanged_handler(int index)
 {
 	if(!loading) {
-	    modified = true;
-	    emit widgetContentsModified(this);
+        modified = true;
+        setPartitionItemState(currentPartitionRow, Modified);
+        emit widgetContentsModified(this);
     }
 
     command_thread.init(CommandTask::DISPLAY_DEFAULT_OPKGS, QStringList(""));
@@ -179,8 +215,9 @@ void XOSCAR_TabGeneralInformation::partitionDistro_currentIndexChanged_handler(i
 void XOSCAR_TabGeneralInformation::partitionNodes_valueChanged_handler(int index)
 {
 	if(loading) return;
-	modified = true;
-	emit widgetContentsModified(this);
+    modified = true;
+    setPartitionItemState(currentPartitionRow, Modified);
+    emit widgetContentsModified(this);
 }
 
 /**
@@ -198,6 +235,7 @@ void XOSCAR_TabGeneralInformation::virtualMachinesCheckBox_stateChanged_handler(
 {
     if(!loading) {
         modified = true;
+        setPartitionItemState(currentPartitionRow, Modified);
         emit widgetContentsModified(this);
         
         virtualMachinesComboBox->setEnabled(state == Qt::Checked);
@@ -219,6 +257,7 @@ void XOSCAR_TabGeneralInformation::virtualMachinesComboBox_currentIndexChanged_h
 {
     if(!loading) { 
         modified = true;
+        setPartitionItemState(currentPartitionRow, Modified);
         emit widgetContentsModified(this);
     }
 }
@@ -231,48 +270,48 @@ void XOSCAR_TabGeneralInformation::virtualMachinesComboBox_currentIndexChanged_h
  * @todo Find a good name by default that avoids conflicts if the user does not
  * change it.
  * @todo Check if a cluster is selected.
- * @todo make a function to handle the prompt save dialog
  */
 void XOSCAR_TabGeneralInformation::add_partition_handler()
 {
-    if(modified) {
-        // prompt to save previous changes
-        QMessageBox msg(QMessageBox::NoIcon, tr("Save changes?"), tr("The previously added or modified partition has not been saved.\n")
-                        + tr("Would you like to save your changes?"),
-                        QMessageBox::Save|QMessageBox::No|QMessageBox::Cancel, this);
+    //cout << "DEBUG: add_partition_handler: ENTER" << endl;
 
-        switch(msg.exec()) {
-            case QMessageBox::Save: 
-                this->save();
-                break;
-            case QMessageBox::No:
-                this->undo();
-                break;
-            case QMessageBox::Cancel:
-                return;
-                break;
-        }
+    if(prompt_save_changes()) {
+        // wait till thread is finished... when undoing in this particular
+        // method, we do not need to refresh the previous partition since we
+        // know we will select a new item. however, if the previous item were
+        // created, then we need to remove it from the list. otherwise we get
+        // extra items.
     }
-
-    // must have a cluster selected in order to add a partition to it
-    if (listOscarClustersWidget->currentRow() == -1) {
+    else {
         return;
     }
 
     // this is still a problem dispite any fancy thread management system. here
     // we'll need to "pause" the GUI by using a dialog and wait until the thread
     // has finished all of it's pending tasks.
+    // This current solution requires the user to click OK; note this is
+    // temporary. a correct solution will be more involved.
     QMessageBox msg(QMessageBox::NoIcon,
                     QString("Test Message Box"), 
                     QString("This is a temporary pausing mechanism.\nClick OK when you feel the thread has finished it's duties."),
                     QMessageBox::Ok);
     msg.exec();
 
-    listClusterPartitionsWidget->addItem ("New_Partition");
+    // must have a cluster selected in order to add a partition to it
+    if (listOscarClustersWidget->currentRow() == -1) {
+        return;
+    }
+
+    QListWidgetItem *pItem = new QListWidgetItem("New_Partition");
+    QVariant var;
+    var.setValue(Created);
+    pItem->setData(Qt::UserRole, var);
+    listClusterPartitionsWidget->addItem (pItem);
     listClusterPartitionsWidget->update ();
 
     setDefaultPartitionValues();
 
+    //cout << "DEBUG: add_partition_handler: setting row to: " << listClusterPartitionsWidget->count()-1 << endl;
     listClusterPartitionsWidget->setCurrentRow(listClusterPartitionsWidget->count()-1);
 
 	modified = true;
@@ -284,33 +323,20 @@ void XOSCAR_TabGeneralInformation::add_partition_handler()
  *
  *  Slot that handles the click signal on the "remove partition" button.
  *
- *  @todo make a function to handle the prompt save dialog
+ *  @todo execute a command REMOVE_PARTITION to remove the partition from the
+ *  cluster when the item is saved or modified. Note when the partition is
+ *  created, we can simply remove the item from the list. If the partition name 
+ *  were modified, we would need to retrieve the original name and then execute
+ *  the remove command.
  */
 void XOSCAR_TabGeneralInformation::remove_partition_handler()
 {
-    if(modified) {
-        // prompt to save previous changes
-        QMessageBox msg(QMessageBox::NoIcon, tr("Save changes?"), tr("The previously added or modified partition has not been saved.\n")
-                        + tr("Would you like to save your changes?"),
-                        QMessageBox::Save|QMessageBox::No|QMessageBox::Cancel, this);
-
-        switch(msg.exec()) {
-            case QMessageBox::Save: 
-                this->save();
-                break;
-            case QMessageBox::No:
-                this->undo();
-                break;
-            case QMessageBox::Cancel:
-                return;
-                break;
-        }
-    }
-
     if(listClusterPartitionsWidget->currentRow() == -1) {
         return;
     }
 
+    currentPartitionRow = -1;
+    modified = false;
     delete listClusterPartitionsWidget->takeItem(listClusterPartitionsWidget->currentRow());
 }
 
@@ -362,9 +388,15 @@ void XOSCAR_TabGeneralInformation::refresh_partition_info()
     QString current_partition = i.next()->text();
     partitionNameEditWidget->setText(current_partition);
 
-    // here we can check if this entry is modified or newly added
-    // if added/modified, we would avoid calling the DISPLAY_PARTITION_NODES
+    // if added/modified, we avoid calling the DISPLAY_PARTITION_NODES
     // since that would overwrite existing modifications
+    // GET_SETUP_DISTROS will retrieve the list of distros and add them to the
+    // comobo box; this should also be skipped b/c the selection would change
+    if(isPartitionModified(listClusterPartitionsWidget->currentRow())) {
+        //cout << "DEBUG: refresh_partition_info: current row is modified, ignoring: " << listClusterPartitionsWidget->currentRow() << endl;
+        return;
+    }
+    //cout << "DEBUG: refresh_partition_info: refreshing info for row: " << listClusterPartitionsWidget->currentRow() << endl;
 
     /* We display the number of nodes composing the partition */
     command_thread.init(CommandTask::DISPLAY_PARTITION_NODES, 
@@ -382,13 +414,20 @@ void XOSCAR_TabGeneralInformation::refresh_partition_info()
  *
  * Slot that handles the click on the "Save Cluster Configuration" button.
  *
+ * @return bool true if the save was successful; otherwise false.
+ *
  * @todo Check if the partition name already exists or not.
  * @todo Display a dialog is partition information are not valid.
  * @todo Check the return value of the command to add partition information
  *       in the database.
+ * @todo Use specific commands depending on the item's status. i.e.
+ *       use ADD_PARTITION when adding partitions; use UPDATE_PARTITION 
+ *       when an existing partition was modified and only needs updating.
  */
-void XOSCAR_TabGeneralInformation::save_cluster_info_handler()
+bool XOSCAR_TabGeneralInformation::save_cluster_info_handler()
 {
+    bool result = false;
+
     int nb_nodes = partitionNumberNodesSpinBox->value();
     QString partition_name = partitionNameEditWidget->text();
     QString partition_distro = partitionDistroComboBox->currentText();
@@ -396,6 +435,10 @@ void XOSCAR_TabGeneralInformation::save_cluster_info_handler()
     if (partition_name.compare("") == 0 || nb_nodes == 0 
         || partition_distro.compare("") == 0) {
         cerr << "ERROR: invalid partition information" << endl;
+        // need to inform caller that they should not continue either since this
+        // has failed. i.e. in save() do not call refresh_list_partitions() b/c
+        // it would erase the changes.
+        result = false;
     } else {
         QStringList args;
         args << partition_name << partition_distro;
@@ -406,12 +449,19 @@ void XOSCAR_TabGeneralInformation::save_cluster_info_handler()
             tmp = partition_name.toStdString() + "_node" + Utilities::intToStdString(i);
             args << tmp.c_str();
         }
+
+        currentPartitionRow = -1;
+        modified = false;
+        result = true;
         command_thread.init (CommandTask::ADD_PARTITION, args);
+
+        /* We unset the selection of the partition is order to be able to update
+        the widget. If we do not do that, a NULL pointer is used and the app
+        crashes. */
+        listClusterPartitionsWidget->setCurrentRow(-1);
     }
-    /* We unset the selection of the partition is order to be able to update
-       the widget. If we do not do that, a NULL pointer is used and the app
-       crashes. */
-    listClusterPartitionsWidget->setCurrentRow(-1);
+
+    return result;
 }
 
 /**
@@ -478,6 +528,9 @@ void XOSCAR_TabGeneralInformation::clusters_list_rowChanged_handler(int row)
  *
  *  @param row Index of the newly selected row in the list widget. -1 if no row
  *  is currently selected.
+ *  @todo When saving changes here, we will need to wait for the thread to
+ *  finish its execution and then re-select the newly selected partion. More
+ *  notes added in code where this mechanism is needed.
  */
 void XOSCAR_TabGeneralInformation::partition_list_rowChanged_handler(int row)
 {
@@ -488,9 +541,92 @@ void XOSCAR_TabGeneralInformation::partition_list_rowChanged_handler(int row)
         emit partition_selection_changed(tr(""));
     }
     else {
+        //cout << "DEBUG: partition_list_rowChanged_handler: row: " << row << endl;
         enablePartitionInfoWidgets(true);
 
         emit partition_selection_changed(listClusterPartitionsWidget->item(row)->text());
+    }
+
+    //cout << "DEBUG: partition_list_rowChanged_handler: currentPartitionRow: " << currentPartitionRow << endl;
+
+    // if count is 0, nothing left to save; clear out flag variables
+    if(listClusterPartitionsWidget->count() == 0) {
+        //cout << "DEBUG: partition_list_rowChanged_handler: partitions list count == 0" << endl;
+        modified = false;
+        currentPartitionRow = -1;
+    }
+    // if row is -1 must prompt here to save changes only if currentPartitionRow
+    // is != -1 meaning something was selected before. saving or reversing
+    // changes here is easy b/c we do not have to select a new item after the
+    // thread has finished. only if the save() or undo() fail or they cancel do
+    // we select the previous partition item
+    else if(row == -1) {
+        //cout << "DEBUG: partition_list_rowChanged_handler: row == -1" << endl;
+
+        if(prompt_save_changes()) {
+            // saved or undo changes, ignore
+            // undo here does not need to set the old selection b/c the new
+            // selection is -1.
+        }
+        else {
+            // leave the currentPartitionRow as is; next call to this method
+            // will result in row == currentPartitionRow which does nothing.
+            listClusterPartitionsWidget->setCurrentRow(currentPartitionRow);
+        }
+    }
+    // row is >= 0, something was selected.
+    else {
+        //cout << "DEBUG: partition_list_rowChanged_handler: row >= 0" << endl;
+
+        // will need to set the text of the partition to the text widget
+        partitionNameEditWidget->setText(listClusterPartitionsWidget->item(row)->text());
+
+        // no previous item was selected, so we only to need save the selected row
+        if(currentPartitionRow == -1) {
+            currentPartitionRow = row;
+            //cout << "DEBUG: partition_list_rowChanged_handler: (set currentPartitionRow = row): " << currentPartitionRow << endl;
+
+            /*if(isPartitionModified(currentPartitionRow)) {
+                // when would the selected row be modified while previous row was -1?
+                //cout << "DEBUG: FLUKE! previous row was -1, and newly selected row is modified!" << endl;
+            }*/
+        }
+        // if the currentPartitionRow is same as this newly selected row, then
+        // we do not want to do anything. the user probably canceled some
+        // changes so we programmatically selected the previous row.
+        else if(currentPartitionRow == row) { 
+            //cout << "DEBUG: partition_list_rowChanged_handler: currentPartitionRow == row" << endl;
+        }
+        // different item selected: must check first if the item is modified
+        else {
+            //cout << "DEBUG: partition_list_rowChanged_handler: currentPartitionRow != row" << endl;
+
+            // previous partition not modified; we need to save the new row
+            if(!isPartitionModified(currentPartitionRow)) {
+                //cout << "DEBUG: partition_list_rowChanged_handler: previous partition not modified" << endl; 
+                currentPartitionRow = row;
+            }
+            else {
+                //cout << "DEBUG: partition_list_rowChanged_handler: previous partition was modified!" << endl;
+                if(prompt_save_changes()) {
+                    // will need to add a pausing mechanism here to wait for the
+                    // thread to finish and re-select the newly selected item
+                    // since the items would be cleared out causing a potential
+                    // re-ordering of items. if the partition names must all be
+                    // unique, this will work. for now, the user will have to
+                    // manual re-select.
+                    currentPartitionRow = row;
+                }
+                else {
+                    //cout << "DEBUG: partition_list_rowChanged_handler: save failed! setting row to: " << currentPartitionRow << endl;
+                    // if cancel(), set selected row to currentPartitionRow.
+                    // since the row and currentPartitionRow would be the same
+                    // (after this most recent call), the item will be selected
+                    // yet no information will be lost.
+                    listClusterPartitionsWidget->setCurrentRow(currentPartitionRow);
+                }
+            }
+        }
     }
 }
 
@@ -506,6 +642,9 @@ void XOSCAR_TabGeneralInformation::partition_list_rowChanged_handler(int row)
  *
  *  @param result Holds the return value of the command.
  *
+ *  @todo will need to handle a few new commands such as: 
+ *        REMOVE_PARTITION,
+ *        UPDATE_PARTITION
  */
 int XOSCAR_TabGeneralInformation::handle_thread_result (CommandTask::CommandTasks command_id, 
     const QString result)
@@ -521,10 +660,23 @@ int XOSCAR_TabGeneralInformation::handle_thread_result (CommandTask::CommandTask
         // skip empty strings? otherwise we have extra partitions added
         // could also check result for empty string
         list = result.split("\n", QString::SkipEmptyParts);
+        // check for changes? they should be saved before this call
         listClusterPartitionsWidget->clear();
         for (int i = 0; i < list.size(); ++i){
-            listClusterPartitionsWidget->addItem (list.at(i));
+            // add item using new and set flag to Saved
+            QListWidgetItem *pItem = new QListWidgetItem(list.at(i));
+            QVariant var;
+            var.setValue(Saved);
+            pItem->setData(Qt::UserRole, var);
+            listClusterPartitionsWidget->addItem (pItem);
         }
+        /* *** Test Code *** 
+            QListWidgetItem *pItem = new QListWidgetItem("New_Partition0");
+            QVariant var;
+            var.setValue(Saved);
+            pItem->setData(Qt::UserRole, var);
+            listClusterPartitionsWidget->addItem (pItem);
+        // *** End Test Code ***/ 
         listClusterPartitionsWidget->update();
     } else if (command_id == CommandTask::DISPLAY_PARTITION_NODES) {
         Loading loader(&loading);
@@ -603,4 +755,123 @@ void XOSCAR_TabGeneralInformation::handle_oscar_config_result(QString list_distr
     for(int i = 0; i < list.size(); i++) {
         partitionDistroComboBox->addItem (list.at(i));
     }
+}
+
+/**
+ * @author Robert Babilon
+ *
+ * This function calls save() or undo() method in this class.
+ * If changes were made and the user wishes to save, this returns true
+ * If changes were made and the user wishes to undo the changes, this returns
+ * true.
+ * If the user wishes to cancel, this returns false.
+ */
+bool XOSCAR_TabGeneralInformation::prompt_save_changes()
+{
+    //cout << "DEBUG: prompt_save_changes: currentPartitionRow: " << currentPartitionRow << endl;
+
+    bool result = true;
+
+    if(currentPartitionRow == -1) {
+        return result;
+    }
+
+    if(isPartitionModified(currentPartitionRow)) {
+        QMessageBox msg(QMessageBox::NoIcon, tr("Save changes?"), tr("The previous partition has been modified.\n")
+                                                                + tr("Would you like to save your changes?"),
+                        QMessageBox::Save|QMessageBox::No|QMessageBox::Cancel, this);
+
+        switch(msg.exec()) {
+            case QMessageBox::Save: 
+                result = save();
+                break;
+            case QMessageBox::No:
+                result = undo();
+                break;
+            case QMessageBox::Cancel:
+                result = false;
+                break;
+        }
+    }
+    
+    return result;
+}
+
+/**
+ * @author Robert Babilon
+ *
+ * Returns true if the partition's state (stored in the data property of
+ * QListWidgetItem) is Modified or Created; otherwise this returns false.
+ *
+ * @param partitionRow The row index of the partition item to check.
+ */
+bool XOSCAR_TabGeneralInformation::isPartitionModified(int partitionRow)
+{
+    bool result = false;
+
+    if(partitionRow == -1) {
+        //cout << "DEBUG: isPartitionModfied: partitionRow == -1" << endl;
+        return result;
+    }
+
+    QListWidgetItem *pItem = listClusterPartitionsWidget->item(partitionRow);
+    QVariant var = pItem->data(Qt::UserRole);
+    PartitionState state = var.value<PartitionState>();
+
+    if(state == Modified || state == Created) {
+        result = true;
+    }
+    //cout << "DEBUG: isPartitionModified: partitionRow: " << partitionRow << " state: " << state << endl;
+
+    return result;
+}
+
+/**
+ * @author Robert Babilon
+ *
+ * Sets the partition's state (stored in the data property of QListWidgetITem)
+ * to state only if the new state is greater than the old state. If overwrite is
+ * true, then the new state will be saved to the item regardless of values.
+ *
+ * @param partitionRow The row index of partition to set the state.
+ * @param state The new state the partition should be set to.
+ * @param overwrite Send true to set the new state regarless of the old state;
+ * send false (or ignore) to set the new state based on state precedence.
+ */
+void XOSCAR_TabGeneralInformation::setPartitionItemState(int partitionRow, PartitionState state, bool overwrite/*=false*/)
+{
+    if(partitionRow == -1) return;
+
+    QListWidgetItem *pItem = listClusterPartitionsWidget->item(partitionRow);
+
+    if(pItem == NULL) {
+        return;
+    }
+
+    if(!overwrite) {
+        PartitionState oldState = pItem->data(Qt::UserRole).value<PartitionState>();
+        state = (state > oldState) ? state : oldState;
+    }
+    pItem->data(Qt::UserRole).setValue(state);
+}
+
+/**
+ * @author Robert Babilon
+ *
+ * Returns the PartitionState of the specified partition item.
+ * @param partitionRow The row index of the partition to retrieve state
+ * information for.
+ * @return PartitionStates The state of the specified partition item.
+ */
+PartitionState XOSCAR_TabGeneralInformation::partitionItemState(int partitionRow)
+{
+    if(partitionRow == -1) return Saved;
+
+    QListWidgetItem *pItem = listClusterPartitionsWidget->item(partitionRow);
+
+    if(pItem == NULL) {
+        cout << "ERROR: invalid partition item" << endl;
+        return Saved;
+    }
+    return pItem->data(Qt::UserRole).value<PartitionState>();
 }

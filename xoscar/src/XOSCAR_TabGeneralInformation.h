@@ -25,6 +25,15 @@ using namespace Ui;
 
 namespace xoscar {
 
+/** 
+ * States for the partition list widget items. The states indicate the
+ * modification status: saved (the item was loaded from oscar), modified (the
+ * user changed a property on a saved item), created (added since last save)
+ * The order of these states is significant. Changing the order or adding new
+ * states may affect XOSCAR_TabGeneralInformation::setPartitionItemState().
+ * */
+enum PartitionState { Saved, Modified, Created };
+
 class XOSCAR_TabGeneralInformation : public QWidget, public GeneralInformationForm, public XOSCAR_TabWidgetInterface
 {
 Q_OBJECT
@@ -39,7 +48,7 @@ public slots:
 	void partitionNodes_valueChanged_handler(int);
 	void add_partition_handler();
     void remove_partition_handler();
-	void save_cluster_info_handler();
+	bool save_cluster_info_handler();
 	void refresh_list_partitions();
     void refresh_partition_info();
     void setDefaultPartitionValues();
@@ -59,13 +68,22 @@ signals:
     void cluster_selection_changed(QString);
     void partition_selection_changed(QString);
 
+protected:
+    bool prompt_save_changes();
+    bool isPartitionModified(int partitionRow);
+    void setPartitionItemState(int partitionRow, PartitionState state, bool overwrite = false);
+    PartitionState partitionItemState(int partitionRow);
+
 private:
    CommandExecutionThread command_thread;
 
    int loading;
    bool v2mpkg;
+   int currentPartitionRow;
 };
 
 }
+
+Q_DECLARE_METATYPE(xoscar::PartitionState)
 
 #endif // XOSCAR_TABGENERALINFORMATION_H
