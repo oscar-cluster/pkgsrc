@@ -92,6 +92,9 @@ GetOptions(
 
 $verbose = "$ENV{RAPT_VERBOSE}" if ($ENV{RAPT_VERBOSE});
 
+print "---> $ARGV[0]\n";
+print "----> Command: " . join(" ",@ARGV) . "\n";
+
 # query default OSCAR repositories if no repo given
 if (!scalar(@repos)) {
     &get_default_repos();
@@ -229,7 +232,12 @@ if ($installroot) {
 }
 
 # run apt-get command
-my $cmd = "apt-get";
+my $cmd;
+if ($ARGV[0] eq "search" || $ARGV[0] eq "show") {
+    $cmd = "aptitude";
+} else {
+    $cmd = "apt-get";
+}
 $cmd .= " ".join(" ",@ARGV);
 
 if ($installroot) {
@@ -238,6 +246,7 @@ if ($installroot) {
 
 if ($ARGV[0] eq "search" && $name_only) {
     $cmd .= " -F \"%p\"";
+    print "---> Command: $cmd\n";
 }
 
 # other preparing commands (cf. sin)

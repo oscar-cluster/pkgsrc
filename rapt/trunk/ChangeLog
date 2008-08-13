@@ -1,3 +1,6 @@
+rapt-2.7:
+- Bug fix when searching packages or querying information about packages.
+
 rapt-2.6:
 - Bug fix: the return code should now be correct all the time.
 
