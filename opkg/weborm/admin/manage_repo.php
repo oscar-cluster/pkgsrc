@@ -25,7 +25,7 @@ echo "<form action=\"delete_packages.php\" method=\"post\">";
 if ($handle = opendir("../repos/$distro_id")) {
        while (($file = readdir($handle)) !== false) {
            if (filetype("../repos/$distro_id/$file") == "file") {
-               echo "<input type=\"radio\" name=\"group1\" value=\"$distro_id/$file\" \">$file<br/>";
+               echo "<input type=\"checkbox\" name=\"$distro_id/$file\" value=\"$distro_id/$file\">$file<br/>";
            }
        }
    }
