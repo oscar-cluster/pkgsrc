@@ -71,30 +71,35 @@ use Switch;
 
 my ($verbose, $export, $unexport, $prepare, $listexp, $name_only);
 my $installroot;
+my $distro;
 my (@repos, @repoadd, @repodel, $repolist);
 my @delfiles;
 
 Getopt::Long::Configure("pass_through");
-GetOptions( 
-        "help"          => \&help,
-        "repo=s"        => \@repos,
+GetOptions(
+        "distro=s"        => \$distro,
+        "export"        => \$export,
 #        "repoadd=s"    => \@repoadd,
 #        "repodel=s"    => \@repodel,
+        "help"          => \&help,
+        "installroot=s" => \$installroot,
+        "listexp"       => \&list_exported,
         "names-only"    => \$name_only,
+        "repo=s"        => \@repos,
         "repolist"      => \$repolist,
-        "export"        => \$export,
         "prepare"       => \$prepare,
         "unexport"      => \$unexport,
-        "listexp"       => \&list_exported,
-        "installroot=s" => \$installroot,
         "verbose|v+"    => \$verbose,
         );
 
 $verbose = "$ENV{RAPT_VERBOSE}" if ($ENV{RAPT_VERBOSE});
 
-# query default OSCAR repositories if no repo given
-if (!scalar(@repos)) {
-    &get_default_repos();
+# WARNING, we currently assume that if the distro is specified, it overwrite
+# any explicit repos (--repo option).
+my $default_repos;
+if (defined $distro) {
+    $default_repos = get_default_repos($distro);
+    @repos = split (" ", $default_repos);
 }
 
 help() if (!scalar(@repos));
@@ -164,7 +169,7 @@ for my $repo (@repos) {
 
 # install exit handler which removes the temporary
 # files and releases the lock
-END {my $rc = $?; cleanup(); exit $rc >> 8};
+END {my $rc = $?; cleanup(); if ($rc != 0) {print "ERROR during RAPT execution\n";} exit $rc};
 
 $SIG{INT} = \&cleanup;
 
@@ -177,7 +182,15 @@ $SIG{INT} = \&cleanup;
 # if command is "install" into empty image: debootstrap first
 if ($installroot) {
     if ((scalar(grep /^install$/, @ARGV) == 1) && &img_needs_bootstrap) {
-        &debootstrap($installroot, @repos);
+        if (!defined $distro) {
+            if (debootstrap($installroot, @repos)) {
+                die "ERROR: Impossible to bootstrap the Debian system";
+            }
+        } else {
+            if (debootstrap_distro ($installroot, $distro)) {
+                die "ERROR: Impossible to bootstrap the Debian system";
+            }
+        }
 
         # Debian/Sarge sucks for one point: if we want to be able to install
         # kernel packages, the /etc/kernel-img.conf file has to be created
@@ -275,6 +288,8 @@ sub help {
     print "\n";
     print "Call apt-get with _only_ the repositories passed on the command line .\n";
     print "OPTIONS can be:\n";
+    print " --distro DISTRO_ID : specify the Linux distribution we want to\n";
+    print "                      deal with.";
     print " --repo URL : repository which should be included in apt actions\n";
     print "              (multiple --repo options are possible).\n";
     print " --installroot DIR : install/remove packages to/from image DIR\n";
@@ -306,57 +321,36 @@ sub cleanup {
     &restore_aptlist;
 }
 
-sub get_default_repos {
-    # if OSCAR_HOME is defined, we're probably on a master
-    my $dquery;
-    if ($ENV{OSCAR_HOME}) {
-        $dquery = "$ENV{OSCAR_HOME}/scripts/distro-query";
-    } else {
-        $dquery = "/usr/bin/distro-query";
-    }
+# Get the default repos for the local distro.
+# TODO: we should be able to query the default repo for other distros (i.e.,
+# not the local one).
+#
+# Input: distro, the distro ID (OS_Detect syntax) or undef for the local distro
+# Return: array with the default repos for the specified distro (local distro 
+#         if no distro specified), undef if error.
+sub get_default_repos ($) {
+    my $distro_id = shift;
+    my $os;
 
-	if (-x $dquery) {
-	    if ($installroot && (-x "$installroot/bin/bash")) {
-	        $dquery = $dquery . " --image $installroot";
-	    }
-	    print "Executing: $dquery\n" if ($verbose);
-	    local *CMD;
-	    open CMD, "$dquery |" or die "Could not run $dquery: $!";
-	    while (<CMD>) {
-	        chomp;
-	        if (/Distro package url : (\S.*)$/) {
-	            push @repos, split(",",$1);
-	        } elsif (/OSCAR package pool : (\S.*)$/) {
-	            push @repos, split(",",$1);
-	        }
-	    }
-	    close CMD;
-	} else {
-	    print "distro-query not found ($dquery)\n";
-	    print "Unable to detect default repositories.\n";
+    if (!defined $distro_id) {
+        $os = OSCAR::OCA::OS_Detect::open ();
+    } else {
+        require OSCAR::PackagePath;
+        my ($distro, $ver, $arch) =
+            OSCAR::PackagePath::decompose_distro_id ($distro_id);
+        $os = OSCAR::OCA::OS_Detect::open (fake=>{ distro=>$distro,
+                                                   distro_version=>$ver,
+                                                   arch=>$arch});
     }
-	my $master = gethostbyname("oscar_server");
-	if ($master) {
-	    my $node=`hostname`; chomp $node;
-	    print "Executing: ssh oscar_server \\\$OSCAR_HOME/scripts/distro-query --node $node\n" if ($verbose);
-	    local *CMD;
-	    open CMD, "ssh oscar_server \\\$OSCAR_HOME/scripts/distro-query --node $node |";
-	    while (<CMD>) {
-		chomp;
-		if (/Distro package url : (\S+)$/) {
-            push @repos, split(",",$1);
-		} elsif (/OSCAR package pool : (\S+)$/) {
-            push @repos, split(",",$1);
-		}
-	    }
-	    close CMD;
-	} #else {
-# 	    print "You are not on an OSCAR cluster. You must specify a repository!\n";
-# 	    help();
-# 	}
+    my $distro_repos = OSCAR::PackagePath::distro_repo_url (os=>$os);
+    my $oscar_repos = OSCAR::PackagePath::oscar_repo_url (os=>$os);
+
     if ($verbose) {
-        print "Repositories detected:\n\t".join("\n\t",@repos)."\n";
+        print "Repositories detected:\n".
+              "\t$distro_repos\n".
+              "\t$oscar_repos\n";
     }
+    return "$distro_repos $oscar_repos";
 }
 
 ################################################################################
@@ -601,12 +595,12 @@ sub uninstall_fake_start_stop_daemon {
 # Output: 0 on success, non-zero on failure.
 
     my $imgpath=shift;
-	
+
     print "Uninstalling fake start-stop-daemon.\n" if $verbose;
     unlink "$imgpath/sbin/start-stop-daemon" or return 1;
     rename "$imgpath/sbin/start-stop-daemon.RAPT.tmp", 
 	"$imgpath/sbin/start-stop-daemon" or return 1;
-}	    
+}
 
 ################################################################################
 # We try to find the mirror we use for the Debian packages when using online   #
@@ -634,7 +628,7 @@ sub get_debootstrap_mirror_and_codename (@) {
 
     # For each repo, we scan files in /tftpboot/distro. If one repo is in a
     # .url file, we have the distro id!
-    
+
     # We get the list of .url files in /tftpboot/distro
     my @files = OSCAR::FileUtils::get_files_in_path ("/tftpboot/distro");
     OSCAR::Utils::print_array (@files);
@@ -685,37 +679,28 @@ sub distro_to_codename ($) {
     }
 }
 
-###############################################################################
-# Debootstrap is used to install the base system into a chroot                #
-#                                                                             #
-# Input:      target, suite, mirror                                           #
-# Returns:    0 if failure, 1 if ok                                           #
-###############################################################################
-sub debootstrap ($@) {
-# debootstrap is used to install the base system into a chroot
-# Input:      target, suite, mirror
-# Returns:    0 if failure, 1 if ok
-    my ($target, @repos) = @_;
-
-    my ($mirror, $distro) = get_debootstrap_mirror_and_codename (@repos);
-    my $codename = distro_to_codename ($distro);
+# Return: -1 if error, 0 else.
+sub do_debootstrap ($$$$) {
+    my ($target, $mirror, $arch, $codename) = @_;
 
     if (system("which debootstrap 2>/dev/null")) {
-        print "ERROR: Could not find command debootstrap!\n";
-        exit 1;
+        carp "ERROR: Could not find command debootstrap!\n";
+        return -1;
     }
 
     # create directory if not existing
     if (! -d "$target") {
         !system("mkdir -p $target")
-          or croak("Could not make directory $target: $!");
+          or (carp("Could not make directory $target: $!"), return -1);
     }
 
-    my $cmd = "debootstrap --verbose $codename $target $mirror";
+    my $cmd = "debootstrap --verbose ";
+    $cmd .= "--arch $arch " if defined $arch;
+    $cmd .= "$codename $target $mirror";
     print "Executing: $cmd\n" if $verbose;
     if (system($cmd)) {
-        print "Failed to debootstrap, aborting.\n";
-        return 0;
+        carp "ERROR: Failed to debootstrap, aborting.\n";
+        return -1;
     }
     # Debian/Sarge sucks for one point: if we want to be able to install
     # kernel packages, the /etc/kernel-img.conf file has to be created
@@ -723,10 +708,91 @@ sub debootstrap ($@) {
     $cmd = "echo \"do_initrd = Yes\" > $target/etc/kernel-img.conf";
     print ("Executing: $cmd\n");
     if (system ($cmd)) {
-        print ("Error: cannot create the file $target/etc/kernel-img.conf");
-        return 0;
+        carp ("Error: cannot create the file $target/etc/kernel-img.conf");
+        return -1;
     }
-    return 1;
+    return 0;
+}
+
+# Return: -1 if error, 0 else.
+sub debootstrap_distro ($$) {
+    my ($target, $distro_id) = @_;
+
+    if (!defined $target || !defined $distro_id) {
+        carp "ERROR: Invalid parameters";
+        return -1;
+    }
+
+    print "---> $distro_id\n";
+    #
+    # We need the distro repo that we can use as debootstrap mirror, the 
+    # architecture and the distro codename.
+    #
+
+    # We get the debootstrap mirror
+    require OSCAR::PackagePath;
+    my ($distro, $ver, $arch) = 
+        OSCAR::PackagePath::decompose_distro_id ($distro_id);
+    my $os = OSCAR::OCA::OS_Detect::open (fake=>{ distro=>$distro,
+                                                distro_version=>$ver,
+                                                arch=>$arch});
+    if (!defined $os) {
+        carp "ERROR: Impossible to detect the distro ($distro, $ver, $arch)";
+        return -1;
+    }
+    my $distro_repos = OSCAR::PackagePath::distro_repo_url (os=>$os);
+    my @repo = split (" ", $distro_repos);
+    if (scalar @repo != 1) {
+        carp "ERROR: we can only deal with one and only one repository for ".
+             "debootstrap; we have ". scalar @repo ." repositories";
+        return -1;
+    }
+    my @data = split (/\+/, $repo[0]);
+    my $mirror = $data[0];
+    print "Debootstrap mirror: $mirror\n" if $verbose;
+
+    # We actually already have the architecture
+    print "Architecture: $arch\n" if $verbose;
+
+    # Now we find the distro codename
+    my $codename = distro_to_codename ($distro_id);
+    print "Distro codename: $codename\n" if $verbose;
+
+    if (do_debootstrap ($target, $mirror, $arch, $codename)) {
+        carp "ERROR: Impossible to run debootstrap ".
+             "($target, $mirror, $arch, $codename)";
+        return -1;
+    }
+
+    return 0;
+}
+
+################################################################################
+# Debootstrap is used to install the base system into a chroot                 #
+#                                                                              #
+# !!!!WARNING: Developers should not use this function anymore but prefer      #
+# debootstrap_distro, for which the implementation is less complex. In order   #
+# to use it, you must specify the distro (rapt --distro <distro_id>) instead   #
+# of repositories!!!!                                                          #
+# TODO: make this function deprecated when OSCAR & systeminstaller will fully  #
+#       support the direct specification of distro ID rather than repos.       #
+#                                                                              #
+# Input:      target, suite, mirror                                            #
+# Returns:    -1 if failure, 0 if ok                                            #
+################################################################################
+sub debootstrap ($@) {
+    my ($target, @repos) = @_;
+
+    my ($mirror, $distro) = get_debootstrap_mirror_and_codename (@repos);
+    my $codename = distro_to_codename ($distro);
+
+    if (do_debootstrap ($target, $mirror, undef, $codename)) {
+        carp "ERROR: Impossible to run debootstrap ".
+             "($target, $mirror, $codename)";
+        return -1;
+    }
+
+    return 0;
 }
 
 #######

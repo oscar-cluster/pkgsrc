@@ -2,6 +2,9 @@ rapt-2.8 (not yet released):
 - Fix the codename detection for Ubuntu (detect gutsy and hardy).
 - Implement a correct usage of debootstrap, it previously worked only with
 Etch.
+- Include the capability of specifying the distro ID, which allows users to
+not have to specify all other details (such as repositories). It also
+simplifies the distro bootstrapping.
 
 rapt-2.7:
 - Bug fix when searching packages or querying information about packages.
