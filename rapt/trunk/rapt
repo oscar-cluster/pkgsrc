@@ -177,8 +177,7 @@ $SIG{INT} = \&cleanup;
 # if command is "install" into empty image: debootstrap first
 if ($installroot) {
     if ((scalar(grep /^install$/, @ARGV) == 1) && &img_needs_bootstrap) {
-        # Warning: distro codename is detected from local installation...
-        &debootstrap($installroot,&detect_codename);
+        &debootstrap($installroot, @repos);
 
         # Debian/Sarge sucks for one point: if we want to be able to install
         # kernel packages, the /etc/kernel-img.conf file has to be created
@@ -625,30 +624,81 @@ sub uninstall_fake_start_stop_daemon {
 # Input: None.                                                                 #
 # Return: the mirror URL, empty string if no mirror is found.                  #
 ################################################################################
-sub get_debootstrap_mirror () {
+sub get_debootstrap_mirror_and_codename (@) {
+    my @repos = @_;
     my $mirror = "";
+    require OSCAR::FileUtils;
+    require OSCAR::Utils;
 
-    foreach my $r (@repos) {
-        my $distro_repo = `grep -r $r /tftpboot/distro`;
-        if ($distro_repo ne "") {
-            my $url_file;
-            ($url_file, $distro_repo) = split (".url:", $distro_repo);
-            my @array = split (/\+/, $distro_repo);
-            $mirror = $array[0];
+    OSCAR::Utils::print_array (@repos);
+
+    # For each repo, we scan files in /tftpboot/distro. If one repo is in a
+    # .url file, we have the distro id!
+    
+    # We get the list of .url files in /tftpboot/distro
+    my @files = OSCAR::FileUtils::get_files_in_path ("/tftpboot/distro");
+    OSCAR::Utils::print_array (@files);
+    my @url_files;
+    foreach my $f (@files) {
+        if ($f =~ /^(.*)\.url$/) {
+            push (@url_files, "/tftpboot/distro/$f");
         }
     }
 
-    return $mirror;
+    OSCAR::Utils::print_array (@url_files);
+
+    my $file;
+    foreach my $r (@repos) {
+        foreach my $url (@url_files) {
+            if (OSCAR::FileUtils::line_in_file ($r, $url) == 1) {
+                $file = $url;
+                $mirror = $r;
+                last;
+            }
+        }
+    }
+    if (!defined $file) {
+        carp "ERROR: Impossible to get the URL for the distro";
+        return "";
+    }
+
+    require File::Basename;
+    my $distro = File::Basename::fileparse($file,".url");
+    my @data = split (/\+/, $mirror);
+    $mirror = $data[0];
+    print "----> RAPT: we found the target repo for debootstrap ".
+          "($mirror, $distro)\n" if $verbose;
+    return ($mirror, $distro);
 }
 
-sub debootstrap ($$$) {
+sub distro_to_codename ($) {
+    my $distro = shift;
+
+    if ($distro =~ /^debian-4-(.*)$/) {
+        return "etch";
+    } elsif ($distro =~ /^ubuntu-7-(.*)$/) {
+        return "gutsy";
+    } elsif ($distro =~ /^ubuntu-8-(.*)$/) {
+        return "hardy";
+    } else {
+        return undef;
+    }
+}
+
+###############################################################################
+# Debootstrap is used to install the base system into a chroot                #
+#                                                                             #
+# Input:      target, suite, mirror                                           #
+# Returns:    0 if failure, 1 if ok                                           #
+###############################################################################
+sub debootstrap ($@) {
 # debootstrap is used to install the base system into a chroot
 # Input:      target, suite, mirror
 # Returns:    0 if failure, 1 if ok
-    my $target = shift;
-    my $suite = shift;
+    my ($target, @repos) = @_;
 
-    my $mirror = get_debootstrap_mirror ();
+    my ($mirror, $distro) = get_debootstrap_mirror_and_codename (@repos);
+    my $codename = distro_to_codename ($distro);
 
     if (system("which debootstrap 2>/dev/null")) {
         print "ERROR: Could not find command debootstrap!\n";
@@ -661,7 +711,7 @@ sub debootstrap ($$$) {
           or croak("Could not make directory $target: $!");
     }
 
-    my $cmd = "debootstrap --verbose $suite $target $mirror";
+    my $cmd = "debootstrap --verbose $codename $target $mirror";
     print "Executing: $cmd\n" if $verbose;
     if (system($cmd)) {
         print "Failed to debootstrap, aborting.\n";
@@ -1047,7 +1097,7 @@ sub detect_codename {
     if (!$codename) {
         croak("Could not detect distribution codename!");
     }
-    if ($codename !~ /^(etch|breezy|ubuntu)$/) {
+    if ($codename !~ /^(etch|breezy|gutsy|hardy)$/) {
         croak("Unsupported distribution codename: $codename\n");
     }
     return $codename;
@@ -1100,7 +1150,15 @@ sub detect_codename_dir {
             require OSCAR::PackagePath;
             my ($d, $v, $a) = 
                 OSCAR::PackagePath::decompose_distro_id ($distro_id);
-            return $d if ($d eq "ubuntu");
+            if ($d eq "ubuntu") {
+                if ($v eq "7.10") {
+                    return "gutsy";
+                } elsif ($v eq "8.04") {
+                    return "hardy";
+                } else {
+                    return "unknow-ubuntu ($d-$v-$a)";
+                }
+            }
         }
 
         # the codename for debian distribution is supposed to be the first
