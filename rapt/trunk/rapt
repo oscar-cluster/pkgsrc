@@ -56,8 +56,6 @@
 #
 # # # #
 
-
-
 use strict;
 use Getopt::Long;
 use IO::File;
@@ -66,8 +64,6 @@ use File::Basename;
 use File::Copy;
 use Carp;
 use Switch;
-# add the line below when ready for it
-#use OSCAR::PackMan;
 
 my ($verbose, $export, $unexport, $prepare, $listexp, $name_only);
 my $installroot;
@@ -112,8 +108,8 @@ if (check_repos (@repos)) {
 
 my @arches = get_arch_repos(@repos);
 if (scalar(@arches) == 0) {
-    print "Warning: Impossible to detect repositories architecture ".
-          "(normal in case of online repo(s)).\n";
+    print "[INFO] Impossible to detect repositories architecture ".
+          "(normal in case of online repo(s)).\n\n" if $verbose;
 }
 
 print "Supported architecture(s): [".join (" ", @arches)."]\n" if $verbose;
@@ -723,7 +719,6 @@ sub debootstrap_distro ($$) {
         return -1;
     }
 
-    print "---> $distro_id\n";
     #
     # We need the distro repo that we can use as debootstrap mirror, the 
     # architecture and the distro codename.
