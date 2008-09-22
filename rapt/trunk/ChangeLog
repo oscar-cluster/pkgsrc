@@ -1,4 +1,4 @@
-rapt-2.8 (not yet released):
+rapt-2.8:
 - Fix the codename detection for Ubuntu (detect gutsy and hardy).
 - Implement a correct usage of debootstrap, it previously worked only with
 Etch.
