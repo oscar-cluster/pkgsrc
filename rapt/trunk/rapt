@@ -107,10 +107,6 @@ if (check_repos (@repos)) {
 }
 
 my @arches = get_arch_repos(@repos);
-if (scalar(@arches) == 0) {
-    print "[INFO] Impossible to detect repositories architecture ".
-          "(normal in case of online repo(s)).\n\n" if $verbose;
-}
 
 print "Supported architecture(s): [".join (" ", @arches)."]\n" if $verbose;
 
