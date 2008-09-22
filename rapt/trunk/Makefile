@@ -39,3 +39,4 @@ mrproper: clean
 clean:
 	rm -f *~
 	rm -f rapt-*.tar.gz
+	rm -rf deb
