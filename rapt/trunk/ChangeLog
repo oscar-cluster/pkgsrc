@@ -1,3 +1,9 @@
+rapt-2.8.1:
+- Fix a bug in get_debootstrap_mirror_and_codename: bad return code check when
+searching for a specific repositories in configuration files.
+- Fix a bug when specifying the architecture (we were not always translating 
+"x86_64" to "amd64").
+
 rapt-2.8:
 - Fix the codename detection for Ubuntu (detect gutsy and hardy).
 - Implement a correct usage of debootstrap, it previously worked only with

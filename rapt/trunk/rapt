@@ -636,7 +636,7 @@ sub get_debootstrap_mirror_and_codename (@) {
     my $file;
     foreach my $r (@repos) {
         foreach my $url (@url_files) {
-            if (OSCAR::FileUtils::line_in_file ($r, $url) == 1) {
+            if (OSCAR::FileUtils::line_in_file ($r, $url) != -1) {
                 $file = $url;
                 $mirror = $r;
                 last;
@@ -687,11 +687,12 @@ sub do_debootstrap ($$$$) {
     }
 
     my $cmd = "debootstrap --verbose ";
-    $cmd .= "--arch $arch " if defined $arch;
+    $arch = "amd64" if $arch eq "x86_64";
+    $cmd .= "--arch=$arch " if defined $arch;
     $cmd .= "$codename $target $mirror";
     print "Executing: $cmd\n" if $verbose;
     if (system($cmd)) {
-        carp "ERROR: Failed to debootstrap, aborting.\n";
+        carp "ERROR: Failed to debootstrap ($cmd), aborting.\n";
         return -1;
     }
     # Debian/Sarge sucks for one point: if we want to be able to install
