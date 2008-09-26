@@ -149,15 +149,16 @@ bool XOSCAR_TabGeneralInformation::undo()
     else { 
         //cout << "DEBUG: undo: current row was modified or saved; setting status to saved" << endl;
 
-        QListWidgetItem *pItem = listClusterPartitionsWidget->item(currentPartitionRow);
-        if(pItem != NULL) {
-            pItem->data(Qt::UserRole).setValue(Saved);
-        }
+        // set this row to Saved state and overwrite any previous values
+        setPartitionItemState(currentPartitionRow, Saved, true);
 
         //cout << "DEBUG: undo: setting current row to: " << currentPartitionRow << endl;
         int temp = currentPartitionRow;
         currentPartitionRow = -1;
         listClusterPartitionsWidget->setCurrentRow(temp);
+
+        // refresh the list of partitions to undo all changes to this partition
+        refresh_list_partitions();
     }
 
 	return true;
@@ -852,7 +853,10 @@ void XOSCAR_TabGeneralInformation::setPartitionItemState(int partitionRow, Parti
         PartitionState oldState = pItem->data(Qt::UserRole).value<PartitionState>();
         state = (state > oldState) ? state : oldState;
     }
-    pItem->data(Qt::UserRole).setValue(state);
+
+    QVariant data = pItem->data(Qt::UserRole);
+    data.setValue(state);
+    pItem->setData(Qt::UserRole, data);
 }
 
 /**
