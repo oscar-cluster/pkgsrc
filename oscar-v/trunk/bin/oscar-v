@@ -65,6 +65,7 @@ if ($add) {
     OSCAR::Logger::oscar_log_section ("Adding a new VM ($add)");
     require OSCAR::ImageMgt;
     my %vars = OSCAR::ImageMgt::get_image_default_settings ();
+    $vars{distro} = $distro;
     if (OSCAR::ImageMgt::create_image ($add, %vars)) {
         die "ERROR: Impossible to create the image for $distro";
     }
