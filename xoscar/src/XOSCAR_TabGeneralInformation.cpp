@@ -25,7 +25,7 @@ XOSCAR_TabGeneralInformation::XOSCAR_TabGeneralInformation(QWidget* parent)
 {
     v2mpkg = false;
     loading = 0;
-    currentPartitionRow = -1;
+    setModifiedFlag(false);
 
     // register the PartitionState enum with Qt in order to use it with the
     // QListWidgetItem::data() property
@@ -122,39 +122,30 @@ XOSCAR_TabWidgetInterface::SaveResult XOSCAR_TabGeneralInformation::undo()
 {
     //cout << "DEBUG: undo()" << endl;
 
-	modified = false;
-
     SaveResult result = NoChange;
 
     if(currentPartitionRow == -1) {
-        //cout << "DEBUG: undo: currentPartitionRow == -1" << endl;
         return result;
     }
-    //cout << "DEBUG: undo: currentPartitionRow != -1" << endl;
     
+    int tempRow = currentPartitionRow;
+    setModifiedFlag(false);
+
     // get the state flag, if modified, then undo the changes by calling
     // refresh on this partition; if created, remove the item
-    if(partitionItemState(currentPartitionRow) == Created) {
-        //cout << "DEBUG: undo: current row was created" << endl;
-        int temp = currentPartitionRow;
-        currentPartitionRow = -1;
-        delete listClusterPartitionsWidget->takeItem(temp);
+    if(partitionItemState(tempRow) == Created) {
+        delete listClusterPartitionsWidget->takeItem(tempRow);
+        // leave result as NoChange
     }
     else { 
-        //cout << "DEBUG: undo: current row was modified or saved; setting status to saved" << endl;
-
         // set this row to Saved state and overwrite any previous values
-        setPartitionItemState(currentPartitionRow, Saved, true);
-
-        //cout << "DEBUG: undo: setting current row to: " << currentPartitionRow << endl;
-        int temp = currentPartitionRow;
-        currentPartitionRow = -1;
-        listClusterPartitionsWidget->setCurrentRow(temp);
+        setPartitionItemState(tempRow, Saved, true);
+        listClusterPartitionsWidget->setCurrentRow(tempRow);
 
         // refresh the list of partitions to undo all changes to this partition
         refresh_list_partitions();
 
-        result = Saving;
+        result = Undoing;
     }
 
 	return result;
@@ -177,7 +168,7 @@ void XOSCAR_TabGeneralInformation::partitionName_textEdited_handler(const QStrin
     }
     listClusterPartitionsWidget->currentItem()->setText(text);
 
-	modified = true;
+    setModifiedFlag();
     setPartitionItemState(currentPartitionRow, Modified);
 	emit widgetContentsModified(this);
 }
@@ -193,7 +184,7 @@ void XOSCAR_TabGeneralInformation::partitionName_textEdited_handler(const QStrin
 void XOSCAR_TabGeneralInformation::partitionDistro_currentIndexChanged_handler(int index)
 {
 	if(!loading) {
-        modified = true;
+        setModifiedFlag();
         setPartitionItemState(currentPartitionRow, Modified);
         emit widgetContentsModified(this);
     }
@@ -212,7 +203,7 @@ void XOSCAR_TabGeneralInformation::partitionDistro_currentIndexChanged_handler(i
 void XOSCAR_TabGeneralInformation::partitionNodes_valueChanged_handler(int index)
 {
 	if(loading) return;
-    modified = true;
+    setModifiedFlag();
     setPartitionItemState(currentPartitionRow, Modified);
     emit widgetContentsModified(this);
 }
@@ -231,7 +222,7 @@ void XOSCAR_TabGeneralInformation::partitionNodes_valueChanged_handler(int index
 void XOSCAR_TabGeneralInformation::virtualMachinesCheckBox_stateChanged_handler(int state)
 {
     if(!loading) {
-        modified = true;
+        setModifiedFlag();
         setPartitionItemState(currentPartitionRow, Modified);
         emit widgetContentsModified(this);
         
@@ -253,7 +244,7 @@ void XOSCAR_TabGeneralInformation::virtualMachinesCheckBox_stateChanged_handler(
 void XOSCAR_TabGeneralInformation::virtualMachinesComboBox_currentIndexChanged_handler(int index)
 {
     if(!loading) { 
-        modified = true;
+        setModifiedFlag();
         setPartitionItemState(currentPartitionRow, Modified);
         emit widgetContentsModified(this);
     }
@@ -279,7 +270,7 @@ void XOSCAR_TabGeneralInformation::add_partition_handler()
     // has finished all of it's pending tasks.
     // This current solution requires the user to click OK; note this is
     // temporary. a correct solution will be more involved.
-    if(result == Saving) {
+    if(result == Saving || result == Undoing) {
         QMessageBox msg(QMessageBox::NoIcon,
                     QString("Test Message Box"), 
                     QString("This is a temporary pausing mechanism.\nClick OK when you feel the thread has finished it's duties."),
@@ -307,7 +298,7 @@ void XOSCAR_TabGeneralInformation::add_partition_handler()
     //cout << "DEBUG: add_partition_handler: setting row to: " << listClusterPartitionsWidget->count()-1 << endl;
     listClusterPartitionsWidget->setCurrentRow(listClusterPartitionsWidget->count()-1);
 
-	modified = true;
+    setModifiedFlag();
 	emit widgetContentsModified(this);
 }
 
@@ -328,8 +319,7 @@ void XOSCAR_TabGeneralInformation::remove_partition_handler()
         return;
     }
 
-    currentPartitionRow = -1;
-    modified = false;
+    setModifiedFlag(false);
     delete listClusterPartitionsWidget->takeItem(listClusterPartitionsWidget->currentRow());
 }
 
@@ -452,8 +442,7 @@ XOSCAR_TabWidgetInterface::SaveResult XOSCAR_TabGeneralInformation::save_cluster
             args << tmp.c_str();
         }
 
-        currentPartitionRow = -1;
-        modified = false;
+        setModifiedFlag(false);
         result = Saving;
         command_thread.init (CommandTask::ADD_PARTITION, args);
 
@@ -554,8 +543,7 @@ void XOSCAR_TabGeneralInformation::partition_list_rowChanged_handler(int row)
     // if count is 0, nothing left to save; clear out flag variables
     if(listClusterPartitionsWidget->count() == 0) {
         //cout << "DEBUG: partition_list_rowChanged_handler: partitions list count == 0" << endl;
-        modified = false;
-        currentPartitionRow = -1;
+        setModifiedFlag(false);
     }
     // if row is -1 must prompt here to save changes only if currentPartitionRow
     // is != -1 meaning something was selected before. saving or reversing
@@ -865,10 +853,10 @@ void XOSCAR_TabGeneralInformation::setPartitionItemState(int partitionRow, Parti
 /**
  * @author Robert Babilon
  *
- * Returns the PartitionState of the specified partition item.
+ * Returns the xoscar::PartitionState of the specified partition item.
  * @param partitionRow The row index of the partition to retrieve state
  * information for.
- * @return PartitionStates The state of the specified partition item.
+ * @return xoscar::PartitionState The state of the specified partition item.
  */
 PartitionState XOSCAR_TabGeneralInformation::partitionItemState(int partitionRow)
 {
@@ -881,4 +869,18 @@ PartitionState XOSCAR_TabGeneralInformation::partitionItemState(int partitionRow
         return Saved;
     }
     return pItem->data(Qt::UserRole).value<PartitionState>();
+}
+
+/**
+ * @author Robert Babilon
+ *
+ * If state is false, XOSCAR_TabGeneralInformation::currentPartitionRow is set to -1.
+ * @param state The new state for the XOSCAR_TabGeneralInformation::modified flag.
+ */
+void XOSCAR_TabGeneralInformation::setModifiedFlag(bool state/*=true*/)
+{
+    if(state == false) {
+        currentPartitionRow = -1;
+    }
+    this->modified = state;
 }

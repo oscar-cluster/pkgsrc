@@ -73,6 +73,7 @@ protected:
     bool isPartitionModified(int partitionRow);
     void setPartitionItemState(int partitionRow, PartitionState state, bool overwrite = false);
     PartitionState partitionItemState(int partitionRow);
+    void setModifiedFlag(bool state = true);
 
 private:
    CommandExecutionThread command_thread;
