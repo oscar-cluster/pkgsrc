@@ -26,6 +26,7 @@ XOSCAR_TabGeneralInformation::XOSCAR_TabGeneralInformation(QWidget* parent)
     v2mpkg = false;
     loading = 0;
     setModifiedFlag(false);
+    wait_gipopup = NULL;
 
     // register the PartitionState enum with Qt in order to use it with the
     // QListWidgetItem::data() property
@@ -98,7 +99,7 @@ XOSCAR_TabGeneralInformation::~XOSCAR_TabGeneralInformation()
  */
 XOSCAR_TabWidgetInterface::SaveResult XOSCAR_TabGeneralInformation::save()
 {
-    //cout << "DEBUG: save()" << endl;
+    cout << "DEBUG: save()" << endl;
 
     SaveResult result = save_cluster_info_handler();
     if(result == Saving) {
@@ -142,6 +143,7 @@ XOSCAR_TabWidgetInterface::SaveResult XOSCAR_TabGeneralInformation::undo()
         setPartitionItemState(tempRow, Saved, true);
         listClusterPartitionsWidget->setCurrentRow(tempRow);
 
+        showModalDialog(tr("Clears changes..."));
         // refresh the list of partitions to undo all changes to this partition
         refresh_list_partitions();
 
@@ -254,32 +256,39 @@ void XOSCAR_TabGeneralInformation::virtualMachinesComboBox_currentIndexChanged_h
  * @author Geoffroy Vallee.
  *
  * Slot that handles the click on the "add partition" button.
- *
- * @todo Find a good name by default that avoids conflicts if the user does not
- * change it.
- * @todo Check if a cluster is selected.
  */
 void XOSCAR_TabGeneralInformation::add_partition_handler()
 {
     //cout << "DEBUG: add_partition_handler: ENTER" << endl;
 
+    // connect slot
+    connect(this, SIGNAL(command_thread_tasks_done()),
+            this, SLOT(add_partition()));
+
     SaveResult result = prompt_save_changes();
 
-    // this is still a problem dispite any fancy thread management system. here
-    // we'll need to "pause" the GUI by using a dialog and wait until the thread
-    // has finished all of it's pending tasks.
-    // This current solution requires the user to click OK; note this is
-    // temporary. a correct solution will be more involved.
-    if(result == Saving || result == Undoing) {
-        QMessageBox msg(QMessageBox::NoIcon,
-                    QString("Test Message Box"), 
-                    QString("This is a temporary pausing mechanism.\nClick OK when you feel the thread has finished it's duties."),
-                    QMessageBox::Ok);
-        msg.exec();
+    if(result == SaveFailed || result == UserCanceled) {
+        // disconnect slot
+        disconnect(this, SIGNAL(command_thread_tasks_done()),
+                   this, SLOT(add_partition()));
     }
-    else if(result != NoChange) {
-        return;
+    else if(result == NoChange) {
+        add_partition();
     }
+}
+
+/**
+ * @author Robert Babilon
+ *
+ * Slot that adds a new item to the list of partitions.
+ *
+ * @todo Find a good name by default that avoids conflicts if the user does not
+ * change it.
+ */
+void XOSCAR_TabGeneralInformation::add_partition()
+{
+    disconnect(this, SIGNAL(command_thread_tasks_done()),
+               this, SLOT(add_partition()));
 
     // must have a cluster selected in order to add a partition to it
     if (listOscarClustersWidget->currentRow() == -1) {
@@ -295,7 +304,6 @@ void XOSCAR_TabGeneralInformation::add_partition_handler()
 
     setDefaultPartitionValues();
 
-    //cout << "DEBUG: add_partition_handler: setting row to: " << listClusterPartitionsWidget->count()-1 << endl;
     listClusterPartitionsWidget->setCurrentRow(listClusterPartitionsWidget->count()-1);
 
     setModifiedFlag();
@@ -408,6 +416,8 @@ void XOSCAR_TabGeneralInformation::refresh_partition_info()
  */
 XOSCAR_TabWidgetInterface::SaveResult XOSCAR_TabGeneralInformation::save_cluster_info_handler()
 {
+    cout << "DEBUG: save_cluster_info_handler()" << endl;
+
     SaveResult result = NoChange;
 
     if(!isPartitionModified(currentPartitionRow)) {
@@ -444,6 +454,8 @@ XOSCAR_TabWidgetInterface::SaveResult XOSCAR_TabGeneralInformation::save_cluster
 
         setModifiedFlag(false);
         result = Saving;
+
+        showModalDialog(tr("Saves changes..."));
         command_thread.init (CommandTask::ADD_PARTITION, args);
 
         /* We unset the selection of the partition is order to be able to update
@@ -718,7 +730,14 @@ int XOSCAR_TabGeneralInformation::handle_thread_result (CommandTask::CommandTask
 void XOSCAR_TabGeneralInformation::command_thread_finished()
 {
     if(!command_thread.isEmpty()) { 
+        // here we could update the text of the popup to the next command
         command_thread.start();
+    }
+    else {
+        if(wait_gipopup != NULL) {
+            wait_gipopup->threadNotify();
+        }
+        emit command_thread_tasks_done();
     }
 }
 
@@ -760,8 +779,6 @@ void XOSCAR_TabGeneralInformation::handle_oscar_config_result(QString list_distr
  */
 XOSCAR_TabWidgetInterface::SaveResult XOSCAR_TabGeneralInformation::prompt_save_changes()
 {
-    //cout << "DEBUG: prompt_save_changes: currentPartitionRow: " << currentPartitionRow << endl;
-
     SaveResult result = NoChange;
 
     if(currentPartitionRow == -1) {
@@ -802,7 +819,6 @@ bool XOSCAR_TabGeneralInformation::isPartitionModified(int partitionRow)
     bool result = false;
 
     if(partitionRow == -1) {
-        //cout << "DEBUG: isPartitionModfied: partitionRow == -1" << endl;
         return result;
     }
 
@@ -813,7 +829,6 @@ bool XOSCAR_TabGeneralInformation::isPartitionModified(int partitionRow)
     if(state == Modified || state == Created) {
         result = true;
     }
-    //cout << "DEBUG: isPartitionModified: partitionRow: " << partitionRow << " state: " << state << endl;
 
     return result;
 }
@@ -883,4 +898,20 @@ void XOSCAR_TabGeneralInformation::setModifiedFlag(bool state/*=true*/)
         currentPartitionRow = -1;
     }
     this->modified = state;
+}
+
+/**
+ * @author Robert Babilon
+ * Method to show the generic wait dialog when processing command tasks.
+ * @param message The initial message to set to the dialogs label.
+ */
+void XOSCAR_TabGeneralInformation::showModalDialog(QString message)
+{
+    if(wait_gipopup == NULL) {
+        wait_gipopup = new GenericWaitDialog(this);
+        wait_gipopup->setModal(true);
+    }
+    wait_gipopup->setLabelText(message);
+    wait_gipopup->show();
+    wait_gipopup->startTimer();
 }

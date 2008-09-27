@@ -20,6 +20,7 @@
 #include "XOSCAR_TabWidgetInterface.h"
 #include "ui_xoscar_generalinformation.h"
 #include "CommandExecutionThread.h"
+#include "Generic_WaitDialog.h"
 
 using namespace Ui;
 
@@ -62,11 +63,14 @@ public slots:
     void virtualMachinesCheckBox_stateChanged_handler(int state);
     void virtualMachinesComboBox_currentIndexChanged_handler(int index);
     void command_thread_finished();
+    void showModalDialog(QString message);
+    void add_partition();
 
 signals:
     void widgetContentsModified(QWidget* widget);
     void cluster_selection_changed(QString);
     void partition_selection_changed(QString);
+    void command_thread_tasks_done();
 
 protected:
     SaveResult prompt_save_changes();
@@ -81,6 +85,8 @@ private:
    int loading;
    bool v2mpkg;
    int currentPartitionRow;
+
+   GenericWaitDialog* wait_gipopup;
 };
 
 }
