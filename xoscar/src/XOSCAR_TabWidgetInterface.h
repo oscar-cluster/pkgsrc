@@ -22,13 +22,14 @@ namespace xoscar {
 
 class XOSCAR_TabWidgetInterface
 {
-
 public:
+    enum SaveResult { Saving, Undoing, NoChange, SaveFailed, UserCanceled };
+
 	XOSCAR_TabWidgetInterface();
 	~XOSCAR_TabWidgetInterface();
 
-	virtual bool save() = 0;
-    virtual bool undo() = 0;
+    virtual SaveResult save() = 0;
+    virtual SaveResult undo() = 0;
 
     virtual bool isModified() const { return modified; }
 

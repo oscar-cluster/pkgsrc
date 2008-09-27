@@ -48,15 +48,15 @@ public slots:
 	void partitionNodes_valueChanged_handler(int);
 	void add_partition_handler();
     void remove_partition_handler();
-	bool save_cluster_info_handler();
+    SaveResult save_cluster_info_handler();
 	void refresh_list_partitions();
     void refresh_partition_info();
     void setDefaultPartitionValues();
     void enablePartitionInfoWidgets(bool enable);
      int handle_thread_result (CommandTask::CommandTasks command_id, const QString result);
     void handle_oscar_config_result(QString list_distros);
-	bool save();
-	bool undo();
+    SaveResult save();
+    SaveResult undo();
     void partition_list_rowChanged_handler(int);
     void clusters_list_rowChanged_handler(int);
     void virtualMachinesCheckBox_stateChanged_handler(int state);
@@ -69,7 +69,7 @@ signals:
     void partition_selection_changed(QString);
 
 protected:
-    bool prompt_save_changes();
+    SaveResult prompt_save_changes();
     bool isPartitionModified(int partitionRow);
     void setPartitionItemState(int partitionRow, PartitionState state, bool overwrite = false);
     PartitionState partitionItemState(int partitionRow);

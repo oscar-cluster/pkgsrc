@@ -154,7 +154,11 @@ void XOSCAR_MainWindow::newOscarOptionSelected()
         listOscarOptionsWidget->currentRow() == oscarOptionsRowPendingChanges) {
         return;
     }
-    if (prompt_save_changes() == false) {
+
+    XOSCAR_TabWidgetInterface::SaveResult result = prompt_save_changes();
+    // if user canceled or the save failed, show previous oscar option
+    if (result == XOSCAR_TabWidgetInterface::UserCanceled || 
+        result == XOSCAR_TabWidgetInterface::SaveFailed) {
         listOscarOptionsWidget->setCurrentRow(oscarOptionsRowPendingChanges);
         return;
     } 
@@ -463,8 +467,12 @@ void XOSCAR_MainWindow::networkConfigTab_currentChanged_handler(int tab_num)
 {
     if(networkConfigurationTabWidget->currentWidget() == widgetPendingChanges) {
         // ignore
+        return;
     }
-    else if(prompt_save_changes() == false) {
+    XOSCAR_TabWidgetInterface::SaveResult result = prompt_save_changes();
+    // if user canceled or save fails, show last tab widget
+    if(result == XOSCAR_TabWidgetInterface::UserCanceled || 
+       result == XOSCAR_TabWidgetInterface::SaveFailed) {
         // if cancel changes, revert to last known tab
         networkConfigurationTabWidget->setCurrentWidget(widgetPendingChanges);
     }
@@ -473,20 +481,19 @@ void XOSCAR_MainWindow::networkConfigTab_currentChanged_handler(int tab_num)
     }
 }
 
-/**
+/** 
  * @author Robert Babilon
  *
- * This function calls save() or undo() on the widget that has changes pending.
- * If the widget does not implement XOSCAR_TabWidgetInterface, then the function
- * ignores it and returns true.
- * If changes were made and the user wishes to save, this returns true
- * If changes were made and the user wishes to undo the changes, this returns
- * true.
- * If the user wishes to cancel, this returns false.
+ * This function calls XOSCAR_TabWidgetInterface::save() or
+ * XOSCAR_TabWidgetInterface::undo() on the widget that has changes pending.  If
+ * the widget does not implement XOSCAR_TabWidgetInterface, then the function
+ * ignores it and returns XOSCAR_TabWidgetInterface::NoChange.
+ *
+ * @return XOSCAR_TabWidgetInterface::SaveResult
  */
-bool XOSCAR_MainWindow::prompt_save_changes()
+XOSCAR_TabWidgetInterface::SaveResult XOSCAR_MainWindow::prompt_save_changes()
 {
-    bool result = true;
+    XOSCAR_TabWidgetInterface::SaveResult result = XOSCAR_TabWidgetInterface::NoChange;
 
     if(isWidgetContentsModified(widgetPendingChanges)) {
         QMessageBox msg(QMessageBox::NoIcon, tr("Save changes?"), tr("The previous tab has been modified.\n")
@@ -503,7 +510,7 @@ bool XOSCAR_MainWindow::prompt_save_changes()
                 result = tab->undo();
                 break;
             case QMessageBox::Cancel:
-                result = false;
+                result = XOSCAR_TabWidgetInterface::UserCanceled;
                 break;
         }
     }

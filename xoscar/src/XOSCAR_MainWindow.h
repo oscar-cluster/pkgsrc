@@ -44,6 +44,7 @@
 #include "XOSCAR_AboutAuthorsDialog.h"
 #include "XOSCAR_AboutOscarDialog.h"
 #include "XOSCAR_FileBrowser.h"
+#include "XOSCAR_TabWidgetInterface.h"
 #include "XOSCAR_TabGeneralInformation.h"
 #include "XOSCAR_TabNetworkConfiguration.h"
 #include "XOSCAR_TabSoftwareConfiguration.h"
@@ -100,7 +101,7 @@ protected:
 	void closeEvent(QCloseEvent* event);
 
 private:
-	bool prompt_save_changes();
+    XOSCAR_TabWidgetInterface::SaveResult prompt_save_changes();
     bool isWidgetContentsModified(QWidget* widget);
 
     XOSCAR_AboutAuthorsDialog about_authors_widget;

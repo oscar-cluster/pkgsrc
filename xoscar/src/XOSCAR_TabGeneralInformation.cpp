@@ -90,21 +90,19 @@ XOSCAR_TabGeneralInformation::~XOSCAR_TabGeneralInformation()
  *  @author Robert Babilon
  *
  *  Saves changes to current partition item and refreshes the list of partitions
- *  based on current cluster selection; then resets the modified flag.
+ *  based on current cluster selection.
  *
  *  This method is overriden from the interface.
  *
- *  @return true if changes were saved successfully; otherwise false.
+ *  @return XOSCAR_TabWidgetInterface::SaveResult
  */
-bool XOSCAR_TabGeneralInformation::save()
+XOSCAR_TabWidgetInterface::SaveResult XOSCAR_TabGeneralInformation::save()
 {
     //cout << "DEBUG: save()" << endl;
 
-    bool result = true;
-    result = save_cluster_info_handler();
-    if(result) {
+    SaveResult result = save_cluster_info_handler();
+    if(result == Saving) {
         refresh_list_partitions();
-        modified = false;
     }
 
     return result;
@@ -113,28 +111,24 @@ bool XOSCAR_TabGeneralInformation::save()
 /**
  *  @author Robert Babilon
  *
- *  Resets the modified flag.
  *  This method is overriden from the interface.
  *
  *  @todo emit a signal that changes were undone/ignored
  *  @todo reset the widgets to a last known state.
- *        if the partition was added (not saved), remove it from the list
- *        if the partition was modified, could call the command to get the list
- *        of partitions for the current cluster.
- *  @todo return false if the undo fails to inform the caller to revert back to
- *  this tab.
  *
- *  @return true if changes were reversed successfully; otherwise false.
+ *  @return XOSCAR_TabWidgetInterface::SaveResult
  */
-bool XOSCAR_TabGeneralInformation::undo()
+XOSCAR_TabWidgetInterface::SaveResult XOSCAR_TabGeneralInformation::undo()
 {
     //cout << "DEBUG: undo()" << endl;
 
 	modified = false;
 
+    SaveResult result = NoChange;
+
     if(currentPartitionRow == -1) {
         //cout << "DEBUG: undo: currentPartitionRow == -1" << endl;
-        return true;
+        return result;
     }
     //cout << "DEBUG: undo: currentPartitionRow != -1" << endl;
     
@@ -159,9 +153,11 @@ bool XOSCAR_TabGeneralInformation::undo()
 
         // refresh the list of partitions to undo all changes to this partition
         refresh_list_partitions();
+
+        result = Saving;
     }
 
-	return true;
+	return result;
 }
 
 /**
@@ -276,27 +272,23 @@ void XOSCAR_TabGeneralInformation::add_partition_handler()
 {
     //cout << "DEBUG: add_partition_handler: ENTER" << endl;
 
-    if(prompt_save_changes()) {
-        // wait till thread is finished... when undoing in this particular
-        // method, we do not need to refresh the previous partition since we
-        // know we will select a new item. however, if the previous item were
-        // created, then we need to remove it from the list. otherwise we get
-        // extra items.
-    }
-    else {
-        return;
-    }
+    SaveResult result = prompt_save_changes();
 
     // this is still a problem dispite any fancy thread management system. here
     // we'll need to "pause" the GUI by using a dialog and wait until the thread
     // has finished all of it's pending tasks.
     // This current solution requires the user to click OK; note this is
     // temporary. a correct solution will be more involved.
-    QMessageBox msg(QMessageBox::NoIcon,
+    if(result == Saving) {
+        QMessageBox msg(QMessageBox::NoIcon,
                     QString("Test Message Box"), 
                     QString("This is a temporary pausing mechanism.\nClick OK when you feel the thread has finished it's duties."),
                     QMessageBox::Ok);
-    msg.exec();
+        msg.exec();
+    }
+    else if(result != NoChange) {
+        return;
+    }
 
     // must have a cluster selected in order to add a partition to it
     if (listOscarClustersWidget->currentRow() == -1) {
@@ -418,16 +410,19 @@ void XOSCAR_TabGeneralInformation::refresh_partition_info()
  * @return bool true if the save was successful; otherwise false.
  *
  * @todo Check if the partition name already exists or not.
- * @todo Display a dialog is partition information are not valid.
  * @todo Check the return value of the command to add partition information
  *       in the database.
  * @todo Use specific commands depending on the item's status. i.e.
  *       use ADD_PARTITION when adding partitions; use UPDATE_PARTITION 
  *       when an existing partition was modified and only needs updating.
  */
-bool XOSCAR_TabGeneralInformation::save_cluster_info_handler()
+XOSCAR_TabWidgetInterface::SaveResult XOSCAR_TabGeneralInformation::save_cluster_info_handler()
 {
-    bool result = false;
+    SaveResult result = NoChange;
+
+    if(!isPartitionModified(currentPartitionRow)) {
+        return result;
+    }
 
     int nb_nodes = partitionNumberNodesSpinBox->value();
     QString partition_name = partitionNameEditWidget->text();
@@ -439,7 +434,13 @@ bool XOSCAR_TabGeneralInformation::save_cluster_info_handler()
         // need to inform caller that they should not continue either since this
         // has failed. i.e. in save() do not call refresh_list_partitions() b/c
         // it would erase the changes.
-        result = false;
+        result = SaveFailed;
+
+        QMessageBox msg(QMessageBox::Warning, tr("Invalid Partition Information"), 
+                        tr("The partition information is invalid and cannot be saved.\n") + 
+                        tr("Please correct the error(s) and try again."), 
+                        QMessageBox::Ok, this);
+        msg.exec();
     } else {
         QStringList args;
         args << partition_name << partition_distro;
@@ -453,7 +454,7 @@ bool XOSCAR_TabGeneralInformation::save_cluster_info_handler()
 
         currentPartitionRow = -1;
         modified = false;
-        result = true;
+        result = Saving;
         command_thread.init (CommandTask::ADD_PARTITION, args);
 
         /* We unset the selection of the partition is order to be able to update
@@ -499,8 +500,8 @@ void XOSCAR_TabGeneralInformation::enablePartitionInfoWidgets(bool enable)
     partitionNumberNodesSpinBox->setEnabled(enable);
     partitionDistroComboBox->setEnabled(enable);
 
-    virtualMachinesCheckBox->setEnabled(enable ? v2mpkg : false);
-    virtualMachinesComboBox->setEnabled(enable ? (v2mpkg && virtualMachinesCheckBox->checkState() == Qt::Checked) : false);
+    virtualMachinesCheckBox->setEnabled(enable && v2mpkg);
+    virtualMachinesComboBox->setEnabled(enable && (v2mpkg && virtualMachinesCheckBox->checkState() == Qt::Checked));
 }
 
 /**
@@ -766,12 +767,14 @@ void XOSCAR_TabGeneralInformation::handle_oscar_config_result(QString list_distr
  * If changes were made and the user wishes to undo the changes, this returns
  * true.
  * If the user wishes to cancel, this returns false.
+ *
+ * @return XOSCAR_TabWidgetInterface::SaveResult enum
  */
-bool XOSCAR_TabGeneralInformation::prompt_save_changes()
+XOSCAR_TabWidgetInterface::SaveResult XOSCAR_TabGeneralInformation::prompt_save_changes()
 {
     //cout << "DEBUG: prompt_save_changes: currentPartitionRow: " << currentPartitionRow << endl;
 
-    bool result = true;
+    SaveResult result = NoChange;
 
     if(currentPartitionRow == -1) {
         return result;
@@ -790,7 +793,7 @@ bool XOSCAR_TabGeneralInformation::prompt_save_changes()
                 result = undo();
                 break;
             case QMessageBox::Cancel:
-                result = false;
+                result = UserCanceled;
                 break;
         }
     }
