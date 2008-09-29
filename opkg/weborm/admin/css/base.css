@@ -53,7 +53,6 @@ p {
 #breadcrumbs { 
     margin: 0px;
     padding: 5px 10px 5px 10px;
-    background-image:  url(../images/breadcrumbs.jpg);
     height: 12px;
 }
 #bannerRight, #bannerLeft {

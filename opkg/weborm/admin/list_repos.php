@@ -6,7 +6,7 @@
                && $file != "."
                && $file != ".."
                && $file != ".svn") {
-               echo "<input type=\"radio\" name=\"group1\" value=\"$file\" onChange=\"newSelection(select1)\">$file<br/>";
+               echo "<input type=\"radio\" name=\"group1\" value=\"$file\">$file<br/>";
            }
        }
    }

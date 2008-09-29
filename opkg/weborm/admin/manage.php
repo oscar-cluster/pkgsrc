@@ -7,7 +7,6 @@ B
       @import url("/admin/css/base.css");
       @import url("/admin/css/site.css");
     </style>
-    <link rel="stylesheet" href="/admin/css/print.css" type="text/css" media="print"/>
     <meta name="author" content="Geoffroy Vallee" />
     <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1" />
 <!--    <script src="display_packages.js"></script>-->
