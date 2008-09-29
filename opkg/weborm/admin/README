@@ -87,6 +87,27 @@ time).
 
 WebORM is now ready to go. :-)
 
+Configuration
+=============
+
+Some Linux distributions setup PHP so it is not possible to upload big files.
+Therefore, you may need to update the PHP configuration files 
+(/etc/php5/apache2/php.ini on Debian-4.0).
+On Debian-4.0, the following configuration works for all OSCAR binary packages:
+
+;;;;;;;;;;;;;;;;;;;
+; Resource Limits ;
+;;;;;;;;;;;;;;;;;;;
+
+max_execution_time = 60     ; Maximum execution time of each script, in seconds
+max_input_time = 60 ; Maximum amount of time each script may spend parsing request data
+memory_limit = 50M      ; Maximum amount of memory a script may consume (16MB)
+
+(...)
+
+; Maximum size of POST data that PHP will accept.
+post_max_size = 15M
+
 License
 =======
 
