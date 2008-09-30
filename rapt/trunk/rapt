@@ -688,7 +688,7 @@ sub do_debootstrap ($$$$) {
 
     my $cmd = "debootstrap --verbose ";
     $arch = "amd64" if $arch eq "x86_64";
-    $cmd .= "--arch=$arch " if defined $arch;
+    $cmd .= "--arch $arch " if defined $arch;
     $cmd .= "$codename $target $mirror";
     print "Executing: $cmd\n" if $verbose;
     if (system($cmd)) {

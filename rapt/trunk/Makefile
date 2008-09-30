@@ -1,7 +1,7 @@
 DESTDIR=
 DEBTMP=/tmp/rapt
 BUILDTMP=/tmp/rapt-build
-VERSION=2.8.1
+VERSION=2.8.2
 
 all:
 

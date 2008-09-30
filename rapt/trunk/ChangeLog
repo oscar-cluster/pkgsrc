@@ -1,3 +1,7 @@
+rapt-2.8.2:
+- Fix a bug when specifying the architecture for bootstrapping (introduced
+during the last release).
+
 rapt-2.8.1:
 - Fix a bug in get_debootstrap_mirror_and_codename: bad return code check when
 searching for a specific repositories in configuration files.
