@@ -36,7 +36,7 @@ GetOptions(
         "update"                        => \$update,
         "mac=s"                         => \$mac,
         "distro=s"                      => \$distro,
-        "help"                          => \&help,
+        "help"                          => \&help_and_exit_success,
         ) || help_and_exit();
 
 my $actions = 0;
@@ -95,9 +95,14 @@ sub help {
     print "\n";
 }
 
-sub help_and_exit {
+sub help_and_exit_error {
     help ();
     exit 1;
+}
+
+sub help_and_exit_success {
+    help ();
+    exit 0;
 }
 
 __END__
