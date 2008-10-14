@@ -106,3 +106,36 @@ sub help_and_exit_success {
 }
 
 __END__
+
+=head1 DESCRIPTION
+
+Setup virtual machines via OSCAR.
+
+Usage: oscar-v OPTION
+OPTION can be:
+
+=item add <VM_ID>:         Add a new virtual machine.
+
+=item remove <VM_ID>:      Remove a virtual machine.
+
+=item update <VM_ID>:      Update a virtual machine.
+
+=item mac <MAC_ADDRESS>:   Sepcify a MAC address (must be used when adding a virutal machine)
+
+=item distro <DISTRO_ID>:  Linux distribution used for the VM (must be used when adding a virutal machine)
+
+=item help:                Display this help
+
+=head1 EXAMPLES
+
+=item Creation of the "my_vm" virtual machine:
+
+=over 8
+
+sudo oscar-v --add my_vm --mac 00:01:02:02:01:00 --distro ubuntu-7-i386
+
+=back
+
+=head1 AUTHOR
+
+=item Geoffroy Vallee, Oak Ridge National Laboratory
