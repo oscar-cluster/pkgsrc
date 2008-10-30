@@ -1,4 +1,4 @@
-package OSCAR::VirtualCluster;
+package OSCAR::VirtualCluster_GUI;
 
 # Copyright (C) 2006-2008   Oak Ridge National Laboratory
 #                           Geoffroy Vallee <valleegr@ornl.gov>
