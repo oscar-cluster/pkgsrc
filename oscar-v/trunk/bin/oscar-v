@@ -28,27 +28,33 @@ BEGIN {
     }
 }
 
-my ($add, $remove, $update, $mac, $distro);
+my ($add, $remove, $update, $mac, $distro, $deploy, $hostos, $techno);
 
 GetOptions(
         "add=s"                         => \$add,
         "remove"                        => \$remove,
         "update"                        => \$update,
+        "deploy"                        => \$deploy,
         "mac=s"                         => \$mac,
         "distro=s"                      => \$distro,
+        "hostos=s"                      => \$hostos,
+        "techno=s"                      => \$techno,
         "help"                          => \&help_and_exit_success,
         ) || help_and_exit();
 
+#
+# First we do some sanity checking...
+#
 my $actions = 0;
 $actions++ if (defined $add);
 $actions++ if (defined $remove);
 $actions++ if (defined $update);
+$actions++ if (defined $deploy);
 if ($actions != 1) {
     die "ERROR: Invalid number of actions ($actions)";
 }
 
-if (defined $add && (!is_a_valid_string ($mac) 
-                     || !is_a_valid_string ($distro))) {
+if (defined $add && !is_a_valid_string ($distro))) {
     die "ERROR: Invalid argument for the addition of a new VM";
 }
 
@@ -60,6 +66,16 @@ if (defined $update && (!is_a_valid_string ($mac)
 if (defined $remove && !is_a_valid_string ($remove)) {
     die "ERROR: Invalid VM name";
 }
+
+if (defined $deploy && (!is_a_valid_string ($hostos)
+                     || !is_a_valid_string ($techno)
+                     || !is_a_valid_string ($mac))) {
+    die "ERROR: Invalid deployment parameters";
+}
+
+#
+# Now that we now we are good to go, we start the work...
+#
 
 if ($add) {
     OSCAR::Logger::oscar_log_section ("Adding a new VM ($add)");
@@ -79,6 +95,28 @@ if ($update) {
     OSCAR::Logger::oscar_log_section ("Updating a VM ($update)");
 }
 
+if ($deploy) {
+    # Note that we do not check if everything is ready for the deployment of
+    # the VM, we currently assume everything is fine. 
+    # TODO: we should check the host OS is ready and so on, but we need to
+    # have OPM/NEST to ease that task.
+
+    my %vm_info = (
+        name => '$deploy',
+        memory => '512',
+        disk_image => '/tmp/$deploy.img',
+        techno => '$techno',
+    );
+    # First we create a profile
+    require OSCAR::VirtualCluster;
+    if (OSCAR::VirtualCluster::generate_v2m_profile (\%vm_info)) {
+        die "ERROR: Impossible to generate the V2M profile";
+    }
+
+    # Then we copy the profile on the remote machine.
+    OSCAR::VirtualCluster::deploy_virtual_cluster ("lo");
+}
+
 exit 0;
 
 sub help {
@@ -86,12 +124,15 @@ sub help {
     print "\n";
     print "Setup virtual machines via OSCAR.\n";
     print "OPTION can be:\n";
-    print "    add <VM_ID>:         Add a new virtual machine.\n";
-    print "    remove <VM_ID>:      Remove a virtual machine.\n";
-    print "    update <VM_ID>:      Update a virtual machine.\n";
-    print "    mac <MAC_ADDRESS>:   Sepcify a MAC address (must be used when adding a virutal machine)\n";
-    print "    distro <DISTRO_ID>:  Linux distribution used for the VM (must be used when adding a virutal machine)\n";
-    print "    help:                Display this help\n";
+    print "    add <VM_ID>:             Add a new virtual machine.\n";
+    print "    remove <VM_ID>:          Remove a virtual machine.\n";
+    print "    update <VM_ID>:          Update a virtual machine.\n";
+    print "    deploy <VM_ID>:          Deploy a virtual machine.\n";
+    print "    mac <MAC_ADDRESS>:       Specify a MAC address (must be used when deploying a virutal machine)\n";
+    print "    distro <DISTRO_ID>:      Linux distribution used for the VM (must be used when adding a virutal machine)\n";
+    print "    hostos <IP|LOCALHOST>    Specify the HostOS where the VM should be deployed";
+    print "    techno <XEN|KVM|QEMU>    Specify the virtualization solution that should be used to deploy a given MV";
+    print "    help:                    Display this help\n";
     print "\n";
 }
 
@@ -132,7 +173,15 @@ OPTION can be:
 
 =over 8
 
-sudo oscar-v --add my_vm --mac 00:01:02:02:01:00 --distro ubuntu-7-i386
+sudo oscar-v --add my_vm --distro ubuntu-7-i386
+
+=back
+
+=item Deployment of the "my_vm" virtual machine:
+
+=over 8
+
+sudo oscar-v --deploy my_vm --hostos localhost --techno KVM --mac 00:01:02:02:01:00 
 
 =back
 
