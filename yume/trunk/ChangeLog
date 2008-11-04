@@ -1,0 +1,53 @@
+yume-2.8.1 (not yet released):
+- improve the man page (by adding examples).
+- slightly improve the Makefile.
+- add a separate ChangeLog file that could be used both with RPM and Debian
+packages
+
+yume-2.8:
+- added master recognition for failover case (heartbeat version).
+
+yume-2.7:
+- fix a bad handling of the return code.
+- added repoadd, repodel, repolist repository manipulation funtionality for
+OSCAR headnodes.
+
+yume-2.6:
+- certain yum versions are too chatty, fixed version detection
+
+yume-2.5:
+- fixed repoquery for newer yum versions
+
+yume-2.3:
+- Improved scalability by dealing with timeouts when calling distro-query
+- More detailed errors
+
+yume-2.2:
+- fixed problem with yume invocation on SUSE clients
+- suse_bootstrap support for installing into empty suse images
+- including yum-repoquery and removing dependency of yum-utils.
+- added rpm groups support (e.g. yume install @eclipse)
+- added repoquery support (--repoquery)
+- moved ptty_try log file to /tmp, cleaning it up at interruption
+- added mirror:http://mirrorlist_url/ option handling
+- significantly improved functionality of yume-opkg
+- limit architectures of installed packages (if not specified), this should
+avoid installing all compatible architectures of a package on a x86_64. Detects
+arch from name of repository.
+- added env variable YUME_VERBOSE
+- added debugging output
+- added correct return codes when subcommands fail
+- removed need for "--" to separate yum arguments
+- changed exported repository URL path to /repo/$repopath
+- added default repository detection for OSCAR clusters.
+
+yume-0.3:
+- added ptty_try (otherwise no progress bar in systeminstaller)
+
+yume-0.2:
+- chop trailing "/" from repo paths, otherwise getting trouble with basename
+
+yume-0.1:
+- added yume-opkg
+- added rpmlists for rhel4 i386 and x86_64 to /usr/share/yume
+
