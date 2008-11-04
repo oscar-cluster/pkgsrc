@@ -26,5 +26,6 @@ dist: clean
 	mv /tmp/$(NAME)-$(VERSION).tar.gz $(PWD)
 
 clean:
+	rm -f *~
 	rm -rf /tmp/$(NAME)-$(VERSION)
 	rm -f $(NAME)-$(VERSION).tar.gz
