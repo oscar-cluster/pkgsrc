@@ -40,14 +40,14 @@ per command line for "@" group handling!
 .SH OPTIONS
 
 .TP
-.B --repo URL :
+.B --repo URL:
 repository which should be included in yum actions (multiple --repo options
 are possible). If no --repo option is passed, yume tries to detect the default
 repository names dynamically. This feature only works on an OSCAR cluster, on
 both master- and client-nodes.
 
 .TP
-.B --export :
+.B --export:
 create httpd configuration for local repositories. The repositories have to be
 passed by using --repo. The URL will be /repo/repopath on the local
 web server. This command fails if the configuration path for the webserver is
@@ -55,33 +55,33 @@ not detected. Be careful and avoid having the same basename for two
 repositories.
 
 .TP
-.B --unexport :
+.B --unexport:
 delete httpd configuration for local repositories. Pass repositories with the
 --repo option.
 
 .TP
-.B --listexp :
+.B --listexp:
 list local repositories which are exported via http.
 
 .TP
-.B --prepare :
+.B --prepare:
 generate repodata for local repositories. This calls "createrepo" and
 generates the package independent repository metadata in the repodata/
 subdirectory.
 
 .TP
-.B --repoquery :
+.B --repoquery:
 call repoquery with the repositories on the command line (or default repos
 on OSCAR systems). This allows finegrained searching of requirements, provides
 and download paths for RPMs, even in remote repositories. Try "repoquery
 --help" for the repository query arguments.
 
 .TP
-.B --help :
+.B --help:
 display help information.
 
 .TP
-.B --verbose :
+.B --verbose:
 verbose output. Multiple specifications of this option lead to higher
 verbosity.
 
@@ -146,8 +146,17 @@ When used on an OSCAR cluster the repositories default to the distribution
 specific repository locations. These can be displayed by using the command
 $OSCAR_HOME/scripts/distro-query.
 
+Yume can also use online repositories:
 
+.TP
+.B yume --repo http://bear.csm.ornl.gov/repos/rhel-5-x86_64 search c3
+searches for RPM that includes C3 in their description, from package available
+in the http://bear.csm.ornl.gov/repos/rhel-5-x86_64 repository.
 
+.TP
+.B yume --repo http://bear.csm.ornl.gov/repos/rhel-5-x86_64 info c3
+displays information about the c3 RPM available from the 
+http://bear.csm.ornl.gov/repos/rhel-5-x86_64 repository.
 
 .SH "SEE ALSO"
 yum(8), yum.conf(5), createrepo(8), repoquery.
