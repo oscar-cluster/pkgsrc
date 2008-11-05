@@ -3,7 +3,13 @@ BINDIR=$(DESTDIR)/usr/bin
 DATADIR=$(DESTDIR)/usr/share
 MANDIR=$(DESTDIR)/usr/share/man
 NAME=yume
-VERSION=2.4
+VERSION=2.8.1
+
+FILES := ChangeLog ptty_try yume yume-opkg-4.2.1 yume-opkg yum-repoquery3 \
+		rhel4-i386.rpmlist yume.8 yume.spec Makefile rhel4-x86_64.rpmlist \
+		yum-repoquery 
+DEBIANFILES := debian/changelog debian/compat debian/control debian/copyright \
+		debian/rules
 
 all:
 
@@ -19,8 +25,9 @@ install:
 	install -o root -g root -m 755  yume.8 $(MANDIR)/man8
 
 dist: clean
-	mkdir -p /tmp/$(NAME)-$(VERSION)
-	cp * /tmp/$(NAME)-$(VERSION)
+	mkdir -p /tmp/$(NAME)-$(VERSION)/debian
+	cp ${FILES} /tmp/$(NAME)-$(VERSION)
+	cp ${DEBIANFILES} /tmp/$(NAME)-$(VERSION)/debian
 	PWD=`pwd`
 	cd /tmp; tar czf $(NAME)-$(VERSION).tar.gz $(NAME)-$(VERSION)
 	mv /tmp/$(NAME)-$(VERSION).tar.gz $(PWD)
