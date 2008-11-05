@@ -6,7 +6,7 @@ Vendor: NEC HPCE
 Release: 1
 License: GPL
 Packager: Erich Focht <efocht@hpce.nec.com>
-Source: %{name}.tar.gz
+Source: %{name}-%{version}.tar.gz
 Group: System Environment/Tools
 BuildArch: noarch
 BuildRoot: %{_tmppath}/%{name}
@@ -34,7 +34,7 @@ In addition, yume can just query the specified repositories by invoking
 repoquery.
 
 %prep
-%setup -n %{name}
+%setup -n %{name}-%{version}
 
 
 %build
