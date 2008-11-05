@@ -2,14 +2,14 @@
 %define name ssh-oscar
 
 # Version of package
-%define version 1.1
+%define version 1.2
 
 #==============================================================
 
 Summary: OSCARified User Synchronization System
 Name: %{name}
 Version: %{version}
-Release: 6
+Release: 1
 BuildArchitectures: noarch
 Packager: Jason Brechin <brechin@ncsa.uiuc.edu>
 URL: http://oscar.sourceforge.net/
