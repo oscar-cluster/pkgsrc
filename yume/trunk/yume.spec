@@ -63,6 +63,8 @@ rm -rf $RPM_BUILD_ROOT
 %{_mandir}/man8/yume*
 
 %changelog
+* Wed Nov 05 2008 Geoffroy Vallee <valleegr@ornl.gov> 2.8.1-1
+- new upstream version (see ChangeLog for more details).
 * Mon Mar 17 2008 Erich Focht -> 2.8-1
 - added master recognition for failover case (heartbeat version).
 * Thu Nov 1 2007 Geoffroy Vallee 2.7-2
