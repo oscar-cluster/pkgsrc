@@ -9,8 +9,8 @@ elif [ `echo $home | wc -w` -ne 1 ] ; then
 else
     # echo the home directory for user $user is $home
     # echo cd $home
-    if ! cd $home ; then
-        echo cannot cd to home directory $home
+    if ! [ -d $home ] ; then
+        echo cannot find home directory $home
     else
 
         file=$home/.ssh/id_dsa
