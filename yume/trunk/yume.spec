@@ -1,7 +1,7 @@
 # $Id$
 Summary: Wrapper to yum for clusters
 Name: yume
-Version: 2.8
+Version: 2.8.1
 Vendor: NEC HPCE
 Release: 1
 License: GPL
