@@ -1,0 +1,12 @@
+ssh-oscar-1.2 (not yet released):
+- Include the patch from Ansgar Esztermann: in ssh-oscar.sh, checks for the
+existance of the home directory instead of entering into the home directory.
+
+ssh-oscar-1.1:
+- Ensure that SSH keys are not generated for user "nobody".
+- Update scripts to use getent.
+- ssh-oscar and sync_users made into seperate packages.
+- Updated to work with C3-3
+
+ssh-oscar-1.0:
+- Initial release.
