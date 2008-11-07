@@ -1,3 +1,9 @@
+yume (2.8.1-1) hardy; urgency=low
+
+  * New upstream version.
+
+ -- Geoffroy Vallee [gvh] <gvh@gvh1.ornl.gov>  Fri, 07 Nov 2008 09:53:01 -0500
+
 yume (2.8-2) gutsy; urgency=low
 
   * Add a dependency to createrepo (needed by yume for the creation of repos). 
