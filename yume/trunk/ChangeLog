@@ -1,4 +1,4 @@
-yume-2.8.1 (not yet released):
+yume-2.8.1:
 - improve the man page (by adding examples).
 - slightly improve the Makefile.
 - add a separate ChangeLog file that could be used both with RPM and Debian
