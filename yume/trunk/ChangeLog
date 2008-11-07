@@ -1,3 +1,6 @@
+yume-2.8.2 (not yet released):
+- add a "deb" target to the Makefile (needed by oscar-packager).
+
 yume-2.8.1:
 - improve the man page (by adding examples).
 - slightly improve the Makefile.
