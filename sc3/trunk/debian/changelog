@@ -9,11 +9,11 @@ sc3 (1.1-2gv1) stable; urgency=low
   * Fix various issues with the package. Update the version to allow
     automatic update of the package.
 
- -- Geoffroy Vallee <valleegr@ornl.gov>  Fri, 11 May 2007 00:43:46 -0400
+ -- Geoffroy Vallee <valleegr@ornl.gov>  Fri, 11 May 2007 01:43:46 -0400
 
 sc3 (1.1-1gv1) UNRELEASED; urgency=low
 
   * New upstream version.
 
- -- Geoffroy Vallee <valleegr@ornl.gov>  Fri, 11 May 2007 12:07:18 -0500
+ -- Geoffroy Vallee <valleegr@ornl.gov>  Fri, 10 May 2007 12:07:18 -0500
 

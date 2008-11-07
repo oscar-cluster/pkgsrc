@@ -1,9 +1,9 @@
 # $Id$
 Summary: Subcluster command and control tools
 Name: sc3
-Version: 1.2
+Version: 1.2.1
 Vendor: NEC HPCE
-Release: 5
+Release: 1
 License: GPL
 Packager: Erich Focht <efocht@hpce.nec.com>
 Source: sc3.tar.gz
@@ -31,11 +31,8 @@ image. This helps to keep cluster nodes and their images in sync.
 
 
 %install
+make install DESTDIR=$RPM_BUILD_ROOT
 
-install -d -o root -g root -m 755 $RPM_BUILD_ROOT/usr/lib/systeminstaller/HPCL
-install -d -o root -g root -m 755 $RPM_BUILD_ROOT/usr/bin
-install -o root -g root -m 644 Subcluster.pm $RPM_BUILD_ROOT/usr/lib/systeminstaller/HPCL
-install -o root -g root -m 755 scexec scrpm scpush $RPM_BUILD_ROOT/usr/bin
 
 %clean
 rm -rf $RPM_BUILD_ROOT
@@ -48,6 +45,8 @@ rm -rf $RPM_BUILD_ROOT
 /usr/lib/systeminstaller/HPCL
 
 %changelog
+* Fri Nov 07 2008 Geoffroy Vallee <valleegr@ornl.gov> 1.2.1-1
+- New upstream release (see ChangeLog for more details).
 * Thu Dec 01 2005 Erich Focht
 - Subcluster fix: filehandle instead of file.
 - Added verbose output to subcluster commands
