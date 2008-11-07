@@ -54,7 +54,7 @@ if ($actions != 1) {
     die "ERROR: Invalid number of actions ($actions)";
 }
 
-if (defined $add && !is_a_valid_string ($distro))) {
+if (defined $add && !is_a_valid_string ($distro)) {
     die "ERROR: Invalid argument for the addition of a new VM";
 }
 
@@ -113,6 +113,7 @@ if ($deploy) {
         die "ERROR: Impossible to generate the V2M profile";
     }
 
+    die "Stop";
     # Then we copy the profile on the remote machine.
     OSCAR::VirtualCluster::deploy_virtual_cluster ("lo");
 }
@@ -152,20 +153,39 @@ __END__
 
 Setup virtual machines via OSCAR.
 
-Usage: oscar-v OPTION
+=head1 USAGE
+
+=over 8
+
+oscar-v OPTION
+
+=back
+
 OPTION can be:
 
-=item add <VM_ID>:         Add a new virtual machine.
+=item --add <VM_ID>
 
-=item remove <VM_ID>:      Remove a virtual machine.
+Add a new virtual machine.
 
-=item update <VM_ID>:      Update a virtual machine.
+=item --remove <VM_ID>
 
-=item mac <MAC_ADDRESS>:   Sepcify a MAC address (must be used when adding a virutal machine)
+Remove a virtual machine.
 
-=item distro <DISTRO_ID>:  Linux distribution used for the VM (must be used when adding a virutal machine)
+=item --update <VM_ID>
 
-=item help:                Display this help
+Update a virtual machine.
+
+=item --mac <MAC_ADDRESS>
+
+Sepcify a MAC address (must be used when adding a virutal machine).
+
+=item --distro <DISTRO_ID>
+
+Linux distribution used for the VM (must be used when adding a virutal machine).
+
+=item --help
+
+Display this help.
 
 =head1 EXAMPLES
 
