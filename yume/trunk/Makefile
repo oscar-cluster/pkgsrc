@@ -38,3 +38,6 @@ clean:
 	rm -f build-stamp configure-stamp
 	rm -rf /tmp/$(NAME)-$(VERSION)
 	rm -f $(NAME)-$(VERSION).tar.gz
+
+deb:
+	dpkg-buildpackage -rfakeroot
