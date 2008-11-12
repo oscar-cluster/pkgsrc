@@ -20,6 +20,7 @@ use Cwd qw(chdir cwd);
 use Getopt::Long;
 use OSCAR::Utils;
 use OSCAR::Logger;
+use OSCAR::VirtualCluster;
 use warnings "all";
 
 BEGIN {
@@ -28,18 +29,21 @@ BEGIN {
     }
 }
 
-my ($add, $remove, $update, $mac, $distro, $deploy, $hostos, $techno);
+my ($add, $remove, $update, $mac, $distro, $deploy, $hostos, $techno,
+    $list_images, $verbose);
 
 GetOptions(
-        "add=s"                         => \$add,
-        "remove"                        => \$remove,
-        "update"                        => \$update,
-        "deploy"                        => \$deploy,
+        "add_vm=s"                      => \$add,
+        "remove_vm=s"                   => \$remove,
+        "update_vm=s"                   => \$update,
+        "deplo_vmy"                     => \$deploy,
         "mac=s"                         => \$mac,
         "distro=s"                      => \$distro,
         "hostos=s"                      => \$hostos,
+        "list-images"                   => \$list_images,
         "techno=s"                      => \$techno,
         "help"                          => \&help_and_exit_success,
+        "verbose"                       => \$verbose,
         ) || help_and_exit();
 
 #
@@ -50,6 +54,7 @@ $actions++ if (defined $add);
 $actions++ if (defined $remove);
 $actions++ if (defined $update);
 $actions++ if (defined $deploy);
+$actions++ if (defined $list_images);
 if ($actions != 1) {
     die "ERROR: Invalid number of actions ($actions)";
 }
@@ -65,7 +70,7 @@ if (defined $update && (!is_a_valid_string ($mac)
 
 if (defined $remove && !is_a_valid_string ($remove)) {
     die "ERROR: Invalid VM name";
-}
+ }
 
 if (defined $deploy && (!is_a_valid_string ($hostos)
                      || !is_a_valid_string ($techno)
@@ -77,13 +82,21 @@ if (defined $deploy && (!is_a_valid_string ($hostos)
 # Now that we now we are good to go, we start the work...
 #
 
+if (OSCAR::VirtualCluster::init_oscarv ($verbose)) {
+    die "ERROR: Impossible to initialize OSCAR-V";
+}
+
 if ($add) {
     OSCAR::Logger::oscar_log_section ("Adding a new VM ($add)");
-    require OSCAR::ImageMgt;
-    my %vars = OSCAR::ImageMgt::get_image_default_settings ();
-    $vars{distro} = $distro;
-    if (OSCAR::ImageMgt::create_image ($add, %vars)) {
-        die "ERROR: Impossible to create the image for $distro";
+    if (OSCAR::VirtualCluster::add_vm_image ($add, $distro)) {
+        die "ERROR: Impossible to store VM image data";
+    }
+    if ($hostos) {
+        if (OSCAR::VirtualCluster::assign_vm_to_hostos ($add,
+                                                        $hostos,
+                                                        $verbose)) {
+            die "ERROR: Impossible to assign the HostOS ($add, $hostos)";
+        }
     }
 }
 

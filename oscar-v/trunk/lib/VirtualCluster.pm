@@ -24,52 +24,167 @@ package OSCAR::VirtualCluster;
 use strict;
 use lib "$ENV{OSCAR_HOME}/lib";
 use OSCAR::Logger;
-use OSCAR::MAC;
-use SIS::DB;
-use SIS::Client;
-use SIS::Adapter;
+use OSCAR::Utils;
+use OSCAR::FileUtils;
+# use OSCAR::MAC;
+# use SIS::DB;
+# use SIS::Client;
+# use SIS::Adapter;
 use Carp;
 
 use vars qw($VERSION @EXPORT);
 use base qw(Exporter);
 
 our @new_virtual_nodes = ();
-
-@EXPORT = qw (
-                vc_deploy
-                load_virtual_nodes_from_file
-                sortclients
-                generate_empty_xml_file
-                @new_virtual_nodes
-                $oscarv_interface
-             );
-
+our $config_path = "/etc/oscar/oscarv";
+our $mapping_file = "$config_path/mapping.xml";
+our $image_file = "$config_path/vm_images";
+our $vm_file = "$config_path/virtual_compute_nodes.xml";
 our $oscarv_interface = "eth0";
 our $destroyed = 0;
 our %HOSTOS = ();
 our %VIRTUALNODES = ();
-our $mapping_file = $ENV{OSCAR_HOME}.'/data/mapping.xml';
 my $v2m_file_dir = '/tmp/oscarv/';
 my $ORDER = 1;
+
+@EXPORT = qw (
+                add_vm_image
+                assign_vm_to_hostos
+                generate_new_vm_config_file
+                generate_new_vm_image_config_file
+                init_oscarv
+                load_virtual_nodes_from_file
+                sortclients
+                vc_deploy
+                @new_virtual_nodes
+                $oscarv_interface
+             );
+
+
+################################################################################
+# This function initialize OSCAR-V, we typically check that needed files       #
+# exists.                                                                      #
+#                                                                              #
+# Return: 0 if success, -1 else.                                               #
+################################################################################
+sub init_oscarv ($) {
+    my $verbose = shift;
+
+    if (! -d "$config_path") {
+        print "[INFO] The directory $config_path does not exist, i create it\n"
+            if ($verbose);
+        my $ret = mkdir ($config_path, 0750);
+        if ($ret != 1) {
+            carp "ERROR: Impossible to create $config_path ($ret)";
+            return -1;
+        }
+    }
+
+    if (! -f $image_file) {
+        print "[INFO] The file for VM images does not exist, i create it\n" 
+            if $verbose;
+        system ("touch $image_file");
+    }
+
+    if (! -f $mapping_file) {
+        print "[INFO] the file for the mapping VM/HostOS does not exist ".
+              "($mapping_file), i create it\n";
+        if (OSCAR::FileUtils::generate_empty_xml_file ($mapping_file, 
+                                                       $verbose)) {
+            carp "ERROR: Impossible to create the $mapping_file XML file";
+            return -1;
+        }
+    }
+
+    return 0;
+}
+
+sub assign_vm_to_hostos ($$$) {
+    my ($vm, $hostos, $verbose) = @_;
+
+    if (!OSCAR::Utils::is_a_valid_string ($vm)
+        || !OSCAR::Utils::is_a_valid_string ($hostos)) {
+        carp "ERROR: Invalid parameters";
+        return -1;
+    }
+
+    if (load_mapping_from_file ()) {
+        carp "ERROR: Impossible to load the mapping VM/HostOS";
+        return -1;
+    }
+
+    if (add_vm_to_hash ($vm, $hostos, $verbose)) {
+        carp "ERROR: Impossible to add the vm ($vm, $hostos)";
+        return -1;
+    }
+
+    if (save_mapping_vm_hostos ()) {
+        carp "ERROR: Impossible to save the mapping VM/HostOS";
+        return -1;
+    }
+
+    return 0;
+}
+
+################################################################################
+# This function adds an image for a VM: it saves meta-data and create the      #
+# image if needed.                                                             #
+#                                                                              #
+# Return: 0 if success, -1 else.                                               #
+################################################################################
+sub add_vm_image ($$) {
+    my ($vm_image, $distro) = @_;
+
+    if (! -f $image_file) {
+        carp "ERROR: $config_path does not exist, please check if OSCAR-V is ".
+             "correctly initialized";
+        return -1;
+    }
+
+    #
+    # We create the image if needed
+    #
+    require OSCAR::ImageMgt;
+    my %vars = OSCAR::ImageMgt::get_image_default_settings ();
+    $vars{distro} = $distro;
+    if (OSCAR::ImageMgt::image_exists ($vm_image) == 0) {
+        if (OSCAR::ImageMgt::create_image ($vm_image, %vars)) {
+            carp "ERROR: Impossible to create the image for $distro";
+            return -1;
+        }
+    }
+
+    #
+    # We save meta-data
+    #
+    my $line = "$vm_image\t$distro\n";
+    if (OSCAR::FileUtils::add_line_to_file_without_duplication ($line,
+                                                                $image_file)) {
+        carp "ERROR: Impossible to add the line $line to $image_file";
+        return -1;
+    }
+
+    return 0;
+}
 
 ################################################################################
 # Generate a V2M profile based on VM's characteristics.                        #
 #                                                                              #
 # Input: vm_info, reference to a hash representing data about the VM. The hash #
-#                 has the following structure:
-#                 my %vm_info = (
-#                   name => 'my_vm',
-#                   memory => '512',
-#                   disk_image => '/tmp/my_vm.img',
-#                   techno => 'Kvm',
-#                 );
+#                 has the following structure:                                 #
+#                 my %vm_info = (                                              #
+#                   name => 'my_vm',                                           #
+#                   memory => '512',                                           #
+#                   disk_image => '/tmp/my_vm.img',                            #
+#                   techno => 'Kvm',                                           #
+#                 );                                                           #
 # Return: 0 if success, -1 else.                                               #
 ################################################################################
 sub generate_v2m_profile ($) {
     my ($vm_info) = @_;
 
-    my $adapter = list_adapter(client=>$vm_name,devname=>"eth0");
-    my $mac = $adapter->mac;
+#     my $adapter = list_adapter(client=>$vm_name,devname=>"eth0");
+#     my $mac = $adapter->mac;
 
     if (! -d $v2m_file_dir) {
         print "The directory for saving V2M configuration file ".
@@ -77,6 +192,7 @@ sub generate_v2m_profile ($) {
         mkdir ($v2m_file_dir, 0750);
     }
     my $vm_name = $$vm_info{'name'};
+    my $vm_techno = $$vm_info{'techno'};
     my $path = $v2m_file_dir.$vm_name.".xml";
     open (FILE, ">$path");
     print FILE "<?xml version=\"1.0\"?>\n";
@@ -84,11 +200,11 @@ sub generate_v2m_profile ($) {
     print FILE "<profile>\n";
     print FILE "\t<name>$vm_name</name>\n";
     print FILE "\t<type>$vm_techno</type>\n";
-    print FILE "\t<image size=\"2000\">/opt/v2m/data/$vmname.img</image>\n";
+    print FILE "\t<image size=\"2000\">/opt/v2m/data/$vm_name.img</image>\n";
     print FILE "\t<cdrom>/opt/v2m/contrib/bin/oscar_bootcd.img</cdrom>\n";
     print FILE "\t<nic1>\n";
     print FILE "\t\t<type>TUN/TAP</type>\n";
-    print FILE "\t\t<mac>$mac</mac>\n";
+#     print FILE "\t\t<mac>$mac</mac>\n";
     print FILE "\t</nic1>\n";
     print FILE "</profile>\n";
     close (FILE);
@@ -100,17 +216,18 @@ sub generate_v2m_profile ($) {
 # Load the list of virtual compute nodes. Note that this list is currently
 # in a speudo-database, i.e., an XML file:
 # ($ENV{OSCAR_HOME}/data/virtual_compute_nodes.xml
-sub load_virtual_nodes_from_file {
-    my $data_file = $ENV{OSCAR_HOME}.'/data/virtual_compute_nodes.xml';
-    if (! -f $data_file) {
-        print "The file $data_file does not exist, " .
+sub load_virtual_nodes_from_file () {
+    if (! -f $mapping_file) {
+        print "The file $mapping_file does not exist, " .
               "no previous virtual cluster exists\n";
     } else {
-        my $simple = XML::Simple->new(ForceArray => 1);
-        my $xml_data = $simple->XMLin($data_file);
-#    @new_virtual_nodes = ();
-        print "Loading virtual compute nodes from the DB...\n";
+        my $xml_data = OSCAR::FileUtils::parse_xmlfile ($mapping_file);
+        @new_virtual_nodes = ();
         my $base = $xml_data->{virtual_nodes}->[0]->{node};
+        #
+        # If the file is empty, we just exist successfully
+        #
+        return 0 if (!defined $base);
         print "Nb of nodes: ".scalar(@{$base})."\n";
         for (my $i=0; $i < scalar(@{$base}); $i++) {
             my $name = $xml_data->{virtual_nodes}->[0]->{node}->[$i]->{name}->[0]."\n";
@@ -186,21 +303,30 @@ sub populate_hostos {
     }
 }
 
-sub add_vn_to_hash {
-    my ($client_name, $hostos_name) = @_;
-    if (!exists $VIRTUALNODES{$client_name}) {
-        $VIRTUALNODES{$client_name} = {
-                  name => $client_name,
+# Return: 0 if success, -1 else.
+sub add_vm_to_hash ($$$) {
+    my ($vm_name, $hostos_name, $verbose) = @_;
+
+    if (!OSCAR::Utils::is_a_valid_string ($vm_name) 
+        || !OSCAR::Utils::is_a_valid_string ($hostos_name)) {
+        carp "ERROR: Invalid arguments";
+        return -1;
+    }
+
+    if (!exists $VIRTUALNODES{$vm_name}) {
+        $VIRTUALNODES{$vm_name} = {
+                  vm => $vm_name,
                   hostos => $hostos_name,
                  };
     } else {
-        print "The key already exists, we do not overload\n";
+        print "[INFO] The key already exists, we do not overload\n" if $verbose;
     }
-    return 1;
+
+    return 0;;
 }
 
 
-sub load_from_file {
+sub load_from_file ($) {
     my $file = shift;
     print "File: $file\n";
     open(IN,"<$file") or croak "Couldn't open file: $file for reading";
@@ -213,75 +339,73 @@ sub load_from_file {
 }
 
 
-sub add_client_to_hash {
+sub add_client_to_hash ($) {
     my $client = shift;
     $HOSTOS{$client} = {
-                  name => $client,
+                  vm => $client,
                  };
     return 1;
 }
 
-
-sub save_mapping_vm_hostos {
-    my $n = 0;
+# Return: 0 if sucess, -1 else.
+sub save_mapping_vm_hostos () {
     my %data_to_save;
+    my $n = 0;
 
     if (! -f $mapping_file) {
-        generate_empty_xml_file ();
+        carp "ERROR: the $mapping_file file does not exist";
+        return -1;
     }
-    my $xsimple = XML::Simple->new();
 
+    my $xsimple = XML::Simple->new();
     foreach my $key (keys %VIRTUALNODES) {
         # We only need to save the name of each virtual compute node, other
         # data are available via the SIS database (the name is the key for
         # machines)
-        %data_to_save->{'mapping'}->{'map'}[$n]->{'vm_name'} = $VIRTUALNODES{$key}->{'name'};
-        %data_to_save->{'mapping'}->{'map'}[$n]->{'host_name'} = $VIRTUALNODES{$key}->{'hostos'};
+        %data_to_save->{'mapping'}->{'map'}[$n]->{'vm_name'}
+            = $VIRTUALNODES{$key}->{'vm'};
+        %data_to_save->{'mapping'}->{'map'}[$n]->{'host_name'}
+            = $VIRTUALNODES{$key}->{'hostos'};
         $n++;
     }
 
     $xsimple->XMLout(\%data_to_save,
-                        noattr => 1,
-                        OutputFile => $mapping_file,
-                        xmldecl => '<?xml version="1.0" encoding="ISO-8859-1"?>');
-    print "Mapping file saved!\n";
+                     noattr => 1,
+                     OutputFile => $mapping_file,
+                     xmldecl => '<?xml version="1.0" encoding="ISO-8859-1"?>');
+    return 0;
 }
 
-sub load_mapping_from_file {
-    my $data_file = $mapping_file;
-    if (-f $data_file) {
-        my $simple = XML::Simple->new(ForceArray => 1);
-        my $xml_data = $simple->XMLin($data_file);
-        print "Loading virtual compute nodes from the DB...\n";
-        my $base = $xml_data->{mapping}->[0]->{map};
+# Return: 0 if success, -1 else.
+sub load_mapping_from_file () {
+    if (-f $mapping_file) {
+        my $xml_data = OSCAR::FileUtils::parse_xmlfile($mapping_file);
+        my $base = $xml_data->{mapping}->{map};
+
+        #
+        # If the file is empty, we simply exit successfully
+        #
+        return 0 if !defined $base;
+
         print "Nb of maps: ".scalar(@{$base})."\n";
         for (my $i=0; $i < scalar(@{$base}); $i++) {
-            my $hostos_name = $xml_data->{mapping}->[0]->{map}->[$i]->{host_name}->[0]."\n";
-            my $vm_name = $xml_data->{mapping}->[0]->{map}->[$i]->{vm_name}->[0]."\n";
+            my $hostos_name
+                = $xml_data->{mapping}->{map}->[$i]->{host_name}."\n";
+            my $vm_name
+                = $xml_data->{mapping}->{map}->[$i]->{vm_name}."\n";
             chomp($vm_name);
             chomp($hostos_name);
             # We check if the node really exist, i.e., is in the SIS DB
-            my $vnode = list_client(name=>$vm_name);
+#             my $vnode = list_client(name=>$vm_name);
             # WARNING we do not check if the map is already in the hash
             print "Map found (vm,hostos)=($vm_name,$hostos_name)\n";
-            add_vn_to_hash ($vm_name, $hostos_name);
+            add_vm_to_hash ($vm_name, $hostos_name, 1);
         }
+    } else {
+        carp "ERROR: file $mapping_file does not exist";
+        return -1;
     }
-    return 1;
-}
-
-sub generate_empty_xml_file {
-    if (! -d $ENV{OSCAR_HOME}.'/data/') {
-        print "The directory " . $ENV{OSCAR_HOME}.'/data/' . "does not exist,"; 
-        print " i create it";
-        mkdir ($ENV{OSCAR_HOME}.'/data/', 0750);
-    }
-    my $data_file = $ENV{OSCAR_HOME}.'/data/virtual_compute_nodes.xml';
-
-    open (FILE, ">$data_file") or die "can't open $data_file $!";
-    print FILE "<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>\n";
-    print FILE "<opt/>";
-    close (FILE);
+    return 0;
 }
 
 
@@ -349,7 +473,7 @@ sub rebuild_dhcp_conf {
 sub boot_vm {
     my $vm = shift;
     my $hostos = shift;
-    
+
     print "Booting VM $vm on Host OS $hostos\n";
     my $cmd = "scp ".$v2m_file_dir.$vm.".xml $hostos:/opt/v2m/data";
     print "Executing: $cmd\n";
