@@ -29,14 +29,15 @@ BEGIN {
     }
 }
 
-my ($add, $remove, $update, $mac, $distro, $deploy, $hostos, $techno,
-    $list_images, $verbose);
+my ($add_image, $add, $remove, $update, $mac, $distro, $deploy, $hostos,
+    $techno, $list_images, $verbose);
 
 GetOptions(
-        "add_vm=s"                      => \$add,
-        "remove_vm=s"                   => \$remove,
-        "update_vm=s"                   => \$update,
-        "deplo_vmy"                     => \$deploy,
+        "add-image=s"                   => \$add_image,
+        "add-vm=s"                      => \$add,
+        "remove-vm=s"                   => \$remove,
+        "update-vm=s"                   => \$update,
+        "deploy-vm"                     => \$deploy,
         "mac=s"                         => \$mac,
         "distro=s"                      => \$distro,
         "hostos=s"                      => \$hostos,
@@ -50,6 +51,7 @@ GetOptions(
 # First we do some sanity checking...
 #
 my $actions = 0;
+$actions++ if (defined $add_image);
 $actions++ if (defined $add);
 $actions++ if (defined $remove);
 $actions++ if (defined $update);
@@ -59,7 +61,7 @@ if ($actions != 1) {
     die "ERROR: Invalid number of actions ($actions)";
 }
 
-if (defined $add && !is_a_valid_string ($distro)) {
+if (defined $add_image && !is_a_valid_string ($distro)) {
     die "ERROR: Invalid argument for the addition of a new VM";
 }
 
@@ -79,11 +81,22 @@ if (defined $deploy && (!is_a_valid_string ($hostos)
 }
 
 #
-# Now that we now we are good to go, we start the work...
+# We initialize OSCAR-V just to be sure everything is fine (if the 
+# initialization has been done before, this does nothing)...
 #
 
 if (OSCAR::VirtualCluster::init_oscarv ($verbose)) {
     die "ERROR: Impossible to initialize OSCAR-V";
+}
+
+#
+# Now that we now we are good to go, we start the work...
+#
+
+if ($add_image) {
+    if (OSCAR::VirtualCluster::add_vm_image ($add_image, $distro)) {
+        die "ERROR: Impossible to store VM image data";
+    }
 }
 
 if ($add) {
@@ -164,7 +177,10 @@ __END__
 
 =head1 DESCRIPTION
 
-Setup virtual machines via OSCAR.
+Setup virtual machines via OSCAR. The deployment of a virtual machine using
+OSCAR-V is composed by 3 steps: 1) an image has to be created, 2) VMs have to
+be assigned to a given image and VMs' characteristics such as the MAC address,
+and 3) the actual deployment of the VMs.
 
 =head1 USAGE
 
@@ -176,15 +192,20 @@ oscar-v OPTION
 
 OPTION can be:
 
-=item --add <VM_ID>
+=item --add_image <image_name>
+
+Add a new image for virtual machines. The "distro" option must be used at the
+same time.
+
+=item --add-vm <VM_ID>
 
 Add a new virtual machine.
 
-=item --remove <VM_ID>
+=item --remove-vm <VM_ID>
 
 Remove a virtual machine.
 
-=item --update <VM_ID>
+=item --update-vm <VM_ID>
 
 Update a virtual machine.
 
