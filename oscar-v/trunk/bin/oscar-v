@@ -12,7 +12,7 @@
 #
 
 #
-# $Id: oscar-config 7238 2008-08-06 20:22:33Z valleegr $
+# $Id$
 #
 
 use strict;
