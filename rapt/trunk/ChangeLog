@@ -1,3 +1,7 @@
+rapt-2.8.3 (not yet released):
+- Minor modification for the oscar-packager support: add a "make rpm" command
+(which only displays a message).
+
 rapt-2.8.2:
 - Fix a bug when specifying the architecture for bootstrapping (introduced
 during the last release).

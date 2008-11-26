@@ -15,6 +15,9 @@ uninstall:
 	rm -f $(DESTDIR)/usr/share/man/man8/rapt.8
 	rm -f $(DESTDIR)/usr/bin/rapt
 
+rpm ::
+	@echo "RAPT is not yet supported on RPM system"
+
 deb ::
 	rm -rf $(DEBTMP)
 	mkdir -p $(DEBTMP)
