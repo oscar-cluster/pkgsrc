@@ -3,7 +3,7 @@ BINDIR=$(DESTDIR)/usr/bin
 DATADIR=$(DESTDIR)/usr/share
 MANDIR=$(DESTDIR)/usr/share/man
 NAME=yume
-VERSION=2.8.1
+VERSION=2.8.2
 
 FILES := ChangeLog ptty_try yume yume-opkg-4.2.1 yume-opkg yum-repoquery3 \
 		rhel4-i386.rpmlist yume.8 yume.spec Makefile rhel4-x86_64.rpmlist \
@@ -28,9 +28,8 @@ dist: clean
 	mkdir -p /tmp/$(NAME)-$(VERSION)/debian
 	cp ${FILES} /tmp/$(NAME)-$(VERSION)
 	cp ${DEBIANFILES} /tmp/$(NAME)-$(VERSION)/debian
-	PWD=`pwd`
 	cd /tmp; tar czf $(NAME)-$(VERSION).tar.gz $(NAME)-$(VERSION)
-	mv /tmp/$(NAME)-$(VERSION).tar.gz $(PWD)
+	mv /tmp/$(NAME)-$(VERSION).tar.gz .
 
 clean:
 	rm -f *~
@@ -41,3 +40,7 @@ clean:
 
 deb:
 	dpkg-buildpackage -rfakeroot
+
+rpm: dist
+	cp $(NAME)-$(VERSION).tar.gz /usr/src/redhat/SOURCES
+	rpmbuild -bb ./yume.spec
