@@ -88,9 +88,26 @@ When used on an OSCAR cluster the repositories default to the distribution
 specific repository locations. These can be displayed by using the command
 $OSCAR_HOME/scripts/distro-query.
 
+.SH "EXAMPLES"
+
+.B rapt --repo http://us.archive.ubuntu.com/ubuntu/+gutsy+main search dpkg
+.br
+this will search for Debian packages that includes rapt in their description
+from packages available in the http://us.archive.ubuntu.com/ubuntu/ repository
+for Gutsy.
+
+.B rapt --repo http://us.archive.ubuntu.com/ubuntu/+gutsy+main show dpkg
+.br
+this will show information about the rapt Debian package available in the
+http://us.archive.ubuntu.com/ubuntu/ repository for Gutsy.
+
+.B rapt --repo http://us.archive.ubuntu.com/ubuntu/+gutsy+main install dpkg
+.br
+this will install the rapt package from the 
+http://us.archive.ubuntu.com/ubuntu/ repository for Gutsy.
 
 .SH "SEE ALSO"
-apt-get(8), yume(8).
+apt-get(8), apt-cache(8), yume(8).
 
 .SH "DIAGNOSTICS"
 Exit status is normally 0.
@@ -99,7 +116,10 @@ If an error occurs, exit status is nonzero.
 .SH BUGS
 None ;-)
 
-.SH AUTHOR
+.SH AUTHORS
 Erich Focht, NEC HPCE, email: efocht at hpce dot nec dot com
+.br
+Geoffroy Vallee, Oak Ridge National Laboratory, email: valleegr at ornl dot gov
+.br
 .br
 Document version $Revision$
