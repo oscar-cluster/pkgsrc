@@ -1,3 +1,9 @@
+v2m (0.9.6-1) hardy; urgency=low
+
+  * New upstream version.
+
+ -- gvallee <gvallee@hugo>  Wed, 03 Dec 2008 11:20:22 -0500
+
 v2m (0.9.4) gutsy; urgency=low
 
   * New upstream version.
