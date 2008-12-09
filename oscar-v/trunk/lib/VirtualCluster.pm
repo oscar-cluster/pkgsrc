@@ -21,8 +21,13 @@ package OSCAR::VirtualCluster;
 # $Id$
 #
 
+BEGIN {
+    if (defined $ENV{OSCAR_HOME}) {
+        unshift @INC, "$ENV{OSCAR_HOME}/lib";
+    }
+}
+
 use strict;
-use lib "$ENV{OSCAR_HOME}/lib";
 use OSCAR::Logger;
 use OSCAR::Utils;
 use OSCAR::FileUtils;
@@ -484,3 +489,41 @@ sub boot_vm {
 }
 
 1;
+
+__END__
+
+=head1 Exported functions
+
+=over 8
+
+=item add_vm_image
+
+Create a new image for the deployment of virtual machines.
+
+=item assign_vm_to_hostos
+
+Specify the mapping virtual machine / host OS.
+
+=item generate_new_vm_config_file
+
+Generate a new configuration file (a.k.a. profile) for a given virtual machine.
+
+=item generate_new_vm_image_config_file
+
+=item init_oscarv
+
+Initialize OSCAR-V and its execution environment.
+
+=item load_virtual_nodes_from_file
+
+=item sortclients
+
+=item vc_deploy
+
+=item @new_virtual_nodes
+
+=item $oscarv_interface
+
+=back
+
+=cut
