@@ -492,6 +492,26 @@ sub boot_vm {
 
 __END__
 
+=head1 Configuration Files
+
+OSCAR-V is based on 2 different configuration files, all of them stored into
+/etc/oscar/oscarv (those configuration can be manually modified but we strongly
+advice you to use the oscar-v script to do so):
+
+=over 8
+
+=item vm_images
+
+DEPRECATED?
+
+=item mapping.xml
+
+This file stores the mapping HostOS / virtual machine. It typically allows one
+to locate a given virtual machine and it also allows OSCAR-V to know where
+commands for virtual machine management should be executed.
+
+=back
+
 =head1 Exported functions
 
 =over 8
