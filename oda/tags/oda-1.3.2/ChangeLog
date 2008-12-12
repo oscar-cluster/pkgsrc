@@ -1,0 +1,38 @@
+1.3.2:
+- Fix a problem when querying data about a specific node/nic.
+- Improve the perldoc documentation of few Perl modules.
+- Fix a problem when getting cluster data.
+
+1.3.1:
+- Update the prereqs for Debian systems.
+- Fix the spec file.
+- Move Perl module to a noarch directory (perllib).
+
+1.3:
+- Remove useless error messages when OSCAR_HOME is not defined.
+- Print a success message at the end of the ODA initialization.
+- Add a files for the definition of all the ODA constants (ODA_Defs.pm)
+- Add the automatic generation and installation of man pages for all ODA
+scripts.
+- Add a new API for the management of OPKGs selection
+- Improve the documentation, we have now a perldoc documentation for
+Database.pm.
+- Add a basic directory structure for unit tests and add a first set of tests
+related to the management of OPKGs and Selector.
+- Improve the data stored for each OPKG, we get now much more information.
+
+1.2:
+- Fix different bugs in SQL syntax (introduced during the merge of the OSCAR
+branch-5-1 into trunk).
+- Clean up the bootstrapping (the database password was generated twice).
+- Include the missing make_database_password script when using Make commands.
+- Fix a bootstrapping issue: we were refering to OSCAR::oda even where the
+bootstrapping was not complete, ending in errors.
+
+1.1:
+- Add the automatic create and initialization of the database.
+- Continue to move many ODA scripts from OSCAR trunk.
+- Add a dedicated Perl module for the bootstrapping.
+
+1.0:
+- Separate ODA from the rest of the OSCAR code.
