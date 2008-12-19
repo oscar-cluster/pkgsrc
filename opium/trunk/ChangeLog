@@ -1,6 +1,8 @@
-ssh-oscar-1.2 (not yet released):
+ssh-oscar-1.2:
 - Include the patch from Ansgar Esztermann: in ssh-oscar.sh, checks for the
 existance of the home directory instead of entering into the home directory.
+- Add a clean Makefile to generate a tarball and a RPM.
+- Clean up and fix the spec file.
 
 ssh-oscar-1.1:
 - Ensure that SSH keys are not generated for user "nobody".

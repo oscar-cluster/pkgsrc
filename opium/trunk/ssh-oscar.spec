@@ -13,9 +13,9 @@ Release: 1
 BuildArchitectures: noarch
 Packager: Jason Brechin <brechin@ncsa.uiuc.edu>
 URL: http://oscar.sourceforge.net/
-Source0: ssh-oscar-1.1.tgz
+Source0: ssh-oscar.tar.gz
 
-Copyright: GPL
+License: GPL
 Group: System
 BuildPreReq: rpm >= 3.0.5
 Requires: rpm >= 3.0.5
@@ -31,11 +31,10 @@ compute nodes.
 
 %prep
 
-%setup -c
+%setup -n %{name}
 
 %install
-cp -p ssh-oscar.sh /etc/profile.d/ssh-oscar.sh
-cp -p ssh-oscar.csh /etc/profile.d/ssh-oscar.csh
+make install
 
 %post
 
