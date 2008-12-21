@@ -65,7 +65,7 @@ $verbose = "$ENV{YUME_VERBOSE}" if ($ENV{YUME_VERBOSE});
 # query default OSCAR repositories if no repo given
 if (!scalar(@repos)) {
     &get_default_repos();
-}	    
+}
 
 if (!scalar(@repos)) {
     print "ERROR: No repositories passed and none detected!\n";

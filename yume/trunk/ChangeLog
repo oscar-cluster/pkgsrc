@@ -1,4 +1,4 @@
-yume-2.8.2 (not yet released):
+yume-2.8.2:
 - add a "deb" target to the Makefile (needed by oscar-packager).
 - fix the "make dist" command.
 
