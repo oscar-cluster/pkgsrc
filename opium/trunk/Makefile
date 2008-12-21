@@ -1,23 +1,23 @@
 PKG=ssh-oscar
 
-BINDIR=etc/profile.d
-
-FILES := ssh-oscar.csh ssh-oscar.sh Makefile
+FILES := ssh-oscar.csh ssh-oscar.sh Makefile install
 
 all:
 
 install:
-	@echo "Installing Perl modules in $(DESTDIR)/$(BINDIR)"
-	install -d -m 0755 $(DESTDIR)/$(BINDIR)
-	install    -m 0755 ${FILES} $(DESTDIR)/$(BINDIR)
+	./install $(DESTDIR)
 
 rpm: dist
 	cp $(PKG).tar.gz /usr/src/redhat/SOURCES
 	rpmbuild -bb ./$(PKG).spec
 
+deb:
+	dpkg-buildpackage -rfakeroot
+
 clean:
 	rm -f *~
 	rm -f ./$(PKG).tar.gz
+	rm -f *.rpm
 
 dist: clean
 	rm -rf /tmp/$(PKG)

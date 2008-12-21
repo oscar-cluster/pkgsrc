@@ -1,0 +1,80 @@
+#!/usr/bin/perl
+#
+
+# This file is part of the OSCAR software package.  For license
+# information, see the COPYING file in the top level directory of the
+# OSCAR source distribution.
+#
+# $Id$
+#
+# Copyright (c) 2008 Geoffroy Vallee <valleegr@ornl.gov>
+#                    Oak Ridge National Laboratory
+#                    All rights reserved.
+#
+# This script install the ssh-oscar script in the good location based on the
+# system type. For precisely, on Debian systems, it is not possible to use
+# /etc/profile.d, therefore we update the /etc/skel/.profile file to simulate
+# the same behavior (on RPM based systems, we simply install everything in
+# /etc/profile.d.
+
+
+BEGIN {
+    if (defined $ENV{OSCAR_HOME}) {
+        unshift @INC, "$ENV{OSCAR_HOME}/lib";
+    }
+}
+use strict;
+use File::Copy;
+use File::Path;
+use OSCAR::OCA::OS_Detect;
+use OSCAR::Utils;
+use warnings "all";
+use Carp;
+
+my $destdir = shift;
+
+$destdir = "" if (!defined $destdir);
+
+my @scripts = ("ssh-oscar.csh", "ssh-oscar.sh");
+
+my $text = "\n# OSCAR update\nif [ ! -e \"\$HOME/.ssh/authorized_keys\" ] ;".
+           " then\n\t/usr/bin/ssh-oscar.sh\nfi\n";
+
+my $os = OSCAR::OCA::OS_Detect::open ("/");
+if (!defined $os) {
+    die "ERROR: Impossible to detect the local distro.\n".
+        "Is your system supported by OSCAR?\n";
+}
+
+if ($os->{pkg} eq "rpm") {
+    $destdir .= "/etc/profile.d";
+    File::Path::mkpath $destdir if (!-d $destdir);
+    foreach my $script (@scripts) {
+        File::Copy::copy($script, $destdir)
+            or die "ERROR: Impossible to copy $script to $destdir";
+    }
+} elsif ($os->{pkg} eq "deb") {
+    my $dest = "$destdir/usr/bin";
+
+    # We update the /etc/skel/.profile.
+    my $file = "$destdir/etc/skel/.profile";
+    my $eval = `grep \"OSCAR update\" $file`;
+    if (! is_a_valid_string $eval) {
+        print "[INFO] We need to update $file\n";
+    }
+    open (DAT, ">>$file") or die "ERROR: Impossible to open $file";
+    print DAT $text;
+    close (DAT);
+
+    # We copy the ssh-oscar scripts
+    File::Path::mkpath $destdir if (!-d $dest);
+    foreach my $script (@scripts) {
+        File::Copy::copy("./$script", $dest)
+            or die "ERROR: Impossible to copy $script to $dest";
+        chmod (0755, "$dest/$script");
+    }
+} else {
+    die "ERROR: Unsupported system $os->{pkg}";
+}
+
+exit 0;

@@ -9,7 +9,7 @@
 Summary: OSCARified User Synchronization System
 Name: %{name}
 Version: %{version}
-Release: 1
+Release: 2
 BuildArchitectures: noarch
 Packager: Jason Brechin <brechin@ncsa.uiuc.edu>
 URL: http://oscar.sourceforge.net/
