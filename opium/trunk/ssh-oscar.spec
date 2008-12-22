@@ -2,14 +2,14 @@
 %define name ssh-oscar
 
 # Version of package
-%define version 1.2
+%define version 1.2.1
 
 #==============================================================
 
 Summary: OSCARified User Synchronization System
 Name: %{name}
 Version: %{version}
-Release: 2
+Release: 1
 BuildArchitectures: noarch
 Packager: Jason Brechin <brechin@ncsa.uiuc.edu>
 URL: http://oscar.sourceforge.net/
@@ -55,6 +55,9 @@ make install
 #==============================================================
 
 %changelog
+* Mon Dec 22 2008 Geoffroy Vallee <valleegr@ornl.gov> 1.2.1-1
+- New upstream version (see ChangeLog for more details).
+
 * Mon Dec 12 2005 Bernard Li <bli@bcgsc.ca>
 - Ensure that SSH keys are not generated for user "nobody"
 
