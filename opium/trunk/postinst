@@ -1,0 +1,24 @@
+#!/usr/bin/perl
+#
+
+use strict;
+use OSCAR::Utils;
+use warnings "all";
+
+my ($phase, $destdir) = @_;
+
+$destdir = "" if (!defined $destdir);
+
+my $text = "\n# OSCAR update\nif [ ! -e \"\$HOME/.ssh/authorized_keys\" ] ;".
+           " then\n\t/usr/bin/ssh-oscar.sh\nfi\n";
+
+# We update the /etc/skel/.profile.
+my $file = "$destdir/etc/skel/.profile";
+my $eval = `grep \"OSCAR update\" $file`;
+if (! OSCAR::Utils::is_a_valid_string $eval) {
+    print "[INFO] We need to update $file\n";
+    open (DAT, ">>$file") or die "ERROR: Impossible to open $file";
+    print DAT $text;
+    close (DAT);
+}
+

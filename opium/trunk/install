@@ -37,9 +37,6 @@ $destdir = "" if (!defined $destdir);
 
 my @scripts = ("ssh-oscar.csh", "ssh-oscar.sh");
 
-my $text = "\n# OSCAR update\nif [ ! -e \"\$HOME/.ssh/authorized_keys\" ] ;".
-           " then\n\t/usr/bin/ssh-oscar.sh\nfi\n";
-
 my $os = OSCAR::OCA::OS_Detect::open ("/");
 if (!defined $os) {
     die "ERROR: Impossible to detect the local distro.\n".
@@ -56,22 +53,18 @@ if ($os->{pkg} eq "rpm") {
 } elsif ($os->{pkg} eq "deb") {
     my $dest = "$destdir/usr/bin";
 
-    # We update the /etc/skel/.profile.
-    my $file = "$destdir/etc/skel/.profile";
-    my $eval = `grep \"OSCAR update\" $file`;
-    if (! is_a_valid_string $eval) {
-        print "[INFO] We need to update $file\n";
-    }
-    open (DAT, ">>$file") or die "ERROR: Impossible to open $file";
-    print DAT $text;
-    close (DAT);
-
     # We copy the ssh-oscar scripts
     File::Path::mkpath $destdir if (!-d $dest);
     foreach my $script (@scripts) {
         File::Copy::copy("./$script", $dest)
             or die "ERROR: Impossible to copy $script to $dest";
         chmod (0755, "$dest/$script");
+    }
+
+    # We update the /etc/skel/.profile.
+    my $cmd = "./postinst configure $destdir";
+    if (system ($cmd)) {
+        die "ERROR: Impossible to execute $cmd";
     }
 } else {
     die "ERROR: Unsupported system $os->{pkg}";
