@@ -1,4 +1,4 @@
-rapt-2.8.3 (not yet released):
+rapt-2.8.3:
 - Minor modification for the oscar-packager support: add a "make rpm" command
 (which only displays a message).
 - Improve the man page.
