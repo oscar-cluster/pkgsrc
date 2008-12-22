@@ -7,6 +7,6 @@ Standards-Version: 3.7.2
 
 Package: ssh-oscar
 Architecture: all
-Depends: ${shlibs:Depends}, ${misc:Depends}, liboscar
+Depends: ${shlibs:Depends}, ${misc:Depends}, liboscar, tcsh | csh | c-shell
 Description: OSCAR SSH management scripts
  Set of scripts for the initialization of SSH for OSCAR users.

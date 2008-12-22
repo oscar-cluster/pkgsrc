@@ -54,7 +54,7 @@ if ($os->{pkg} eq "rpm") {
     my $dest = "$destdir/usr/bin";
 
     # We copy the ssh-oscar scripts
-    File::Path::mkpath $destdir if (!-d $dest);
+    File::Path::mkpath $dest if (!-d $dest);
     foreach my $script (@scripts) {
         File::Copy::copy("./$script", $dest)
             or die "ERROR: Impossible to copy $script to $dest";
