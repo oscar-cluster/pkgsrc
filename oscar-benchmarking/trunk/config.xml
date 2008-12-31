@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<oscar 
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns:oscar-config="http://sf.net/oscar/2005/config.xml"
+  xsi:schemaLocation="http://sf.net/oscar/2005/config.xml oscar-config.xsd"
+>
+  <!--
+      
+      This file is part of the OSCAR software package.  For license
+      information, see the COPYING file in the top level directory of the
+      OSCAR source distribution.
+     
+      $Id: config.xml 5375 2006-09-27 16:51:31Z efocht $
+  -->
+  <name>cbench-sources</name>
+
+  <version>
+    <major>1</major>
+    <minor>1</minor>
+    <subversion>5</subversion>
+    <release>1</release>
+  </version>
+
+  <class>included</class>
+
+  <summary>Cbench is a performance benchmarking infrastructure tool. It provides scripts and templates for an entire lifecycle of performance evaluation tasks from generation of jobs to parsing of the generated data. This package provides source rpm for the cbench tool. Any user can generate binary packages from these sources and spec file.
+  </summary>
+  <license>GPL</license>
+  <group>System Environment/Base</group>
+  <packager>
+    <name>Anand</name>
+    <email>tikotekaraa@ornl.gov</email>
+  </packager>
+
+  <description>
+	Cbench is a performance benchmarking infrastructure tool. It provides scripts and templates for an entire lifecycle of performance evaluation tasks from generation of jobs to parsing of the generated data. This package provides source rpm for the cbench tool. Any user can generate binary packages from these sources and spec file.
+  </description>
+
+  <binary-package-list>
+      <pkg>cbench-sources</pkg>
+  </binary-package-list>
+
+</oscar>

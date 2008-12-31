@@ -1,0 +1,15 @@
+# .bashrc
+
+# Source global definitions
+if [ -f /etc/bashrc ]; then
+	. /etc/bashrc
+fi
+
+# User specific aliases and functions
+
+export PATH=/opt/lam-7.1.2/bin:/opt/lam-7.1.2/lib:$PATH
+export CBENCHCLUSTER="xtorc"
+export CBENCHOME="/home/anand/cbench"
+export CBENCHTEST="$CBENCHOME/testset_cbench"
+export MPIHOME="/opt/lam-7.1.2"
+export COMPILERCOLLECTION="gcc"

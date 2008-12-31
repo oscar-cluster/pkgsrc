@@ -1,0 +1,5 @@
+#!/bin/sh
+
+
+chown -R oscartst:oscartst /home/oscartst/SOURCES/
+chown -R oscartst:oscartst /home/oscartst/SPECS/

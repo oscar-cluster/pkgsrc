@@ -1,0 +1,7 @@
+
+%_topdir 	/home/oscartst
+%_builddir      /home/anand
+%_sourcedir     %{_topdir}/SOURCES
+%_specdir       %{_topdir}/SPECS
+%_srcrpmdir     %{_topdir}/SRPMS
+%_rpmdir	%{_builddir}/RPMS

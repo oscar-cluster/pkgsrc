@@ -1,0 +1,57 @@
+\documentclass[pdftex,10pt]{article}
+\ExecuteOptions{letterpaper}
+\usepackage{fullpage}
+\usepackage[final]{pdfpages}
+
+
+\title{Cbench: Current status, Todo list, and general notes}
+\author{SRT Team \\
+	Oak Ridge National Laboratory 
+}
+%\date{Month XX, 200x}
+
+\begin{document}
+\maketitle
+\renewcommand{\thefootnote}{\arabic{footnote}}
+
+\section{Introduction to Cbench}
+\label{sect:Introduction}
+
+Cbench creates an infrastructure which is capable of running various benchmarks in an automated fashion. Cbench requires a one-time configuration file per cluster resource that is being used for running the actual benchmarks. The Cbench infrastructure allows an user to create specific scripts for their own benchmarks from the provided template scripts. The given template scripts can be used to create an entire lifecycle of specific scripts from job configuration to cleanup. Cbench also provides tools or scripts to analyze the data generated during a job run using a client-server model. This model requires data to be in a specific format for further analysis. The client, therefore, must ensure that the specific application data is parsed and formatted according to the cbench backend requirements. The user is thus tasked with writing their own parser for their application data.
+
+Oscar is a cluster management and configuration framework. OSCAR provides a framework for package installation. Currently, OSCAR does not provide Cbench package through its installation process. The following paragraphs provide pointers on how Cbench may be provided through OSCAR. Specifically, the paragraphs point to the issues, and the modifications needed in order to install and manage Cbench through OSCAR.
+
+\section{Current Design for inclusion of Cbench into OSCAR}
+
+\subsection{Issues}
+\label{sect:Issues}
+The packaging framework of OSCAR expects all packages for RedHat type distributions to be RPMs. Therefore Cbench must be provided as an RPM or a collection of RPMs. There are several issues that complicate the procedure of creating an RPM for Cbench. First, the Cbench project is a collection of perl scripts and not a standard unix build environment of makefiles, even though the project does contain a lot of makefiles for standard applications such as HPCC. Second, the Cbench framework is divided into two unequal parts. One part is its core, which provides the necessary infrastructre support alluded to in section \ref{sect:Introduction}. The second part is a collection of all the current applications and their related files. Thus, any attempt to supply an Cbench RPM must provide the cbench core and one or more of its applications. Third, closely following the second, we see that a strategic issue here is to decide whether the users (administrator) be given a choice of applications they expressly need or simply provide them with all the applications that are with the cbench source. Finally, the cbench package is not a system package but a user package. And since an administrator builds a cluster, it is difficult to guess what the users need, who needs it.
+
+\subsection{Current provisions}
+Based on the issues discussed in section \ref{sect:Issues}, the following steps are suggested. This solution has also been tested on OSCAR 5.0 and Fedora 5 on Xtorc.
+
+\begin{enumerate}
+\item Separate Cbench into core files and application specific files.
+\item Currently only focus on HPCC as a proof-of-concept.
+\item Write an RPM specification file containing these two packages.
+\item The build part in the specification file should point to the compilation of HPCC.
+\item Use RPM macros for builddir, topdir etc for later ease of installation.
+\item Write a specification file for creating an rpm that will contain the cbench sources and the specification files for building application rpms (HPCC) for users.
+\item Use the RPM created in step 6 for inclusion into OSCAR.
+\item Write a config.xml and post-install scripts.
+\item The installation of Cbench sources will occur in /home/oscartst.
+\item The post-install scripts should change the permissions on /home/oscartst to allow other users to access it.
+\item After installation, each user simply needs a rpmmacros file to override the builddirs used in step 5 and a bashrc file with few cbench environment variables for compilation purposes in their home directory . 
+\item Each user then can simply build cbench rpms using the specifications file in /home/oscartst.
+\item Simply install the binary packages containing the Cbench core and built applications. (In this case HPCC)
+\end{enumerate}
+
+In the above design there will be one Cbench core RPM and multiple application RPMs present. Each user can then decide how many applications he/she needs to build. These steps or created RPMs should be distribution and architecture independent.
+
+The scripts, files, and sources for the above solution are in the svn directory on bear with the following path: https://bear.csm.ornl.gov/svn/bench/trunk/dat/cbench
+
+
+
+
+
+\end{document}
