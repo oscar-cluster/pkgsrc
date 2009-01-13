@@ -1,0 +1,17 @@
+#!/usr/bin/perl
+#
+
+# Copyright (c) 2009 Geoffroy Vallee <valleegr at ornl dot gov>
+#                    Oak Ridge National Laboratory
+#                    All rights reserved.
+#
+
+print "[YUME] Testing options...\n";
+
+my $cmd = "/usr/bin/yume --toto";
+
+if (system ($cmd) == 0) {
+    die "ERROR: it seems that yume does not check options";
+}
+
+print "[YUME] Options testing successful\n"

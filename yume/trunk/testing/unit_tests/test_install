@@ -1,0 +1,24 @@
+#!/usr/bin/perl
+#
+
+# Copyright (c) 2009 Geoffroy Vallee <valleegr at ornl dot gov>
+#                    Oak Ridge National Laboratory
+#                    All rights reserved.
+#
+
+print "[YUME] Testing package installation...\n";
+
+# If the user that execute tests is not root, we skip that test
+if ($< != 0) {
+    print "[INFO] The test is not run as root, we skip it\n";
+    exit 0;
+}
+
+my $cmd = "/usr/bin/yume --repo http://bear.csm.ornl.gov/repos/rhel-5-i386 install toto";
+
+if (system ($cmd) == 0) {
+    die "ERROR: it seems that yume does not check the installation ".
+        "return code";
+}
+
+print "[YUME] Package installation testing successful\n"
