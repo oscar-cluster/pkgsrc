@@ -161,21 +161,21 @@ if ($repoquery) {
     # try using native repoquery, if available
     my $rq = `which repoquery >/dev/null 2>&1`;
     if ($?) {
-	# fall back to included yum-repoquery
-	my @yum_v = `yum --version`;
-	my $yum_version;
-	for (@yum_v) {
-	    next if (!/^\d.*/);
-	    s/\..*$//g;
-	    $yum_version = $_;
-	}
-	if ($yum_version < 3) {
-	    $rq = "/usr/bin/yum-repoquery";
-	} else {
-	    $rq = "/usr/bin/yum-repoquery3";
-	}
+        # fall back to included yum-repoquery
+        my @yum_v = `yum --version`;
+        my $yum_version;
+        for (@yum_v) {
+            next if (!/^\d.*/);
+            s/\..*$//g;
+            $yum_version = $_;
+        }
+        if ($yum_version < 3) {
+            $rq = "/usr/bin/yum-repoquery";
+        } else {
+            $rq = "/usr/bin/yum-repoquery3";
+        }
     } else {
-	$rq = "repoquery";
+        $rq = "repoquery";
     }
 
     # run repoquery command
@@ -190,33 +190,47 @@ if ($repoquery) {
     # run yum command
     $cmd = "yum -c $name";
     if (($verbose > 2) && ($verbose <= 10)) {
-	$cmd .= " -d $verbose -e 2";
+        $cmd .= " -d $verbose -e 2";
     }
     if ($installroot) {
-	# special handling for empty suse images
-	if ((scalar(grep /^install$/, @ARGV) == 1) &&
-	    &img_empty($installroot)) {
-	    # try creating lock directory, if it fails we'll fail in
-	    # other place anyway
-	    system("mkdir -p $installroot/var/lock/rpm");
-	    if ((&distro_repos() eq "suse") || (&distro_repos() eq "sles")) {
-		&bootstrap_suse($installroot);
-	    }
-	}
-	$cmd .= " --installroot $installroot";
+        # special handling for empty suse images
+        if ((scalar(grep /^install$/, @ARGV) == 1) &&
+            &img_empty($installroot)) {
+            # try creating lock directory, if it fails we'll fail in
+            # other place anyway
+            system("mkdir -p $installroot/var/lock/rpm");
+            if ((&distro_repos() eq "suse") || (&distro_repos() eq "sles")) {
+                &bootstrap_suse($installroot);
+            }
+        }
+        $cmd .= " --installroot $installroot";
     }
     my @yumargs = @ARGV;
+
+    # yum has a very bad return code policy: if you try to install a package
+    # that is not available, yum will be happy and return 0. So we need to check
+    # first if the package is available or not.
+    if ($yumargs[0] eq "install") {
+        $cmd = "yum info";
+        for (my $i=1; $i<scalar(@yumargs); $i++) {
+            $cmd .= " $yumargs[$i]";
+        }
+        print "Executing: $cmd\n" if $verbose;
+        if (system ($cmd)) {
+            die "ERROR: Some packages are not available";
+        }
+    }
 
     # x86_64 needs arch to be specified, otherwise it installs
     # both i386 and x86_64 rpms (if available)
     if ($archstr eq "x86_64") {
-	@yumargs = &transform_args(@ARGV);
+        @yumargs = &transform_args(@ARGV);
     }
     @yumargs = &transform_groups(@yumargs);
 
     if (!scalar(@yumargs)) {
-	print "No arguments passed to yum! Not doing anything.\n";
-	help();
+        print "No arguments passed to yum! Not doing anything.\n";
+        help();
     }
 
     $cmd .= " ".join(" ",@yumargs);
@@ -225,9 +239,11 @@ if ($repoquery) {
     $! = 0;
     $err = system($cmd);
 }
+
 if ($verbose && $err) {
     print STDERR "ERROR: \"$cmd\" returned $err: $!\n";
 }
+
 exit $err;
 
 #############################################################################
