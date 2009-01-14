@@ -1,5 +1,7 @@
 yume-2.8.3 (not yet released):
 - add a framework for unit tests + some basic unit tests.
+- [Ticket #511] We now check the options and display the help message if the
+option is invalid.
 
 yume-2.8.2:
 - add a "deb" target to the Makefile (needed by oscar-packager).

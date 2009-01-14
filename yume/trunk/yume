@@ -44,21 +44,20 @@ my ($name, $fh, $verbose, $export, $unexport, $prepare, $listexp, $repoquery);
 my $installroot;
 my (@repos, @repoadd, @repodel, $repolist);
 my $prog = $0;
-Getopt::Long::Configure("pass_through");
-GetOptions( 
-	    "help"      => \&help,
-            "repo=s"    => \@repos,
-            "repoadd=s" => \@repoadd,
-            "repodel=s" => \@repodel,
-            "repolist"  => \$repolist,
-	    "export"    => \$export,
-	    "prepare"   => \$prepare,
-	    "unexport"  => \$unexport,
-	    "listexp"   => \&list_exported,
-	    "installroot=s" => \$installroot,
-	    "repoquery|rq"  => \$repoquery,
-	    "verbose|v+"    => \$verbose,
-          );
+GetOptions(
+            "help"          => \&help_and_exit,
+            "repo=s"        => \@repos,
+            "repoadd=s"     => \@repoadd,
+            "repodel=s"     => \@repodel,
+            "repolist"      => \$repolist,
+            "export"        => \$export,
+            "prepare"       => \$prepare,
+            "unexport"      => \$unexport,
+            "listexp"       => \&list_exported,
+            "installroot=s" => \$installroot,
+            "repoquery|rq"  => \$repoquery,
+            "verbose|v+"    => \$verbose,
+          ) || help_and_die();
 
 $verbose = "$ENV{YUME_VERBOSE}" if ($ENV{YUME_VERBOSE});
 
@@ -69,7 +68,7 @@ if (!scalar(@repos)) {
 
 if (!scalar(@repos)) {
     print "ERROR: No repositories passed and none detected!\n";
-    help();
+    help_and_die ();
 }
 
 my @validarch = qw(i386 x86_64 ia64 ppc64 noarch);
@@ -422,7 +421,16 @@ sub help {
     print "The commands --repolist, --repoadd, --repolist only make sense\n";
     print "on an OSCAR master node. Multiple --repoadd|--repodel options\n";
     print "can be used on the command line.\n";
-    exit;
+}
+
+sub help_and_exit {
+    help ();
+    exit 0;
+}
+
+sub help_and_die {
+    help ();
+    exit 1;
 }
 
 sub cleanup {
@@ -529,8 +537,9 @@ sub get_default_repos {
 		}
 	    }
 	} else {
-	    print "You are not on an OSCAR cluster. You must specify a repository!\n";
-	    help();
+	    print "ERROR: You are not on an OSCAR cluster. ".
+              "You must specify a repository!\n";
+	    help_and_die ();
 	}
     }
     if ($verbose) {
