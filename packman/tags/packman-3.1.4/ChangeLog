@@ -1,0 +1,86 @@
+packman-3.1.4:
+* Fix a bug in the search capability on RPM based systems.
+* Remove some debugging messages.
+
+packman-3.1.3:
+* Implement the image bootstrapping for RPM based systems.
+* Better error handling.
+* Include a "rpm" target to the Makefile; it is not possible to execute "make
+rpm".
+* Improve the spec file.
+
+packman-3.1.2:
+* Improve the packman script: make the script more stable, add the support of
+the remove, search and show commands.
+* Clean up the man page and the different Perl docs.
+* Fix the "show" and "search" commands on RPM based systems.
+
+packman-3.1.1:
+* Fix a bug in the declaration and exportation of constants. Now we can use
+them outside of PackMan without warnings or errors.
+
+packman-3.1.0:
+* Enable to specification of a distro ID (OS_Detect syntax) to a PackMan 
+object.
+* Finalize the support of "show" and "search" commands.
+* Store the concrete module format used in the backend (DEB vs. RPM).
+* Extend the packman script to support package installation.
+* Disable the remove function which is deprecated.
+
+packman-3.0.6:
+* Fix a bug introduced in 3.0.5, the location for the installation of Perl
+modules was automatic but we did not add OSCAR in the path, leading with
+issues with the OSCAR core.
+* Install Perl modules in "vendorlib"
+
+packman-3.0.5:
+* Fixes bug #474: We automatically detect where the Perl modules should be
+installed.
+
+packman-3.0.4:
+* Fixes bug #460: PackMan from now monitors sub-command execution and detect
+error messages (searching for messages starting by "ERROR").
+
+packman-3.0.3:
+* Add a status request: gives information about a given packman object.
+* Do not include empty local repositories (they make repository management
+more complex).
+
+packman-3.0.2:
+* Enhance the packman script: no irrelevant warnings when PackMan is directly
+installed on the system (no OSCAR_HOME).
+
+packman-3.0.1:
+* Fix a bug with the packman script.
+
+packman-3.0.0:
+* Remove DepMan, which is deprecated.
+* Match both the Debian and RPM package: a single packman package.
+
+packman-2.9.2:
+* Revisit the Makefile in order to be able to use it on both RPM and Debian
+based systems (the best of the different scripts).
+* Revisit the spec file in order to use the Makefile everytime it is possible
+(easier to maintain the code).
+
+packman-2.9.1:
+* For Debian, switch back to apt-get instead of aptitude; problems with
+untrusted packages.
+* Add a simple packman script in order to allow one to use packman as a stand
+alone tool.
+
+packman-2.9.0:
+* Fixed query_installed bugs
+* Added whatprovides method to RPM module, this is missing in Debian
+* Added check_installed method for checking if a list of packages is installed
+* Added search_repo method for searching a repository for packages matching a 
+pattern
+* Added clean method implementation for apt caches
+* Limited clean method scope to the configured repositories
+
+packman-2.8.1:
+* Add the option "--allow-unauthenticated" when using "apt-get install". This
+is needed because of the switch to Etch.
+* Update the package to make it more compliant with the Debian policy.
+* Add debugging information.
+* Change the order of preference for backends, it is now (DEB, RPM).
