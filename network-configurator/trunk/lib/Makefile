@@ -4,22 +4,18 @@ TOPDIR=..
 include $(TOPDIR)/Config.mk
 
 SUBDIRS :=
-FILES := network-configurator
-
-doc:
-	install -d -m 0755 $(DESTDIR)/usr/local/man/man1/
-	for bin in ${FILES} ; do ( pod2man --section=1 $$bin $(DESTDIR)/usr/local/man/man1/$$bin.1 ) ; done
+FILES := Network_Configurator.pm
 
 all:
 	for dir in ${SUBDIRS} ; do ( cd $$dir ; ${MAKE} all ) ; done
 
-install: doc
+install:
 	install -d -m 0755 $(DESTDIR)/usr/bin
-	install    -m 0755 ${FILES} $(DESTDIR)/usr/bin
+	install    -m 0755 ${FILES} $(DESTDIR)$(LIBDIR)/OSCAR
 	for dir in ${SUBDIRS} ; do ( cd $$dir ; ${MAKE} install ) ; done
 
 uninstall:
-	cd $(DESTDIR)/usr/bin; rm -f ${FILES}
+	cd $(DESTDIR)$(LIBDIR)/OSCAR; rm -f ${FILES}
 	for dir in ${SUBDIRS} ; do ( cd $$dir ; ${MAKE} uninstall ) ; done
 
 clean:

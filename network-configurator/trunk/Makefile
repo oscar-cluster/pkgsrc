@@ -3,7 +3,7 @@ PKG=network-configurator
 
 include ./Config.mk
 
-SUBDIRS := bin
+SUBDIRS := lib bin
 
 all:
 	for dir in ${SUBDIRS} ; do ( cd $$dir ; ${MAKE} all ) ; done
