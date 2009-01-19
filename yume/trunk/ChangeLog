@@ -1,7 +1,10 @@
 yume-2.8.3 (not yet released):
-- add a framework for unit tests + some basic unit tests.
-- [Ticket #511] We now check the options and display the help message if the
-option is invalid.
+- Extend ptty_try so we can catch the return code of executed commands and
+return it back to the user (therefore PackMan can catch errors). Contribution
+to close [Ticket #509].
+- Extend yume so we can catch errors from yum. Contribution to close [Ticket
+#509].
+- Add a framework for unit tests + some basic unit tests.
 - [Ticket #452] Yume now returns an error code when we try to install a
 package that is not available.
 

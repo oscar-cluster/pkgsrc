@@ -8,6 +8,11 @@
 #      ptty_try cmd args ...
 #
 
+#
+# Copiright (c) 2009 Geoffroy Vallee <valleegr@ornl.gov>
+#                    Oak Ridge National Laboratory
+#                    All rights reserved.
+#
 
 #use blib;
 eval "require IO::Pty";
@@ -22,14 +27,27 @@ $^W = 1;
 my $pty = new IO::Pty;
 my $pid;
 
+# Global variable to handle the return code of the command we have to execute
+# with ptty_try
+use vars qw($cmd_rc);
+$cmd_rc = 0;
+
 my $logfile;
 
 sub cleanup {
     if (-f $logfile) {
 	unlink($logfile);
     }
-    exit;
 }
+
+# install exit handler which removes the temporary
+# files and releases the lock
+END {my $rc = $?; 
+     if ($rc != 0) {
+         print "ERROR during process execution ($rc)\n";
+         exit 2; # if the command did not succeed, we return 2.
+     }
+    };
 
 $SIG{INT} = \&cleanup;
 $SIG{HUP} = \&cleanup;
@@ -58,6 +76,7 @@ unless (@ARGV) {
   $pid = fork();
   die "Cannot fork" if not defined $pid;
   unless ($pid) {
+    # Child process
     close STAT_RDR;
     $pty->make_slave_controlling_terminal();
     my $slave = $pty->slave();
@@ -83,6 +102,8 @@ unless (@ARGV) {
   $pty->set_raw();
   # now wait for child exec (eof due to close-on-exit) or exec error
   my $errstatus = sysread(STAT_RDR, $errno, 256);
+  waitpid ($pid, 0);
+  $cmd_rc = $?;
   die "Cannot sync with child: $!" if not defined $errstatus;
   close STAT_RDR;
   if ($errstatus) {
@@ -92,6 +113,8 @@ unless (@ARGV) {
   $SIG{WINCH} = \&winch;
   parent($pty);
 }
+
+exit $cmd_rc;
 
 sub winch {
   $pty->slave->clone_winsize_from(\*STDIN);
@@ -159,4 +182,18 @@ sub parent
  unlink($logfile);
 }
 
+__END__
 
+=head1 DESCRIPTION
+
+ptty_try is a tiny tool that is actually part of IO::Tty (see CPAN).
+It lets a child process believe that it runs with a tty.
+The whole output sent to the tty will be received as STDOUT.
+
+=head1 USAGE
+
+ptty_try cmd args ...
+
+ptty_try returns 2 if the command "cmd" does not succeed.
+
+=cut

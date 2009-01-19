@@ -44,6 +44,8 @@ my ($name, $fh, $verbose, $export, $unexport, $prepare, $listexp, $repoquery);
 my $installroot;
 my (@repos, @repoadd, @repodel, $repolist);
 my $prog = $0;
+
+Getopt::Long::Configure("pass_through");
 GetOptions(
             "help"          => \&help_and_exit,
             "repo=s"        => \@repos,
@@ -57,7 +59,7 @@ GetOptions(
             "installroot=s" => \$installroot,
             "repoquery|rq"  => \$repoquery,
             "verbose|v+"    => \$verbose,
-          ) || help_and_die();
+          );
 
 $verbose = "$ENV{YUME_VERBOSE}" if ($ENV{YUME_VERBOSE});
 
@@ -156,6 +158,10 @@ if ($verbose) {
 }
 
 my ($cmd, $err);
+# Array to store error messages catched during the execution of
+# the yum command.
+use vars qw ( @error_msgs );
+
 if ($repoquery) {
 
     # try using native repoquery, if available
@@ -188,7 +194,7 @@ if ($repoquery) {
 } else {
 
     # run yum command
-    $cmd = "yum -c $name";
+    $cmd = "/usr/bin/yum -c $name";
     if (($verbose > 2) && ($verbose <= 10)) {
         $cmd .= " -d $verbose -e 2";
     }
@@ -235,13 +241,33 @@ if ($repoquery) {
 
     $cmd .= " ".join(" ",@yumargs);
     print STDERR "Executing: $cmd\n" if ($verbose);
+
+    # Variable used to track the number of errors during the execution
+    # of the yum command.
+    $err = 0;
+
     #EF the following line resets the errno and avoids fake error messages
     $! = 0;
-    $err = system($cmd);
+    use IPC::Open3;
+    use Symbol qw(gensym);
+    open(NULL, ">", File::Spec->devnull);
+    my $pid = open3(gensym, ">&NULL", \*PH, "$cmd");
+    my $line;
+    while($line = <PH> ) {
+	if ($line =~ /^ERROR/ || $line =~ /^Error/) {
+            # error detected during the execution of the child
+            $err ++;
+            chomp $line;
+            push (@error_msgs, $line);
+        }
+    }
+    waitpid($pid, 0);
 }
 
 if ($verbose && $err) {
-    print STDERR "ERROR: \"$cmd\" returned $err: $!\n";
+    #my $output = $!;
+    my $output = join (", ", @error_msgs);
+    print STDERR "ERROR: \"$cmd\" returned $err: $output\n";
 }
 
 exit $err;
