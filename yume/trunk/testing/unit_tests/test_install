@@ -6,6 +6,9 @@
 #                    All rights reserved.
 #
 
+use strict;
+use warnings "all";
+
 print "[YUME] Testing package installation...\n";
 
 # If the user that execute tests is not root, we skip that test
@@ -17,6 +20,20 @@ if ($< != 0) {
 my $cmd = "/usr/bin/yume --repo http://bear.csm.ornl.gov/repos/rhel-5-i386 install toto";
 
 if (system ($cmd) == 0) {
+    die "ERROR: it seems that yume does not check the installation ".
+        "return code";
+}
+
+my $cmd2 = "/usr/bin/ptty_try $cmd";
+
+my $rc = system ($cmd);
+if ($rc == 0) {
+    die "ERROR: it seems that yume does not check the installation ".
+        "return code when using ptty_try";
+}
+
+$cmd = "/usr/bin/yume --repo http://bear.csm.ornl.gov/repos/rhel-5-i386 install yume";
+if (system ($cmd) != 0) {
     die "ERROR: it seems that yume does not check the installation ".
         "return code";
 }
