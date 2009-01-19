@@ -17,6 +17,7 @@ if ($< != 0) {
     exit 0;
 }
 
+print "\t-> We try to install a non-existing package to check the return code\n";
 my $cmd = "/usr/bin/yume --repo http://bear.csm.ornl.gov/repos/rhel-5-i386 install toto";
 
 if (system ($cmd) == 0) {

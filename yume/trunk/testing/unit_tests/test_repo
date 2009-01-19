@@ -6,7 +6,7 @@
 #                    All rights reserved.
 #
 
-print "[YUME] Testing package installation...\n";
+print "[YUME] Testing repository capabilities...\n";
 
 # If the user that execute tests is not root, we skip that test
 if ($< != 0) {
@@ -17,8 +17,7 @@ if ($< != 0) {
 my $cmd = "/usr/bin/yume --repo http://toto.com/rhel-5-i386 install toto";
 
 if (system ($cmd) == 0) {
-    die "ERROR: it seems that yume does not check the installation ".
-        "return code";
+    die "ERROR: it seems that yume does not return code when the repo is invalid";
 }
 
-print "[YUME] Package installation testing successful\n"
+print "[YUME] Package repository capabilities successful\n"
