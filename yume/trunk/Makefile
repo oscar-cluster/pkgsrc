@@ -3,17 +3,22 @@ BINDIR=$(DESTDIR)/usr/bin
 DATADIR=$(DESTDIR)/usr/share
 MANDIR=$(DESTDIR)/usr/share/man
 NAME=yume
-VERSION=2.8.2
+VERSION=2.8.3
 
 FILES := ChangeLog ptty_try yume yume-opkg-4.2.1 yume-opkg yum-repoquery3 \
 		rhel4-i386.rpmlist yume.8 yume.spec Makefile rhel4-x86_64.rpmlist \
 		yum-repoquery 
+MANSCRIPTS := ptty_try
 DEBIANFILES := debian/changelog debian/compat debian/control debian/copyright \
 		debian/rules
 
 all:
 
-install:
+manpages:
+	install -d -m 0755 $(DESTDIR)/usr/local/man/man1/
+	for bin in ${MANSCRIPTS} ; do ( pod2man --section=1 $$bin $(DESTDIR)/usr/local/man/man1/$$bin.1 ) ; done
+
+install: manpages
 	install -d -o root -g root -m 755 $(BINDIR)
 	install -d -o root -g root -m 755 $(DATADIR)/$(NAME)
 	install -d -o root -g root -m 755 $(MANDIR)/man8
