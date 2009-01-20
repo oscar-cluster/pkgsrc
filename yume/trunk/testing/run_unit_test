@@ -19,7 +19,7 @@ use OSCAR::Utils;
 use Carp;
 use warnings "all";
 
-my $unit_testing_dir = "./unit_tests/";
+my $unit_testing_dir = "./unit_tests";
 
 print "Testing YUME using scripts in $unit_testing_dir...\n";
 
