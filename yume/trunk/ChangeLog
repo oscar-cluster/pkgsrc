@@ -1,4 +1,4 @@
-yume-2.8.3 (not yet released):
+yume-2.8.3:
 - Extend ptty_try so we can catch the return code of executed commands and
 return it back to the user (therefore PackMan can catch errors). Contribution
 to close [Ticket #509].
