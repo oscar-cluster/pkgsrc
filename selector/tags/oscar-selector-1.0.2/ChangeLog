@@ -1,0 +1,12 @@
+1.0.2:
+- Core packages are now always checked (a bug prevented to do so before).
+- Core packages cannot be unchecked (a bug prevented to do so before).
+
+1.0.1:
+- Clean up and improve the spec file.
+- Ease the creation of RPMs.
+
+1.0:
+- Separate Selector from the rest of the OSCAR code.
+- Include the specification of Selector capabilities.
+- Make the implementation based on the specification.
