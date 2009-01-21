@@ -18,14 +18,20 @@ use warnings;
 use Carp;
 
 # use OSCAR::Network_Configurator;
+use OSCAR::Logger;
+use OSCAR::NetworkConfigDefs;
+use OSCAR::Utils;
 
 use Getopt::Long;
 
-my ($verbose, $debug);
+my ($verbose, $debug, $bridge, $nic, @options);
 GetOptions(
             "debug"     => \$debug,
             "help"      => \&help_and_exit,
             "verbose"   => \$verbose,
+            "bridge=s"  => \$bridge,
+            "add-nic=s" => \$nic,
+            "option=s"  => \@options,
           ) || help_and_die();
 
 sub help {
@@ -42,6 +48,40 @@ sub help_and_exit {
     exit 0;
 }
 
+OSCAR::Logger::init_log_file("/var/log/oscar/network_configurator.log");
+# We set the verbose mode based on the different passed options.
+my $initial_verbose_value = 0;
+$initial_verbose_value = $ENV{OSCAR_VERBOSE} if (defined $ENV{OSCAR_VERBOSE});
+if ($debug) {
+    $ENV{OSCAR_VERBOSE} = 10;
+}
+if ($verbose) {
+    $ENV{OSCAR_VERBOSE} = 5;
+}
+
+
+if ($bridge && $nic) {
+    my $log = "Adding $nic to the bridge $bridge";
+    if (scalar (@options)) {
+        for (my $i=0; $i<scalar(@options); $i++) {
+            my @valid_options = OSCAR::NetworkConfigDefs::SUPPORTED_OPTIONS();
+            if (!is_element_in_array ($options[$i], @valid_options)) {
+                print "[INFO]: Unsupported option $options[$i]\n";
+                delete $options[$i];
+            }
+        }
+        $log .= " with options ".join(" ", @options);
+    }
+    OSCAR::Logger::oscar_log_subsection ("$log");
+    my $cmd = "/usr/sbin/brctl addbr $bridge ".
+        "&& /usr/sbin/brctl addif $bridge $nic";
+    if (system $cmd) {
+        die "ERROR: Impossible to execute $cmd\n";
+    }
+}
+
+$ENV{OSCAR_VERBOSE} = $initial_verbose_value;
+
 __END__
 
 =head1 NAME
@@ -54,3 +94,31 @@ configuration.
 network-configurator OPTIONS
 
 =head1 OPTIONS
+
+=over 8
+
+=item add-nic
+
+Specify the NIC to add to a specific bridge (must be used with the bridge option). If the bridge does not exist, it is created.
+
+=item bridge
+
+Specify the bridge we want to deal with.
+
+=item help
+
+Display the command help.
+
+=item option
+
+Specify options related to a specific tasks. Execute "perldoc OSCAR::NetworkConfigDefs" for more details.
+
+=item verbose
+
+=back
+
+=head1 AUTHORS
+
+Geoffroy Vallee <valleegr at ornl dot gov>
+
+=cut

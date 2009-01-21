@@ -4,7 +4,7 @@ TOPDIR=..
 include $(TOPDIR)/Config.mk
 
 SUBDIRS :=
-FILES := Network_Configurator.pm
+FILES := Network_Configurator.pm NetworkConfigDefs.pm
 
 all:
 	for dir in ${SUBDIRS} ; do ( cd $$dir ; ${MAKE} all ) ; done
