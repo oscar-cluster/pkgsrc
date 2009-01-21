@@ -5,7 +5,7 @@ Maintainer   : Geoffroy Vallee <valleegr@ornl.gov>
 Build-Depends: debhelper (>= 4.0.0)
 Standards-Version: 3.7.2
 
-Package: oda
+Package: network-configurator
 Architecture: all
 Depends: ${shlibs:Depends}, ${misc:Depends}, liboscar
 Description: Script that helps at setting up the network.
