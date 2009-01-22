@@ -61,7 +61,14 @@ GetOptions(
             "verbose|v+"    => \$verbose,
           );
 
-$verbose = "$ENV{YUME_VERBOSE}" if ($ENV{YUME_VERBOSE});
+# The verbose can be set both via the options or via the env variable.
+# So we make sure that whatever is the case, everything is set correctly
+if ($verbose && $ENV{YUME_VERBOSE}) {
+    $verbose = "$ENV{YUME_VERBOSE}";
+}
+if ($verbose && !defined $ENV{YUME_VERBOSE}) {
+    $ENV{YUME_VERBOSE} = $verbose;
+}
 
 # query default OSCAR repositories if no repo given
 if (!scalar(@repos)) {
@@ -213,10 +220,22 @@ if ($repoquery) {
     }
     my @yumargs = @ARGV;
 
+    #
     # yum has a very bad return code policy: if you try to install a package
     # that is not available, yum will be happy and return 0. So we need to check
     # first if the package is available or not.
-    if ($yumargs[0] eq "install") {
+    #
+
+    # First we check if this is an install command or not
+    my $install_cmd = 0;
+    foreach my $arg (@yumargs) {
+        if ($arg eq "install") {
+            $install_cmd = 1;
+            last;
+	}
+    }
+
+    if ($install_cmd) {
         $cmd = "yum info";
         for (my $i=1; $i<scalar(@yumargs); $i++) {
             $cmd .= " $yumargs[$i]";
