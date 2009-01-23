@@ -1,4 +1,4 @@
-yume-2.8.4 (not yet released):
+yume-2.8.4:
 - Fix a bug when checking if a package is available before installation.
 - Improve the management of the verbose mode, we can really use the verbose
 option or the env variable, and have the same behavior.
