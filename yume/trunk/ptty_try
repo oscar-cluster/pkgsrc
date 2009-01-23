@@ -102,8 +102,6 @@ unless (@ARGV) {
   $pty->set_raw();
   # now wait for child exec (eof due to close-on-exit) or exec error
   my $errstatus = sysread(STAT_RDR, $errno, 256);
-  waitpid ($pid, 0);
-  $cmd_rc = $?;
   die "Cannot sync with child: $!" if not defined $errstatus;
   close STAT_RDR;
   if ($errstatus) {
@@ -112,6 +110,10 @@ unless (@ARGV) {
   }
   $SIG{WINCH} = \&winch;
   parent($pty);
+  # Catching the return code with waitpid creates few problem, we deactivate it
+  waitpid ($pid, 0);
+  $cmd_rc = $?;
+  print "return code: $cmd_rc\n";
 }
 
 exit $cmd_rc;

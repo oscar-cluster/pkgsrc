@@ -227,21 +227,26 @@ if ($repoquery) {
     #
 
     # First we check if this is an install command or not
-    my $install_cmd = 0;
+    my $install_cmd = 0; # This is tell us if the command if an install command
+                         # and if so, where it is in the command line, that
+                         # allows us to know where to look to get the list of
+                         # packages.
     foreach my $arg (@yumargs) {
         if ($arg eq "install") {
             $install_cmd = 1;
             last;
 	}
+	$install_cmd++;
     }
 
+    my $search_cmd;
     if ($install_cmd) {
-        $cmd = "yum info";
-        for (my $i=1; $i<scalar(@yumargs); $i++) {
-            $cmd .= " $yumargs[$i]";
+        $search_cmd = "yum info";
+        for (my $i=$install_cmd; $i<scalar(@yumargs); $i++) {
+            $search_cmd .= " $yumargs[$i]";
         }
-        print "Executing: $cmd\n" if $verbose;
-        if (system ($cmd)) {
+        print "Executing: $search_cmd\n" if $verbose;
+        if (system ($search_cmd)) {
             die "ERROR: Some packages are not available";
         }
     }

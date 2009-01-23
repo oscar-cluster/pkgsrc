@@ -2,6 +2,7 @@ yume-2.8.4 (not yet released):
 - Fix a bug when checking if a package is available before installation.
 - Improve the management of the verbose mode, we can really use the verbose
 option or the env variable, and have the same behavior.
+- Fix a problem in the return code catching in ptty_try.
 
 yume-2.8.3:
 - Extend ptty_try so we can catch the return code of executed commands and
