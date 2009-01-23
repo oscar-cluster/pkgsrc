@@ -113,7 +113,6 @@ unless (@ARGV) {
   # Catching the return code with waitpid creates few problem, we deactivate it
   waitpid ($pid, 0);
   $cmd_rc = $?;
-  print "return code: $cmd_rc\n";
 }
 
 exit $cmd_rc;
