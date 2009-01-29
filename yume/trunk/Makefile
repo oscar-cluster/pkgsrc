@@ -2,6 +2,7 @@ DESTDIR=
 BINDIR=$(DESTDIR)/usr/bin
 DATADIR=$(DESTDIR)/usr/share
 MANDIR=$(DESTDIR)/usr/share/man
+SOURCEDIR=/usr/src/redhat/SOURCES
 NAME=yume
 VERSION=2.8.4
 
@@ -47,5 +48,5 @@ deb:
 	dpkg-buildpackage -rfakeroot
 
 rpm: dist
-	cp $(NAME)-$(VERSION).tar.gz /usr/src/redhat/SOURCES
+	cp $(NAME)-$(VERSION).tar.gz $(SOURCEDIR)
 	rpmbuild -bb ./yume.spec
