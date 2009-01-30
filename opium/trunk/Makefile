@@ -1,4 +1,5 @@
 DESTDIR=
+SOURCEDIR=/usr/src/redhat/SOURCES
 
 PKG=ssh-oscar
 
@@ -33,5 +34,5 @@ dist: clean
 	mv /tmp/$(PKG).tar.gz .
 
 rpm: dist
-	cp $(PKG).tar.gz /usr/src/redhat/SOURCES
+	cp $(PKG).tar.gz $(SOURCEDIR)
 	rpmbuild -bb ./$(PKG).spec
