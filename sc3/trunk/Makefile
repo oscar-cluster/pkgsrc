@@ -1,4 +1,6 @@
 DESTDIR=
+SOURCEDIR=/usr/src/redhat/SOURCES
+
 NAME:=sc3
 LIBS := Subcluster.pm
 SCRIPTS := scexec scrpm scpush
@@ -32,5 +34,5 @@ deb:
 	dpkg-buildpackage -rfakeroot
 
 rpm: dist
-	cp $(NAME).tar.gz /usr/src/redhat/SOURCES
+	cp $(NAME).tar.gz $(SOURCEDIR)
 	rpmbuild -bb ./sc3.spec
