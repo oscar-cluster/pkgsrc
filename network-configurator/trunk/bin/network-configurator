@@ -24,13 +24,14 @@ use OSCAR::Utils;
 
 use Getopt::Long;
 
-my ($verbose, $debug, $bridge, $nic, @options);
+my ($verbose, $debug, $bridge, $nic, @options, $file);
 GetOptions(
             "debug"     => \$debug,
             "help"      => \&help_and_exit,
             "verbose"   => \$verbose,
             "bridge=s"  => \$bridge,
             "add-nic=s" => \$nic,
+            "file|f=s"  => \$file,
             "option=s"  => \@options,
           ) || help_and_die();
 
@@ -59,6 +60,21 @@ if ($verbose) {
     $ENV{OSCAR_VERBOSE} = 5;
 }
 
+if ($file) {
+    OSCAR::Logger::oscar_log_subsection ("Using config file $file");
+    if (! -f $file) {
+        die "ERROR: Configuration file does not exist ($file)";
+    }
+    require OSCAR::ConfigFile;
+    $nic = OSCAR::ConfigFile::get_value ($file, undef, "add_nic");
+    $bridge = OSCAR::ConfigFile::get_value ($file, undef, "bridge");
+    my $option = OSCAR::ConfigFile::get_value ($file, undef, "option");
+    if (OSCAR::Utils::is_a_valid_string ($option)) {
+        @options = split (" ", $option);
+    }
+    OSCAR::Logger::oscar_log_subsection ("Successfully parse the network ".
+        "based on $file");
+}
 
 if ($bridge && $nic) {
     my $log = "Adding $nic to the bridge $bridge";
@@ -97,23 +113,27 @@ network-configurator OPTIONS
 
 =over 8
 
-=item add-nic
+=item --add-nic
 
 Specify the NIC to add to a specific bridge (must be used with the bridge option). If the bridge does not exist, it is created.
 
-=item bridge
+=item --bridge
 
 Specify the bridge we want to deal with.
 
-=item help
+=item --file|-f CONFIG_FILE
+
+Setup the network based on a configuration file CONFIG_FILE.
+
+=item --help
 
 Display the command help.
 
-=item option
+=item --option
 
 Specify options related to a specific tasks. Execute "perldoc OSCAR::NetworkConfigDefs" for more details.
 
-=item verbose
+=item --verbose
 
 =back
 
