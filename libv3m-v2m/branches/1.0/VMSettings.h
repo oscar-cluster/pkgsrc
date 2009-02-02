@@ -9,6 +9,9 @@
 #ifndef _VMSETTINGS_H_
 #define _VMSETTINGS_H_
 
+#include <stdio.h>
+#include <stdlib.h>
+
 #define MAX_LINE_LENGHT 128
 
 class VMSettings{

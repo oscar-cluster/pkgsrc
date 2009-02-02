@@ -10,11 +10,13 @@
 #define PROFILEXMLNODE_H
 
 #include <libxml++/libxml++.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 #include "nic.h"
 
 using namespace std;
-class Glib::ustring;
+// class Glib::ustring;
 
 typedef struct virtual_fs{
     /** Identifier of the virtual file system */
