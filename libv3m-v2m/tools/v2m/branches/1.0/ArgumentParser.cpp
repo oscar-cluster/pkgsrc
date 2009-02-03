@@ -62,7 +62,7 @@ ArgumentParser::ArgumentParser (int argc, char **argv)
         // based in the DTD and compliant with the DTD
         ifstream f(argv[1]);
         if (!f) {
-            cerr << "Error, invalid profile." << endl;
+            cerr << "ERROR: profile does not exist (." << argv[1] << ")" << endl;
             printUsage();
             exit (-1);
         }
