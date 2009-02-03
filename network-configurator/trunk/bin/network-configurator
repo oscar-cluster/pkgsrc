@@ -19,18 +19,19 @@ use Carp;
 
 # use OSCAR::Network_Configurator;
 use OSCAR::Logger;
+use OSCAR::Network;
 use OSCAR::NetworkConfigDefs;
 use OSCAR::Utils;
 
 use Getopt::Long;
 
-my ($verbose, $debug, $bridge, $nic, @options, $file);
+my ($verbose, $debug, $bridge, @nics, @options, $file);
 GetOptions(
             "debug"     => \$debug,
             "help"      => \&help_and_exit,
             "verbose"   => \$verbose,
             "bridge=s"  => \$bridge,
-            "add-nic=s" => \$nic,
+            "add-nic=s" => \@nics,
             "file|f=s"  => \$file,
             "option=s"  => \@options,
           ) || help_and_die();
@@ -66,18 +67,24 @@ if ($file) {
         die "ERROR: Configuration file does not exist ($file)";
     }
     require OSCAR::ConfigFile;
-    $nic = OSCAR::ConfigFile::get_value ($file, undef, "add_nic");
+    my $nic = OSCAR::ConfigFile::get_value ($file, undef, "add_nic");
+    if (OSCAR::Utils::is_a_valid_string ($nic)) {
+        push (@nics, $nic);
+    }
     $bridge = OSCAR::ConfigFile::get_value ($file, undef, "bridge");
     my $option = OSCAR::ConfigFile::get_value ($file, undef, "option");
     if (OSCAR::Utils::is_a_valid_string ($option)) {
-        @options = split (" ", $option);
+        my @opts = split (" ", $option);
+        foreach my $opt (@opts) {
+            push (@options, $opt);
+        }
     }
     OSCAR::Logger::oscar_log_subsection ("Successfully parse the network ".
         "based on $file");
 }
 
-if ($bridge && $nic) {
-    my $log = "Adding $nic to the bridge $bridge";
+if ($bridge && scalar (@nics) > 0) {
+    my $log = "Adding ".join (", ", @nics)." to the bridge $bridge";
     if (scalar (@options)) {
         for (my $i=0; $i<scalar(@options); $i++) {
             my @valid_options = OSCAR::NetworkConfigDefs::SUPPORTED_OPTIONS();
@@ -89,10 +96,91 @@ if ($bridge && $nic) {
         $log .= " with options ".join(" ", @options);
     }
     OSCAR::Logger::oscar_log_subsection ("$log");
-    my $cmd = "/usr/sbin/brctl addbr $bridge ".
-        "&& /usr/sbin/brctl addif $bridge $nic";
-    if (system $cmd) {
-        die "ERROR: Impossible to execute $cmd\n";
+
+    # Does the bridge already exists?
+    my $output = `/sbin/ifconfig $bridge 2>/dev/null`;
+    my $cmd;
+    if ($output eq "") {
+        # If we try to create a bridge with 2 nics, we do not know how to get
+        # the IP.
+        if (scalar (@nics) != 1) {
+            die "ERROR: you can only add a single NIC when creating a ".
+                "bridge, otherwise we do not know what IP we must use";
+        }
+        
+        my $nic = $nics[0];
+    
+        # We need to get the current IP of the NIC to add
+        $cmd = "/sbin/ifconfig $nic | grep \"inet addr\" | ".
+               "awk ' { print \$2 } ' | sed -e 's/addr://'";
+        my $ip = `$cmd`;
+        chomp ($ip);
+        print "Detected IP: $ip ($nic)\n";
+        if (!OSCAR::Network::is_a_valid_ip ($ip)) {
+            die "ERROR: the detected IP is invalid ($ip)";
+        }
+        
+        # We shutdown the interface to add
+        $cmd = "/sbin/ifconfig $nic down";
+        if (system ($cmd)) {
+            die "ERROR: Impossible to execute $cmd";
+        }
+        
+        # We restart the interface
+        $cmd = "/sbin/ifconfig $nic 0.0.0.0 up";
+        if (system ($cmd)) {
+            die "ERROR: Impossible to execute $cmd";
+        }
+        
+        # We create the bridge
+        $cmd = "/usr/sbin/brctl addbr $bridge";
+        if (system ($cmd)) {
+            die "ERROR: Impossible to execute $cmd";
+        }
+        $cmd = "/sbin/ifconfig $bridge $ip up";
+        if (system ($cmd)) {
+            die "ERROR: Impossible to execute $cmd";
+        }
+    } else {
+        foreach my $nic (@nics) {
+            $cmd = "/sbin/ifconfig $nic 0.0.0.0 promisc up";
+            if (system ($cmd)) {
+                die "ERROR: Impossible to execute $cmd";
+            }
+        }
+    }
+
+# I think we also should do the following
+#     "sudo /sbin/ifconfig "
+#                 << nic_id
+#                 << " down\n";
+#         file_op << "sudo /sbin/ifconfig "
+#                 << nic_id
+#                 << " 0.0.0.0 up\n";
+#         file_op << "echo \"Bring up tap0 with IP 0.0.0.0, create bridge "
+#                 << "qemubr0 and add interfaces " << nic_id
+#                 << "and tap0\"\n";
+#         file_op << "sudo /sbin/ifconfig $1 0.0.0.0 promisc up\n";
+    foreach my $nic (@nics) {
+        $cmd = "/usr/sbin/brctl addif $bridge $nic";
+        if (system $cmd) {
+            die "ERROR: Impossible to execute $cmd\n";
+        }
+    }
+    
+    # Now we deal witht the options
+    if (scalar (@options) > 0) {
+        require OSCAR::SystemServices;
+        require OSCAR::SystemServicesDefs;
+        foreach my $opt (@options) {
+            if ($opt eq "restart_dhcpd") {
+                if (OSCAR::SystemServices::system_service (
+                        OSCAR::SystemServicesDefs::DHCP(),
+                        OSCAR::SystemServicesDefs::RESTART())) {
+                    die "ERROR: Impossible to deal with $opt";
+                }
+            }
+        }
     }
 }
 
@@ -115,7 +203,8 @@ network-configurator OPTIONS
 
 =item --add-nic
 
-Specify the NIC to add to a specific bridge (must be used with the bridge option). If the bridge does not exist, it is created.
+Specify the NIC to add to a specific bridge (must be used with the bridge option). If the bridge does not exist, it is created, but for that, few constraints must be followed: only one nic should be specified, and the nic should have a valid IP, this IP will be assigned to the bridge.
+Except for the case when the bridge is created, this option is aggregable.
 
 =item --bridge
 
@@ -123,7 +212,7 @@ Specify the bridge we want to deal with.
 
 =item --file|-f CONFIG_FILE
 
-Setup the network based on a configuration file CONFIG_FILE.
+Setup the network based on a configuration file CONFIG_FILE. If other options are specified at the command line, those options are aggregated or overwritten to the config file values.
 
 =item --help
 
