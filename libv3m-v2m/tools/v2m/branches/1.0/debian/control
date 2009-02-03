@@ -7,7 +7,7 @@ Standards-Version: 3.7.2
 
 Package: v2m
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}
+Depends: ${shlibs:Depends}, ${misc:Depends}, network-configurator
 Description: Virtual Machine Management (V2M)
  V2M is a command line interface for libv3m which allows the management and the
  monitoring of virtual machines based on different system-level virtualization
