@@ -40,7 +40,7 @@ profile_name)
   }
 
   if (load_profile_data ()) {
-        cerr << "ERROR loading the profile's data" << endl;
+        cerr << "ERROR: impossible to load profile's data" << endl;
         exit (-1);
   }
 }
@@ -58,8 +58,8 @@ profile_name)
 ProfileXMLNode::ProfileXMLNode (xmlpp::Node* node)
 {
     if (node == NULL) {
-        cerr << "ProfileXMLNode::ProfileXMLNode: the node is not valid (NULL)"
-             << endl;
+        cerr << "ERROR: ProfileXMLNode::ProfileXMLNode: the node is not valid "
+             << "(NULL)" << endl;
         return;
     }
 
@@ -67,7 +67,7 @@ ProfileXMLNode::ProfileXMLNode (xmlpp::Node* node)
     profile_node = node;
 
     if (load_profile_data ()) {
-        cerr << "ERROR loading the profile" << endl;
+        cerr << "ERROR: Impossible to load the profile" << endl;
         exit (-1);
     }
 }
