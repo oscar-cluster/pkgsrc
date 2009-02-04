@@ -22,7 +22,7 @@
 using namespace xoscar;
 
 XOSCAR_FileBrowser::XOSCAR_FileBrowser(const QString &filter,
-                         QDialog *parent,
+                         QWidget *parent,
                          const char *name)
         : QDialog (parent)
 {

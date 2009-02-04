@@ -67,6 +67,7 @@ protected:
 private:
    CommandExecutionThread command_thread;
    QString partition_name;
+   XOSCAR_FileBrowser *file_browser;
 };
 
 }

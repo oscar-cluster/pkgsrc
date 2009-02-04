@@ -34,7 +34,7 @@ Q_OBJECT
 
 public:
     XOSCAR_FileBrowser(const QString &filter,
-                QDialog *parent = 0, 
+                QWidget *parent = 0, 
                 const char *name = 0);
     void setDir(const QString &path);
 

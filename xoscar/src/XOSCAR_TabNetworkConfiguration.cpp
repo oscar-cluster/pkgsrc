@@ -23,6 +23,7 @@ using namespace xoscar;
 
 XOSCAR_TabNetworkConfiguration::XOSCAR_TabNetworkConfiguration(QWidget* parent)
     : QWidget(parent)
+    , file_browser(NULL)
 {
     setupUi(this);
 
@@ -74,10 +75,12 @@ XOSCAR_TabNetworkConfiguration::~XOSCAR_TabNetworkConfiguration()
 void XOSCAR_TabNetworkConfiguration::open_file()
 {
     cout << "File selection" << endl;
-    XOSCAR_FileBrowser *file_browser = new XOSCAR_FileBrowser("");
-    connect(file_browser, SIGNAL(fileSelected(const QString)),
-            this, SLOT(open_mac_file(const QString)));
-    file_browser->show();
+    if(file_browser == NULL) {
+        file_browser = new XOSCAR_FileBrowser("", this);
+        connect(file_browser, SIGNAL(fileSelected(const QString)),
+                this, SLOT(open_mac_file(const QString)));
+    }
+    file_browser->exec();
 }
 
 /**
