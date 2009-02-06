@@ -1,5 +1,9 @@
 yume-2.8.5 (not yet released):
 - Remove uneeded debugging messages.
+- Modify the Makefile so we can choose the directory to save sources when
+creating RPMs.
+- Modify the Makefile so we can choose the directory where the binary packages
+are stored.
 
 yume-2.8.4:
 - Fix a bug when checking if a package is available before installation.

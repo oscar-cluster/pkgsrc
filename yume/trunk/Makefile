@@ -1,4 +1,5 @@
 DESTDIR=
+PKGDEST=
 BINDIR=$(DESTDIR)/usr/bin
 DATADIR=$(DESTDIR)/usr/share
 MANDIR=$(DESTDIR)/usr/share/man
@@ -45,8 +46,20 @@ clean:
 	rm -f $(NAME)-$(VERSION).tar.gz
 
 deb:
-	dpkg-buildpackage -rfakeroot
+	@if [ -n "$$UNSIGNED_OSCAR_PKG" ]; then \
+        echo "dpkg-buildpackage -rfakeroot -us -uc"; \
+        dpkg-buildpackage -rfakeroot -us -uc; \
+    else \
+        echo "dpkg-buildpackage -rfakeroot"; \
+        dpkg-buildpackage -rfakeroot; \
+    fi
+	@if [ -n "$(PKGDEST)" ]; then \
+        mv ../$(NAME)*.deb $(PKGDEST); \
+    fi
 
 rpm: dist
 	cp $(NAME)-$(VERSION).tar.gz $(SOURCEDIR)
-	rpmbuild -bb ./yume.spec
+	rpmbuild -bb ./$(NAME).spec
+	@if [ -n "$(PKGDEST)" ]; then \
+        mv `rpm --eval '%{_topdir}'`/RPMS/noarch/$(NAME)-*.noarch.rpm $(PKGDEST); \
+    fi
