@@ -1,4 +1,5 @@
 DESTDIR=
+PKGDEST=
 SOURCEDIR=/usr/src/redhat/SOURCES
 
 NAME:=sc3
@@ -27,12 +28,24 @@ dist: clean
 clean:
 	rm -f *~
 	rm -f build-stamp configure-stamp
-	rm -rf debian/files debian/sc3
+	rm -rf debian/files debian/$(NAME)
 	rm -f $(NAME).tar.gz
 
 deb:
-	dpkg-buildpackage -rfakeroot
+	@if [ -n "$$UNSIGNED_OSCAR_PKG" ]; then \
+        echo "dpkg-buildpackage -rfakeroot -us -uc"; \
+        dpkg-buildpackage -rfakeroot -us -uc; \
+    else \
+        echo "dpkg-buildpackage -rfakeroot"; \
+        dpkg-buildpackage -rfakeroot; \
+    fi
+	@if [ -n "$(PKGDEST)" ]; then \
+        mv ../$(NAME)*.deb $(PKGDEST); \
+    fi
 
 rpm: dist
 	cp $(NAME).tar.gz $(SOURCEDIR)
-	rpmbuild -bb ./sc3.spec
+	rpmbuild -bb ./$(NAME).spec
+	@if [ -n "$(PKGDEST)" ]; then \
+        mv `rpm --eval '%{_topdir}'`/RPMS/noarch/$(NAME)-*.noarch.rpm $(PKGDEST); \
+    fi
