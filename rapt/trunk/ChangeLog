@@ -1,3 +1,9 @@
+rapt-2.8.4 (not yet released):
+- Modify the Makefile so we can choose the directory where the binary packages
+are stored.
+- Enable the creation of unsigned Debian packages by setting the
+UNSIGNED_OSCAR_PKG environment variable.
+
 rapt-2.8.3:
 - Minor modification for the oscar-packager support: add a "make rpm" command
 (which only displays a message).

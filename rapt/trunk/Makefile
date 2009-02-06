@@ -1,7 +1,9 @@
 DESTDIR=
+PKGDEST=
 DEBTMP=/tmp/rapt
 BUILDTMP=/tmp/rapt-build
-VERSION=2.8.3
+VERSION=2.8.4
+PKG=rapt
 
 all:
 
@@ -19,27 +21,32 @@ rpm ::
 	@echo "RAPT is not yet supported on RPM system"
 
 deb ::
-	rm -rf $(DEBTMP)
-	mkdir -p $(DEBTMP)
-	cp -rf * $(DEBTMP)
-	cd $(DEBTMP); rm -rf `find . -name .svn`; dpkg-buildpackage -rfakeroot
-	echo "The Debian package is ready in /tmp"
+	@if [ -n "$$UNSIGNED_OSCAR_PKG" ]; then \
+        echo "dpkg-buildpackage -rfakeroot -us -uc"; \
+        dpkg-buildpackage -rfakeroot -us -uc; \
+    else \
+        echo "dpkg-buildpackage -rfakeroot"; \
+        dpkg-buildpackage -rfakeroot; \
+    fi
+	@if [ -n "$(PKGDEST)" ]; then \
+        mv ../$(PKG)*.deb $(PKGDEST); \
+    fi
 
 dist: mrproper
 	rm -rf $(BUILDTMP); \
-	mkdir -p $(BUILDTMP)/rapt-$(VERSION); \
-	cp -rf * $(BUILDTMP)/rapt-$(VERSION); \
+	mkdir -p $(BUILDTMP)/$(PKG)-$(VERSION); \
+	cp -rf * $(BUILDTMP)/$(PKG)-$(VERSION); \
 	PWD=`pwd`; \
 	cd $(BUILDTMP); rm -rf `find . -name .svn`; \
-	tar czf rapt-$(VERSION).tar.gz rapt-$(VERSION); \
-	cp rapt-$(VERSION).tar.gz $(PWD);
+	tar czf $(PKG)-$(VERSION).tar.gz $(PKG)-$(VERSION); \
+	cp $(PKG)-$(VERSION).tar.gz $(PWD);
 
 mrproper: clean
 	rm -f build-stamp configure-stamp
 	rm -f debian/files
-	rm -rf debian/rapt
+	rm -rf debian/$(PKG)
 
 clean:
 	rm -f *~
-	rm -f rapt-*.tar.gz
+	rm -f $(PKG)-*.tar.gz
 	rm -rf deb
