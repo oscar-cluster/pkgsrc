@@ -153,7 +153,7 @@ void XOSCAR_TabNetworkConfiguration::assignmac_clicked_handler()
 {
     if(listNoneAssignedMacWidget->currentItem() == NULL || 
         oscarNodesTreeWidget->currentItem() == NULL) {
-        cout << "ERROR: cannot assign mac address: nothing selected" << endl;
+        cerr << "ERROR: cannot assign mac address: nothing selected" << endl;
         return;
     }
 
@@ -175,7 +175,7 @@ void XOSCAR_TabNetworkConfiguration::assignmac_clicked_handler()
 void XOSCAR_TabNetworkConfiguration::unassignmac_clicked_handler()
 {
     if(oscarNodesTreeWidget->currentItem() == NULL) {
-        cout << "ERROR: cannot unassign mac address: nothing selected in oscar nodes" << endl;
+        cerr << "ERROR: cannot unassign mac address: nothing selected in oscar nodes" << endl;
         return;
     }
 

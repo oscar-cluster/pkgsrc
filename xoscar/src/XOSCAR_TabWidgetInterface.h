@@ -25,8 +25,8 @@ class XOSCAR_TabWidgetInterface
 public:
     enum SaveResult { Saving, Undoing, NoChange, SaveFailed, UserCanceled };
 
-	XOSCAR_TabWidgetInterface();
-	~XOSCAR_TabWidgetInterface();
+    XOSCAR_TabWidgetInterface();
+    ~XOSCAR_TabWidgetInterface();
 
     virtual SaveResult save() = 0;
     virtual SaveResult undo() = 0;
@@ -37,7 +37,7 @@ signals:
     virtual void widgetContentsModified(QWidget* widget)=0;
 
 protected:
-	virtual void setModified(const bool mod) { modified = mod; }
+    virtual void setModified(const bool mod) { modified = mod; }
     bool modified;
 };
 

@@ -72,7 +72,7 @@ void XOSCAR_TabSoftwareConfiguration::partition_selection_changed(QString name)
 void XOSCAR_TabSoftwareConfiguration::software_configuration_tab_activated()
 {
     if(partition_name.isEmpty() || cluster_name.isEmpty()) {
-        cout << "ERROR: no cluster and/or no partition selected" << endl;
+        cerr << "ERROR: no cluster and/or no partition selected" << endl;
         opkgsListWidget->clear();
         return;
     }

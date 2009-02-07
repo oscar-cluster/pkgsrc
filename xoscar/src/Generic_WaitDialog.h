@@ -44,7 +44,7 @@ public slots:
     void threadNotify();
 
 protected:
-	void closeEvent(QCloseEvent* event);
+    void closeEvent(QCloseEvent* event);
 
 private:
     /** Indicates when the QTimer has finished */

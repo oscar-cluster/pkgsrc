@@ -26,7 +26,7 @@ CommandBuilder::CommandBuilder ()
     QString path = getenv("HOME");
     QDir dir (path);
     if ( !dir.exists() ) {
-        cout << "ERROR: Impossible to find the home directory" << endl;
+        cerr << "ERROR: Impossible to find the home directory" << endl;
         return;
     }
     path = path + "/.xoscar.conf";

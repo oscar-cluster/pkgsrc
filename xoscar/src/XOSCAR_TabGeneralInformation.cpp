@@ -32,17 +32,17 @@ XOSCAR_TabGeneralInformation::XOSCAR_TabGeneralInformation(ThreadHandlerInterfac
     // QListWidgetItem::data() property
     qRegisterMetaType<PartitionState>("PartitionState");
 
-	setupUi(this);
+    setupUi(this);
 
-	// signals for widgets when they are modified
-	connect(partitionNameEditWidget, SIGNAL(textEdited(const QString&)),
-	        this, SLOT(partitionName_textEdited_handler(const QString&)));
+    // signals for widgets when they are modified
+    connect(partitionNameEditWidget, SIGNAL(textEdited(const QString&)),
+            this, SLOT(partitionName_textEdited_handler(const QString&)));
 
-	connect(partitionDistroComboBox, SIGNAL(currentIndexChanged(int)),
+    connect(partitionDistroComboBox, SIGNAL(currentIndexChanged(int)),
             this, SLOT(partitionDistro_currentIndexChanged_handler(int)));
 
-	connect(partitionNumberNodesSpinBox, SIGNAL(valueChanged(int)),
-	        this, SLOT(partitionNodes_valueChanged_handler(int)));
+    connect(partitionNumberNodesSpinBox, SIGNAL(valueChanged(int)),
+            this, SLOT(partitionNodes_valueChanged_handler(int)));
 
     connect(virtualMachinesCheckBox, SIGNAL(stateChanged(int)),
             this, SLOT(virtualMachinesCheckBox_stateChanged_handler(int)));
@@ -50,9 +50,9 @@ XOSCAR_TabGeneralInformation::XOSCAR_TabGeneralInformation(ThreadHandlerInterfac
     connect(virtualMachinesComboBox, SIGNAL(currentIndexChanged(int)),
             this, SLOT(virtualMachinesComboBox_currentIndexChanged_handler(int)));
 
-	// signals for control widgets
-	connect(addPartitionButton, SIGNAL(clicked()),
-	        this, SLOT(add_partition_handler()));
+    // signals for control widgets
+    connect(addPartitionButton, SIGNAL(clicked()),
+            this, SLOT(add_partition_handler()));
 
     connect(removeClusterButton_2, SIGNAL(clicked()),
             this, SLOT(remove_partition_handler()));
@@ -66,11 +66,11 @@ XOSCAR_TabGeneralInformation::XOSCAR_TabGeneralInformation(ThreadHandlerInterfac
     connect(listClusterPartitionsWidget, SIGNAL(currentRowChanged(int)),
             this, SLOT(partition_list_rowChanged_handler(int)));
 
-	connect(listClusterPartitionsWidget, SIGNAL(itemSelectionChanged ()),
+    connect(listClusterPartitionsWidget, SIGNAL(itemSelectionChanged ()),
             this, SLOT(refresh_partition_info()));
 
-	connect(saveClusterInfoButton, SIGNAL(clicked()),
-	        this, SLOT(save()));
+    connect(saveClusterInfoButton, SIGNAL(clicked()),
+            this, SLOT(save()));
 
     enablePartitionInfoWidgets(false);
     setDefaultPartitionValues();
@@ -142,7 +142,7 @@ XOSCAR_TabWidgetInterface::SaveResult XOSCAR_TabGeneralInformation::undo()
         result = Undoing;
     }
 
-	return result;
+    return result;
 }
 
 /**
@@ -154,17 +154,17 @@ XOSCAR_TabWidgetInterface::SaveResult XOSCAR_TabGeneralInformation::undo()
  */
 void XOSCAR_TabGeneralInformation::partitionName_textEdited_handler(const QString& text)
 {
-	if(loading) return;
+    if(loading) return;
 
     if(listClusterPartitionsWidget->currentItem() == NULL) {
-        cout << "ERROR: no partition selected" << endl;
+        cerr << "ERROR: no partition selected" << endl;
         return;
     }
     listClusterPartitionsWidget->currentItem()->setText(text);
 
     setModifiedFlag();
     setPartitionItemState(currentPartitionRow, Modified);
-	emit widgetContentsModified(this);
+    emit widgetContentsModified(this);
 }
 
 /**
@@ -177,7 +177,7 @@ void XOSCAR_TabGeneralInformation::partitionName_textEdited_handler(const QStrin
  */
 void XOSCAR_TabGeneralInformation::partitionDistro_currentIndexChanged_handler(int index)
 {
-	if(!loading) {
+    if(!loading) {
         setModifiedFlag();
         setPartitionItemState(currentPartitionRow, Modified);
         emit widgetContentsModified(this);
@@ -196,7 +196,7 @@ void XOSCAR_TabGeneralInformation::partitionDistro_currentIndexChanged_handler(i
  */
 void XOSCAR_TabGeneralInformation::partitionNodes_valueChanged_handler(int index)
 {
-	if(loading) return;
+    if(loading) return;
     setModifiedFlag();
     setPartitionItemState(currentPartitionRow, Modified);
     emit widgetContentsModified(this);
@@ -299,7 +299,7 @@ void XOSCAR_TabGeneralInformation::add_partition()
     listClusterPartitionsWidget->setCurrentRow(listClusterPartitionsWidget->count()-1);
 
     setModifiedFlag();
-	emit widgetContentsModified(this);
+    emit widgetContentsModified(this);
 }
 
 /**
@@ -340,10 +340,10 @@ void XOSCAR_TabGeneralInformation::refresh_list_partitions ()
         return;
     }
 
-	// oscar does not (currently) support multiple clusters so the Perl
-	// scripts have the cluster hard coded. This argument is ignored, but in
-	// the future would be used to indicate which cluster we are requesting
-	// partitions for.
+    // oscar does not (currently) support multiple clusters so the Perl
+    // scripts have the cluster hard coded. This argument is ignored, but in
+    // the future would be used to indicate which cluster we are requesting
+    // partitions for.
     threadHandler->enqueue_command_task(CommandTask(xoscar::DISPLAY_PARTITIONS, 
                                         QStringList(listOscarClustersWidget->currentItem()->text()), 
                                         dynamic_cast<ThreadUserInterface*>(this)));
@@ -729,7 +729,7 @@ void XOSCAR_TabGeneralInformation::handle_oscar_config_result(QString list_distr
     cout << list_distros.toStdString () << endl;
     QStringList list = list_distros.split (" ", QString::SkipEmptyParts);
 
-	partitionDistroComboBox->clear();
+    partitionDistroComboBox->clear();
 
     for(int i = 0; i < list.size(); i++) {
         partitionDistroComboBox->addItem (list.at(i));
@@ -850,7 +850,7 @@ PartitionState XOSCAR_TabGeneralInformation::partitionItemState(int partitionRow
     QListWidgetItem *pItem = listClusterPartitionsWidget->item(partitionRow);
 
     if(pItem == NULL) {
-        cout << "ERROR: invalid partition item" << endl;
+        cerr << "ERROR: invalid partition item" << endl;
         return Saved;
     }
     return pItem->data(Qt::UserRole).value<PartitionState>();

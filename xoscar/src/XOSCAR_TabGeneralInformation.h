@@ -47,11 +47,11 @@ public:
 public slots:
     void partitionName_textEdited_handler(const QString&);
     void partitionDistro_currentIndexChanged_handler(int);
-	void partitionNodes_valueChanged_handler(int);
-	void add_partition_handler();
+    void partitionNodes_valueChanged_handler(int);
+    void add_partition_handler();
     void remove_partition_handler();
     SaveResult save_cluster_info_handler();
-	void refresh_list_partitions();
+    void refresh_list_partitions();
     void refresh_partition_info();
     void setDefaultPartitionValues();
     void enablePartitionInfoWidgets(bool enable);
