@@ -21,18 +21,15 @@ using namespace xoscar;
  * @author Geoffroy Vallee.
  *
  */
-ORMAddDistroDialog::ORMAddDistroDialog(QDialog *parent) 
+ORMAddDistroDialog::ORMAddDistroDialog(ThreadHandlerInterface* handler, QWidget *parent) 
     : QDialog (parent) 
+    , ThreadUserInterface(handler)
 {
     setupUi(this);
     connect (addDistroOkButton, SIGNAL(clicked()), 
              this, SLOT(newDistroSelected()));
     connect(listNonSetupDistrosWidget, SIGNAL(itemSelectionChanged ()),
             this, SLOT(refresh_repos_url()));
-    connect(&command_thread, SIGNAL(thread_terminated(CommandTask::CommandTasks, QString)),
-            this, SLOT(handle_thread_result (CommandTask::CommandTasks, QString)));
-    connect(&command_thread, SIGNAL(finished()),
-            this, SLOT(command_thread_finished()));
 }
 
 ORMAddDistroDialog::~ORMAddDistroDialog ()
@@ -59,7 +56,7 @@ void ORMAddDistroDialog::newDistroSelected ()
     }
     QStringList args;
     args << distro << distroRepoEdit->text() << oscarRepoEdit->text();
-    command_thread.init (CommandTask::SETUP_DISTRO, args);
+    threadHandler->enqueue_command_task(CommandTask(xoscar::SETUP_DISTRO, args));
 
 /*
     cout << "Command to execute: " << cmd << endl;
@@ -73,7 +70,7 @@ void ORMAddDistroDialog::newDistroSelected ()
  *       stuff.
  */
 void ORMAddDistroDialog::refresh_list_distros() {
-    command_thread.init (CommandTask::LIST_UNSETUP_DISTROS, QStringList(""));
+    threadHandler->enqueue_command_task(CommandTask(xoscar::LIST_UNSETUP_DISTROS, QStringList("")));
 }
 
 /**
@@ -97,9 +94,8 @@ void ORMAddDistroDialog::refresh_repos_url()
         distro = i.next()->text();
     }
 
-    command_thread.init (CommandTask::DISPLAY_DEFAULT_DISTRO_REPO, QStringList(distro));
-    command_thread.wait();
-    command_thread.init (CommandTask::DISPLAY_DEFAULT_OSCAR_REPO, QStringList(distro));
+    threadHandler->enqueue_command_task(CommandTask(xoscar::DISPLAY_DEFAULT_DISTRO_REPO, QStringList(distro)));
+    threadHandler->enqueue_command_task(CommandTask(xoscar::DISPLAY_DEFAULT_OSCAR_REPO, QStringList(distro)));
 }
 
 /**
@@ -113,9 +109,9 @@ void ORMAddDistroDialog::refresh_repos_url()
  *  are in CommandTask.h.
  *  @param result Holds the return value of the command.
  */
-int ORMAddDistroDialog::handle_thread_result (CommandTask::CommandTasks command_id, QString result)
+int ORMAddDistroDialog::handle_thread_result (xoscar::CommandId command_id, QString result)
 {
-     if (command_id == CommandTask::LIST_UNSETUP_DISTROS) {
+     if (command_id == xoscar::LIST_UNSETUP_DISTROS) {
         /* Once we have the list, we update the widget */
         this->listNonSetupDistrosWidget->clear();
         QStringList list = result.split(" ");
@@ -123,26 +119,11 @@ int ORMAddDistroDialog::handle_thread_result (CommandTask::CommandTasks command_
             this->listNonSetupDistrosWidget->addItem (list.at(i));
         }
         this->update();
-    } else if (command_id == CommandTask::DISPLAY_DEFAULT_OSCAR_REPO) {
+    } else if (command_id == xoscar::DISPLAY_DEFAULT_OSCAR_REPO) {
         oscarRepoEdit->setText(result);
-    } else if (command_id == CommandTask::DISPLAY_DEFAULT_DISTRO_REPO) {
+    } else if (command_id == xoscar::DISPLAY_DEFAULT_DISTRO_REPO) {
         distroRepoEdit->setText(result);
     }
     // We ignore other command IDs
-
-    command_thread.wakeThread();
     return 0;
-}
-
-/**
- * @author Robert Babilon
- *
- * Slot called when the QThread signal finished() is emitted.
- * Starts the command thread again only if it has tasks left.
- */
-void ORMAddDistroDialog::command_thread_finished()
-{
-    if(!command_thread.isEmpty()) { 
-        command_thread.start();
-    }
 }

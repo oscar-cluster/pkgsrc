@@ -16,55 +16,43 @@
 #ifndef COMMANDTASK_H
 #define COMMANDTASK_H
 
-#include <QMetaType>
 #include <QString>
 #include <QStringList>
 
+#include "utilities.h"
+#include "ThreadUserInterface.h"
+
 namespace xoscar {
+
+class ThreadUserInterface;
 
 class CommandTask
 {
 public:
- enum CommandTasks {
-        INACTIVE = 0,
-        GET_LIST_REPO,
-        GET_LIST_OPKGS,
-        GET_SETUP_DISTROS,
-        DO_SYSTEM_SANITY_CHECK,
-        DO_OSCAR_SANITY_CHECK,
-        GET_LIST_DEFAULT_REPOS,
-        DISPLAY_PARTITIONS,
-        DISPLAY_PARTITION_NODES,
-        DISPLAY_PARTITION_DISTRO,
-        ADD_PARTITION,
-        DISPLAY_DETAILS_PARTITION_NODES,
-        SETUP_DISTRO,
-        LIST_UNSETUP_DISTROS,
-        DISPLAY_DEFAULT_OSCAR_REPO,
-        DISPLAY_DEFAULT_DISTRO_REPO,
-        REMOVE_PARTITION,
-        DISPLAY_DEFAULT_OPKGS
-    };
-    
     CommandTask();
-    CommandTask(CommandTasks cmd_id, QStringList cmd_args);
+    CommandTask(CommandId cmd_id, QStringList cmd_args, ThreadUserInterface* threaduser=NULL);
     ~CommandTask();
 
-    CommandTasks commandTaskId() const;
-    void setCommandTaskId(CommandTasks cmd_id);
+    CommandId commandTaskId() const;
+    void setCommandTaskId(const CommandId cmd_id);
 
     QStringList commandArgs() const;
     void setCommandArgs(QStringList cmd_args);
+
+    ThreadUserInterface* threadUser() const {return thread_user;}
+    void setThreadUser(ThreadUserInterface* const threaduser) {thread_user = threaduser;}
 
 private:
     /**
       * Identifier to the command to execute. These ids are defined in
       * CommandTask.h 
       */
-    CommandTasks command_id;
+    CommandId command_id;
 
     /** Parameter(s) of the command to execute */
     QStringList command_args;
+
+    ThreadUserInterface* thread_user;
 };
 
 } // namespace xoscar

@@ -33,6 +33,7 @@
 #include "pstream.h"
 #include "CommandBuilder.h"
 #include "CommandTask.h"
+#include "utilities.h"
 
 using namespace std;
 using namespace redi;
@@ -84,7 +85,7 @@ public:
     CommandExecutionThread(QObject *parent = 0);
     ~CommandExecutionThread();
 
-    void init (CommandTask::CommandTasks, QStringList);
+    void init (xoscar::CommandId, QStringList);
     void init(CommandTask cmd_task);
     void init(QList<CommandTask> cmd_tasks);
 
@@ -99,12 +100,13 @@ signals:
     /** This signal is a generic signal emitted when the thread ends.
       * @param command_id Unique identifier of the executed command.
       * @param result Result of the executed command.
+      * @param threadUser Class implementing the ThreadUserInterface to handle the results.
       */
-    virtual void thread_terminated (CommandTask::CommandTasks command_id, QString result);
+    virtual void thread_terminated (xoscar::CommandId command_id, QString result, ThreadUserInterface* threadUser);
 
 protected:
     void run();
-    void run_command(CommandTask::CommandTasks command_id, QStringList command_args);
+    void run_command(CommandTask &task);
 
     void appendCommandTask(CommandTask cmd_task);
     void appendCommandTask(QList<CommandTask> cmd_tasks);

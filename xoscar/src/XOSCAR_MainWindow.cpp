@@ -18,8 +18,11 @@
 #include "SimpleConfigFile.h"
 #include "Hash.h"
 #include "utilities.h"
+#include <QMetaType>
 
 using namespace xoscar;
+
+Q_DECLARE_METATYPE(xoscar::CommandId)
 
 /**
  * @author Geoffroy Vallee
@@ -33,18 +36,26 @@ using namespace xoscar;
  */
 XOSCAR_MainWindow::XOSCAR_MainWindow(QMainWindow *parent)
     : QMainWindow(parent) 
+    , add_oscar_repo_widget(dynamic_cast<ThreadHandlerInterface*>(this))
+    , add_distro_widget(dynamic_cast<ThreadHandlerInterface*>(this), this)
     , widgetPendingChanges(NULL)
     , oscarOptionsRowPendingChanges(-1)
+    , wait_dialog(this)
 {
+    // register this enum so it can be used in the queued connections
+    qRegisterMetaType<xoscar::CommandId>();
+
     setupUi(this);
+
+    wait_dialog.setModal(true);
 
     // The QTabWidget widget will not allow 0 tabs via the designer method so
     // it will have a "dummy" tab that needs to be removed.
     networkConfigurationTabWidget->removeTab(0);
 
-    giTab = new XOSCAR_TabGeneralInformation(networkConfigurationTabWidget);
-    networkTab = new XOSCAR_TabNetworkConfiguration(networkConfigurationTabWidget);
-    softwareTab = new XOSCAR_TabSoftwareConfiguration(networkConfigurationTabWidget);
+    giTab = new XOSCAR_TabGeneralInformation(dynamic_cast<ThreadHandlerInterface*>(this), networkConfigurationTabWidget);
+    networkTab = new XOSCAR_TabNetworkConfiguration(dynamic_cast<ThreadHandlerInterface*>(this), networkConfigurationTabWidget);
+    softwareTab = new XOSCAR_TabSoftwareConfiguration(dynamic_cast<ThreadHandlerInterface*>(this), networkConfigurationTabWidget);
 
     // Add the tabs dynamically
     networkConfigurationTabWidget->insertTab(0, giTab, tr("General Information"));
@@ -92,6 +103,7 @@ XOSCAR_MainWindow::XOSCAR_MainWindow(QMainWindow *parent)
                     this, SLOT(do_oscar_sanity_check()));
 
     /* Connect button sinals */
+    //TODO let the command thread finish before closing the window
     connect(QuitButton, SIGNAL(clicked()),
                     this, SLOT(destroy()));
 
@@ -104,6 +116,7 @@ XOSCAR_MainWindow::XOSCAR_MainWindow(QMainWindow *parent)
     connect(networkConfigurationTabWidget, SIGNAL(currentChanged (int)),
                     this, SLOT(networkConfigTab_currentChanged_handler(int)));
 
+    // TODO remove/replace these
     connect(&command_thread, SIGNAL(opd_done(QString, QString)),
         this, SLOT(kill_popup(QString, QString)));
 
@@ -115,9 +128,10 @@ XOSCAR_MainWindow::XOSCAR_MainWindow(QMainWindow *parent)
 
     connect(&command_thread, SIGNAL(sanity_command_done(QString)),
         this, SLOT(update_check_text_widget(QString)));
+    // END
 
-    connect(&command_thread, SIGNAL(thread_terminated(CommandTask::CommandTasks, QString)),
-        this, SLOT(handle_thread_result (CommandTask::CommandTasks, QString)));
+    connect(&command_thread, SIGNAL(thread_terminated(xoscar::CommandId, QString, ThreadUserInterface*)),
+        this, SLOT(handle_thread_result (xoscar::CommandId, QString, ThreadUserInterface*)));
 
     connect(&command_thread, SIGNAL(finished()),
             this, SLOT(command_thread_finished()));
@@ -132,7 +146,7 @@ XOSCAR_MainWindow::XOSCAR_MainWindow(QMainWindow *parent)
 
     /* Get the list of Linux distributions that are already setup. */
     cout << "Get the setup distros" << endl;
-    command_thread.init (CommandTask::GET_SETUP_DISTROS, QStringList(""));
+    enqueue_command_task(CommandTask(xoscar::GET_SETUP_DISTROS, QStringList(""), dynamic_cast<ThreadUserInterface*>(this)));
     cout << "Init done" << endl;
 }
 
@@ -283,7 +297,7 @@ void XOSCAR_MainWindow::display_opkgs_from_repo()
         wait_popup->show();
         update();
 
-        command_thread.init(CommandTask::GET_LIST_OPKGS, QStringList(repo));
+        enqueue_command_task(CommandTask(xoscar::GET_LIST_OPKGS, QStringList(repo)));
     }
 }
 
@@ -314,8 +328,8 @@ void XOSCAR_MainWindow::add_repo_to_list()
     wait_popup->show();
     update();
 
-    command_thread.init(CommandTask::GET_LIST_REPO, QStringList(repo_url));
-    command_thread.init(CommandTask::GET_LIST_OPKGS, QStringList(repo_url));
+    enqueue_command_task(CommandTask(xoscar::GET_LIST_REPO, QStringList(repo_url)));
+    enqueue_command_task(CommandTask(xoscar::GET_LIST_OPKGS, QStringList(repo_url)));
 }
 
 /**
@@ -337,25 +351,25 @@ void XOSCAR_MainWindow::handle_oscar_config_result(QString list_distros)
         this->listSetupDistrosWidget->addItem (list.at(i));
     }
     listSetupDistrosWidget->update();
-    command_thread.init(CommandTask::INACTIVE, QStringList(""));
+    enqueue_command_task(CommandTask(xoscar::INACTIVE, QStringList("")));
 }
 
 void XOSCAR_MainWindow::refresh_list_setup_distros()
 {
     listSetupDistrosWidget->clear();
-    command_thread.init (CommandTask::GET_SETUP_DISTROS, QStringList(""));
+    enqueue_command_task(CommandTask(xoscar::GET_SETUP_DISTROS, QStringList("")));
 }
 
 void XOSCAR_MainWindow::do_system_sanity_check()
 {
     sanityCheckTextWidget->clear();
-    command_thread.init (CommandTask::DO_SYSTEM_SANITY_CHECK, QStringList(""));
+    enqueue_command_task(CommandTask(xoscar::DO_SYSTEM_SANITY_CHECK, QStringList("")));
 }
 
 void XOSCAR_MainWindow::do_oscar_sanity_check()
 {
     sanityCheckTextWidget->clear();
-    command_thread.init (CommandTask::DO_OSCAR_SANITY_CHECK, QStringList(""));
+    enqueue_command_task(CommandTask(xoscar::DO_OSCAR_SANITY_CHECK, QStringList("")));
 }
 
 /**
@@ -539,14 +553,20 @@ void XOSCAR_MainWindow::activate_tab(int tab_num)
  * are in CommandTask.h.
  * @param result Holds the return value of the command.
  */
-int XOSCAR_MainWindow::handle_thread_result (CommandTask::CommandTasks command_id, 
-    const QString result)
+int XOSCAR_MainWindow::handle_thread_result (xoscar::CommandId command_id, 
+    QString result, ThreadUserInterface* threadUser)
 {
+    if(threadUser != NULL) {
+        cout << "Calling thread user: " << threadUser << endl;
+        threadUser->handle_thread_result(command_id, result);
+        //TODO call any other thread users that want to know about this command id
+    }
+
     QStringList list;
     cout << "MainWindow: result from cmd exec thread received: "
          << command_id
          << endl;
-    if (command_id == CommandTask::GET_LIST_DEFAULT_REPOS) {
+    if (command_id == xoscar::GET_LIST_DEFAULT_REPOS) {
         // We parse the result: one URL per line.
         if (listReposWidget == NULL) {
             cerr << "ERROR: Impossible to update the widget that gives "
@@ -559,15 +579,15 @@ int XOSCAR_MainWindow::handle_thread_result (CommandTask::CommandTasks command_i
             listReposWidget->addItem (list.at(i));
         }
         listReposWidget->update();
-    } else if (command_id == CommandTask::DISPLAY_PARTITION_DISTRO) {
+    } else if (command_id == xoscar::DISPLAY_PARTITION_DISTRO) {
         cerr << "ERROR: Not yet implemented" << endl;
 /*        int index = partitionDistroComboBox->findText(distro_name);
         partitionDistroComboBox->setCurrentIndex(index);*/
-    } else if (command_id == CommandTask::SETUP_DISTRO) {
+    } else if (command_id == xoscar::SETUP_DISTRO) {
         // We could here try to see if the command was successfully executed or
         // not. Otherwise, nothing to do here.
-    } else if (command_id == CommandTask::GET_SETUP_DISTROS) {
-        command_thread.init (CommandTask::GET_LIST_DEFAULT_REPOS, QStringList (""));
+    } else if (command_id == xoscar::GET_SETUP_DISTROS) {
+        enqueue_command_task(CommandTask(xoscar::GET_LIST_DEFAULT_REPOS, QStringList ("")));
     }
 
     command_thread.wakeThread();
@@ -585,6 +605,10 @@ void XOSCAR_MainWindow::command_thread_finished()
     if(!command_thread.isEmpty()) { 
         command_thread.start();
     }
+    else {
+        wait_dialog.threadNotify();
+        emit command_thread_tasks_done();
+    }
 }
 
 /**
@@ -600,4 +624,22 @@ bool XOSCAR_MainWindow::isWidgetContentsModified(QWidget* widget)
 {
     XOSCAR_TabWidgetInterface* tab = dynamic_cast<XOSCAR_TabWidgetInterface*>(widget);
     return (tab != NULL && tab->isModified()) ? true : false; 
+}
+
+/**
+ * @author Robert Babilon
+ * Method to show the generic wait dialog when processing command tasks.
+ * @param message The initial message to set to the dialogs label.
+ */
+void XOSCAR_MainWindow::show_generic_wait_dialog(QString message)
+{
+    wait_dialog.setLabelText(message);
+    wait_dialog.show();
+    wait_dialog.startTimer();
+}
+
+void XOSCAR_MainWindow::enqueue_command_task(CommandTask task, QString message)
+{
+    show_generic_wait_dialog(message != tr("") ? message : tr("Please wait for XOSCAR to process command(s)."));
+    command_thread.init(task);
 }

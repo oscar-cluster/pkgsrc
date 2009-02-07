@@ -19,8 +19,8 @@
 
 #include "XOSCAR_TabWidgetInterface.h"
 #include "ui_xoscar_generalinformation.h"
-#include "CommandExecutionThread.h"
-#include "Generic_WaitDialog.h"
+#include "ThreadHandlerInterface.h"
+#include "ThreadUserInterface.h"
 
 using namespace Ui;
 
@@ -36,11 +36,12 @@ namespace xoscar {
 enum PartitionState { Saved, Modified, Created };
 
 class XOSCAR_TabGeneralInformation : public QWidget, public GeneralInformationForm, public XOSCAR_TabWidgetInterface
+    , public ThreadUserInterface
 {
 Q_OBJECT
 
 public:
-    XOSCAR_TabGeneralInformation(QWidget* parent=0);
+    XOSCAR_TabGeneralInformation(ThreadHandlerInterface* handler, QWidget* parent=0);
     ~XOSCAR_TabGeneralInformation();
 
 public slots:
@@ -54,7 +55,7 @@ public slots:
     void refresh_partition_info();
     void setDefaultPartitionValues();
     void enablePartitionInfoWidgets(bool enable);
-     int handle_thread_result (CommandTask::CommandTasks command_id, const QString result);
+     int handle_thread_result (xoscar::CommandId command_id, const QString result);
     void handle_oscar_config_result(QString list_distros);
     SaveResult save();
     SaveResult undo();
@@ -62,8 +63,6 @@ public slots:
     void clusters_list_rowChanged_handler(int);
     void virtualMachinesCheckBox_stateChanged_handler(int state);
     void virtualMachinesComboBox_currentIndexChanged_handler(int index);
-    void command_thread_finished();
-    void showModalDialog(QString message);
     void add_partition();
 
 signals:
@@ -80,13 +79,9 @@ protected:
     void setModifiedFlag(bool state = true);
 
 private:
-   CommandExecutionThread command_thread;
-
    int loading;
    bool v2mpkg;
    int currentPartitionRow;
-
-   GenericWaitDialog* wait_gipopup;
 };
 
 }

@@ -55,7 +55,7 @@ CommandExecutionThread::~CommandExecutionThread()
   *          the list of OSCAR packages for the specified repository. The 
   *          different modes are defined in CommandTask.h
   */
-void CommandExecutionThread::init (CommandTask::CommandTasks cmd_id, QStringList args)
+void CommandExecutionThread::init (xoscar::CommandId cmd_id, QStringList args)
 {
     appendCommandTask(CommandTask(cmd_id, args));
 
@@ -73,7 +73,6 @@ void CommandExecutionThread::init (CommandTask::CommandTasks cmd_id, QStringList
 void CommandExecutionThread::init(CommandTask cmd_task)
 {
     appendCommandTask(cmd_task);
-
     start(QThread::TimeCriticalPriority);
 }
 
@@ -170,7 +169,7 @@ void CommandExecutionThread::run()
     }
     else {
         setSleepFlag();
-        run_command(current_task.commandTaskId(), current_task.commandArgs());
+        run_command(current_task);
         sleepThread();
     }
 
@@ -273,74 +272,76 @@ void CommandExecutionThread::resetStatusFlag()
   * @todo we should only use the thread_terminated signal, not the old 
   *       individual signals (such as opd_done).
   */
-void CommandExecutionThread::run_command(CommandTask::CommandTasks command_id, QStringList command_args)
+void CommandExecutionThread::run_command(CommandTask &task)
 {
+    xoscar::CommandId command_id = task.commandTaskId();
+    QStringList command_args = task.commandArgs();
     char *ohome = getenv ("OSCAR_HOME");
     QString list_opkgs = "", list_repos = "";
     QString result = "";
 
-    if (command_id == CommandTask::INACTIVE) {
-        emit (thread_terminated(command_id, result));
+    if (command_id == xoscar::INACTIVE) {
+        emit (thread_terminated(command_id, result, task.threadUser()));
         return;
-    } else if (command_id == CommandTask::GET_LIST_REPO) {
+    } else if (command_id == xoscar::GET_LIST_REPO) {
         /* We refresh the list of available repositories */
         const string cmd = build_cmd ((string) ohome 
             + "/scripts/opd2  --non-interactive --list-repos");
         list_repos = get_output_word_by_word (cmd);
         emit (opd_done(list_repos, list_opkgs));
-        emit (thread_terminated(command_id, result));
-    } else if (command_id == CommandTask::GET_LIST_OPKGS) {
+        emit (thread_terminated(command_id, result, task.threadUser()));
+    } else if (command_id == xoscar::GET_LIST_OPKGS) {
         /* We update the list of available OPKGs, based on the new repo */
         const string cmd = build_cmd ((string) ohome 
             + "/scripts/opd2  --non-interactive --repo " 
             + command_args.at(0).toStdString ());
         list_opkgs = get_output_word_by_word (cmd);
         emit (opd_done(list_repos, list_opkgs));
-        emit (thread_terminated(command_id, result));
-    } else if (command_id == CommandTask::GET_SETUP_DISTROS) {
+        emit (thread_terminated(command_id, result, task.threadUser()));
+    } else if (command_id == xoscar::GET_SETUP_DISTROS) {
         /* We update the list of available OPKGs, based on the new repo */
         const string cmd = build_cmd ((string) ohome 
             + "/scripts/oscar-config --list-setup-distros");
         result = get_output_word_by_word (cmd);
         emit (oscar_config_done(result));
-        emit (thread_terminated(command_id, result));
-    } else if (command_id == CommandTask::DO_SYSTEM_SANITY_CHECK) {
+        emit (thread_terminated(command_id, result, task.threadUser()));
+    } else if (command_id == xoscar::DO_SYSTEM_SANITY_CHECK) {
         const string cmd = build_cmd ((string) ohome
             + "/scripts/system-sanity");
         result = get_output_line_by_line (cmd);
         emit (sanity_command_done(result));
-        emit (thread_terminated(command_id, result));
-    } else if (command_id == CommandTask::DO_OSCAR_SANITY_CHECK) {
+        emit (thread_terminated(command_id, result, task.threadUser()));
+    } else if (command_id == xoscar::DO_OSCAR_SANITY_CHECK) {
         const string cmd = build_cmd ((string) ohome 
            + "/scripts/oscar_sanity_check");
         result = get_output_line_by_line (cmd);
         emit (sanity_command_done(result));
-        emit (thread_terminated(command_id, result));
-    } else if (command_id == CommandTask::GET_LIST_DEFAULT_REPOS) {
+        emit (thread_terminated(command_id, result, task.threadUser()));
+    } else if (command_id == xoscar::GET_LIST_DEFAULT_REPOS) {
         const string cmd = build_cmd ((string) ohome 
             + "/scripts/opd2 --non-interactive --list-default-repos");
         result = get_output_line_by_line (cmd);
         cout << "Default repos: " << result.toStdString() << endl;
-        emit (thread_terminated(command_id, result));
-    } else if (command_id == CommandTask::DISPLAY_PARTITIONS) {
+        emit (thread_terminated(command_id, result, task.threadUser()));
+    } else if (command_id == xoscar::DISPLAY_PARTITIONS) {
         const string cmd = build_cmd ((string) ohome 
             + "/scripts/oscar --display-partitions "
             + command_args.at(0).toStdString());
         result = get_output_line_by_line (cmd);
-        emit (thread_terminated(command_id, result));
-    } else if (command_id == CommandTask::DISPLAY_PARTITION_NODES) {
+        emit (thread_terminated(command_id, result, task.threadUser()));
+    } else if (command_id == xoscar::DISPLAY_PARTITION_NODES) {
         const string cmd = build_cmd ((string) ohome 
             + "/scripts/oscar --display-partition-nodes "
             + command_args.at(0).toStdString());
         result = get_output_line_by_line (cmd);
-        emit (thread_terminated(command_id, result));
-    } else if (command_id == CommandTask::DISPLAY_PARTITION_DISTRO) {
+        emit (thread_terminated(command_id, result, task.threadUser()));
+    } else if (command_id == xoscar::DISPLAY_PARTITION_DISTRO) {
         const string cmd = build_cmd ((string) ohome 
             + "/scripts/oscar --display-partition-distro "
             + command_args.at(0).toStdString());
         result = get_output_line_by_line (cmd);
-        emit (thread_terminated(command_id, result));
-    } else if (command_id == CommandTask::ADD_PARTITION) {
+        emit (thread_terminated(command_id, result, task.threadUser()));
+    } else if (command_id == xoscar::ADD_PARTITION) {
         string cmd = (string) ohome 
                         + "/scripts/oscar"
                         + " --add-partition " + command_args.at(0).toStdString()
@@ -351,19 +352,19 @@ void CommandExecutionThread::run_command(CommandTask::CommandTasks command_id, Q
             cmd += command_args.at(i).toStdString();
         }
         result = get_output_line_by_line (build_cmd (cmd));
-        emit (thread_terminated(command_id, result));
-    } else if (command_id == CommandTask::REMOVE_PARTITION) {
-        result = "ERROR: CommandTask::REMOVE_PARTITION not yet implemented.";
+        emit (thread_terminated(command_id, result, task.threadUser()));
+    } else if (command_id == xoscar::REMOVE_PARTITION) {
+        result = "ERROR: xoscar::REMOVE_PARTITION not yet implemented.";
         cout << result.toStdString() << endl;
-        emit (thread_terminated(command_id, result));
-    } else if (command_id == CommandTask::DISPLAY_DETAILS_PARTITION_NODES) {
+        emit (thread_terminated(command_id, result, task.threadUser()));
+    } else if (command_id == xoscar::DISPLAY_DETAILS_PARTITION_NODES) {
         const string cmd = build_cmd ((string) ohome 
             + "/scripts/oscar --display-partition-nodes "
             + command_args.at(0).toStdString()
             + " -v");
         result = get_output_line_by_line (cmd);
-        emit (thread_terminated(command_id, result));
-    } else if (command_id == CommandTask::SETUP_DISTRO) {
+        emit (thread_terminated(command_id, result, task.threadUser()));
+    } else if (command_id == xoscar::SETUP_DISTRO) {
         const string cmd = build_cmd ((string) ohome 
                 + "/scripts/oscar-config --setup-distro "
                 + command_args.at(0).toStdString()
@@ -372,30 +373,30 @@ void CommandExecutionThread::run_command(CommandTask::CommandTasks command_id, Q
                 + " --use-oscar-repo "
                 + command_args.at(2).toStdString());
         result = get_output_line_by_line (cmd);
-        emit (thread_terminated(command_id, result));
-    } else if (command_id == CommandTask::LIST_UNSETUP_DISTROS) {
+        emit (thread_terminated(command_id, result, task.threadUser()));
+    } else if (command_id == xoscar::LIST_UNSETUP_DISTROS) {
         const string cmd = build_cmd ((string) ohome
                 + "/scripts/oscar-config --list-unsetup-distros");
         result = get_output_word_by_word (cmd);
-        emit (thread_terminated(command_id, result));
-    } else if (command_id == CommandTask::DISPLAY_DEFAULT_OSCAR_REPO) {
+        emit (thread_terminated(command_id, result, task.threadUser()));
+    } else if (command_id == xoscar::DISPLAY_DEFAULT_OSCAR_REPO) {
         const string cmd = build_cmd ((string) ohome 
                 + "/scripts/oscar-config --display-default-oscar-repo "
                 + command_args.at(0).toStdString());
         result = get_output_word_by_word (cmd);
-        emit (thread_terminated(command_id, result));
-    } else if (command_id == CommandTask::DISPLAY_DEFAULT_DISTRO_REPO) {
+        emit (thread_terminated(command_id, result, task.threadUser()));
+    } else if (command_id == xoscar::DISPLAY_DEFAULT_DISTRO_REPO) {
         const string cmd = build_cmd ((string) ohome
                 + "/scripts/oscar-config --display-default-distro-repo "
                 + command_args.at(0).toStdString());
         result = get_output_word_by_word (cmd);
-        emit (thread_terminated(command_id, result));
-    } else if (command_id == CommandTask::DISPLAY_DEFAULT_OPKGS) {
+        emit (thread_terminated(command_id, result, task.threadUser()));
+    } else if (command_id == xoscar::DISPLAY_DEFAULT_OPKGS) {
         const string cmd = build_cmd ((string) ohome
                 + "/scripts/opd2 --non-interactive --default-opkgs "
                 + command_args.at(0).toStdString());
         result = get_output_line_by_line (cmd);
-        emit (thread_terminated(command_id, result));
+        emit (thread_terminated(command_id, result, task.threadUser()));
     }
     // We ignore other command IDs
 }

@@ -33,19 +33,20 @@ using namespace xoscar;
  * distribution has been setup, we should also pop up a new widget for the 
  * configuration of OSCAR (oscar-config tftpboot related stuff).
  */
-ORMAddRepoDialog::ORMAddRepoDialog(QDialog *parent) 
+ORMAddRepoDialog::ORMAddRepoDialog(ThreadHandlerInterface* handler, QDialog *parent) 
     : QDialog (parent) 
+    , ThreadUserInterface(handler)
 {
     QString list_distros;
 
     setupUi(this);
 
-    connect(&command_thread, SIGNAL(thread_terminated(CommandTask::CommandTasks, QString)),
-            this, SLOT(handle_thread_result (CommandTask::CommandTasks, QString)));
-    connect(&command_thread, SIGNAL(finished()),
-            this, SLOT(command_thread_finished()));
-
-    command_thread.init (CommandTask::GET_SETUP_DISTROS, QStringList(""));
+// TODO this could be set via a list of commands to "listen" to. the main window already
+// calls GET_SETUP_DISTROS in its constructor so this is uncessary. plus, this GET_SETUP_DISTROS
+// might need to happen each time this is shown...
+// also causes seg fault b/c of initialization sequence of objects
+//      threadHandler->enqueue_command_task(CommandTask(xoscar::GET_SETUP_DISTROS, QStringList(""), 
+//                                                      dynamic_cast<ThreadUserInterface*>(this)));
 }
 
 ORMAddRepoDialog::~ORMAddRepoDialog ()
@@ -63,9 +64,9 @@ ORMAddRepoDialog::~ORMAddRepoDialog ()
  *  are in CommandTask.h.
  *  @param result Holds the return value of the command.
  */
-int ORMAddRepoDialog::handle_thread_result (CommandTask::CommandTasks command_id, QString result)
+int ORMAddRepoDialog::handle_thread_result (xoscar::CommandId command_id, QString result)
 {
-     if (command_id == CommandTask::GET_SETUP_DISTROS) {
+     if (command_id == xoscar::GET_SETUP_DISTROS) {
         /* Once we have the list, we update the widget */
         QStringList list = result.split(" ");
         for(int i = 0; i < list.size(); i++) {
@@ -73,20 +74,5 @@ int ORMAddRepoDialog::handle_thread_result (CommandTask::CommandTasks command_id
         }
         this->update();
     }
-
-    command_thread.wakeThread();
     return 0;
-}
-
-/**
- * @author Robert Babilon
- *
- * Slot called when the QThread signal finished() is emitted.
- * Starts the command thread again only if it has tasks left.
- */
-void ORMAddRepoDialog::command_thread_finished()
-{
-    if(!command_thread.isEmpty()) { 
-        command_thread.start();
-    }
 }

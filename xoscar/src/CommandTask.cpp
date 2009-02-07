@@ -16,43 +16,59 @@
 
 using namespace xoscar;
 
-Q_DECLARE_METATYPE(CommandTask::CommandTasks)
-
 CommandTask::CommandTask()
-    : command_id(INACTIVE)
+    : command_id(xoscar::INACTIVE)
     , command_args(QString(""))
+    , thread_user(NULL)
 {
-    // register this enum so it can be used in the queued connections
-    qRegisterMetaType<CommandTask::CommandTasks>();
 }
 
-CommandTask::CommandTask(CommandTasks cmd_id, QStringList cmd_args)
+CommandTask::CommandTask(CommandId cmd_id, QStringList cmd_args, ThreadUserInterface* threaduser)
 {
-    qRegisterMetaType<CommandTask::CommandTasks>();
-
     command_id = cmd_id;
     command_args = cmd_args;
+    thread_user = threaduser;
 }
 
 CommandTask::~CommandTask()
 {
 }
-
-CommandTask::CommandTasks CommandTask::commandTaskId() const
+/**
+ * @author Robert Babilon
+ *
+ * Method to get the command id
+ */
+xoscar::CommandId CommandTask::commandTaskId() const
 {
     return command_id;
 }
 
-void CommandTask::setCommandTaskId(CommandTasks cmd_id)
+/**
+ * @author Robert Babilon
+ *
+ * Method to set the command task id
+ */
+void CommandTask::setCommandTaskId(const CommandId cmd_id)
 {
     command_id = cmd_id;
 }
 
+/**
+ * @author Robert Babilon
+ *
+ * Method to get the command's arguments
+ */
 QStringList CommandTask::commandArgs() const
 {
     return command_args;
 }
 
+/**
+ * @author Robert Babilon
+ *
+ * Method to set the command's arguments
+ * @param cmd_args The arguments to set.
+ */
 void CommandTask::setCommandArgs(QStringList cmd_args)
 {
     command_args = cmd_args;

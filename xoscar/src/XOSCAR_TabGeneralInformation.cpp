@@ -20,13 +20,13 @@
 
 using namespace xoscar;
 
-XOSCAR_TabGeneralInformation::XOSCAR_TabGeneralInformation(QWidget* parent)
+XOSCAR_TabGeneralInformation::XOSCAR_TabGeneralInformation(ThreadHandlerInterface* handler, QWidget* parent)
     : QWidget(parent)
+    , ThreadUserInterface(handler)
 {
     v2mpkg = false;
     loading = 0;
     setModifiedFlag(false);
-    wait_gipopup = NULL;
 
     // register the PartitionState enum with Qt in order to use it with the
     // QListWidgetItem::data() property
@@ -71,13 +71,6 @@ XOSCAR_TabGeneralInformation::XOSCAR_TabGeneralInformation(QWidget* parent)
 
 	connect(saveClusterInfoButton, SIGNAL(clicked()),
 	        this, SLOT(save()));
-
-	// signals for command execution thread
-    connect(&command_thread, SIGNAL(thread_terminated(CommandTask::CommandTasks, QString)),
-        this, SLOT(handle_thread_result (CommandTask::CommandTasks, QString)));
-
-    connect(&command_thread, SIGNAL(finished()),
-            this, SLOT(command_thread_finished()));
 
     enablePartitionInfoWidgets(false);
     setDefaultPartitionValues();
@@ -143,7 +136,6 @@ XOSCAR_TabWidgetInterface::SaveResult XOSCAR_TabGeneralInformation::undo()
         setPartitionItemState(tempRow, Saved, true);
         listClusterPartitionsWidget->setCurrentRow(tempRow);
 
-        showModalDialog(tr("Clears changes..."));
         // refresh the list of partitions to undo all changes to this partition
         refresh_list_partitions();
 
@@ -191,7 +183,7 @@ void XOSCAR_TabGeneralInformation::partitionDistro_currentIndexChanged_handler(i
         emit widgetContentsModified(this);
     }
 
-    command_thread.init(CommandTask::DISPLAY_DEFAULT_OPKGS, QStringList(""));
+    threadHandler->enqueue_command_task(CommandTask(xoscar::DISPLAY_DEFAULT_OPKGS, QStringList(""), dynamic_cast<ThreadUserInterface*>(this)));
 }
 
 /**
@@ -352,7 +344,9 @@ void XOSCAR_TabGeneralInformation::refresh_list_partitions ()
 	// scripts have the cluster hard coded. This argument is ignored, but in
 	// the future would be used to indicate which cluster we are requesting
 	// partitions for.
-    command_thread.init(CommandTask::DISPLAY_PARTITIONS, QStringList(listOscarClustersWidget->currentItem()->text()));
+    threadHandler->enqueue_command_task(CommandTask(xoscar::DISPLAY_PARTITIONS, 
+                                        QStringList(listOscarClustersWidget->currentItem()->text()), 
+                                        dynamic_cast<ThreadUserInterface*>(this)));
 }
 
 /**
@@ -390,14 +384,14 @@ void XOSCAR_TabGeneralInformation::refresh_partition_info()
     //cout << "DEBUG: refresh_partition_info: refreshing info for row: " << listClusterPartitionsWidget->currentRow() << endl;
 
     /* We display the number of nodes composing the partition */
-    command_thread.init(CommandTask::DISPLAY_PARTITION_NODES, 
-                        QStringList(current_partition));
+    threadHandler->enqueue_command_task(CommandTask(xoscar::DISPLAY_PARTITION_NODES, 
+                        QStringList(current_partition),dynamic_cast<ThreadUserInterface*>(this)));
 
     /* We get the list of supported distros */
-    command_thread.init(CommandTask(CommandTask::GET_SETUP_DISTROS, QStringList("")));
+    threadHandler->enqueue_command_task(CommandTask(xoscar::GET_SETUP_DISTROS, QStringList(""), dynamic_cast<ThreadUserInterface*>(this)));
 
     /* We get the Linux distribution on which the partition is based */
-    command_thread.init(CommandTask(CommandTask::DISPLAY_PARTITION_DISTRO, QStringList("")));
+    threadHandler->enqueue_command_task(CommandTask(xoscar::DISPLAY_PARTITION_DISTRO, QStringList(""), dynamic_cast<ThreadUserInterface*>(this)));
 }
 
 /**
@@ -405,7 +399,7 @@ void XOSCAR_TabGeneralInformation::refresh_partition_info()
  *
  * Slot that handles the click on the "Save Cluster Configuration" button.
  *
- * @return bool true if the save was successful; otherwise false.
+ * @return XOSCAR_TabWidgetInterface::SaveResult
  *
  * @todo Check if the partition name already exists or not.
  * @todo Check the return value of the command to add partition information
@@ -455,8 +449,7 @@ XOSCAR_TabWidgetInterface::SaveResult XOSCAR_TabGeneralInformation::save_cluster
         setModifiedFlag(false);
         result = Saving;
 
-        showModalDialog(tr("Saves changes..."));
-        command_thread.init (CommandTask::ADD_PARTITION, args);
+        threadHandler->enqueue_command_task(CommandTask(xoscar::ADD_PARTITION, args, dynamic_cast<ThreadUserInterface*>(this)));
 
         /* We unset the selection of the partition is order to be able to update
         the widget. If we do not do that, a NULL pointer is used and the app
@@ -648,7 +641,7 @@ void XOSCAR_TabGeneralInformation::partition_list_rowChanged_handler(int row)
  *        REMOVE_PARTITION,
  *        UPDATE_PARTITION
  */
-int XOSCAR_TabGeneralInformation::handle_thread_result (CommandTask::CommandTasks command_id, 
+int XOSCAR_TabGeneralInformation::handle_thread_result (xoscar::CommandId command_id, 
     const QString result)
 {
     QStringList list;
@@ -656,7 +649,7 @@ int XOSCAR_TabGeneralInformation::handle_thread_result (CommandTask::CommandTask
          << command_id
          << endl;
 
-    if (command_id == CommandTask::DISPLAY_PARTITIONS) {
+    if (command_id == xoscar::DISPLAY_PARTITIONS) {
         Loading loader(&loading);
         // We parse the result: one partition name per line.
         // skip empty strings? otherwise we have extra partitions added
@@ -680,23 +673,23 @@ int XOSCAR_TabGeneralInformation::handle_thread_result (CommandTask::CommandTask
             listClusterPartitionsWidget->addItem (pItem);
         // *** End Test Code ***/ 
         listClusterPartitionsWidget->update();
-    } else if (command_id == CommandTask::DISPLAY_PARTITION_NODES) {
+    } else if (command_id == xoscar::DISPLAY_PARTITION_NODES) {
         Loading loader(&loading);
         list = result.split(" ", QString::SkipEmptyParts);
         partitionNumberNodesSpinBox->setValue(list.size());
-    } else if (command_id == CommandTask::DISPLAY_PARTITION_DISTRO) {
+    } else if (command_id == xoscar::DISPLAY_PARTITION_DISTRO) {
         cerr << "ERROR: Not yet implemented" << endl;
 /*        int index = partitionDistroComboBox->findText(distro_name);
         partitionDistroComboBox->setCurrentIndex(index);*/
-    } else if (command_id == CommandTask::SETUP_DISTRO) {
+    } else if (command_id == xoscar::SETUP_DISTRO) {
         // We could here try to see if the command was successfully executed or
         // not. Otherwise, nothing to do here.
-    } else if (command_id == CommandTask::GET_SETUP_DISTROS) {
-        //command_thread.init (CommandTask::GET_LIST_DEFAULT_REPOS, QStringList (""));
+    } else if (command_id == xoscar::GET_SETUP_DISTROS) {
+        //command_thread.init (xoscar::GET_LIST_DEFAULT_REPOS, QStringList (""));
         // @todo This GET_LIST_DEFAULT_REPOS is not handled in this class. It
         // was originally in XOSCAR_MainWindow and may or may not need to be
         // ported into this class.
-    } else if(command_id == CommandTask::DISPLAY_DEFAULT_OPKGS) {
+    } else if(command_id == xoscar::DISPLAY_DEFAULT_OPKGS) {
         Loading loader(&loading);
         virtualMachinesComboBox->clear();
 
@@ -715,30 +708,7 @@ int XOSCAR_TabGeneralInformation::handle_thread_result (CommandTask::CommandTask
         virtualMachinesCheckBox->setEnabled(v2mpkg);
         virtualMachinesComboBox->setEnabled(v2mpkg && virtualMachinesCheckBox->checkState() == Qt::Checked);
     }
-
-    // wake the thread up so it can exit run() and be ready for another command
-    command_thread.wakeThread();
     return 0;
-}
-
-/**
- * @author Robert Babilon
- *
- * Slot called when the QThread signal finished() is emitted.
- * Starts the command thread again only if it has tasks left.
- */
-void XOSCAR_TabGeneralInformation::command_thread_finished()
-{
-    if(!command_thread.isEmpty()) { 
-        // here we could update the text of the popup to the next command
-        command_thread.start();
-    }
-    else {
-        if(wait_gipopup != NULL) {
-            wait_gipopup->threadNotify();
-        }
-        emit command_thread_tasks_done();
-    }
 }
 
 /**
@@ -898,20 +868,4 @@ void XOSCAR_TabGeneralInformation::setModifiedFlag(bool state/*=true*/)
         currentPartitionRow = -1;
     }
     this->modified = state;
-}
-
-/**
- * @author Robert Babilon
- * Method to show the generic wait dialog when processing command tasks.
- * @param message The initial message to set to the dialogs label.
- */
-void XOSCAR_TabGeneralInformation::showModalDialog(QString message)
-{
-    if(wait_gipopup == NULL) {
-        wait_gipopup = new GenericWaitDialog(this);
-        wait_gipopup->setModal(true);
-    }
-    wait_gipopup->setLabelText(message);
-    wait_gipopup->show();
-    wait_gipopup->startTimer();
 }

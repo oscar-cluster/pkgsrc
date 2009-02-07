@@ -31,10 +31,10 @@
 #include <unistd.h>
 
 #include "ui_AddRepoWidget.h"
-#include "CommandExecutionThread.h"
+#include "ThreadUserInterface.h"
+#include "ThreadHandlerInterface.h"
 
 using namespace std;
-using namespace redi;
 
 /**
  * @namespace xoscar
@@ -44,19 +44,16 @@ using namespace redi;
 namespace xoscar {
 
 class ORMAddRepoDialog : public QDialog, public Ui_AddRepoDialog
+    , ThreadUserInterface
 {
 Q_OBJECT
 
 public:
-    ORMAddRepoDialog(QDialog *parent = 0);
+    ORMAddRepoDialog(ThreadHandlerInterface* handler, QDialog *parent = 0);
     ~ORMAddRepoDialog();
 
 public slots:
-     int handle_thread_result (CommandTask::CommandTasks, QString);
-    void command_thread_finished();
-
-private:
-    CommandExecutionThread command_thread;
+     int handle_thread_result (xoscar::CommandId, QString);
 };
 
     class XORM_AddRepoDialog: public ORMAddRepoDialog {};

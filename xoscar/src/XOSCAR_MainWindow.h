@@ -48,6 +48,8 @@
 #include "XOSCAR_TabGeneralInformation.h"
 #include "XOSCAR_TabNetworkConfiguration.h"
 #include "XOSCAR_TabSoftwareConfiguration.h"
+#include "Generic_WaitDialog.h"
+#include "ThreadHandlerInterface.h"
 
 using namespace Ui; 
 using namespace std;
@@ -68,6 +70,7 @@ namespace xoscar {
  * xoscar (~/.xoscar.conf).
  */
 class XOSCAR_MainWindow : public QMainWindow, public MainWindow
+	, public ThreadHandlerInterface
 {
 Q_OBJECT
 
@@ -86,7 +89,7 @@ public slots:
     void handle_about_authors_action();
     void handle_about_oscar_action();
     void handle_oscar_config_result (QString);
-     int handle_thread_result (CommandTask::CommandTasks, QString);
+     int handle_thread_result (xoscar::CommandId, QString, ThreadUserInterface*);
     void kill_popup (QString, QString);
     void newOscarOptionSelected ();
     void refresh_display_opkgs_from_repo();
@@ -96,6 +99,11 @@ public slots:
 	void activate_tab(int tab_num);
 	void widgetContentsChanged_handler(QWidget*);
     void command_thread_finished();
+    void show_generic_wait_dialog(QString message);
+    void enqueue_command_task(CommandTask task, QString message=tr(""));
+
+signals:
+    void command_thread_tasks_done();
 
 protected:
 	void closeEvent(QCloseEvent* event);
@@ -117,6 +125,7 @@ private:
 
     QWidget* widgetPendingChanges;
     int oscarOptionsRowPendingChanges;
+    GenericWaitDialog wait_dialog;
 };
 
 } // namespace xoscar

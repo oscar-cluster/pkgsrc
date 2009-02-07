@@ -31,10 +31,10 @@
 #include <unistd.h>
 
 #include "ui_AddDistroWidget.h"
-#include "CommandExecutionThread.h"
+#include "ThreadUserInterface.h"
+#include "ThreadHandlerInterface.h"
 
 using namespace std;
-using namespace redi;
 
 /**
  * @namespace xoscar
@@ -44,25 +44,22 @@ using namespace redi;
 namespace xoscar {
 
 class ORMAddDistroDialog : public QDialog, public Ui_AddDistroDialog
+    , ThreadUserInterface
 {
 Q_OBJECT
 
 public:
-    ORMAddDistroDialog(QDialog *parent = 0);
+    ORMAddDistroDialog(ThreadHandlerInterface* handler, QWidget *parent = 0);
     ~ORMAddDistroDialog();
     void refresh_list_distros();
 
 public slots:
-     int handle_thread_result (CommandTask::CommandTasks, QString);
+     int handle_thread_result (xoscar::CommandId, QString);
     void newDistroSelected();
     void refresh_repos_url();
-    void command_thread_finished();
 
 signals:
     virtual void refreshListDistros();
-
-private:
-    CommandExecutionThread command_thread;
 };
 
     class XORM_AddDistroDialog: public ORMAddDistroDialog {};

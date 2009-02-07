@@ -22,8 +22,9 @@
 
 #include "XOSCAR_TabWidgetInterface.h"
 #include "ui_xoscar_networkconfiguration.h"
-#include "CommandExecutionThread.h"
 #include "XOSCAR_FileBrowser.h"
+#include "ThreadUserInterface.h"
+#include "ThreadHandlerInterface.h"
 
 using namespace std;
 using namespace Ui;
@@ -35,11 +36,12 @@ const QString macChildNodeName = QString("MAC");
 const QString ipChildNodeName = QString("IP");
 
 class XOSCAR_TabNetworkConfiguration : public QWidget, public NetworkConfigurationForm
+    , public ThreadUserInterface
 {
 Q_OBJECT
 
 public:
-    XOSCAR_TabNetworkConfiguration(QWidget* parent=0);
+    XOSCAR_TabNetworkConfiguration(ThreadHandlerInterface* handler, QWidget* parent=0);
     ~XOSCAR_TabNetworkConfiguration();
 
 public slots:
@@ -48,13 +50,12 @@ public slots:
     void import_macs_from_file();
     void partition_selection_changed(QString);
     void network_configuration_tab_activated();
-     int handle_thread_result (CommandTask::CommandTasks command_id, const QString result);
+     int handle_thread_result (xoscar::CommandId command_id, const QString result);
     void open_file();
     void assignmac_clicked_handler();
     void unassignmac_clicked_handler();
     void assignallmacs_clicked_handler();
     void importmanualmac_clicked_handler();
-    void command_thread_finished();
 
 protected:
     bool isMacUnassigned(QString & mac);
@@ -65,7 +66,6 @@ protected:
     bool isValidMacAddress(QString mac);
 
 private:
-   CommandExecutionThread command_thread;
    QString partition_name;
    XOSCAR_FileBrowser *file_browser;
 };
