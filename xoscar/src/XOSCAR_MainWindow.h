@@ -78,29 +78,32 @@ public:
     XOSCAR_MainWindow(QMainWindow *parent = 0);
     ~XOSCAR_MainWindow();
 
+public:
+    void closePopups();
+    void handle_oscar_config_result (QString);
+    void update_check_text_widget(QString);
+    void show_generic_wait_dialog(QString message);
+    void enqueue_command_task(CommandTask task, QString message=tr(""));
+    void update_oscar_repos(QString);
+    void update_list_opkgs(QString);
+
 public slots:
     void add_repo_to_list ();
     void create_add_distro_window ();
     void create_add_repo_window ();
-    void closePopups();
     void display_opkgs_from_repo ();
     void do_oscar_sanity_check();
     void do_system_sanity_check();
     void handle_about_authors_action();
     void handle_about_oscar_action();
-    void handle_oscar_config_result (QString);
      int handle_thread_result (xoscar::CommandId, QString, ThreadUserInterface*);
-    void kill_popup (QString, QString);
     void newOscarOptionSelected ();
     void refresh_display_opkgs_from_repo();
     void refresh_list_setup_distros();
     void networkConfigTab_currentChanged_handler(int);
-    void update_check_text_widget(QString);
     void activate_tab(int tab_num);
     void widgetContentsChanged_handler(QWidget*);
     void command_thread_finished();
-    void show_generic_wait_dialog(QString message);
-    void enqueue_command_task(CommandTask task, QString message=tr(""));
 
 signals:
     void command_thread_tasks_done();

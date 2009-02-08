@@ -94,8 +94,6 @@ public:
     QList<CommandTask> commandTasks() const;
 
 signals:
-    virtual void opd_done (QString, QString);
-    virtual void sanity_command_done (QString);
     /** This signal is a generic signal emitted when the thread ends.
       * @param command_id Unique identifier of the executed command.
       * @param result Result of the executed command.

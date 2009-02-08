@@ -277,7 +277,6 @@ void CommandExecutionThread::run_command(CommandTask &task)
     xoscar::CommandId command_id = task.commandTaskId();
     QStringList command_args = task.commandArgs();
     char *ohome = getenv ("OSCAR_HOME");
-    QString list_opkgs = "", list_repos = "";
     QString result = "";
 
     if (command_id == xoscar::INACTIVE) {
@@ -287,16 +286,14 @@ void CommandExecutionThread::run_command(CommandTask &task)
         /* We refresh the list of available repositories */
         const string cmd = build_cmd ((string) ohome 
             + "/scripts/opd2  --non-interactive --list-repos");
-        list_repos = get_output_word_by_word (cmd);
-        emit (opd_done(list_repos, list_opkgs));
+        result = get_output_word_by_word (cmd);
         emit (thread_terminated(command_id, result, task.threadUser()));
     } else if (command_id == xoscar::GET_LIST_OPKGS) {
         /* We update the list of available OPKGs, based on the new repo */
         const string cmd = build_cmd ((string) ohome 
             + "/scripts/opd2  --non-interactive --repo " 
             + command_args.at(0).toStdString ());
-        list_opkgs = get_output_word_by_word (cmd);
-        emit (opd_done(list_repos, list_opkgs));
+        result = get_output_word_by_word (cmd);
         emit (thread_terminated(command_id, result, task.threadUser()));
     } else if (command_id == xoscar::GET_SETUP_DISTROS) {
         /* We update the list of available OPKGs, based on the new repo */
@@ -308,13 +305,11 @@ void CommandExecutionThread::run_command(CommandTask &task)
         const string cmd = build_cmd ((string) ohome
             + "/scripts/system-sanity");
         result = get_output_line_by_line (cmd);
-        emit (sanity_command_done(result));
         emit (thread_terminated(command_id, result, task.threadUser()));
     } else if (command_id == xoscar::DO_OSCAR_SANITY_CHECK) {
         const string cmd = build_cmd ((string) ohome 
            + "/scripts/oscar_sanity_check");
         result = get_output_line_by_line (cmd);
-        emit (sanity_command_done(result));
         emit (thread_terminated(command_id, result, task.threadUser()));
     } else if (command_id == xoscar::GET_LIST_DEFAULT_REPOS) {
         const string cmd = build_cmd ((string) ohome 

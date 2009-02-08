@@ -101,14 +101,6 @@ XOSCAR_MainWindow::XOSCAR_MainWindow(QMainWindow *parent)
     connect(networkConfigurationTabWidget, SIGNAL(currentChanged (int)),
                     this, SLOT(networkConfigTab_currentChanged_handler(int)));
 
-    // TODO remove/replace these
-    connect(&command_thread, SIGNAL(opd_done(QString, QString)),
-        this, SLOT(kill_popup(QString, QString)));
-
-    connect(&command_thread, SIGNAL(sanity_command_done(QString)),
-        this, SLOT(update_check_text_widget(QString)));
-    // END
-
     /* signals related to the CommandExecutionThread */
     connect(&command_thread, SIGNAL(thread_terminated(xoscar::CommandId, QString, ThreadUserInterface*)),
         this, SLOT(handle_thread_result (xoscar::CommandId, QString, ThreadUserInterface*)));
@@ -182,30 +174,17 @@ void XOSCAR_MainWindow::newOscarOptionSelected()
 /**
  * @author Geoffroy Vallee.
  *
- * Slot executed when a OPD2 command ends (executed by the 
- * CommandExecutionThread). In this case, we need to update the list of OPKGs or
- * the list of repos, and we also need to close the dialog that asks to user to
- * wait while we are executing a OPD2 command.
- * Note the return depends on the query mode (see CommandExecutionThread.h file
- * for the list of supported mode). It means that the thread used for the 
- * execution of OPD2 commands can only do one query at a time. The mode defines
- * the type of query that as to be done (for example get the list of available
- * OPKGs for a specific repo or get the list of available repo).
- * Based on the mode only one result is returned for the OPD2 command execution
- * thread, others are empty QStrings.
- * Also note that we return QString because Qt signals can only deal by default
+ * Procedure executed when the GET_LIST_OPKGS command ends (executed by the 
+ * CommandExecutionThread). In this case, we need to update the list of OPKGs.
+ * Note that we return QString because Qt signals can only deal by default
  * with very specific types. Therefore we use QString to simplify the 
  * implementation (natively supported).
  *
  * @param list_repos List of OSCAR repositories; result of the OPD2 command. The
  *                   list is empty is users request something else than the list
  *                   of repos.
- * @param list_opkgs List of OSCAR packages available via a specific OSCAR 
- *                   repository; result of the OPD2 command. The list is empty 
- *                   is users request something else than the OPKGs list.
- * @todo This function can be simplified using the split function from Qt
  */
-void XOSCAR_MainWindow::kill_popup(QString list_repos, QString list_opkgs)
+void XOSCAR_MainWindow::update_list_opkgs(QString list_opkgs)
 {
     /* We update the list of available OPKGs for the selected OSCAR repo */
     QStringList list = list_opkgs.split (" ");
@@ -214,9 +193,23 @@ void XOSCAR_MainWindow::kill_popup(QString list_repos, QString list_opkgs)
         this->listOPKGsWidget->addItem (list.at(i));
     }
     listOPKGsWidget->update();
+}
 
+/**
+ * @author Robert Babilon.
+ *
+ * Procedure executed when the GET_LIST_REPO command ends (executed by the 
+ * CommandExecutionThread). In this case, we need to update the list of OPKGs or
+ * the list of repos.
+ *
+ * @param list_opkgs List of OSCAR packages available via a specific OSCAR 
+ *                   repository; result of the OPD2 command. The list is empty 
+ *                   is users request something else than the OPKGs list.
+ */
+void XOSCAR_MainWindow::update_oscar_repos(QString list_repos)
+{
     /* We update the list of available OSCAR repos */
-    list = list_repos.split (" ");
+    QStringList list = list_repos.split (" ");
     for(int i = 0; i < list.size(); i++) {
         this->listReposWidget->addItem (list.at(i));
     }
@@ -225,7 +218,6 @@ void XOSCAR_MainWindow::kill_popup(QString list_repos, QString list_opkgs)
     /* We close the popup window that asks the user to wait */
     wait_popup->close();
 }
-
 
 /**
  * @author Geoffroy Vallee.
@@ -567,6 +559,14 @@ int XOSCAR_MainWindow::handle_thread_result (xoscar::CommandId command_id,
     } else if (command_id == xoscar::GET_SETUP_DISTROS) {
         handle_oscar_config_result(result);
         enqueue_command_task(CommandTask(xoscar::GET_LIST_DEFAULT_REPOS, QStringList ("")));
+    } else if (command_id == xoscar::GET_LIST_OPKGS) {
+        update_list_opkgs(result);
+    } else if (command_id == xoscar::GET_LIST_REPO) {
+        update_oscar_repos(result);
+    } else if (command_id == xoscar::DO_SYSTEM_SANITY_CHECK) {
+        update_check_text_widget(result);
+    } else if (command_id == xoscar::DO_OSCAR_SANITY_CHECK) {
+        update_check_text_widget(result);
     }
 
     command_thread.wakeThread();
