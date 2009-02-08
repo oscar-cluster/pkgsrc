@@ -129,7 +129,7 @@ XOSCAR_TabWidgetInterface::SaveResult XOSCAR_TabGeneralInformation::undo()
     // refresh on this partition; if created, remove the item
     if(partitionItemState(tempRow) == Created) {
         delete listClusterPartitionsWidget->takeItem(tempRow);
-        // leave result as NoChange
+        result = Undoing;
     }
     else { 
         // set this row to Saved state and overwrite any previous values
@@ -339,6 +339,11 @@ void XOSCAR_TabGeneralInformation::refresh_list_partitions ()
     if(listOscarClustersWidget->currentRow() == -1) {
         return;
     }
+
+    // this is semi-temporary fix. oscar only allows a single cluster
+    // currently. avoid refreshing partitions fixes a seg fault.
+    // the seg fault has to do with a lot of stuff.
+    if(isPartitionModified(currentPartitionRow)) return;
 
     // oscar does not (currently) support multiple clusters so the Perl
     // scripts have the cluster hard coded. This argument is ignored, but in
@@ -558,10 +563,12 @@ void XOSCAR_TabGeneralInformation::partition_list_rowChanged_handler(int row)
     else if(row == -1) {
         //cout << "DEBUG: partition_list_rowChanged_handler: row == -1" << endl;
 
-        if(prompt_save_changes()) {
+        SaveResult result = prompt_save_changes();
+        if(result == Saving || result == Undoing) {
             // saved or undo changes, ignore
             // undo here does not need to set the old selection b/c the new
             // selection is -1.
+            setModifiedFlag(false);
         }
         else {
             // leave the currentPartitionRow as is; next call to this method
@@ -603,7 +610,8 @@ void XOSCAR_TabGeneralInformation::partition_list_rowChanged_handler(int row)
             }
             else {
                 //cout << "DEBUG: partition_list_rowChanged_handler: previous partition was modified!" << endl;
-                if(prompt_save_changes()) {
+                SaveResult result = prompt_save_changes();
+                if(result == Saving || result == Undoing) {
                     // will need to add a pausing mechanism here to wait for the
                     // thread to finish and re-select the newly selected item
                     // since the items would be cleared out causing a potential
