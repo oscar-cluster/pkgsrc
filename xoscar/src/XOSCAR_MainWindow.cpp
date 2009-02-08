@@ -41,6 +41,7 @@ XOSCAR_MainWindow::XOSCAR_MainWindow(QMainWindow *parent)
     , widgetPendingChanges(NULL)
     , oscarOptionsRowPendingChanges(-1)
     , wait_dialog(this)
+    , closeRequest(false)
 {
     // register this enum so it can be used in the queued connections
     qRegisterMetaType<xoscar::CommandId>();
@@ -103,10 +104,6 @@ XOSCAR_MainWindow::XOSCAR_MainWindow(QMainWindow *parent)
                     this, SLOT(do_oscar_sanity_check()));
 
     /* Connect button sinals */
-    //TODO let the command thread finish before closing the window
-    connect(QuitButton, SIGNAL(clicked()),
-                    this, SLOT(destroy()));
-
     connect(actionAboutXOSCAR, SIGNAL(triggered()),
                     this, SLOT(handle_about_authors_action()));
     connect(actionAbout_OSCAR, SIGNAL(triggered()),
@@ -392,7 +389,7 @@ void XOSCAR_MainWindow::update_check_text_widget(QString text)
  * makes sure that all xoscar related dialog are closed before exiting the
  * application.
  */
-void XOSCAR_MainWindow::destroy()
+void XOSCAR_MainWindow::closePopups()
 {
     add_distro_widget.close();
     add_oscar_repo_widget.close();
@@ -415,6 +412,8 @@ void XOSCAR_MainWindow::closeEvent(QCloseEvent* event)
     }
     
     if(isWidgetContentsModified(widgetPendingChanges) == false) { 
+        closeRequest = true;
+        closePopups();
         event->accept();
     }
     else {
@@ -608,6 +607,11 @@ void XOSCAR_MainWindow::command_thread_finished()
     else {
         wait_dialog.threadNotify();
         emit command_thread_tasks_done();
+
+        if(closeRequest) {
+            wait_dialog.hide();
+            close();
+        }
     }
 }
 

@@ -82,7 +82,7 @@ public slots:
     void add_repo_to_list ();
     void create_add_distro_window ();
     void create_add_repo_window ();
-    void destroy();
+    void closePopups();
     void display_opkgs_from_repo ();
     void do_oscar_sanity_check();
     void do_system_sanity_check();
@@ -96,8 +96,8 @@ public slots:
     void refresh_list_setup_distros();
     void networkConfigTab_currentChanged_handler(int);
     void update_check_text_widget(QString);
-	void activate_tab(int tab_num);
-	void widgetContentsChanged_handler(QWidget*);
+    void activate_tab(int tab_num);
+    void widgetContentsChanged_handler(QWidget*);
     void command_thread_finished();
     void show_generic_wait_dialog(QString message);
     void enqueue_command_task(CommandTask task, QString message=tr(""));
@@ -106,7 +106,7 @@ signals:
     void command_thread_tasks_done();
 
 protected:
-	void closeEvent(QCloseEvent* event);
+    void closeEvent(QCloseEvent* event);
 
 private:
     XOSCAR_TabWidgetInterface::SaveResult prompt_save_changes();
@@ -126,6 +126,7 @@ private:
     QWidget* widgetPendingChanges;
     int oscarOptionsRowPendingChanges;
     GenericWaitDialog wait_dialog;
+    bool closeRequest;
 };
 
 } // namespace xoscar
