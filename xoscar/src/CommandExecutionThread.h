@@ -95,7 +95,6 @@ public:
 
 signals:
     virtual void opd_done (QString, QString);
-    virtual void oscar_config_done (QString);
     virtual void sanity_command_done (QString);
     /** This signal is a generic signal emitted when the thread ends.
       * @param command_id Unique identifier of the executed command.

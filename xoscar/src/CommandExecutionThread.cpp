@@ -303,7 +303,6 @@ void CommandExecutionThread::run_command(CommandTask &task)
         const string cmd = build_cmd ((string) ohome 
             + "/scripts/oscar-config --list-setup-distros");
         result = get_output_word_by_word (cmd);
-        emit (oscar_config_done(result));
         emit (thread_terminated(command_id, result, task.threadUser()));
     } else if (command_id == xoscar::DO_SYSTEM_SANITY_CHECK) {
         const string cmd = build_cmd ((string) ohome

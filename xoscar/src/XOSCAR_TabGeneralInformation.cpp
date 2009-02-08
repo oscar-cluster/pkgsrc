@@ -686,17 +686,17 @@ int XOSCAR_TabGeneralInformation::handle_thread_result (xoscar::CommandId comman
         list = result.split(" ", QString::SkipEmptyParts);
         partitionNumberNodesSpinBox->setValue(list.size());
     } else if (command_id == xoscar::DISPLAY_PARTITION_DISTRO) {
-        cerr << "ERROR: Not yet implemented" << endl;
-/*        int index = partitionDistroComboBox->findText(distro_name);
-        partitionDistroComboBox->setCurrentIndex(index);*/
+        Loading loader(&loading);
+        int index = partitionDistroComboBox->findText(result);
+        if(index == -1) {
+            cout << "WARNING: partition's distro was not found" << endl;
+        }
+        partitionDistroComboBox->setCurrentIndex(index);
     } else if (command_id == xoscar::SETUP_DISTRO) {
         // We could here try to see if the command was successfully executed or
         // not. Otherwise, nothing to do here.
     } else if (command_id == xoscar::GET_SETUP_DISTROS) {
-        //command_thread.init (xoscar::GET_LIST_DEFAULT_REPOS, QStringList (""));
-        // @todo This GET_LIST_DEFAULT_REPOS is not handled in this class. It
-        // was originally in XOSCAR_MainWindow and may or may not need to be
-        // ported into this class.
+        handle_oscar_config_result(result);
     } else if(command_id == xoscar::DISPLAY_DEFAULT_OPKGS) {
         Loading loader(&loading);
         virtualMachinesComboBox->clear();

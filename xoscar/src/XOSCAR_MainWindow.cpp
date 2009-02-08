@@ -67,7 +67,6 @@ XOSCAR_MainWindow::XOSCAR_MainWindow(QMainWindow *parent)
 
     connect(giTab, SIGNAL(partition_selection_changed(QString)),
             networkTab, SLOT(partition_selection_changed(QString)));
-
     connect(giTab, SIGNAL(partition_selection_changed(QString)),
             softwareTab, SLOT(partition_selection_changed(QString)));
     connect(giTab, SIGNAL(cluster_selection_changed(QString)),
@@ -75,17 +74,6 @@ XOSCAR_MainWindow::XOSCAR_MainWindow(QMainWindow *parent)
 
     connect(giTab, SIGNAL(widgetContentsModified(QWidget*)),
             this, SLOT(widgetContentsChanged_handler(QWidget*)));
-
-    // We read the xoscar configuration file (~/.xoscar.conf). Note that if the
-    // file does not exist, a default configuration file is created.
-//     QString home_path = getenv("HOME");
-//     QDir dir (home_path);
-//     if ( !dir.exists() ) {
-//         cout << "ERROR: Impossible to find the home directory" << endl;
-//         return;
-//     }
-//     home_path = home_path + "/.xoscar.conf";
-//     SimpleConfigFile confFile = SimpleConfigFile (home_path.toStdString());
 
     /* Connect slots and signals */
     connect(AddOSCARRepoButton, SIGNAL(clicked()),
@@ -117,19 +105,13 @@ XOSCAR_MainWindow::XOSCAR_MainWindow(QMainWindow *parent)
     connect(&command_thread, SIGNAL(opd_done(QString, QString)),
         this, SLOT(kill_popup(QString, QString)));
 
-    connect(&command_thread, SIGNAL(oscar_config_done(QString)),
-        this, SLOT(handle_oscar_config_result(QString)));
-
-    connect(&command_thread, SIGNAL(oscar_config_done(QString)),
-            giTab, SLOT(handle_oscar_config_result(QString)));
-
     connect(&command_thread, SIGNAL(sanity_command_done(QString)),
         this, SLOT(update_check_text_widget(QString)));
     // END
 
+    /* signals related to the CommandExecutionThread */
     connect(&command_thread, SIGNAL(thread_terminated(xoscar::CommandId, QString, ThreadUserInterface*)),
         this, SLOT(handle_thread_result (xoscar::CommandId, QString, ThreadUserInterface*)));
-
     connect(&command_thread, SIGNAL(finished()),
             this, SLOT(command_thread_finished()));
 
@@ -344,6 +326,7 @@ void XOSCAR_MainWindow::handle_oscar_config_result(QString list_distros)
 {
     cout << list_distros.toStdString () << endl;
     QStringList list = list_distros.split (" ", QString::SkipEmptyParts);
+    listSetupDistrosWidget->clear();
     for(int i = 0; i < list.size(); i++) {
         this->listSetupDistrosWidget->addItem (list.at(i));
     }
@@ -553,11 +536,11 @@ void XOSCAR_MainWindow::activate_tab(int tab_num)
  * @param result Holds the return value of the command.
  */
 int XOSCAR_MainWindow::handle_thread_result (xoscar::CommandId command_id, 
-    QString result, ThreadUserInterface* threadUser)
+    QString result, ThreadUserInterface* threaduser)
 {
-    if(threadUser != NULL) {
-        cout << "Calling thread user: " << threadUser << endl;
-        threadUser->handle_thread_result(command_id, result);
+    if(threaduser != NULL) {
+        cout << "DEBUG: Calling threaduser: " << threaduser << endl;
+        threaduser->handle_thread_result(command_id, result);
         //TODO call any other thread users that want to know about this command id
     }
 
@@ -578,14 +561,11 @@ int XOSCAR_MainWindow::handle_thread_result (xoscar::CommandId command_id,
             listReposWidget->addItem (list.at(i));
         }
         listReposWidget->update();
-    } else if (command_id == xoscar::DISPLAY_PARTITION_DISTRO) {
-        cerr << "ERROR: Not yet implemented" << endl;
-/*        int index = partitionDistroComboBox->findText(distro_name);
-        partitionDistroComboBox->setCurrentIndex(index);*/
     } else if (command_id == xoscar::SETUP_DISTRO) {
         // We could here try to see if the command was successfully executed or
         // not. Otherwise, nothing to do here.
     } else if (command_id == xoscar::GET_SETUP_DISTROS) {
+        handle_oscar_config_result(result);
         enqueue_command_task(CommandTask(xoscar::GET_LIST_DEFAULT_REPOS, QStringList ("")));
     }
 
@@ -642,6 +622,11 @@ void XOSCAR_MainWindow::show_generic_wait_dialog(QString message)
     wait_dialog.startTimer();
 }
 
+/**
+ * @author Robert Babilon
+ * Method to add a CommandTask to the CommandExecutionThread's queue.
+ * @param message The initial message to set to the dialogs label.
+ */
 void XOSCAR_MainWindow::enqueue_command_task(CommandTask task, QString message)
 {
     show_generic_wait_dialog(message != tr("") ? message : tr("Please wait for XOSCAR to process command(s)."));
