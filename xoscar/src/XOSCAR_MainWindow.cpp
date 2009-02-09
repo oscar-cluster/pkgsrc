@@ -533,8 +533,9 @@ int XOSCAR_MainWindow::handle_thread_result (xoscar::CommandId command_id,
     if(threaduser != NULL) {
         cout << "DEBUG: Calling threaduser: " << threaduser << endl;
         threaduser->handle_thread_result(command_id, result);
-        //TODO call any other thread users that want to know about this command id
     }
+    // call other users that want to listen to this particular command
+    notify_associated_threadusers(threaduser, command_id, result);
 
     QStringList list;
     cout << "MainWindow: result from cmd exec thread received: "

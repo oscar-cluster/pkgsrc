@@ -44,6 +44,7 @@ enum CommandId {
         DISPLAY_DEFAULT_DISTRO_REPO,
         REMOVE_PARTITION,
         DISPLAY_DEFAULT_OPKGS
+        ,LAST_CMD_ID // Not to be used!
     };
 
 class Utilities

@@ -74,6 +74,8 @@ XOSCAR_TabGeneralInformation::XOSCAR_TabGeneralInformation(ThreadHandlerInterfac
 
     enablePartitionInfoWidgets(false);
     setDefaultPartitionValues();
+
+    threadHandler->append_threaduser_with_commandid(dynamic_cast<ThreadUserInterface*>(this), xoscar::GET_SETUP_DISTROS);
 }
 
 XOSCAR_TabGeneralInformation::~XOSCAR_TabGeneralInformation()
