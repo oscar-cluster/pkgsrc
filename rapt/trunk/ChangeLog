@@ -1,4 +1,4 @@
-rapt-2.8.4 (not yet released):
+rapt-2.8.4:
 - Modify the Makefile so we can choose the directory where the binary packages
 are stored.
 - Enable the creation of unsigned Debian packages by setting the
