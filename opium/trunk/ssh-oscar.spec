@@ -2,7 +2,7 @@
 %define name ssh-oscar
 
 # Version of package
-%define version 1.2.1
+%define version 1.2.2
 
 #==============================================================
 
@@ -55,6 +55,9 @@ make install
 #==============================================================
 
 %changelog
+* Tue Feb 10 2009 Geoffroy Vallee <valleegr@ornl.gov> 1.2.2-1
+- New upstream version (see ChangeLog for more details).
+
 * Mon Dec 22 2008 Geoffroy Vallee <valleegr@ornl.gov> 1.2.1-1
 - New upstream version (see ChangeLog for more details).
 

@@ -1,5 +1,11 @@
+ssh-oscar (1.2.2-1) intrepid; urgency=low
+
+  * New upstream version.
+
+ -- Geoffroy Vallee <valleegr@ornl.gov>  Tue, 10 Feb 2009 10:21:15 -0500
+
 ssh-oscar (1.2.1-1) hardy; urgency=low
 
-  * New upstream version
+  * New upstream version.
 
  -- Geoffroy Vallee <valleegr@ornl.gov>  Sun, 21 Dec 2008 19:18:15 -0500

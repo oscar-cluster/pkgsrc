@@ -1,4 +1,4 @@
-ssh-oscar-1.2.2 (not yet released):
+ssh-oscar-1.2.2:
 - Modify the Makefile so we can choose the directory where the binary packages
 are stored.
 - Enable the creation of unsigned Debian packages by setting the
