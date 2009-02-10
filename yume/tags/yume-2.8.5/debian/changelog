@@ -1,0 +1,66 @@
+yume (2.8.5-1) intrepid; urgency=low
+
+  * New upstream version.
+
+ -- Geoffroy Vallee <valleegr@ornl.gov>  Tue, 10 Feb 2009 10:44:30 -0500
+
+yume (2.8.4-1) hardy; urgency=low
+
+  * New upstream version.
+
+ -- Geoffroy Vallee <valleegr@ornl.gov>  Thu, 22 Jan 2009 19:19:00 -0500
+
+yume (2.8.3-1) hardy; urgency=low
+
+  * New upstream version.
+
+ -- Geoffroy Vallee <valleegr@ornl.gov>  Mon, 19 Jan 2009 13:03:22 -0500
+
+yume (2.8.2-1) hardy; urgency=low
+
+  * New upstream version.
+
+ -- Geoffroy Vallee <valleegr@ornl.gov>  Sun, 21 Dec 2008 16:29:48 -0500
+
+yume (2.8.1-1) hardy; urgency=low
+
+  * New upstream version.
+
+ -- Geoffroy Vallee <valleegr@ornl.gov>  Fri, 07 Nov 2008 09:53:01 -0500
+
+yume (2.8-2) gutsy; urgency=low
+
+  * Add a dependency to createrepo (needed by yume for the creation of repos). 
+
+ -- Geoffroy Vallee <valleegr@ornl.gov>  Wed, 23 Jul 2008 10:43:52 -0400
+
+yume (2.8-1) gutsy; urgency=low
+
+  * Improved recognition of master node for nodes running heartbeat.
+
+ -- Erich Focht <efocht@hpce.nec.com>  Mon, 17 Mar 2008 22:16:42 +0100
+
+yume (2.7-2) gutsy; urgency=low
+
+  * Fix a bug in the return code handling.
+
+ -- Geoffroy Vallee <valleegr@ornl.gov>  Thu, 01 Nov 2007 22:46:42 -0400
+
+yume (2.7-1) stable; urgency=low
+
+  * added repoadd, repodel, repolist repository manipulation funtionality for OSCAR headnodes.
+
+ -- Erich Focht <efocht@hpce.nec.com>  Sun, 28 Oct 2007 19:05:00 +0100
+
+yume (2.6-1) stable; urgency=low
+
+  * Bugfixes for dealing with newer versions of yum (>=3.0.0)
+
+ -- Erich Focht <efocht@hpce.nec.com>  Sat, 27 Oct 2007 16:35:00 +0100
+
+yume (2.4-1) stable; urgency=low
+
+  * Initial release 
+
+ -- Geoffroy Vallee <valleegr@ornl.gov>  Sat,  9 Jun 2007 22:13:39 -0400
+
