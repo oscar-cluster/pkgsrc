@@ -1,0 +1,31 @@
+sc3 (1.2.2-1) intrepid; urgency=low
+
+  * New upstream version.
+
+ -- Geoffroy Vallee <valleegr@ornl.gov>  Tue, 10 Feb 2009 10:49:59 -0500
+
+sc3 (1.2.1-1) hardy; urgency=low
+
+  * New upstream version.
+
+ -- Geoffroy Vallee <valleegr@ornl.gov>  Fri, 07 Nov 2008 11:30:41 -0500
+
+sc3 (1.2-5) stable; urgency=low
+
+  * Bugfix for nodelist type subcluster validation.
+
+ -- Erich Focht <efocht@hpce.nec.com>  Wed, 24 Oct 2007 18:44:00 +0200
+
+sc3 (1.1-2gv1) stable; urgency=low
+
+  * Fix various issues with the package. Update the version to allow
+    automatic update of the package.
+
+ -- Geoffroy Vallee <valleegr@ornl.gov>  Fri, 11 May 2007 01:43:46 -0400
+
+sc3 (1.1-1gv1) UNRELEASED; urgency=low
+
+  * New upstream version.
+
+ -- Geoffroy Vallee <valleegr@ornl.gov>  Fri, 10 May 2007 12:07:18 -0500
+
