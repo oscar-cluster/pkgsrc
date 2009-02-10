@@ -1,4 +1,4 @@
-yume-2.8.5 (not yet released):
+yume-2.8.5:
 - Remove uneeded debugging messages.
 - Modify the Makefile so we can choose the directory to save sources when
 creating RPMs.

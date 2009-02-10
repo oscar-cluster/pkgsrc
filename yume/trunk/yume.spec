@@ -1,7 +1,7 @@
 # $Id$
 Summary: Wrapper to yum for clusters
 Name: yume
-Version: 2.8.4
+Version: 2.8.5
 Vendor: NEC HPCE
 Release: 1
 License: GPL
@@ -63,6 +63,8 @@ rm -rf $RPM_BUILD_ROOT
 %{_mandir}/man8/yume*
 
 %changelog
+* Tue Feb 10 2009 Geoffroy Vallee <valleegr@ornl.gov> 2.8.5-1
+- new upstream version (see ChangeLog for more details).
 * Wed Jan 22 2009 Geoffroy Vallee <valleegr@ornl.gov> 2.8.4-1
 - new upstream version (see ChangeLog for more details).
 * Mon Jan 19 2009 Geoffroy Vallee <valleegr@ornl.gov> 2.8.3-1
