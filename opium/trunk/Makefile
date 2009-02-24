@@ -13,7 +13,7 @@ doc:
 	install -d -m 0755 $(DESTDIR)/usr/local/man/man1/
 	for bin in ${MANPAGES} ; do ( pod2man --section=1 $$bin $(DESTDIR)/usr/local/man/man1/$$bin.1 ) ; done
 
-install: doc clean
+install: clean doc
 	for dir in ${SUBDIRS} ; do ( cd $$dir ; ${MAKE} install ) ; done
 	@echo "Installing ssh-oscar..."
 	# We use an install script because the installation is completely different
