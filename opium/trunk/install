@@ -35,7 +35,7 @@ my $destdir = shift;
 
 $destdir = "" if (!defined $destdir);
 
-my @scripts = ("ssh-oscar.csh", "ssh-oscar.sh");
+my @scripts = ("ssh-oscar.csh", "ssh-oscar.sh", "ssh-oscar");
 
 my $os = OSCAR::OCA::OS_Detect::open ("/");
 if (!defined $os) {

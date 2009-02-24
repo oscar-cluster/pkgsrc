@@ -3,15 +3,21 @@ PKGDEST=
 SOURCEDIR=/usr/src/redhat/SOURCES
 PKG=ssh-oscar
 
-FILES := ssh-oscar.csh ssh-oscar.sh Makefile install postinst
+MANPAGES := ssh-oscar
 SUBDIRS := 
 
 all:
 	for dir in ${SUBDIRS} ; do ( cd $$dir ; ${MAKE} all ) ; done
 
-install: clean
+doc:
+	install -d -m 0755 $(DESTDIR)/usr/local/man/man1/
+	for bin in ${MANPAGES} ; do ( pod2man --section=1 $$bin $(DESTDIR)/usr/local/man/man1/$$bin.1 ) ; done
+
+install: doc clean
 	for dir in ${SUBDIRS} ; do ( cd $$dir ; ${MAKE} install ) ; done
 	@echo "Installing ssh-oscar..."
+	# We use an install script because the installation is completely different
+	# on Debian and RPM based systems.
 	./install $(DESTDIR)
 
 deb:
@@ -38,9 +44,12 @@ clean:
 dist: clean
 	rm -rf /tmp/$(PKG)
 	mkdir /tmp/$(PKG)
-	cp -rf ${FILES} /tmp/$(PKG)
+	cp -rf * /tmp/$(PKG)
+	cd /tmp/$(PKG); rm -rf `find . -name ".svn"`
 	cd /tmp; tar czf ./$(PKG).tar.gz $(PKG)
 	mv /tmp/$(PKG).tar.gz .
+	rm -rf /tmp/$(PKG)/
+	rm -f /tmp/$(PKG).tar.gz
 
 rpm: dist
 	cp $(PKG).tar.gz $(SOURCEDIR)

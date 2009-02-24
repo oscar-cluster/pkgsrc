@@ -1,0 +1,122 @@
+#!/usr/bin/perl
+#
+
+#
+# Copyright(c) 2009 Geoffroy Vallee <valleegr at ornl dot gov>
+#                   Oak Ridge National Laboratory
+#                   All rights reserved.
+#
+
+BEGIN {
+    if (defined $ENV{OSCAR_HOME}) {
+        unshift @INC, "$ENV{OSCAR_HOME}/lib";
+    }
+}
+
+use strict;
+use warnings "all";
+use Getopt::Long;
+use Carp;
+
+use OSCAR::FileUtils;
+use OSCAR::Utils;
+
+my $verbose;
+
+sub help () {
+    print "For a complete desciption of $0, please refer to the man page (man $0)";
+}
+
+sub help_and_exit () {
+    help ();
+    die "ERROR: Invalid option";
+}
+
+
+
+GetOptions(
+        "verbose"                       => \$verbose,
+        "help"                          => \&help,
+        ) || help_and_exit();
+
+my $initial_verbose_value = 0;
+$initial_verbose_value = $ENV{OSCAR_VERBOSE} if (defined $ENV{OSCAR_VERBOSE});
+if ($verbose) {
+    $ENV{OSCAR_VERBOSE} = 5;
+}
+
+my $user = `whoami`;
+chomp ($user);
+if (!OSCAR::Utils::is_a_valid_string ($user)) {
+    die "ERROR: Impossible to determine the user name";
+}
+
+my $home = $ENV{HOME};
+if (!OSCAR::Utils::is_a_valid_string ($home)) {
+    die "ERROR: Impossible to determine the home directory";
+}
+
+OSCAR::Logger::oscar_log_section ("Updating ssh data for $user ($home)");
+my %keys = ('dsa'   => "$home/.ssh/id_dsa",
+            'rsa'   => "$home/.ssh/id_rsa",
+            'rsa1'  => "$home/.ssh/identity");
+foreach my $key (keys %keys) {
+    OSCAR::Logger::oscar_log_subsection "Dealing with $key SSH key type";
+    if (! -f $keys{$key}) {
+        OSCAR::Logger::oscar_log_subsection "Generating ssh file $keys{$key}";
+        my $cmd = "ssh-keygen -t $key -N '' -f $keys{$key}";
+        if (system $cmd) {
+            die "ERROR: Impossible to execute $cmd";
+        }
+    } else {
+        OSCAR::Logger::oscar_log_subsection "$key SSH key already exists";
+    }
+}
+
+my %public_keys = ('id_dsa.pub'     => "authorized_keys2",
+                   'identity.pub'   => "authorized_keys",
+                   'id_rsa.pub'     => "authorized_keys2");
+foreach my $pub_key (keys %public_keys) {
+    my $line = `cat $home/.ssh/$pub_key`;
+    OSCAR::FileUtils::add_line_to_file_without_duplication ($line,
+        "$home/.ssh/$public_keys{$pub_key}");
+}
+
+my $cmd = "chmod 600 $home/.ssh/authorized_keys*";
+if (system ($cmd)) {
+    die "ERROR: Impossible to execute $cmd";
+}
+
+EXIT_SUCCESS:
+$ENV{OSCAR_VERBOSE} = $initial_verbose_value;
+OSCAR::Logger::oscar_log_section ("SSH data updating");
+exit 0;
+
+__END__
+
+=head1 NAME
+
+ssh-oscar, script that updates the SSH configuration for a given user and
+ensures that the user can log to the nodes without password.
+
+=head1 SYNOPSIS
+
+ssh-oscar OPTIONS
+
+=head1 OPTIONS
+
+Recognized options include:
+
+=over 4
+
+=item --verbose
+
+Enable the verbose mode.
+
+=back
+
+=head1 SEE ALSO
+
+ssh-oscar.sh, oscar-oscar.csh
+
+=cut

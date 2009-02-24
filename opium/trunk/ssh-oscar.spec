@@ -2,7 +2,7 @@
 %define name ssh-oscar
 
 # Version of package
-%define version 1.2.2
+%define version 1.3
 
 #==============================================================
 
@@ -18,7 +18,7 @@ Source0: ssh-oscar.tar.gz
 License: GPL
 Group: System
 BuildPreReq: rpm >= 3.0.5
-Requires: rpm >= 3.0.5
+Requires: rpm >= 3.0.5, oscar-base-lib
 Conflicts: sync-users-oscar
 #==============================================================
 
