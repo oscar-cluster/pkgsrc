@@ -51,10 +51,15 @@ make install
 
 /etc/profile.d/ssh-oscar.sh
 /etc/profile.d/ssh-oscar.csh
+/etc/profile.d/ssh-oscar
+/usr/local/man/man1/ssh-oscar.1
 
 #==============================================================
 
 %changelog
+* Tue Feb 24 2009 Geoffroy Vallee <valleegr@ornl.gov> 1.3-1
+- New upstream version (see ChangeLog for more details).
+
 * Tue Feb 10 2009 Geoffroy Vallee <valleegr@ornl.gov> 1.2.2-1
 - New upstream version (see ChangeLog for more details).
 
