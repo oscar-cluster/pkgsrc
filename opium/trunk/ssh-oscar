@@ -89,7 +89,7 @@ if (system ($cmd)) {
 
 EXIT_SUCCESS:
 $ENV{OSCAR_VERBOSE} = $initial_verbose_value;
-OSCAR::Logger::oscar_log_section ("SSH data updating");
+OSCAR::Logger::oscar_log_section ("SSH data updated");
 exit 0;
 
 __END__
