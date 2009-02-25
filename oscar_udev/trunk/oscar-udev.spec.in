@@ -1,0 +1,35 @@
+%define libpref PERLLIBPATH
+%define libtarget $RPM_BUILD_ROOT%{libpref}
+
+Summary:        OSCAR udev configuration tool.
+Name:           oscar-udev
+Version:        1.0
+Release:        1
+Vendor:         Open Cluster Group <http://OSCAR.OpenClusterGroup.org/>
+Distribution:   OSCAR
+Packager:       Geoffroy Vallee <valleegr@ornl.gov>
+License:        GPL
+Group:          Development/Libraries
+Source:         %{name}.tar.gz
+BuildRoot:      %{_localstatedir}/tmp/%{name}-root
+BuildArch:      noarch
+AutoReqProv: 	no
+
+%description
+Set of scripts and Perl modules for the management of udev within an OSCAR cluster.
+
+%prep
+%setup -n %{name}
+
+%build
+make install DESTDIR=$RPM_BUILD_ROOT
+
+%install 
+
+%files
+%defattr(-,root,root)
+%{libpref}/*
+
+%changelog
+* Wed Feb 25 2009 Geoffroy Vallee <valleegr@ornl.gov> 1.0-1
+- New upstream version (see ChangeLog for more details).
