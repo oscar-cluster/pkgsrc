@@ -1,0 +1,92 @@
+-*- text -*-
+
+Copyright (c) 2002-2004 The Trustees of Indiana University.  
+                        All rights reserved.
+
+This file is part of the Env-switcher software package.  For license
+information, see the LICENSE file in the top-level directory of the
+Env-switcher source distribution.
+
+$Id: INSTALL,v 1.4 2004/01/15 16:38:32 jsquyres Exp $
+
+
+Installation
+============
+
+The switcher packages use a standard automake-based configure and
+"make install".  Most of the time, users will install this package
+via RPM, so reading this file is unnecessary.
+
+However, if someone has a burning desire to compile from source,
+configure takes three important options:
+
+1. --prefix=DIR: the directory where switcher will be installed
+2. --with-modulefiles=DIR: the directory base where the switcher
+   module itself should be installed
+3. --enable-suppress-errors: since env-switcher is involved in the
+   startup of *EVERY SHELL SESSION* on your machine, it is *CRITICAL*
+   to understand what this option does before proceedings.  See
+   "Shell Startup Errors", below.
+
+A standard "make all install" will do the deed.
+
+
+Shell Startup Errors
+====================
+
+There is a strong religious debate in the system administrator
+community about how to handle errors at shell startup.  
+
+- One camp says that outputting messages to stderr is acceptable, even
+  though this makes some utilities fail (e.g., scp, sftp, cpush,
+  etc.).  The rationale multi-fold:
+
+  1. You always want to know when there is a problem with shell
+     startup.  Otherwise, some executables (for example) may
+     mysteriously disappear from user's paths, and there is no
+     explanation as to why they are gone.
+  2. Even though *some* utilities fail, others do not.  It is always
+     possible to fix the shell startup error without much effort.
+  3. Other utilities write errors to stderr upon failure, even during
+     shell startup (e.g., xauth, ssh itself, etc.).
+
+- The other camp says that you should *never* output anything to
+  stderr.  Errors should be handled or discarded silently.  Users have
+  to fend for themselves and try to figure out why certain
+  executables, libraries, or man pages have seemingly disappeared,
+  even though they have specific defaults to make them appear.
+
+  The main rationale is that outputting to stderr causes some
+  utilities to fail (in some cases, unavoidably -- for example,
+  there's really no good way for scp to *not* fail if something is
+  written to stderr).
+
+I firmly fall in the former camp (if something is wrong, you should be
+notified, even if it causes other things to fail).  Indeed, I added
+capabilities to env-switcher a long, long time ago to make switcher
+not display errors -- it simply required running a single switcher
+command.  But some lazy system administrators need the default set for
+them during configuration.  
+
+The end result is that it really doesn't matter that much.
+Env-switcher now has a configure switch "--enable-suppress-errors"
+that will set switcher's default behavior in the presence of errors.
+
+The name is meant to emphasize the magnitude of what you are doing:
+you are supressing env-switcher from showing legitimate errors.  You
+have been warned.  :-)
+   
+
+Usage
+=====
+
+See the README file for information on how to use switcher.
+
+
+Contact information
+===================
+
+Don't look for a web page or public CVS archive for this project
+anyway -- there [currently] isn't one.  Maybe someday.  In the
+meantime, send mail to the OSCAR mailing lists with comments,
+suggestions, and bug reports (see http://oscar.sf.net/).

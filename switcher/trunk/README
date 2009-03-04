@@ -1,0 +1,429 @@
+-*- text -*-
+
+Copyright (c) 2002-2004 The Trustees of Indiana University.  
+                        All rights reserved.
+
+This file is part of the Env-switcher software package.  For license
+information, see the LICENSE file in the top-level directory of the
+Env-switcher source distribution.
+
+$Id: README,v 1.5 2004/01/15 16:38:32 jsquyres Exp $
+
+
+Introduction
+============
+
+The switcher package provides an convenient method for users to switch
+between "similar" packages.  System- and user-level defaults are
+maintained in data files and are examined at shell invocation time to
+determine how the user's environment should be set up.
+
+Sample scenario
+---------------
+
+The canonical example of where this is helpful is using multiple
+implementations of the Message Passing Interface (MPI).  This
+typically requires that the user's "dot" files are set appropriately
+on each machine that is used since rsh/ssh are typically used to
+invoke commands on remote nodes.
+
+When there are multiple MPI implementations installed on a single
+machine, the user must set their "dot" files to pick one and set (for
+example) the $PATH and $MANPATH environment variables.  This is
+because different MPI implementations have the same names for similar
+commands (e.g., "mpirun", "mpicc", etc.), and man pages with the same
+name (since the API is the same across all MPI implementations).
+
+Setting things correctly in dot files is rarely a simple thing --
+users tend to set things incorrectly, resulting in heartache and many
+hours worth of lost time trying to figure out the right settings.
+Additionally, users who wish to switch between multiple MPI
+implementations must manually edit their dot files to perform the
+switch.
+
+This package provides a mechanism that reads both user-level and
+system-level defaults at shell initialization time, and sets up the
+user's environment as dictated by those defaults.
+
+
+General usage
+=============
+
+This package provides a command-line method to switch between similar
+packages (such as multiple MPI implementations).  
+
+There are two levels of defaults (in precedence order):
+
+1. The user's preferences
+2. The system-wide defaults
+
+Administrators (or RPMs) generally add information to the system-wide
+defaults.  Users are free to override any of these defaults (including
+a setting that disables the entire use of the switcher package).
+
+The majority of environment manipulation is performed through the
+modules package (see http://modules.sourceforge.net/).  As such, each
+package that uses switcher will need to provide a modulefile that
+performs the necessary environment manipulations to enable usage.
+
+The main command for manipulating switcher data is the "switcher"
+command.  It has several command line options, and can be loosely
+divided into general, administrator, and user options.
+
+Note
+----
+
+The exact syntax of switcher commands is somewhat cumbersome; this is
+unfortunately necessary given the requirements for what switcher needs
+to do.  Switcher module authors are encouraged to provide convenience
+shell aliases that execute the proper switcher syntax to set
+themselves as the default (or other common actions).
+
+The switcher modules need to provide documentation as to what aliases
+they provide so that users know what to execute.
+
+Sample scenario:
+----------------
+
+Before launching into the details and specifics of how switcher works,
+here is a fairly simple example that should provide most users the
+information that they need to get started.  The general scheme is as
+follows:
+
+1. The LAM/MPI OSCAR RPM is installed.  It registers itself with
+   switcher, and provides a modulefile for switcher to use to setup
+   the environment for LAM/MPI.
+
+2. The MPICH OSCAR RPM is installed.  Just like the LAM/MPI RPM, it
+   registers itself with switcher, and provides a modulefile.
+
+3. The OSCAR sysadmin picks LAM/MPI to be the default for the cluster
+   by executing "use_lam --system".
+
+--> Joe User logs in and is able to use LAM/MPI automatically.
+
+4. Joe decides that he wants to use something other than LAM/MPI, so
+   he looks to see what other MPI implementations are available with
+   the "list_mpi" command (alias).
+
+5. Joe see that MPICH is installed, and decides to use it.  He
+   executes the "use_mpich" alias that the MPICH OSCAR RPM provides
+   which tells switcher to set Joe's default to use MPICH.
+
+6. Joe later forgets which MPI he is using, so he executes the
+   "which_mpi" command (alias), which informs him that he is using
+   MPICH.
+
+7. Joe then wants to set his default back to the system default.  He
+   executes "use_mpi_default".
+
+8. Jane User decides that she does not want to use the switcher
+   package at all.  She tells switcher to effectively disable itself
+   with "switcher_disable".
+
+9. Jane later decides that she wants to use switcher, and re-enables
+   it with "switcher_enable".
+
+All of the commands listed above are aliases provided by the various
+"mpi" modulefiles.  The exact switcher syntax is a little more
+complicated, but the user generally doesn't need to see anything more
+than that.
+
+Sample scenario explained:
+--------------------------
+
+Let's go through those 7 steps again, and show the exact switcher
+commands that are used.  Remember that all the string names used below
+(e.g., "mpi", "lam-7.0.2", "mpich-1.2.1" are arbitrary and have no
+special meaning to switcher):
+
+1. The LAM/MPI OSCAR RPM registers itself with switcher in its %post
+   section:
+
+   switcher mpi --add-name lam-7.0.2 /opt/lam-7.0.2/etc
+
+   This copies a modulefile named "lam-7.0.2" from /opt/lam-7.0.2/etc
+   into the switcher central repository, and makes the name
+   "lam-7.0.2" available under the "mpi" tag group.
+
+2. The MPICH OSCAR RPM is installed:
+
+   switcher mpi --add-name mpich-1.2.1 /opt/mpich-1.2.1/etc
+
+3. The OSCAR sysadmin picks LAM/MPI to be the default:
+
+   switcher mpi --add-attr default lam-7.0.2 --system
+
+   Now all users will magically invoke the lam-7.0.2 modulefile upon
+   shell initialization, and have their $PATH and $MANPATH set for
+   LAM/MPI 7.0.2.
+
+4. Joe User wants to see what other MPI implementations are available:
+
+   switcher mpi --list
+
+5. Joe decides to use MPICH:
+
+   switcher mpi --add-attr default mpich-1.2.1
+
+   All of Joe's new shells will magically invoke the mpich-1.2.1
+   modulefile upon shell initialization, and have their $PATH and
+   $MANPATH set for MPICH 1.2.1.
+
+6. Joe later checks which MPI he is using:
+
+   switcher mpi --show
+
+7. Joe switches back to use the system default:
+
+   switcher mpi --rm-addr default
+
+8. Jane User decides not to use switcher anymore:
+
+   switcher global --add-attr default none
+
+9. Jane later sees the fallacy of her ways, and decides to use
+   switcher again:
+
+   switcher global --rm-attr default
+
+Terms:
+------
+
+"tags" are used to indicate groupings of similar packages.  For
+example, "mpi" is a tag commonly used on OSCAR clusters to group all
+the different MPI implementations together.
+
+"names" are used to indicate different packages in a single tag.  For
+example, "lam" and "mpich" are possible names under the "mpi" tag.
+The scope of a name is a single tag, so it is possible to have
+multiple different "foo" names -- each under a different tag.
+
+"attributes" are what drive the default actions.  For example, the
+"default" attribute is what chooses one MPI implementation from the
+list of available names in the mpi tag.
+
+General options:
+----------------
+
+Several query options can be used to show
+
+shell$ switcher <tag> = <name>
+
+  This is probably the most common usage of switcher; users will set
+  their default <name> for a given <tag>.  A common example:
+
+  switcher mpi = lam-7.0.2
+
+  This sets the value of the "mpi" <tag> to be the <name> "lam-7.0.2".
+  Of course, the possible values for <tag> and <name> are finite --
+  you can only use the <tag>s and associated <names>s that are
+  installed on your system.  The options listed below provide the
+  valid list of <tag>s and <name>s on your system.
+
+shell$ switcher --list
+
+  List all defined tags.
+
+shell$ switcher <tag> --list
+
+  List all defined names for a given <tag>.
+
+shell$ switcher <tag> --show [--system|--user]
+
+  Shows the current attributes and corresponding values for a given
+  <tag> that will be used upon shell invocation to determine, among
+  other things, which modulefiles to invoke.
+
+  - If --system is given, the current setting from the system default
+    is shown (from $prefix/etc/switcher.ini).
+  - If --user is given, the current setting is shown from the user's
+    individual setting (from $HOME/.switcher.ini), if available,
+    or "none" if it does not exist for <tag>.
+  - If no argument is given, show the current effective setting --
+    whichever will be used (system or user).
+
+Administrator options:
+----------------------
+
+Administrators maintain "tags", "names", and "attributes".
+
+shell# switcher <tag> --add-tag [--force]
+
+  Create a new tag named <tag>.  If <tag> already exists, prompt to
+  empty the contents of the <tag>, or, if --force is given, do that
+  silently.
+
+shell# switcher <tag> --rm-tag [--force]
+
+  Remove the tag <tag> (and all of its corresponding names) if it
+  exists.  Prompt for confirmation unless --force is given.
+
+shell# switcher <tag> --add-name <name> <dir> [--force]
+
+  Creates a name for the specified <tag>, and copies a modulefile from
+  <dir> into the switcher central repository ($prefix/share/<tag>/).
+  The modulefile must be named in the form <dir>/<name>.
+
+  If --force is supplied, any previous <tag>/<name> combination will
+  be silently overwritten.  Otherwise, if there is a previous
+  <tag>/<name> combination, user will be prompted if they want to
+  overwrite it.
+
+  Special case: if <name> is the first name for a given <tag> (i.e.,
+  the <tag> does not previously exist), the <tag> will be created
+  before processing creating the <name>.
+
+shell# switcher <tag> --rm-name <name> [--force]
+
+  Removes a <tag>/<name> combination from the switcher central
+  repository (both the system default file and any scripts that exist
+  in the $prefix/share/<tag> directory).  Prompt for confirmation
+  unless --force is given.
+
+User options:
+-------------
+
+Users maintain their own set of "attributes" that override the
+system-default attributes.
+
+shell$ switcher <tag> --add-attr <attribute> <value> [--system|--user] [--force]
+
+  Sets the <value> for a given <attribute> under the specified <tag>.
+  If a value already exists for the <attribute> in that <tag>, prompt
+  the user for confirmation unless --force is given.
+
+  If --system is given, result will be saved in
+  $prefix/etc/switcher.ini.  Otherwise, result is saved in
+  $HOME/.switcher.ini (--user may also be supplied, but the effect is
+  the same if --system is not supplied).
+
+shell$ switcher <tag> --rm-attr <attribute> [--system|--user] [--force]
+
+  Delete the <attribute> from the specified <tag>.  Prompt for
+  confirmation unless --force is given.
+
+  If --system is given, result will be saved in
+  $prefix/etc/switcher.ini.  Otherwise, result is saved in
+  $HOME/.switcher.ini (--user may also be supplied, but the effect is
+  the same if --system is not supplied).
+
+Special tag: "global"
+---------------------
+
+The special tag "global", if it exists, any attribute in this section
+is a default for the corresponding attribute in any other section in
+this scope.  That is, if a given <tag> section does not have attribute
+X, look in the <global> section to see if X is defined there.
+
+This applies *individually* to both the system default and the user
+defaults.
+
+So when resolving which value will be used for a given tag/attribute
+combination, the following algorithm is used:
+
+  - look for desired attribute in user-level <tag> section
+  - if not there, look in user-level <global> section
+  - if not there, look in system-level <tag> section
+  - if not there, look in system-level <global> section
+  - if not there, then it doesn't exist, so use "" (the empty string)
+
+Attributes:
+-----------
+
+Three attributes are currently used by the switcher packages.
+Additional attributes can be defined and stored in the switcher
+repository, but they will not be used for any purpose by switcher upon
+shell invocation.
+
+1. "default"
+
+   If the resolved <value> is a valid <name> in the corresponding
+   <tag>, then the modulefile for that name will be loaded upon shell
+   initialization (i.e., $p/share/<tag>/<value>).
+
+   If the resolved <value> is either of the special values "none" or ""
+   (the empty string), this <tag> will be skipped
+
+   If the resolved <value> is anything else, a warning will be issued
+   (regardless of the <value> in the "announce" attribute), and the
+   <tag> will be skipped.
+
+   It is possible to set the "default" attribute in global tags --
+   this is most commonly used to set "default=none" to disable the
+   entire mechanism on a user-by-user basis.  Any other <value> for
+   "default" in a global section may not be useful, since each <tag>
+   can defined whatever <name>s it wants.
+
+2. "announce"
+
+   If the resolved <value> is "true" or "1", a message will be
+   displayed indicating which <name> is loaded at shell initialization
+   time.  If "none" is loaded, a message will be displayed to that
+   effect.
+
+   All other resolved values will be ignored (including the absence of
+   this attribute, which would resolve to "")
+
+3. "exists"
+
+   This is an internal attribute and should not be edited or deleted.
+
+
+Switcher module authors
+=======================
+
+Authors are encouraged to provide several aliases (with the module
+"alias" command) that greatly simplify the syntax that the user has to
+type.  The following aliases are recommended:
+
+1. use_<tag>_<name>
+
+   Maps to "switcher <tag> --add-attr default <name> --force".
+
+2. use_<name>
+
+   Where there is no naming conflict, this is a shortcut with an
+   implicit value for <tag>.
+
+3. use_<tag>_default
+
+   Maps to: "switcher <tag> --rm-attr default --force".
+
+4. list_<tag>
+
+   Maps to: "switcher <tag> --list".
+
+5. which_<tag>
+
+   Maps to either: "switcher <tag> --show" or a puts statement that
+   prints out a *one line* description of what package is being used.
+
+
+
+Portability
+===========
+
+While this package was specifically motivated by the use of multiple
+MPI implementations on OSCAR clusters, there is nothing specific to
+either OSCAR or MPI in switcher.  As such, it can be used in any
+environment for any "switching" kind of purpose.
+
+
+Contact information
+===================
+
+The main authors for env-switcher are Jeff Squyres and Brian Barrett.
+It was developed mainly for a generic solution to user-environment
+issues in the OSCAR cluster project (http://oscar.sourceforge.net/).
+I was specifically designed to be generic enough to apply to non-OSCAR
+systems as well.
+
+This project is developed and hosted on SourceForge
+(http://sourceforge.net/).  The main web page is:
+
+    http://env-switcher.sourceforge.net/
+
+Bugs and other problems should be filed in the SourceForge bug
+tracker.
+

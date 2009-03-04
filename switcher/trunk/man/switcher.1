@@ -1,0 +1,421 @@
+.TH switcher 1 "May, 2004" "env-switcher 1.0.13" "Shell environment control"
+.SH NAME
+switcher \- Control which modules are loaded at each shell invocation
+.SH SYNTAX
+switcher --list
+.PP
+switcher --show-exec
+.PP
+switcher --announce
+.PP
+switcher <tag> = <name> [<args>]
+.PP
+switcher <tag> <command> [<args>]
+.PP
+switcher-reload
+.SH DESCRIPTION
+.I switcher
+is a command line utility to maintain a list of modulefiles that will
+be loaded for each user shell.  A module generally adds some
+information in the shell environment, such as appending directories
+into the
+.I PATH
+and/or 
+.IR MANPATH , 
+setting environment variables, etc.  
+.I switcher 
+therefore effectively allows a user to control which software packages
+are available in their environment without needing to edit their "dot"
+files (.bashrc, .cshrc, etc.).  This can be useful when there are
+multiple, conflicting packages available on a system, and only one of
+them should be loaded at a time.  A good example of this is multiple
+implementations of the Message Passing Infterface (MPI) -- only one
+MPI implementation should be loaded into the
+.IR PATH / MANPATH
+at a time.
+.PP
+Note that 
+.I switcher
+usually only edits defaults for
+.I future
+shell invocations.  Specifically, it does
+.I not
+change the current environment.  Although this is for a variety of
+good technical reasons, it can cause unexpected behavior if a user
+runs a switcher command and then wonders why the environment has not
+bee changed.  The
+.I switcher-reload
+command is provided for this purpose.  It will re-initialize the
+environment according to whatever the current set of
+switcher-specified settings are.  Hence, users now have two choices
+after running
+.IR switcher :
+1) run
+.IR switcher-reload ,
+or 2) load a new shell (e.g., logout and log back in again, launch a
+new shell and/or window, etc.).
+.PP
+.I switcher
+allows for a set of system-level defaults as well as user-level
+defaults (which always override any corresponding system-level
+defaults).  For example, the system administrator can set the default
+MPI implementation to be LAM/MPI.  All users will then have LAM/MPI
+added to their 
+.I PATH
+and 
+.I MANPATH
+for every shell.  However, user 
+.B bob
+decides that he wants to use the MPICH implementation of MPI -- not
+LAM/MPI.
+.B bob
+can use
+.I switcher 
+to create a user-level MPI default that will override the system-level
+default.  So when
+.B bob
+logs in, he'll have MPICH added to his
+.I PATH
+and 
+.IR MANPATH ,
+not LAM/MPI.
+.PP
+Another user for
+.I switcher
+is to give users the choice whether to load a software package or not.
+For example, if the system-level default loads a software package
+named ABC, the user can use
+.I switcher
+to create a user-level default indicating that ABC should not be
+loaded at all.
+.PP
+Note that MPI implementations are only used as an example -- the
+.I switcher
+package can be used for any kind of software package. 
+.PP
+Also note that
+.I switcher
+is
+.I not
+cluster-aware, meaning that when
+.I switcher
+configuration files are changed, they are only changed on an
+individual filesystem.  Specifically, system-level defaults are
+typically stored on a local filesystem on each machine that
+.I switcher
+is installed on.  Changing the system-level default on that machine
+will not change the system-level default on any other machine.
+.PP
+Another mechanism must be used to effect the change on all other
+desired machines, such as executing the appropriate
+.I switcher
+command to modify the system-level defaults on all desired machines,
+or simply distributing the system-level defaults file to all desired
+machines (note that OSCAR clusters, by default, automatically
+distribute the system-level defaults file from the server node to all
+the client nodes at periodic intervals).  
+.PP
+An exception to this is the user-level configuration file because it
+is stored under
+.IR $HOME/.switcher.ini .
+Typically,
+.I $HOME is available across many different machines via a networked
+filesystem.  So using
+.I switcher
+to change user-level defaults typically makes the result be available
+to a larger set of nodes than when modifying system-level defaults.
+.SH OPTIONS
+The following two options can be applied to most 
+.I switcher
+commands:
+.IP --force  
+Do the action without prompting for confirmation.
+.IP --silent
+Do no print any status or warnings messages.
+.PP
+The 
+.I switcher
+command can be used in one of two forms: with a single
+.I --list
+argument, or with a
+.I <tag>
+followed by one or more arguments.
+.PP
+When 
+.I switcher
+is invoked with a single
+.I --list
+argument, all available tags are displayed.
+.PP
+.I switcher
+is typically only invoked with the "--show-exec" and "--announce"
+options internally; these options are not intended for general usage.
+.PP
+When
+.I switcher 
+is invoked with the "<tag> = <name>" syntax, it is actually an alias
+for the following:
+.IP
+switcher <tag> --add-attr default <name>
+.PP
+The "--system", "--user", "--force", and "--silent" arguments can be
+also be used.  Note that "--system", "--user", etc., must be the last
+arguments on the command line, due to limitations of switcher's
+command line parsing scheme.  See the BUGS section, below.
+.PP 
+When
+.I switcher
+is invoked with a tag argument, the following commands are available:
+.IP --list
+List all available names for that tag.
+.IP "--show [--system|--user]"
+Show all attributes (and corresponding values) for the tag from the
+system scope (if
+.I --system
+is given), the user scope (if
+.I --user
+is given), or the "resolved" scope (if neither is given).  In either
+case, the output will be of the form "level:name=value", where "level"
+will either be
+.I system
+or
+.I user
+indicating which level the attribute is actually set at, "name" will
+be the name of the attribute shown, and "value" will be the value of
+the attribute.  Note that the "--system" or "--user" switch must be
+the last argument on the command line, due to limitations of
+switcher's command line parsing scheme.  See the BUGS section, below.
+.IP --add-tag
+Add the tag to the
+.I switcher
+repository.
+.IP --rm-tag
+Remove the tag (and any names and attributes that it contains) from
+the
+.I switcher
+repository.
+.IP "--add-name <name> <dir>"
+Add the name 
+.I <name>
+to the switcher repository for the specified tag.  A modulefile named
+.I <name>
+will be copied from the directory
+.I <dir>
+to switcher's internal repository.  If this is the first name for a
+given tag, 
+.I --add-tag
+will implicitly be invoked to create the tag before creating the name.
+Note that adding a name only makes the modulefile available to
+.IR switcher ,
+it does 
+.B not
+make that modulefile active.
+.IP "--rm-name <name>"
+Removes the name
+.I <name>
+from the specified tag.  If this is the last name on a tag, 
+.I --rm-tag
+is also implicitly invoked after the name is removed.
+.IP "--add-attr <attribute> <value> [--system|--user]"
+Add the attribute
+.I <attribute>
+with value
+.I <value>
+to the specified tag.  If
+.I --system
+is specified and the user has write permissions to the system-level
+default file, the attribute and value are written as system-level
+defaults.  If 
+.I --user
+is specified or no scoping argument is given, the attribute and value
+are written to the user-level default file for the current user.  Note
+that the "--system" or "--user" switch must be the last argument on
+the command line, due to limitations of switcher's command line
+parsing scheme.  See the BUGS section, below.
+.IP "--rm-attr <attribute> [--system|--user]"
+Remove the attribute
+.I <attribute> 
+from the specified tag.  If 
+.I --system
+is specified and the user has write permissions to the system-level
+default file, the attribute is removed from the system-level
+defaults.  If 
+.I --user
+is specified or no scoping argument is given, the attribute is removed
+from the user-level default file for the current user.  Note that 
+the "--system" or "--user" switch must be the last argument on the command
+line, due to limitations of switcher's command line parsing scheme.
+See the BUGS section, below.
+.SH NOMENCLATURE
+.I switcher
+manipulates four kinds of items:
+.IP 1)
+"Tags" are strings that group similar applications.  From the example
+given in the Description section, above, both LAM/MPI and MPICH would
+probably share the same tag --
+.IR mpi .
+.IP 2)
+"Names" are strings that indicate package names in a tag.  For
+example, LAM's name in the "mpi" tag may be "lam-6.5.6", and MPICH's
+name in the "mpi" tag may be "mpich-1.2.4".  Each name directly
+corresponds to a modulefile.
+.IP 3)
+"Attributes" are additional meta data that may be stored on each tag.
+Each attribute has a corresponding value.  The "default" attribute has
+special meaning -- setting the "default" attribute to the value of a
+name in a given tag will tell switcher which modulefiles to load.
+.IP 4)
+"Values" are paired with attributes.  Each attribute has a
+corresponding string value.
+.SH SPECIAL TAGS
+Attribute names can contain any alpha/numeric combinations.
+Currently, the only tag that
+.I switcher
+recognizes as a keyword is "global".  Any attributes that are created
+on the gloabl tag are potentially used in the attribute resolution
+process, described in the section "ATTRIBUTE SCOPE / RESOLUTION".
+.SH SPECIAL ATTRIBUTES
+Attribute names can contain any alpha/numeric combinations.
+.IP default
+The value for the default attribute that 
+.I switcher 
+expects is a value name on a given tag that indicates what modulefile
+should be loaded.  If the default attribute resolves to the 
+value "none", then no modulefile will be loaded for that tag.
+.IP announce
+The announce attribute takes a list of event types in which to display
+a message.  Valid event types are: all, none, load, warn, error.
+Other event types are ignored.  Multiple types should be delimited
+with commas.  The "load" type will print out a message indicating
+which name was loaded for the default attribute.  The "warn" type will
+print out warnings; the "error" type will print out errors.  "none"
+indicates that no messages should ever be printed; "all" is a shortcut
+for all types except "none".  If the announce attribute is undefined,
+it defaults to "warn,error", unless the "--silent" command line switch
+is used, in which case the announce attribute defaults to "none".
+.PP
+Attributes by any other name can be cached on a tag -- 
+.I switcher
+will simply ignore them.  However, it is possible that 
+.I switcher
+will someday recognize other attributes.  Hence, if users define their
+own attributes, it is suggested that they prefix the attribute name
+with the string "user" in order to prevent potential future name
+clashes with future special
+.I switcher
+attributes.
+.SH ATTRIBUTE SCOPE / RESOLUTION
+.I switcher
+allows a two-tier structure of attributes -- system-level and
+user-level.  The system-level attribute/value pairs are set by the
+system administrator and generally apply to all users who use
+.IR switcher .
+User-level attribute/value pairs are set individually by each user to
+indicate their personal preferances, potentially overriding the
+system-level defaults.
+.PP
+At run time, 
+.I switcher
+"resolves" each attribute for each tag.  The order of resolution is as
+follows:
+.IP 1) 
+If a user-level attribute exists for this tag, use it
+.IP 2) 
+If a user-level attribute exists for the "global" tag, use it
+.IP 3) 
+If a system-level attribute exists for this tag, use it
+.IP 4) 
+If a system-level attribute exists for the "global" tag, use it
+.IP 5) 
+Use a blank string ("")
+.SH EXAMPLES
+The following examples show some common ways to use 
+.IR switcher .
+.PP
+COMMANDS TYPICALLY USED BY USERS.
+.IP "switcher --list"
+See a full list of all tags that are available.
+.IP "switcher mpi --list"
+See a list of names available under the tag
+.IR mpi .
+.IP "switcher mpi = lam-6.5.6"
+This sets the user's default for the tag
+.I mpi
+to be "lam-6.5.6".  If there is a system-level default for the tag 
+.IR mpi ,
+this will override it.  The next shell invoked by the user will load
+the lam-6.5.6 modulefile.  Note that the "=" syntax is actually an
+alias for: "switcher mpi --add-attr default lam-6.5.6".
+.IP "switcher mpi = none"
+The "none" value is a special keyword telling switcher that no
+modulefiles should be loaded for the 
+.I mpi
+tag.  Note that the "=" syntax is actually an alias for: "switcher mpi
+--add-attr default none".
+.IP "switcher mpi --rm-attr default"
+This command will remove the user's personal default and effectively
+return the user to whatever the system default for the
+.I mpi
+tag.
+.IP "switcher mpi --show"
+Shows the resolved attributes for the 
+.I mpi
+tag.
+.IP "switcher global = none"
+Effectively disables switcher for the user.  According to the
+resolution process, the attribute "default" will get the special
+value "none" for all tags.  Hence, 
+.I switcher 
+will not get a modulefile name for any tag, and will therefore not
+load any modulefiles.  This is attractive for advanced users on
+systems that user 
+.I switcher 
+who prefer to do their own module loading / unloading.  Note that
+the "=" syntax is actually an alias for: "switcher global --add-attr
+default none".
+.PP
+COMMANDS TYPICALLY USED IN RPMS.
+.IP "switcher mpi --add-name lam-6.5.6 /opt/lam-6.5.6/share/lam --silent --force"
+This command is used in the %post script of the LAM/MPI OSCAR RPM.  It
+registers the name "lam-6.5.6" with switcher, and provides a
+directorywhere a "lam-6.5.6" modulefile can be copied from.  The
+--silent and --force flags are used because RPMs are not supposed to
+prompt for input and are not supposed to produce output.  Note that
+registering a modulefile will not make 
+.I switcher
+start loading that modulefile for all user shells. 
+.IP "switcher mpi --rm-name lam-6.5.6 --silent --force"
+This command is used in the %preun script of the LAM/MPI OSCAR RPM.
+It de-registers the name "lam-6.5.6" from switcher's repository.
+.PP
+.PP
+COMMANDS TYPICALLY USED BY ROOT.
+.IP "switcher mpi --add-attr default lam-6.5.6 --system"
+This command would be executed by root to set the system default for
+the 
+.I mpi
+tag.  After this command, all users will load the lam-6.5.6 modulefile
+upon their next shell invocation (unless they have their own
+user-level defaults). Note that switcher will not automatically load
+any modulefile until it has been set as the default for a given tag.
+.IP "switcher global --add-attr default none --system"
+This command effectively disables 
+.I switcher 
+on a system-level default basis.  That is, 
+.I switcher
+will only load modulefiles if users have individual settings that
+override this attribute.  Hence, 
+.I switcher 
+is effectively disabled for all users who do not specifically use
+.IR switcher .
+.SH FILES
+The defaults are maintained in ini-style text files.  These files can
+be manually edited if necessary, but is recommended to use the
+.I switcher
+command unless absolutely necessary.
+.IP /opt/env-switcher/etc/switcher.ini
+The system-level defaults file.
+.IP $HOME/.switcher.ini
+User-level defaults file.
+.SH SEE ALSO
+module(1), modulefile(4)
