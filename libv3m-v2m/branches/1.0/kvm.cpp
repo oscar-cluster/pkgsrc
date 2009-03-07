@@ -167,7 +167,7 @@ int kvmVM::install_vm_from_cdrom ()
 int kvmVM::install_vm_from_net ()
 {
     boot_mode = NETWORK_BOOT;
-    cerr << "ERROR: not yet supported" << endl;
+    cerr << "ERROR: not yet supported (" << boot_mode << ")" << endl;
     return -1;
 }
 
@@ -383,7 +383,6 @@ int kvmVM::generate_bridged_network_config_file ()
         file_op << "sudo /usr/sbin/brctl stp qemubr0 off\n";
         file_op << "echo \"Bring up the bridge\"\n";
         file_op << "sudo /sbin/ifconfig qemubr0 $IP up\n";
-        file_op << "sudo route add default gw 192.168.1.254\n";
     }
     if (((data.nic1_type).compare("TUN/TAP") == 0)
         || ((data.nic2_type).compare("TUN/TAP") == 0)) {

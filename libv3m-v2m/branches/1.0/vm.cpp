@@ -256,6 +256,14 @@ int VM::create_image_from_cdrom()
         cout << "VM image created" << endl;
         return 0;
     }
+    if ((data_profile.type).compare("Kvm") == 0) {
+        cout << "VM::create_image_from_cdrom(): Creating "
+             << "an image for a KVM VM from a bootable CDROM" << endl;
+        kvm_vm->create_image();
+        kvm_vm->install_vm_from_cdrom ();
+        cout << "VM image created" << endl;
+        return 0;
+    }
     cerr << "Sorry this functionnality is not yet supported "
          << "for this virtualization technology" << endl;
     return -1;
@@ -289,6 +297,21 @@ int VM::create_image_with_oscar()
     }
     if ((data_profile.type).compare("Qemu") == 0) {
         cout << "Creating a Qemu VM using OSCAR" << endl;
+        // We create first an empty image
+        if (qemu_vm->create_image ()) {
+            cerr << "ERROR creating the image" << endl;
+            return -1;
+        }
+        // then we install the system within the image
+        if (qemu_vm->install_vm_from_cdrom ()) {
+            cerr << "ERROR installing the VM" << endl;
+            return -1;
+        }
+        cout << "VM image created" << endl;
+        return 0;
+    }
+    if ((data_profile.type).compare("Kvm") == 0) {
+        cout << "Creating a KVM VM using OSCAR" << endl;
         // We create first an empty image
         if (qemu_vm->create_image ()) {
             cerr << "ERROR creating the image" << endl;
