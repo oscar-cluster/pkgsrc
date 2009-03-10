@@ -283,7 +283,7 @@ int qemuVM::generate_network_config_file ()
 {
     profile_data_t data = profile->get_profile_data ();
     string filename = "/tmp/qemu-" + data.name + "-ifup.sh";
-    string scriptdown = "/etc/qemu-" + data.name + "ifdown.sh";
+    string scriptdown = "/tmp/qemu-" + data.name + "-ifdown.sh";
     string config_file = "/tmp/qemu-" + data.name + ".cfg";
     string cmd;
     string nic_id;

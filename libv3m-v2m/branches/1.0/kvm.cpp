@@ -111,7 +111,7 @@ int kvmVM::create_image()
     }
     cout << "file string location: " << location.find("file://") << endl;
     string size = data.image_size;
-    Glib::ustring cmd = "qemu-img create " + location +" " + size + "M";
+    Glib::ustring cmd = "kvm-img create " + location +" " + size + "M";
     cout << "Command to create the KVM image: " << cmd.c_str() << endl;
     if (system (cmd.c_str())) {
         cerr << "ERROR executing " << cmd << endl;
@@ -135,7 +135,7 @@ int kvmVM::install_vm_from_cdrom ()
     boot_mode = CDROM_BOOT;
 
     if (profile == NULL) {
-        cerr << "Profile not found" << endl;
+        cerr << "ERROR: Profile not found" << endl;
         return -1;
     }
 
@@ -143,8 +143,8 @@ int kvmVM::install_vm_from_cdrom ()
 
     // Check if the cdrom information is specified into the profile
     if ((data.cdrom).compare ("N/A") == 0 && (data.cdrom).compare ("") == 0) {
-        cerr << "Impossible to create an image from cdrom, no cdrom seems "
-             << "to be specified for the VM" << endl;
+        cerr << "ERROR: Impossible to create an image from cdrom, no cdrom "
+                "seems to be specified for the VM" << endl;
         return -1;
     }
 
@@ -179,7 +179,7 @@ int kvmVM::install_vm_from_net ()
   */
 int kvmVM::migrate (string node_id)
 {
-    cerr << "ERROR: not yet supported" << endl;
+    cerr << "ERROR: not yet supported (kvmVM::migrate)" << endl;
     return -1;
 }
 
@@ -192,7 +192,7 @@ int kvmVM::migrate (string node_id)
   */
 int kvmVM::pause ()
 {
-    cerr << "ERROR: not yet supported" << endl;
+    cerr << "ERROR: not yet supported (kvmVM::pause)" << endl;
     return -1;
 }
 
@@ -205,12 +205,13 @@ int kvmVM::pause ()
   */
 int kvmVM::unpause ()
 {
-    cerr << "ERROR: not yet supported" << endl;
+    cerr << "ERROR: not yet supported (kvmVM::unpause)" << endl;
     return -1;
 }
 
 /**
   * @author Panyong Zhang.
+  * @author Geoffroy Vallee.
   *
   * Gets the virtual machine's status.
   *
@@ -246,14 +247,11 @@ int kvmVM::status()
 
     cmd = "rm -f kvm_status.tmp ";
     if (system (cmd.c_str())) {
-        cerr << "ERROR executing " << cmd << endl;
+        cerr << "ERROR: Impossible to execute: " << cmd << endl;
         exit(-1);
     }
 
     return status;
-
-    cerr << "ERROR: not yet supported" << endl;
-    return -1;
 }
 
 /**
@@ -321,8 +319,8 @@ int kvmVM::generate_bridged_network_config_file ()
 {
     profile_data_t data = profile->get_profile_data ();
     string filename = "/tmp/kvm-" + data.name + "-ifup.sh";
-    string scriptdown = "/etc/qemu-" + data.name + "ifdown.sh";
-    string config_file = "/tmp/qemu-" + data.name + ".cfg";
+    string scriptdown = "/tmp/kvm-" + data.name + "-ifdown.sh";
+    string config_file = "/tmp/kvm-" + data.name + ".cfg";
     string cmd;
     string nic_id;
     ofstream file_op, conffile, script_down;
@@ -394,26 +392,6 @@ int kvmVM::generate_bridged_network_config_file ()
     return 0;
 }
 
-#if 0
-/** @author Panyong Zhang.
-  * 
-  * Generates the network configuration file for KVM virtual machines.
-  *
-  * @todo Get the eth0 IP and assign it to the bridge.
-  * @todo We should check if the bridge already exists.
-  * @return 0 if success, -1 else.
-  */
-int KVM::generate_nat_network_config_file()
-{
-    "# Open the ip fordwarding"
-    "echo 1>/proc/sys/net/ipv4/ip_forward"
-    "echo 1>/proc/sys/net/ipv6/conf/default/forwarding"
-
-    "/sbin/iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE"
-    "/sbin/iptables -I INPUT -i dummy+ -j ACCEPT"
-    return 0;
-}
-#endif
 /**
   * @author Panyong Zhang.
   *
@@ -426,7 +404,7 @@ int kvmVM::boot_vm ()
     cout << "Create_vm for Kvm" << endl;
 
     if (profile == NULL) {
-        cerr << "Profile not found" << endl;
+        cerr << "ERROR: Profile not found" << endl;
         return -1;
     }
 
@@ -438,6 +416,7 @@ int kvmVM::boot_vm ()
 
 /**
   * @author Panyong Zhang.
+  * @author Geoffroy Vallee.
   *
   * Boot up a virtual machine, based on a configuration file (low-level
   * function).
@@ -492,7 +471,9 @@ int kvmVM::__boot_vm ()
             cmd += data.nic1_mac;
             cmd += " -net tap,script=/tmp/kvm-";
             cmd += data.name;
-            cmd += "-ifup.sh";
+            cmd += "-ifup.sh,downscript=/tmp/kvm-";
+            cmd += data.name;
+            cmd += "-ifdown.sh";
         }
         if ((data.nic1_type).compare("TUN/TAP") == 0) {
             cmd += " -net nic,macaddr=";
@@ -517,7 +498,9 @@ int kvmVM::__boot_vm ()
             cmd += data.nic2_mac;
             cmd += " -net tap,script=/tmp/kvm-";
             cmd += data.name;
-            cmd += "-ifup.sh";
+            cmd += "-ifup.sh,downscript=/tmp/qemu-";
+            cmd += data.name;
+            cmd += "-ifdown.sh";
         }
         // WARNING: the VLAN master cannot be nic2
         if ((data.nic2_type).compare("VLAN") == 0) {
