@@ -59,6 +59,7 @@ An example of this file:
 <programlisting role="xml">
 <![CDATA[
 <?xml version="1.0"?>
+<!DOCTYPE profile PUBLIC "" "/etc/libv3m/v3m_profile.dtd">
 <config>
     <qemu>
         <command>sudo qemu</command>
