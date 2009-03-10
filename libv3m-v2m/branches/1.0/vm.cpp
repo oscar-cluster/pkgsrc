@@ -31,12 +31,12 @@ VM::VM (string file) {
     parser.set_validate();
     parser.parse_file(file);
     if (!parser) {
-        cerr << "Error, profile not valid. Check your profile." << endl;
+        cerr << "ERROR: profile not valid. Check your profile." << endl;
         return;
     }
 
     if (!parser) {
-        cerr << "Error: profile parser is empty, impossible to analyse" << endl;
+        cerr << "ERROR: profile parser is empty, impossible to analyse" << endl;
         return;
     }
     xmlpp::Node* root = parser.get_document()->get_root_node(); 
@@ -209,7 +209,7 @@ int VM::migrate (string node_id)
   */
 int VM::pause ()
 {
-    cerr << "ERROR: feature not yet supported" << endl;
+    cerr << "ERROR: feature not yet supported (pause)" << endl;
     return -1;
 }
 
@@ -222,7 +222,7 @@ int VM::pause ()
   */
 int VM::unpause ()
 {
-    cerr << "ERROR: feature not yet supported" << endl;
+    cerr << "ERROR: feature not yet supported (unpause)" << endl;
     return -1;
 }
 
@@ -264,8 +264,8 @@ int VM::create_image_from_cdrom()
         cout << "VM image created" << endl;
         return 0;
     }
-    cerr << "Sorry this functionnality is not yet supported "
-         << "for this virtualization technology" << endl;
+    cerr << "Sorry the creation of image from a bootable CDROM is not yet "
+         << "supported for this virtualization technology" << endl;
     return -1;
 }
 
@@ -284,12 +284,12 @@ int VM::create_image_with_oscar()
         cout << "Creating a Xen VM using OSCAR" << endl;
         // We create first an empty image
         if (xen_vm->create_image ()) {
-            cerr << "ERROR creating the image" << endl;
+            cerr << "ERROR creating the Xen image" << endl;
             return -1;
         }
         // then we install the system within the image
         if (xen_vm->install_vm_from_net ()) {
-            cerr << "ERROR installing the VM" << endl;
+            cerr << "ERROR: Impossible to netinstall the Xen VM" << endl;
             return -1;
         }
         cout << "VM image created" << endl;
@@ -299,12 +299,13 @@ int VM::create_image_with_oscar()
         cout << "Creating a Qemu VM using OSCAR" << endl;
         // We create first an empty image
         if (qemu_vm->create_image ()) {
-            cerr << "ERROR creating the image" << endl;
+            cerr << "ERROR creating the QEMU image" << endl;
             return -1;
         }
         // then we install the system within the image
         if (qemu_vm->install_vm_from_cdrom ()) {
-            cerr << "ERROR installing the VM" << endl;
+            cerr << "ERROR: Impossible to install the QEMU VM from bootable "
+                << "CDROM" << endl;
             return -1;
         }
         cout << "VM image created" << endl;
@@ -313,13 +314,14 @@ int VM::create_image_with_oscar()
     if ((data_profile.type).compare("Kvm") == 0) {
         cout << "Creating a KVM VM using OSCAR" << endl;
         // We create first an empty image
-        if (qemu_vm->create_image ()) {
-            cerr << "ERROR creating the image" << endl;
+        if (kvm_vm->create_image ()) {
+            cerr << "ERROR: creating the KVM image" << endl;
             return -1;
         }
         // then we install the system within the image
-        if (qemu_vm->install_vm_from_cdrom ()) {
-            cerr << "ERROR installing the VM" << endl;
+        if (kvm_vm->install_vm_from_cdrom ()) {
+            cerr << "ERROR installing the KVM VM using a bootable CDROM"
+                 << endl;
             return -1;
         }
         cout << "VM image created" << endl;
@@ -329,7 +331,7 @@ int VM::create_image_with_oscar()
         cout << "Creating a XenHVM VM using OSCAR" << endl;
         // We create first an empty image
         if (xenhvm_vm->create_image ()) {
-            cerr << "ERROR creating the image" << endl;
+            cerr << "ERROR creating the XenHVM image" << endl;
             return -1;
         }
         // then we install the system within the image
