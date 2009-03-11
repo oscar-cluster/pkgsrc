@@ -25,6 +25,9 @@
 # Author and copyright holder:
 # (C)opyright 2005,2006 Erich Focht <efocht@hpce.nec.com>
 # ---------------   All rights reserved. ----------------
+# (C)opyright 2009      Geoffroy Vallee <valleegr at ornl dot gov>
+#                       Oak Ridge National Laboratory
+#                       All rights reserved.
 #
 # Contributions:
 #      grouplist aware metadata: (c) 2006 Bernard Li <bli@bcgsc.ca>
@@ -35,6 +38,9 @@ use Getopt::Long;
 use IO::File;
 use POSIX qw(tmpnam);
 use File::Basename;
+use Carp;
+
+use vars qw ( $archstr );
 
 # number of ssh retries for and delay between them
 my $max_ssh_attempts = 30;
@@ -82,7 +88,11 @@ if (!scalar(@repos)) {
 
 my @validarch = qw(i386 x86_64 ia64 ppc64 noarch);
 
-my $archstr = &get_arch_repos(@repos);
+$archstr = &get_arch_repos(@repos);
+if (!defined $archstr || $archstr eq "") {
+    die "ERROR: Impossible to detect the architecture of repos: ".
+       join (", ", @repos);
+}
 $archstr = "i?86" if ($archstr eq "i386");
 
 chomp(my $hostname=`hostname -s`);
@@ -164,10 +174,17 @@ if ($verbose) {
     print STDERR "==========================================\n";
 }
 
+# Updating meta-data for the target repos
 my ($cmd, $err);
+$cmd = "/usr/bin/yum -c $name update";
+print "Executing $cmd\n" if $verbose;
+if (system $cmd) {
+    die "ERROR: Impossible to execute $cmd; Impossible to get repos meta-data";
+}
+
 # Array to store error messages catched during the execution of
 # the yum command.
-use vars qw ( @error_msgs );
+use vars qw ( @error_msgs @output);
 
 if ($repoquery) {
 
@@ -231,31 +248,58 @@ if ($repoquery) {
                          # and if so, where it is in the command line, that
                          # allows us to know where to look to get the list of
                          # packages.
-    foreach my $arg (@yumargs) {
-        if ($arg eq "install") {
-            $install_cmd = 1;
+    my $phase = "";
+    for (my $i=0; $i < scalar(@yumargs); $i++) {
+        if ($yumargs[$i] eq "install") {
+            $install_cmd = $i; # the number 2 represents the position of the 
+                              # install token within the command, we uset that
+                              # later on to check the availability of the RPMs
+                              # we try to install
+            $phase = "install";
             last;
-	}
-	$install_cmd++;
+        } elsif ($yumargs[$i] eq "update") {
+            $phase = "update";
+            last;
+        } elsif ($yumargs[$i] eq "remove") {
+            $phase = "remove";
+            last;
+        } elsif ($yumargs[$i] eq "info") {
+            $phase = "info";
+            last;
+        } elsif ($yumargs[$i] eq "search") {
+            $phase = "update";
+            last;
+        }
     }
 
     my $search_cmd;
+    # If we try to install RPMs, we check if all RPMs are available.
     if ($install_cmd) {
-        $search_cmd = "yum info";
-        for (my $i=$install_cmd; $i<scalar(@yumargs); $i++) {
-            $search_cmd .= " $yumargs[$i]";
-        }
-        print "Executing: $search_cmd\n" if $verbose;
-        if (system ($search_cmd)) {
-            die "ERROR: Some packages are not available";
+        print "Checking the RPMs to install are really available...\n";
+        for (my $i=$install_cmd+1; $i<scalar(@yumargs); $i++) {
+            my $pkg;
+            if ($archstr eq "x86_64") {
+                $pkg = join (" ", update_rpm_arch("info", "$yumargs[$i]"));
+            } else {
+                $pkg = $yumargs[$i];
+            }
+            $search_cmd = "yum -c $name info $pkg";
+#             $search_cmd .= " 1>/dev/null" if !$verbose;
+            print "Executing: $search_cmd\n" if ($verbose < 5);
+            my $rc = system($search_cmd);
+            if ($rc) {
+                die "ERROR: Impossible to execute \"$search_cmd\" (rc: $rc); ".
+                    "some packages are not available (".join (", ", @yumargs).")";
+            }
         }
     }
 
+    print "Yum args: ". join (" ",@yumargs)."\n";
     # x86_64 needs arch to be specified, otherwise it installs
     # both i386 and x86_64 rpms (if available)
-    if ($archstr eq "x86_64") {
-        @yumargs = &transform_args(@ARGV);
-    }
+#     if ($archstr eq "x86_64") {
+#          @yumargs = &update_rpm_arch($phase, @yumargs);
+#     }
     @yumargs = &transform_groups(@yumargs);
 
     if (!scalar(@yumargs)) {
@@ -264,28 +308,30 @@ if ($repoquery) {
     }
 
     $cmd .= " ".join(" ",@yumargs);
-    print STDERR "Executing: $cmd\n" if ($verbose);
+    print "Executing: $cmd\n" if ($verbose);
 
     # Variable used to track the number of errors during the execution
     # of the yum command.
-    $err = 0;
+    $err = system ($cmd);
 
-    #EF the following line resets the errno and avoids fake error messages
-    $! = 0;
-    use IPC::Open3;
-    use Symbol qw(gensym);
-    open(NULL, ">", File::Spec->devnull);
-    my $pid = open3(gensym, ">&NULL", \*PH, "$cmd");
-    my $line;
-    while($line = <PH> ) {
-	if ($line =~ /^ERROR/ || $line =~ /^Error/) {
-            # error detected during the execution of the child
-            $err ++;
-            chomp $line;
-            push (@error_msgs, $line);
-        }
-    }
-    waitpid($pid, 0);
+
+    # EF the following line resets the errno and avoids fake error messages
+#     $! = 0;
+#     use IPC::Open3;
+#     use Symbol qw(gensym);
+#     open(NULL, ">", File::Spec->devnull);
+#     my $pid = open3(gensym, ">&NULL", \*PH, "$cmd");
+#     my ($line);
+#     while($line = <PH> ) {
+#         push (@output, $line);
+#         if ($line =~ /^ERROR/ || $line =~ /^Error/) {
+#             # error detected during the execution of the child
+#             $err ++;
+#             chomp $line;
+#             push (@error_msgs, $line);
+#         }
+#     }
+#     waitpid($pid, 0);
 }
 
 if ($verbose && $err) {
@@ -293,6 +339,8 @@ if ($verbose && $err) {
     my $output = join (", ", @error_msgs);
     print STDERR "ERROR: \"$cmd\" returned $err: $output\n";
 }
+
+print join ("\n", @output) . "\n";
 
 exit $err;
 
@@ -613,30 +661,42 @@ sub get_default_repos {
     }
 }
 
+sub detect_arch_http_repo ($) {
+    my $repo = shift;
+    
+    print "Detect architecture of the only repository $repo...\n";
+    my $varch = join("|",@validarch);
+    if ($repo =~ /^(.*)($varch)(.*)$/) {
+        return $2;
+    }
+    return undef;
+}
+
 # guess architecture from repository name
 sub get_arch_repos {
     my (@repos) = @_;
     my $arch;
     my $varch = join("|",@validarch);
     for my $r (@repos) {
-	$r =~ s:/$::;
-	if ($r =~ m/\-([^\-]+)$/) {
-	    my $a = $1;
-	    if ($a =~ /^($varch)$/) {
-		if (!$arch) {
-		    $arch = $a;
-		} else {
-		    if ($arch ne $a) {
-			print STDERR "WARNING: multiple architecture repos specified.\n";
-		    }
-		}
-	    } else {
-		print STDERR "WARNING: repository name $r doesn't match any valid architecture\n" if ($verbose);
-	    }
-	}
+        my $a;
+        if ($r =~ /^http:/) {
+            $a = detect_arch_http_repo ($r);
+            $arch = $a if (!$arch);
+        } else {
+            $r =~ s:/$::;
+            if ($r =~ m/\-([^\-]+)$/) {
+                $a = $1;
+                if ($a =~ /^($varch)$/) {
+                    $arch = $a if (!$arch);
+                }
+            }
+        }
+        if ($arch ne $a) {
+            print "WARNING: multiple architecture repos specified.\n";
+        }
     }
     if ($arch && $verbose) {
-	print STDERR "Repository architecture: $arch\n";
+        print "Repository architecture: $arch\n";
     }
     return $arch;
 }
@@ -645,33 +705,42 @@ sub get_arch_repos {
 # have identical names for 32 and 64 bits. Therefore yume will install both
 # RPMs (x86_64 and i686) if they are available. Trying to avoid this by
 # renaming packages by $pkg.{x86_64,noarch}
-sub transform_args {
-    my (@args) = @_;
+sub update_rpm_arch ($@) {
+    my ($phase, @args) = @_;
     my @trans;
 
+    print "Updating the RPM arch from the $phase command ($archstr)\n";
+
+    return @args if ($phase ne "install" && $phase ne "update");
     return @args if (!$archstr);
+    
+    print "Args: ". join (" ",@args)."\n";
+
+    # We search the phase id in the args
+    my $i;
+    for ($i=0; $i < scalar(@args); $i++) {
+        if ($args[$i] eq $phase) {
+            last;
+        }
+    }
+    return undef if ($args[$i] ne $phase);
+    print "pos: $i\n";
 
     my $varch = join("|",@validarch);
 
-    my $flag = 0;
-    for my $a (@args) {
-	if ($flag) {
-	    if (($a !~ /\.($varch)$/) && ($a !~ /\.rpm$/) && ($a !~ /^@/)) {
-		$a .= ".{$archstr,noarch}";
-	    }
-	}
-	push @trans, $a;
-	#
-	# this does not apply to "remove"
-	if ($a =~ /^(install|update)$/) {
-	    $flag = 1;
-	}
+    for (my $pos = 0; $pos <= $i; $pos++) {
+        push (@trans, $args[$pos]);
     }
-    if ($verbose > 5) {
-	print STDERR "Arguments transformation:\n";
-	for (my $i = 0; $i <= $#args; $i++) {
-	    print STDERR "\t".$args[$i]."\t\t".$trans[$i]."\n";
-	}
+
+    for (my $n = $i+1; $n < scalar(@args); $n++) {
+        my $rpm = $args[$n];
+        print "RPM: $rpm\n";
+        if (($rpm !~ /(.*).($varch)(.*)$/) 
+            && ($rpm !~ /\.rpm$/)
+            && ($rpm !~ /^@/)) {
+            $rpm .= ".{$archstr,noarch}";
+        }
+        push @trans, $rpm;
     }
     return @trans; 
 }

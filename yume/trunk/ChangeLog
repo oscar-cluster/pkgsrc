@@ -1,3 +1,9 @@
+yume-2.8.6 (not yet released):
+- Make the seach and info options really work (previously we had no output).
+- Correctly check if packages are available before installation.
+- Add the detection of the architecture of only repositories.
+- Correctly run on Debian based systems.
+
 yume-2.8.5:
 - Remove uneeded debugging messages.
 - Modify the Makefile so we can choose the directory to save sources when
