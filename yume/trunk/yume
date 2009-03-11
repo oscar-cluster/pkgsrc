@@ -176,7 +176,7 @@ if ($verbose) {
 
 # Updating meta-data for the target repos
 my ($cmd, $err);
-$cmd = "/usr/bin/yum -c $name update";
+$cmd = "/usr/bin/yum -c $name -y update";
 print "Executing $cmd\n" if $verbose;
 if (system $cmd) {
     die "ERROR: Impossible to execute $cmd; Impossible to get repos meta-data";
