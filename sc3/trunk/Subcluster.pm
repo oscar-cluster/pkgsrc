@@ -31,7 +31,7 @@ use POSIX;
 use Data::Dumper;
 use Fcntl;
 
-my $C3PATH="/opt/c3-4";
+my $C3PATH="/usr/bin";
 
 sub new {
     my $classname = shift;

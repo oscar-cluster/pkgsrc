@@ -7,7 +7,7 @@ Standards-Version: 3.7.2
 
 Package: sc3
 Architecture: all
-Depends: ${shlibs:Depends}, ${misc:Depends}
+Depends: ${shlibs:Depends}, ${misc:Depends}, c3 (>= 5.0.1)
 Description: Subcluster command and control tools
  Subcluster tools based on the C3 cluster command and control utilities.
  One can define subclusters by one of: image, domain name, nodelist. The user

@@ -5,6 +5,7 @@ creating RPMs.
 are stored.
 - Enable the creation of unsigned Debian packages by setting the
 UNSIGNED_OSCAR_PKG environment variable.
+- Based on c3-5.x.
 
 sc3-1.2.1:
 - Add a Makefile.

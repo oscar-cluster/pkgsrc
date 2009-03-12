@@ -10,7 +10,7 @@ Source: sc3.tar.gz
 Group: System Environment/Tools
 BuildArch: noarch
 BuildRoot: %{_tmppath}/%{name}
-Requires: c3
+Requires: c3 >= 5.0.1
 Requires: systeminstaller
 AutoReqProv: no
 
@@ -45,7 +45,7 @@ rm -rf $RPM_BUILD_ROOT
 /usr/lib/systeminstaller/HPCL
 
 %changelog
-* Tue Feb 10 2009 Geoffroy Vallee <valleegr@ornl.gov> 1.2.2-1
+* Thu Mar 12 2009 Geoffroy Vallee <valleegr@ornl.gov> 1.2.2-1
 - New upstream release (see ChangeLog for more details).
 * Fri Nov 07 2008 Geoffroy Vallee <valleegr@ornl.gov> 1.2.1-1
 - New upstream release (see ChangeLog for more details).
