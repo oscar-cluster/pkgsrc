@@ -1,0 +1,15 @@
+sc3-1.2.3:
+- Update to c3-5.x.
+
+sc3-1.2.2:
+- Modify the Makefile so we can choose the directory to save sources when
+creating RPMs.
+- Modify the Makefile so we can choose the directory where the binary packages
+are stored.
+- Enable the creation of unsigned Debian packages by setting the
+UNSIGNED_OSCAR_PKG environment variable.
+
+sc3-1.2.1:
+- Add a Makefile.
+- Add files for the creation of a Debian package.
+- Modify the spec file to be based on the Makefile.
