@@ -1,7 +1,7 @@
 # $Id$
 Summary: Subcluster command and control tools
 Name: sc3
-Version: 1.2.2
+Version: 1.2.3
 Vendor: NEC HPCE
 Release: 1
 License: GPL
@@ -45,7 +45,7 @@ rm -rf $RPM_BUILD_ROOT
 /usr/lib/systeminstaller/HPCL
 
 %changelog
-* Thu Mar 12 2009 Geoffroy Vallee <valleegr@ornl.gov> 1.2.2-1
+* Thu Mar 12 2009 Geoffroy Vallee <valleegr@ornl.gov> 1.2.3-1
 - New upstream release (see ChangeLog for more details).
 * Fri Nov 07 2008 Geoffroy Vallee <valleegr@ornl.gov> 1.2.1-1
 - New upstream release (see ChangeLog for more details).
