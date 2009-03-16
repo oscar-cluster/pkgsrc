@@ -50,6 +50,7 @@ my ($name, $fh, $verbose, $export, $unexport, $prepare, $listexp, $repoquery);
 my $installroot;
 my (@repos, @repoadd, @repodel, $repolist);
 my $prog = $0;
+my $debug;
 
 Getopt::Long::Configure("pass_through");
 GetOptions(
@@ -65,6 +66,7 @@ GetOptions(
             "installroot=s" => \$installroot,
             "repoquery|rq"  => \$repoquery,
             "verbose|v+"    => \$verbose,
+            "debug"         => \$debug,
           );
 
 # The verbose can be set both via the options or via the env variable.
@@ -74,6 +76,10 @@ if ($verbose && $ENV{YUME_VERBOSE}) {
 }
 if ($verbose && !defined $ENV{YUME_VERBOSE}) {
     $ENV{YUME_VERBOSE} = $verbose;
+}
+if ($debug) {
+    $ENV{YUME_VERBOSE} = 10;
+    $verbose = 10;
 }
 
 # query default OSCAR repositories if no repo given
@@ -176,7 +182,7 @@ if ($verbose) {
 
 # Updating meta-data for the target repos
 my ($cmd, $err);
-$cmd = "/usr/bin/yum -c $name -y update";
+$cmd = "/usr/bin/yum -c $name makecache";
 print "Executing $cmd\n" if $verbose;
 if (system $cmd) {
     die "ERROR: Impossible to execute $cmd; Impossible to get repos meta-data";
@@ -223,7 +229,7 @@ if ($repoquery) {
         $cmd .= " -d $verbose -e 2";
     }
     if ($installroot) {
-        # special handling for empty suse images
+        # special handling for empty images
         if ((scalar(grep /^install$/, @ARGV) == 1) &&
             &img_empty($installroot)) {
             # try creating lock directory, if it fails we'll fail in
@@ -273,28 +279,35 @@ if ($repoquery) {
     }
 
     my $search_cmd;
+    print "-> Preparing the $phase command\n" if $verbose > 5;
     # If we try to install RPMs, we check if all RPMs are available.
-    if ($install_cmd) {
-        print "Checking the RPMs to install are really available...\n";
+    if ($phase eq "install") {
+        print "-> Checking the RPMs to install are really available (for ".
+              "$archstr)...\n";
         for (my $i=$install_cmd+1; $i<scalar(@yumargs); $i++) {
-            my $pkg;
-            if ($archstr eq "x86_64") {
-                $pkg = join (" ", update_rpm_arch("info", "$yumargs[$i]"));
-            } else {
-                $pkg = $yumargs[$i];
+            my $pkg = $yumargs[$i];
+            # We also check the package arch
+            my @requests = ("$pkg.$archstr", "$pkg.noarch");
+            my $ret = 0;
+            foreach my $r (@requests) {
+                $search_cmd = "yum -c $name info $r";
+                print "Executing: $search_cmd\n" if ($verbose > 5);
+                my $rc = system($search_cmd);
+                if ($rc == 0) {
+                    $yumargs[$i] = $r;
+                    $ret = 1;
+                    last;
+                }
             }
-            $search_cmd = "yum -c $name info $pkg";
-#             $search_cmd .= " 1>/dev/null" if !$verbose;
-            print "Executing: $search_cmd\n" if ($verbose < 5);
-            my $rc = system($search_cmd);
-            if ($rc) {
-                die "ERROR: Impossible to execute \"$search_cmd\" (rc: $rc); ".
+            if ($ret != 1) {
+                die "ERROR: Impossible to execute \"$search_cmd\"; ".
                     "some packages are not available (".join (", ", @yumargs).")";
             }
         }
     }
 
-    print "Yum args: ". join (" ",@yumargs)."\n";
+    print "-> All packages are available\n";
+
     # x86_64 needs arch to be specified, otherwise it installs
     # both i386 and x86_64 rpms (if available)
 #     if ($archstr eq "x86_64") {
@@ -312,7 +325,7 @@ if ($repoquery) {
 
     # Variable used to track the number of errors during the execution
     # of the yum command.
-    $err = system ($cmd);
+    $err = system ("$cmd");
 
 
     # EF the following line resets the errno and avoids fake error messages
@@ -714,8 +727,6 @@ sub update_rpm_arch ($@) {
     return @args if ($phase ne "install" && $phase ne "update");
     return @args if (!$archstr);
     
-    print "Args: ". join (" ",@args)."\n";
-
     # We search the phase id in the args
     my $i;
     for ($i=0; $i < scalar(@args); $i++) {
@@ -738,10 +749,11 @@ sub update_rpm_arch ($@) {
         if (($rpm !~ /(.*).($varch)(.*)$/) 
             && ($rpm !~ /\.rpm$/)
             && ($rpm !~ /^@/)) {
-            $rpm .= ".{$archstr,noarch}";
+            $rpm = "$rpm.{$archstr,noarch}";
         }
         push @trans, $rpm;
     }
+    
     return @trans; 
 }
 

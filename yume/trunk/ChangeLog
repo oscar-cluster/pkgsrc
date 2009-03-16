@@ -3,6 +3,8 @@ yume-2.8.6 (not yet released):
 - Correctly check if packages are available before installation.
 - Add the detection of the architecture of only repositories.
 - Correctly run on Debian based systems.
+- Correctly detect package architecture.
+- Add a debug option to get even more output.
 
 yume-2.8.5:
 - Remove uneeded debugging messages.
