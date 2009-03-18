@@ -1,4 +1,4 @@
-yume-2.8.6 (not yet released):
+yume-2.8.6:
 - Make the seach and info options really work (previously we had no output).
 - Correctly check if packages are available before installation.
 - Add the detection of the architecture of only repositories.

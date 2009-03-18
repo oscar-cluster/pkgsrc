@@ -32,11 +32,11 @@ my $pid;
 use vars qw($cmd_rc);
 $cmd_rc = 0;
 
-my $logfile;
+use vars qw ($logfile);
 
 sub cleanup {
-    if (-f $logfile) {
-	unlink($logfile);
+    if (defined $logfile && -f $logfile) {
+        unlink($logfile);
     }
 }
 
@@ -145,7 +145,7 @@ sub process
 sub parent
 {
  chomp($logfile = `mktemp /tmp/ptytry.XXXXXXX`);
- open(LOG,">>$logfile") || die;
+ open(LOG,">>$logfile") || die ("ERROR: Impossible to create logfile");
  my ($pty) = @_;
  my $tty = $pty;
  my ($rin,$win,$ein) = ('','','');
