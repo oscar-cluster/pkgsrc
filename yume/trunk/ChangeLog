@@ -1,3 +1,6 @@
+yume-2.8.7 (not yet released):
+- Update the package architecture detection mechanism.
+
 yume-2.8.6:
 - Make the seach and info options really work (previously we had no output).
 - Correctly check if packages are available before installation.
