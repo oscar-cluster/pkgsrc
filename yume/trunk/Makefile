@@ -5,7 +5,7 @@ DATADIR=$(DESTDIR)/usr/share
 MANDIR=$(DESTDIR)/usr/share/man
 SOURCEDIR=/usr/src/redhat/SOURCES
 NAME=yume
-VERSION=2.8.5
+VERSION=2.8.7
 
 FILES := ChangeLog ptty_try yume yume-opkg-4.2.1 yume-opkg yum-repoquery3 \
 		rhel4-i386.rpmlist yume.8 yume.spec Makefile rhel4-x86_64.rpmlist \
