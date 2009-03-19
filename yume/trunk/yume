@@ -287,7 +287,12 @@ if ($repoquery) {
         for (my $i=$install_cmd+1; $i<scalar(@yumargs); $i++) {
             my $pkg = $yumargs[$i];
             # We also check the package arch
-            my @requests = ("$pkg.$archstr", "$pkg.noarch");
+            my @requests;
+            if ($archstr ne "i?86") {
+                @requests = ("$pkg.$archstr", "$pkg.noarch");
+            } else {
+                @requests = ("$pkg-i386", "$pkg.noarch", "$pkg.i686");
+            }
             my $ret = 0;
             foreach my $r (@requests) {
                 $search_cmd = "yum -c $name info $r";
