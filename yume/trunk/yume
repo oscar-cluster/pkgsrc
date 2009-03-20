@@ -597,15 +597,20 @@ sub is_failover_mounted {
 #
 # We're on an OSCAR master node if $OSCAR_HOME/oscarsamples/ is there.
 #
+# Return: 1 if the machine is the OSCAR headnode, 0 else.
 sub on_oscar_master {
-    return ($ENV{OSCAR_HOME} && -d $ENV{OSCAR_HOME}."/oscarsamples" &&
-	    ((&is_ha_running && &is_failover_mounted) || !&is_ha_running));
+    return 1 if ($ENV{OSCAR_HOME} && -d $ENV{OSCAR_HOME}."/oscarsamples" 
+	&& ((&is_ha_running && &is_failover_mounted) || !&is_ha_running));
+    return 1 if (-d "/usr/share/oscar/oscarsamples"
+        && ((&is_ha_running && &is_failover_mounted) || !&is_ha_running));
+
+    return 0;
 }
 
 sub get_default_repos {
     # if OSCAR_HOME is defined, we're on an OSCAR cluster
     if (&on_oscar_master()) {
-	my $dquery = "$ENV{OSCAR_HOME}/scripts/distro-query";
+	my $dquery = "/usr/bin/distro-query";
 	if (-x $dquery) {
 	    if ($installroot && (-x "$installroot/bin/bash")) {
 		$dquery = $dquery . " --image $installroot";
