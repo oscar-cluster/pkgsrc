@@ -1,0 +1,340 @@
+------------------------------------------------------------
+System Installer v2.4.0
+------------------------------------------------------------
+    - Switch the new database interface: we now assume the OSCAR database (ODA)
+      has the write information.
+    - Fix the mksiimage script.
+------------------------------------------------------------
+System Installer v2.3.13
+------------------------------------------------------------
+    - Support ODA 1.4.2 (API modifications).
+------------------------------------------------------------
+System Installer v2.3.12
+------------------------------------------------------------
+    - Cleanup Makefile.PL.
+    - Fix a bug when passing the postinstall action during the client
+      definition.
+------------------------------------------------------------
+System Installer v2.3.11
+------------------------------------------------------------
+    - Update the list of requirements to build the package
+      on RPM based systems.
+    - mksiimage: fix a bug in sanity check; we check the image name only
+      for commands that actually involve a specific image.
+    - Fix a problem when creating a new image: post image creation scripts
+      are now really executed.
+    - Deactivate the GUI progress bar since it was not working any more
+      (because we automatically and transparently deal with binary package
+      dependencies, it is very difficult to know the image creation progress).
+------------------------------------------------------------
+System Installer v2.3.10 
+------------------------------------------------------------
+    - Add a build configuration file for oscar-packager.
+    - Clean up the spec file.
+    - Modify the Makefile so we can choose the directory where the 
+      binary packages are stored.
+    - Enable the creation of unsigned Debian packages by setting the
+      UNSIGNED_OSCAR_PKG environment variable.
+    - [Ticket #126] Implement a sanity check before the actual
+      creation of a new image.
+    - [Ticket #462] The init_si_config function is now in a GUI
+      independent Perl module (SystemInstaller::Utils).
+    - [Ticket #515] Invalid package names (such as comments)
+      are not included anymore in the list of packages to
+      installed, when parsing the package list files.
+    - Update dependencies to Perl modules from OSCAR base
+      > 6.0.1.
+    - Add the automatic detection of initrd images when setting
+      image's kernel(s), otherwise, no Debian systems will boot.
+    - Code cleaning up.
+------------------------------------------------------------
+System Installer v2.3.9 
+------------------------------------------------------------
+    - Modify SystemInstaller to use ORM (and ultimately
+      PackMan) for image creation: avoid duplication of 
+      similar capabilities and simplify the code.
+    - Fix a typo when using the mksiimage script with the
+      two "force" and "verbose" options (problem reported by
+      Erik Jacobson).
+    - Fix a problem with the generation of the SystemConfigurator
+      configuration file when the label of the default kernel
+      is too long.
+    - Better error handling and debugging messages.
+------------------------------------------------------------
+System Installer v2.3.8
+------------------------------------------------------------
+    - Fix the changelog: systeminstaller-oscar changelogs
+      should _not_ be included into packages (RPM or
+      Deb) changelogs. Package chaneglogs are only
+      reserved for modifications to the packages, not
+      the "upstream" version of systeminstaller.
+	- Improved mksiadapter tool as well as generation/updating
+	  of /etc/hosts. It now includes names corresponding to
+	  all available interfaces [EF].
+------------------------------------------------------------
+System Installer v2.3.7
+------------------------------------------------------------
+        - Add check whether all packages were really installed 
+              (new feature of packman) [EF].
+        - Add functionality to umount /proc recursively [EF].
+        - Add support for ppc, ppc64 in Partition.pm
+------------------------------------------------------------
+System Installer v2.3.6
+------------------------------------------------------------
+        - New feature of image builder: passing of package 
+              group files
+------------------------------------------------------------
+System Installer v2.3.5
+------------------------------------------------------------
+        - Urgent fix for newer Tk versions (suse 10.2) in 
+              SystemImager/Tk/Image.pm.
+------------------------------------------------------------
+System Installer v2.3.4
+------------------------------------------------------------
+        - Fix trouble with non-english locale: ifconfig 
+              output is unexpected
+        - When virtual interfaces are defined, they need to 
+              be excluded from the dhcp configuration, 
+              otherwise dhcpd won't start
+        - Month in comment is wrong (in the range 0..11)
+        - ifconfig is used without path, sometimes this leads 
+              to problems
+        - For software raids the automatically created 
+              mdadm.conf had a wrong raid level.
+------------------------------------------------------------
+System Installer v2.3.3
+------------------------------------------------------------
+        - Fixed bug introduced in changeset 5892 (breaking 
+              repository selection).
+------------------------------------------------------------
+System Installer v2.3.2
+------------------------------------------------------------
+        - Modified checks for systemconfigurator to accept 
+              opkg-sis-client OR systemconfigurator.
+------------------------------------------------------------
+System Installer v2.3.1
+------------------------------------------------------------
+        - Fix a bug in the "build image" widget: now when we 
+              select a "target distribution, the pool list 
+              is really update.
+        - Include refactoring of the Makefile (by Bernard Li).
+------------------------------------------------------------
+System Installer v1.04
+------------------------------------------------------------
+        - Add update START_FLAMETHROWER_DAEMON = no to yes
+             in flamethrower.conf when multicast is selected.
+        - Add multicasting option to mkdhcpconf
+        - Add update flamethrower.conf and start flamethrower.
+------------------------------------------------------------
+System Installer v1.03
+------------------------------------------------------------
+        -Fixed issues with ip method from tksis
+        -Added padding to tksis for machine creation
+        -Doc fixes to SIS man page
+        -Redhat Advance Server distro detection
+------------------------------------------------------------
+System Installer v1.01
+------------------------------------------------------------
+        -Fix for mkdhcpconf
+        -Fix of mkautoinstallscript call in tksis
+        -Fix for get_machine_listing when no image given
+        -Fix for mksimachine when no MAC given
+------------------------------------------------------------
+System Installer v1.00
+------------------------------------------------------------
+        -Just minor packaging changes
+------------------------------------------------------------
+System Installer v0.96
+------------------------------------------------------------
+        -Extensive performance/scaling improvements
+        -Ability to add a single machine via mksimachine
+        -New --pad flag on mksirange
+        -Database migration code, simigratedb, in %post.
+------------------------------------------------------------
+System Installer v0.95
+------------------------------------------------------------
+        -New database format with simpler interface and 
+         simpler prereqs (perl-MLDBM rpm only)
+        -tksis fixes for SystemImager 3.0 architecture.
+        -Some performance improvements.
+------------------------------------------------------------
+System Installer v0.94
+------------------------------------------------------------
+        -Changes to work properly with the United Linux 
+         versions of SuSE and SLES.
+        -More SystemImager 3.0 architecture changes
+------------------------------------------------------------
+System Installer v0.93 
+------------------------------------------------------------
+Features:
+        -Integration with SystemImager 3.x
+        -Added --parse for --List output
+Fixes:
+        -Fixed --List for mksidisk
+------------------------------------------------------------
+System Installer v0.92 
+------------------------------------------------------------
+Features:
+        -New no scripts rpm method to avoid lots of distro
+         rpm problems.
+        -Made image name a list box in tksis.
+Fixes:
+        -Prevent duplicate clients from being added.
+        -Fixed ignoring of other subnets in mkdhcpconf.
+        
+------------------------------------------------------------
+System Installer v0.91 
+------------------------------------------------------------
+Features:
+        -Set root password for image in tksis
+Fixes:
+        -Various SuSE/SLES fixes.
+        -Fix for disk type override
+        -Fixed command line aliases in mksirange
+        -Fixed some error conditions in tksis
+------------------------------------------------------------
+System Installer v0.90 
+------------------------------------------------------------
+Features:
+        -New generic staged rpm installation using conf files
+        -Support for fetching an image from a running client
+        -Display client/adapter properties in tksis
+        -Allow update of client definitions from tksis.
+
+Fixes:
+        -Add nfs filesystems to exclude list
+        -Itanium disk partitioning fix
+        -Lilo label length limit still could be long
+        -DHCP 3.0 support in generated dhcpd.conf
+        -Allow cache file to be in any directory
+        -Fixes to some error checks
+        -Default domain in tksis panel
+        -Add /dev/null device during image build
+------------------------------------------------------------
+System Installer v0.80 
+------------------------------------------------------------
+Features:
+        -Made --path optional on mksiimage
+        -Removed --host from mksiimage
+        -Added dynamic footprinting to PackageBest
+        -Added support for TurboLinux
+        -Can now specify config file items on the command line
+        -Made the PackageBest stuff semi-seperate
+
+Fixes:
+        -Make sure systemconfigurator is in package list
+        -Check filename in mksidisk
+        -Cleaned up the kernel selection code
+        -Cleaned up the systemconfig.conf setup
+        -Added disk type to buildimage
+        -Added --version to commands
+        -Restrict length of boot loader labels
+        
+------------------------------------------------------------
+System Installer v0.70 
+------------------------------------------------------------
+Features:
+        -New, simplified Package API
+        -Support for Suse
+        -Support for multiple kernels
+        -Support for bootable flag in disk partitioning.
+        -Use stdin for mksidisk instead of partition string.
+        -New conf file entries to control image build failure.
+
+Fixes:
+        -The RPM version picking stuff actually works.
+        -Tksis post install panel refresh bug.
+        -Machine deletion will continue if the autoinstall
+         script doesn't exist.
+
+Notes: 
+        The minimal Devian support has fallen by the wayside
+        for now. It hasn't been ported to the new API. As
+        before, see the README for more info.
+
+------------------------------------------------------------
+System Installer v0.61 
+------------------------------------------------------------
+Fixes:
+        -Minor tksis path fixes.
+
+------------------------------------------------------------
+System Installer v0.6 
+------------------------------------------------------------
+Features:
+        -RPM package lib now picks best version of file
+        -distinfo tree moved to /usr/share
+        -Drive type given on mksidisk command line will 
+         override type in the file.
+        -Appconfig is used for all command line options
+        -Support for multiple location of SystemImager 
+         binaries.
+        
+Fixes:
+        -buildimage now shipping correctly
+        -Some command line option fixes
+        -Cleaned up & eliminated some prereqs
+
+Preliminary items:
+        -Minimal Debian Package Support (see README for more info)
+
+------------------------------------------------------------
+System Installer v0.5 
+------------------------------------------------------------
+This is quite a large release, so many features that we had
+to skip 0.4! 0.4 was actually built, but never released since
+we were really hammering the changes in. 0.5 is much more 
+complete than previous releases and much easier to use.
+
+Features:
+	-mksirange command. Defines a group of machines
+	-mksimachine command. Edit machine definitions.
+	-mkdhcpconf command. Generates a dhcpd.conf file based
+	 on the SIS database definitions.
+	-Tksis gui now available. In systeminstaller-x11 
+	 package.
+	-Added libdbdcsv-perl package for dbd prereqs.
+	-Added netmask & default gateway to machine commands.
+	-Added ability to use a partition file.
+	-Added verbose flag to several commands.
+
+Fixes:
+	-Usage and arg check updates to several commands.
+	-Mount /proc into image during building.
+	-Put the rsync config in the right place.
+	-Actually delete clients when requested.
+	-Don't delete an image if clients are using it.
+	-Default systeminstaller.conf is now shipped.
+	-Database is initialized properly.
+
+------------------------------------------------------------
+System Installer v0.3 
+------------------------------------------------------------
+This release is able to build RPM based images. It is tied
+to the SystemImager beta release.
+
+Features: 
+        -The buildimage command. An interactive command to
+         guide users through the process.
+ 
+        -Links to SystemImager to complete the System
+         Installation Suite chain.
+
+Fixes:
+        -Various and assorted bug fixes.        
+------------------------------------------------------------
+System Installer v0.2 
+------------------------------------------------------------
+Features:
+	-Improved packaging including rpm
+	-Commands tied to librarires
+
+------------------------------------------------------------
+System Installer v0.1.0 
+------------------------------------------------------------
+First release of SystemInstaller. 
+
+Features:
+	-Command stubs that store data
+	-Image libraries
+	-Disk libraries
