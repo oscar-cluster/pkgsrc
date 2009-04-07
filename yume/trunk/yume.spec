@@ -1,7 +1,7 @@
 # $Id$
 Summary: Wrapper to yum for clusters
 Name: yume
-Version: 2.8.7
+Version: 2.8.8
 Vendor: Open Source Cluster Group
 Release: 1
 License: GPL
@@ -63,6 +63,8 @@ rm -rf $RPM_BUILD_ROOT
 %{_mandir}/man8/yume*
 
 %changelog
+* Tue Apr 07 2009 Geoffroy Vallee <valleegr@ornl.gov> 2.8.8-1
+- new upstream version (see ChangeLog for more details).
 * Thu Mar 19 2009 Geoffroy Vallee <valleegr@ornl.gov> 2.8.7-1
 - new upstream version (see ChangeLog for more details).
 * Wed Mar 18 2009 Geoffroy Vallee <valleegr@ornl.gov> 2.8.6-1
