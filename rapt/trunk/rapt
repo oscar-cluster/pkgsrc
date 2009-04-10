@@ -657,23 +657,14 @@ sub get_debootstrap_mirror_and_codename (@) {
     return ($mirror, $distro);
 }
 
-sub distro_to_codename ($) {
-    my $distro = shift;
-
-    if ($distro =~ /^debian-4-(.*)$/) {
-        return "etch";
-    } elsif ($distro =~ /^ubuntu-7-(.*)$/) {
-        return "gutsy";
-    } elsif ($distro =~ /^ubuntu-8-(.*)$/) {
-        return "hardy";
-    } else {
-        return undef;
-    }
-}
-
 # Return: -1 if error, 0 else.
 sub do_debootstrap ($$$$) {
     my ($target, $mirror, $arch, $codename) = @_;
+
+    if (!OSCAR::Utils::is_a_valid_string ($codename)) {
+        carp "ERROR: Invalid distro codename";
+        return -1;
+    }
 
     if (system("which debootstrap 2>/dev/null")) {
         carp "ERROR: Could not find command debootstrap!\n";
@@ -747,7 +738,12 @@ sub debootstrap_distro ($$) {
     print "Architecture: $arch\n" if $verbose;
 
     # Now we find the distro codename
-    my $codename = distro_to_codename ($distro_id);
+    my $codename = $os->{'codename'};
+    if (!OSCAR::Utils::is_a_valid_string ($codename)) {
+        carp "ERROR: Impossible to detect the codename of $distro_id";
+        OSCAR::Utils::print_hash ("Distro data", "", $os);
+        return -1;
+    }
     print "Distro codename: $codename\n" if $verbose;
 
     if (do_debootstrap ($target, $mirror, $arch, $codename)) {
@@ -775,8 +771,18 @@ sub debootstrap_distro ($$) {
 sub debootstrap ($@) {
     my ($target, @repos) = @_;
 
-    my ($mirror, $distro) = get_debootstrap_mirror_and_codename (@repos);
-    my $codename = distro_to_codename ($distro);
+    my ($mirror, $distro_id) = get_debootstrap_mirror_and_codename (@repos);
+    require OSCAR::PackagePath;
+    my ($distro, $ver, $arch) =
+        OSCAR::PackagePath::decompose_distro_id ($distro_id);
+    my $os = OSCAR::OCA::OS_Detect::open (fake=>{ distro=>$distro,
+                                                distro_version=>$ver,
+                                                arch=>$arch});
+    if (!defined $os) {
+        carp "ERROR: Impossible to detect the distro ($distro, $ver, $arch)";
+        return -1;
+    }
+    my $codename = $os->{'codename'};
 
     if (do_debootstrap ($target, $mirror, undef, $codename)) {
         carp "ERROR: Impossible to run debootstrap ".
