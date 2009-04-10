@@ -1,3 +1,6 @@
+ssh-oscar-1.3.1 (not yet released):
+- Update the build dependencies for the Debian packages.
+
 ssh-oscar-1.3:
 - Include a Perl script that avoids problems when using few shells.
 
