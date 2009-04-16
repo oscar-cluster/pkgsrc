@@ -2,13 +2,11 @@
 <oscar>
   <name>oscar-udev</name>
   <class>included</class>
-  <summary>OSCAR extension for the management of the udev configuration on compute nodes.</summary>
-  <description>
-OSCAR extension for the management of the udev configuration on compute nodes.
-  </description>
+  <summary>OSCAR extension for the management of the udev.</summary>
+  <description>OSCAR extension for the management of the udev configuration on compute nodes.</description>
   <license>GPL</license>
   <group>Application/System</group>
-  <uri>http://www.csm.ornl.gov/srt/oscarv/</uri>
+  <uri>http://oscar.openclustergroup.org/</uri>
   <authors>
     <author cat="maintainer">
       <name>Geoffroy Vallee</name>
@@ -20,10 +18,8 @@ OSCAR extension for the management of the udev configuration on compute nodes.
       <pkg>oscarv</pkg>
     </requires>
   </serverDeps>
-  <clientDeps>
-  </clientDeps>
-  <apiDeps>
-  </apiDeps>
+  <clientDeps/>
+  <apiDeps/>
   <changelog>
     <versionEntry version="1.0-1">
       <changelogEntry authorName="Geoffroy Vallee" date="2009-01-21T15:00:11-05:00">
