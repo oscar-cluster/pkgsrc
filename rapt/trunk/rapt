@@ -1171,9 +1171,6 @@ sub detect_codename {
     if (!$codename) {
         croak("Could not detect distribution codename!");
     }
-    if ($codename !~ /^(etch|breezy|gutsy|hardy)$/) {
-        croak("Unsupported distribution codename: $codename\n");
-    }
     return $codename;
 }
 
@@ -1209,68 +1206,26 @@ sub detect_codename_repo {
     return $codename;
 }
 
-sub detect_codename_dir {
+# Return: the distro codename (e.g., lenny, hardy); undef if error.
+sub detect_codename_dir ($) {
     my ($dir) = @_;
-    my $codename;
+    my $os;
 
-    if (-f "$dir/etc/debian_version") {
-        # There is a trick with Ubuntu systems: they have a non-valid 
-        # /etc/debian_version and the ubuntu release data is actually in
-        # /etc/lsb-release. So if we get data from this file and if it specifies
-        # the system is an Ubuntu system we quit.
-        require OSCAR::LSBreleaseParser;
-        my $distro_id = OSCAR::LSBreleaseParser::parse_lsbrelease("/");
-        if (defined ($distro_id) && $distro_id ne "") {
-            require OSCAR::PackagePath;
-            my ($d, $v, $a) = 
-                OSCAR::PackagePath::decompose_distro_id ($distro_id);
-            if ($d eq "ubuntu") {
-                if ($v eq "7.10") {
-                    return "gutsy";
-                } elsif ($v eq "8.04") {
-                    return "hardy";
-                } else {
-                    return "unknow-ubuntu ($d-$v-$a)";
-                }
-            }
-        }
+    require OSCAR::OCA::OS_Detect;
+    require OSCAR::Utils;
 
-        # the codename for debian distribution is supposed to be the first
-        # line of the /etc/debian_version file.
-        # Moreover, we just support sarge (aka. Debian 3.1).
-        open (IN, "$dir/etc/debian_version")
-            or die "Can't open file: $!\n";
-        $codename = <IN>;
-        close IN;
-        # Since the codename may have multiple forms (3.1 vs sarge for 
-        # instance, we translate to a generic codename (e.g. 3.1->sarge)
-        # WARNING a \n is added after the codename when we read the file!
-        chomp($codename);
-        switch ($codename) {
-            case "3.0" { 
-                $codename = "sarge"; 
-            }
-            case "3.1" {
-                $codename = "sarge";
-            }
-            case "4.0" {
-                $codename = "etch";
-            }
-        }
-    } elsif (-f "$dir/etc/lsb-release") {
-	# there is a chance for this being a ubuntu distro
-	# it is not supported, yet, but we'll recognize it
-	# in order to facilitate development for ubuntu
-	open IN, "$dir/etc/lsb-release"
-	    or croak "Cannot open $dir/etc/lsb-release: $!";
-	while (<IN>) {
-	    if (/^DISTRIB_CODENAME=(.*)$/) {
-		$codename = $1;
-	    }
-	}
-	close IN;
+    if (OSCAR::Utils::is_a_valid_string ($dir)) {
+        $os = OSCAR::OCA::OS_Detect::open(chroot=>$dir);
+    } else {
+        $os = OSCAR::OCA::OS_Detect::open();
     }
-    return $codename;
+
+    if (!defined $os) {
+        carp "ERROR: Impossible to detect the codenane";
+        return undef;
+    }
+
+    return $os->{'codename'};
 }
 
 ################################################################################
