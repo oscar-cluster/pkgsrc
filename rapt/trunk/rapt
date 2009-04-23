@@ -772,8 +772,6 @@ sub debootstrap_distro ($$) {
 # debootstrap_distro, for which the implementation is less complex. In order   #
 # to use it, you must specify the distro (rapt --distro <distro_id>) instead   #
 # of repositories!!!!                                                          #
-# TODO: make this function deprecated when OSCAR & systeminstaller will fully  #
-#       support the direct specification of distro ID rather than repos.       #
 #                                                                              #
 # Input:      target, suite, mirror                                            #
 # Returns:    -1 if failure, 0 if ok                                            #
@@ -1088,24 +1086,18 @@ sub restart_httpd {
     }
 }
 
+# Return: 0 if success, value > 0 else.
 sub prep_repodata (@) {
     my @list_arch = @_;
 
-    #
-    # this routine should be replaced by the gencache call to a
-    # packman instance when that will be available
-    #
-
     if (system("which dpkg-scanpackages 2>/dev/null")) {
-        print "ERROR: Could not find command dpkg-scanpackages!\n";
-        exit 1;
+        carp "ERROR: Could not find command dpkg-scanpackages!\n";
+        return 1;
     }
 
+    require OSCAR::Utils;
+
     foreach my $a (@list_arch) {
-        # detect distribution codename
-        # currently from the master server, should actually come from the pool
-        my $codename = &detect_codename();
-        my $subdir = "dists/$codename/binary-$a";
         my $err = 0;
         for my $repo (@repos) {
             next if ($repo =~ /^(http|ftp):/);
@@ -1116,10 +1108,18 @@ sub prep_repodata (@) {
                 if (! -d $repo);
             next if ($repo !~ m:^/:);
 
+            my $codename = detect_codename_repo($repo);
+            if (!OSCAR::Utils::is_a_valid_string ($codename)) {
+                carp "ERROR: Impossible to detect the codename for $repo";
+                return 1;
+            }
+            my $subdir = "dists/$codename/binary-$a";
+
             # create directory for package metadata
             if (! -d "$repo/$subdir") {
                 !system("mkdir -p $repo/$subdir")
-                    or croak "Could not create directory $repo/$subdir";
+                    or (carp "ERROR: Could not create directory $repo/$subdir",
+                        return 1);
             }
 
             # now generate the Package.gz file
@@ -1165,7 +1165,7 @@ sub detect_codename {
         # image
         $codename = &detect_codename_dir($installroot);
         if (!$codename) {
-            $codename = &detect_codename_repo(@repos);
+            $codename = &detect_codename_repos(@repos);
         }
     }
     if (!$codename) {
@@ -1178,31 +1178,60 @@ sub detect_codename {
 # This needs improvement. For a local repo it should be able to detect the
 # codename by unpacking the debian-release or lsb-release file.
 # 
-sub detect_codename_repo {
-    my (@repos) = @_;
+sub detect_codename_repo ($) {
+    my ($repo) = @_;
+
+    print "Detecting repo(s) codename(s)\n";
+
     # the codename of a debian-alike repo is the word after the URL
-    my $repo = $repos[0];
     my ($url,$codename,$dummy) = split(/\+/,$repo);
 
     # for local repositories try some more tricks
-    if (!$codename && ($url =~ /^file:(\S+)$/)) {
-	my $path = $1;
-	my @cnames = glob("$path/dists/*");
-	if (scalar(@cnames) == 1) {
-	    $codename = basename($cnames[0]);
-	} elsif (scalar(@cnames) > 1) {
-	    print "Pool seems to contain multiple codenames!\n ".
-		join(", ",@cnames)."\n";
-	    print "Cannot identify codename!\n";
-	} else {
-	    # no codename subdirectory or glob expansion failed
-	    #
-	    # ... code missing here ...
-	    # - find .deb packages containing lsb-release and debian-release
-	    # - unpack them and detect the codename
-	    print "... no code for virgin repo codename detection, yet ...\n";
-	}
+    if (!$codename && (($url =~ /^file:(\S+)$/) || -d $url)) {
+        my $path = $1;
+        my @cnames = glob("$path/dists/*");
+        if (scalar(@cnames) == 1) {
+            $codename = basename($cnames[0]);
+        } elsif (scalar(@cnames) > 1) {
+            print "Pool seems to contain multiple codenames!\n ".
+            join(", ",@cnames)."\n";
+            print "Cannot identify codename!\n";
+        } else {
+            my $distro_id = File::Basename::basename ($url);
+            chomp ($distro_id);
+            require OSCAR::PackagePath;
+            my ($dist, $ver, $arch) 
+                = OSCAR::PackagePath::decompose_distro_id ($distro_id);
+            if (!defined $dist || !defined $ver || !defined $arch) {
+                carp "ERROR: Impossible to detect the distro ID ($path)";
+                return undef;
+            }
+            my $os = OSCAR::OCA::OS_Detect::open (fake=>{ distro=>$dist,
+                                                          distro_version=>$ver,
+                                                          arch=>$arch});
+            $codename = $os->{'codename'};
+        }
     }
+
+    return $codename;
+}
+
+sub detect_codename_repos (@) {
+    my @repos = @_;
+    my $codename;
+    my $c;
+
+    foreach my $r (@repos) {
+        $c = detect_codename_repo ($r);
+        if (defined $codename && $codename ne $c) {
+            carp "ERROR: Multiple codenames detected ($codename, $c)";
+            return undef;
+        }
+        if (!defined $codename) {
+            $codename = $c;
+        }
+    }
+
     return $codename;
 }
 
