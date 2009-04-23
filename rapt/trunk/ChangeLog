@@ -4,6 +4,8 @@ rapt-2.8.5 (not yet released):
 packages are available, we need to get the list of all available Debian
 packages. A bug previously prevented to get the list of all available
 packages, this is now fixed.
+- [Ticket #545] The generation of repository meta-data is now based on the
+repository codename and not anymore on local distro codename.
 
 rapt-2.8.4:
 - Modify the Makefile so we can choose the directory where the binary packages
