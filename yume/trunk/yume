@@ -182,7 +182,7 @@ if ($verbose) {
 
 # Updating meta-data for the target repos
 my ($cmd, $err);
-$cmd = "/usr/bin/yum -c $name makecache";
+$cmd = "/usr/bin/yum -c $name makecache 1>/dev/null";
 print "Executing $cmd\n" if $verbose;
 if (system $cmd) {
     die "ERROR: Impossible to execute $cmd; Impossible to get repos meta-data";
