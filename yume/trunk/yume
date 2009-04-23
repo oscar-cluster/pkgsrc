@@ -283,7 +283,7 @@ if ($repoquery) {
     # If we try to install RPMs, we check if all RPMs are available.
     if ($phase eq "install") {
         print "-> Checking the RPMs to install are really available (for ".
-              "$archstr)...\n";
+              "$archstr)...\n" if $verbose;
         for (my $i=$install_cmd+1; $i<scalar(@yumargs); $i++) {
             my $pkg = $yumargs[$i];
             # We also check the package arch
@@ -311,7 +311,7 @@ if ($repoquery) {
         }
     }
 
-    print "-> All packages are available\n";
+    print "-> All packages are available\n" if $verbose;
 
     # x86_64 needs arch to be specified, otherwise it installs
     # both i386 and x86_64 rpms (if available)
@@ -687,7 +687,7 @@ sub get_default_repos {
 sub detect_arch_http_repo ($) {
     my $repo = shift;
     
-    print "Detect architecture of the only repository $repo...\n";
+    print "Detect architecture of the only repository $repo...\n" if $verbose;
     my $varch = join("|",@validarch);
     if ($repo =~ /^(.*)($varch)(.*)$/) {
         return $2;

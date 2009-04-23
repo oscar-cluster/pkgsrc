@@ -1,3 +1,6 @@
+yume-2.8.9 (not yet released):
+- Finer grain management of output.
+
 yume-2.8.8:
 - Fix various issues when OSCAR is installed directly on the system.
 
