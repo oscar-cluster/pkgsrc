@@ -1,4 +1,4 @@
-rapt-2.8.5 (not yet released):
+rapt-2.8.5:
 - [Ticket #538] The distro codename detection is now based on OS_Detect.
 - [Ticket #398] To be able to check whether all Debian packages from a list of
 packages are available, we need to get the list of all available Debian

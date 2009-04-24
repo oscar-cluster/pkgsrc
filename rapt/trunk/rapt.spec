@@ -45,7 +45,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_mandir}/man8/rapt*
 
 %changelog
-* Fri Apr 10 2009 Geoffroy Vallee - 2.8.5-1
+* Fri Apr 23 2009 Geoffroy Vallee - 2.8.5-1
 - New upstream version (see ChangeLog file for more details).
 * Tue Feb 10 2009 Geoffroy Vallee - 2.8.4-1
 - New upstream version (see ChangeLog file for more details).
