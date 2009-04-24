@@ -1,0 +1,340 @@
+#!/usr/bin/env perl
+#
+
+#
+# Copyright (c) 2009 Oak Ridge National Laboratory.
+#                    Geoffroy R. Vallee <valleegr@ornl.gov>
+#                    All rights reserved.
+#
+# This file is part of the OSCAR software package.  For license
+# information, see the COPYING file in the top level directory of the
+# OSCAR source distribution.
+#
+
+#
+# $Id$
+#
+
+use strict;
+use Carp;
+use Cwd qw(chdir cwd);
+use Getopt::Long;
+use Term::Complete;
+
+use OSCAR::Database;
+use OSCAR::PackageSet;
+use OSCAR::PackagePath;
+use OSCAR::SelectorCommon;
+use OSCAR::Utils;
+use warnings "all";
+
+BEGIN {
+    if (defined $ENV{OSCAR_HOME}) {
+        unshift @INC, "$ENV{OSCAR_HOME}/lib";
+    }
+}
+
+my ($verbose, $debug, $list, $duplicate, $add_opkgs, $set, $new, $interactive);
+
+use vars qw ($current_package_set);
+
+# Command line arguement variables for the interactive mode.
+my $file = '';
+my $inun = 0;
+my $help = '';
+
+GetOptions(
+        "duplicate|d=s"                 => \$duplicate,
+        "interactive"                   => \$interactive,
+        "list|l"                        => \$list,
+        "add-opkgs"                     => \$add_opkgs,
+        "package-set|set=s"             => \$set,
+        "new-set|new=s"                 => \$new,
+        "debug"                         => \$debug,
+        'm'                             => \$inun,
+        'filename=s'                    => \$file,
+        'f=s'                           => \$file,
+        "verbose"                       => \$verbose,
+        "help"                          => \&help,
+        ) || help_and_exit();
+
+sub help {
+    print "Usage: $0 OPTION\n";
+    print "\n";
+    print "Tool for the selection and management of OSCAR packages (OPKGs).\n";
+    print "For more details, please refer to the man page (man oscar-selector)\n";
+    print "\n";
+}
+
+sub help_and_exit {
+    help ();
+    exit 1;
+}
+
+sub interactive_selector {
+    my @groups_list;
+    my @package_sets = OSCAR::PackageSet::get_package_sets();
+    my $selected_group;
+
+    # Currently we only deal with the Default package set
+    my $selected_package_set = "Default";
+
+    #Get a list of all the packages
+    my $distro = OSCAR::PackagePath::get_distro();
+    if (!defined $distro) {
+        die "ERROR: Impossible to get the local distro ID";
+    }
+    my $compat_distro = OSCAR::PackagePath::get_compat_distro ($distro);
+    my @opkgs = 
+        OSCAR::PackageSet::get_list_opkgs_in_package_set($selected_package_set,
+                                                        $compat_distro);
+
+    #List the packages and start getting input
+    #Print the packages before giving a prompt
+#     OSCAR::SelectorCommon::printPackages("all", $selected_package_set);
+
+
+    #Start the prompt section
+    #This will exit by the user typing 'quit'
+    my $log_path = "/var/log/oscar/selector_cli.log";
+    OSCAR::Logger::init_log_file ($log_path);
+    my $continue = 1;
+    my @completion_list = qw ( select unselect list file help quit exit );
+    my $prompt = "\nselector> ";
+
+    while($continue)
+    {
+        my $response = Complete($prompt, @completion_list);
+        $continue = OSCAR::SelectorCommon::processInput(\$current_package_set,
+                                                        $response);
+    }
+    return 0;
+}
+
+my $initial_verbose_value = 0;
+$initial_verbose_value = $ENV{OSCAR_VERBOSE} if (defined $ENV{OSCAR_VERBOSE});
+if ($debug) {
+    $ENV{OSCAR_VERBOSE} = 10;
+}
+if ($verbose) {
+    $ENV{OSCAR_VERBOSE} = 5;
+}
+
+if ($interactive) {
+    interactive_selector ();
+    exit 0;
+}
+
+if ($file) {
+    my $distro = OSCAR::PackagePath::get_distro();
+    my $compat_distro = OSCAR::PackagePath::get_compat_distro ($distro);
+    my @opkgs
+        = OSCAR::PackageSet::get_list_opkgs_in_package_set($current_package_set,
+                                                           $compat_distro); 
+
+    # If the user doesn't want to maintain the package state, 
+    # reset all core and included packages to selected and others to unselected 
+    if($inun == 1) { 
+        foreach my $pack (@opkgs) { 
+            OSCAR::SelectorCommon::processInput("select -q $pack");
+        }
+    }
+    OSCAR::SelectorCommon::processInput("file " . $file);
+    OSCAR::SelectorCommon::processInput("quit");
+}
+
+if ($list) {
+    my $set_name = $ARGV[0];
+    if (OSCAR::Utils::is_a_valid_string ($set_name)) {
+        require OSCAR::OCA::OS_Detect;
+        my $os = OSCAR::OCA::OS_Detect::open();
+        if (!defined $os && ref($os) ne "HASH") {
+            die "ERROR: Unsupported distro";
+        }
+        my $distro = "$os->{compat_distro}-$os->{compat_distrover}-$os->{arch}";
+        my @ps = OSCAR::PackageSet::get_package_sets();
+        if (OSCAR::Utils::is_element_in_array ($set_name, @ps)) {
+            my @opkgs = 
+                OSCAR::PackageSet::get_list_opkgs_in_package_set ($set_name, 
+                                                                  $distro);
+            OSCAR::Utils::print_array (@opkgs);
+        } else {
+            die "ERROR: Unknown package set ($set_name)";
+        }
+    } else {
+        print "Prout\n";
+        my @ps = OSCAR::PackageSet::get_package_sets();
+        OSCAR::Utils::print_array (@ps);
+    }
+}
+
+if ($duplicate) {
+    my @ps = OSCAR::PackageSet::get_package_sets();    
+    if (OSCAR::Utils::is_a_valid_string ($duplicate) 
+        && OSCAR::Utils::is_element_in_array ($duplicate, @ps)) {
+        my $new_ps = $ARGV[0];
+        if (!OSCAR::Utils::is_a_valid_string ($new_ps)) {
+            die "ERROR: Invalid package set name ($new_ps)";
+        }
+        my $os = OSCAR::OCA::OS_Detect::open();
+        if (!defined $os && ref($os) ne "HASH") {
+            die "ERROR: Unsupported distro";
+        }
+        my $distro = "$os->{compat_distro}-$os->{compat_distrover}-$os->{arch}";
+        if (OSCAR::PackageSet::duplicate_package_set ($duplicate,
+                                                      $new_ps,
+                                                      $distro)) {
+            die "ERROR: Impossible to duplicate the package set";
+        }
+    } else {
+        die "ERROR: Invalid package set ($duplicate)";
+    }
+}
+
+if ($add_opkgs) {
+    if (!OSCAR::Utils::is_a_valid_string ($set)) {
+        die "ERROR: Invalid package set";
+    }
+
+    my @ps = OSCAR::PackageSet::get_package_sets();
+    if (!OSCAR::Utils::is_a_valid_string ($set) 
+        || !OSCAR::Utils::is_element_in_array ($set, @ps)) {
+        die "ERROR: Invalid package set";
+    }
+
+    my $os = OSCAR::OCA::OS_Detect::open();
+    if (!defined $os && ref($os) ne "HASH") {
+        die "ERROR: Unsupported distro";
+    }
+    my $distro = "$os->{compat_distro}-$os->{compat_distrover}-$os->{arch}";
+
+    # We get the list of available OPKGs via the repositories
+    require OSCAR::ORM;
+    my @repos = OSCAR::ORM::get_default_repositories ();
+    my @opkgs;
+    foreach my $repo (@repos) {
+        my @pkgs = OSCAR::ORM::get_available_opkgs($repo);
+        foreach my $opkg (@pkgs) {
+            push (@opkgs, @pkgs);
+        }
+    }
+
+    # We get the list of OPKGs that are already in the package set
+    my @ps_opkgs = 
+        OSCAR::PackageSet::get_list_opkgs_in_package_set ($set, 
+                                                          $distro);
+
+    # We only add the OPKGs that are actually available via the repositories and
+    # not already in the package set.
+    my @opkgs_to_add;
+    my $o;
+    foreach $o (@ARGV) {
+        if (!OSCAR::Utils::is_element_in_array ($o, @opkgs)) {
+            OSCAR::Logger::oscar_log_subsection "[WARNING] OPKG $o is not ".
+                "available, not added to the package set";
+            next;
+        } 
+
+        if (OSCAR::Utils::is_element_in_array ($o, @ps_opkgs)) {
+            OSCAR::Logger::oscar_log_subsection "[WARNING] OPKG $o is already ".
+                "in the package set, we do not add it";
+            next;
+        }
+
+        push (@opkgs_to_add, $o);
+    }
+
+    # Then we actually add the OPKGs
+    foreach $o (@opkgs_to_add) {
+        OSCAR::PackageSet::add_opkg_to_package_set ($set, $distro, $o);
+    }
+}
+
+if ($new) {
+    if (!OSCAR::Utils::is_a_valid_string ($new)) {
+        die "ERROR: Invalid package set";
+    }
+
+    my $os = OSCAR::OCA::OS_Detect::open();
+    if (!defined $os && ref($os) ne "HASH") {
+        die "ERROR: Unsupported distro";
+    }
+    my $distro = "$os->{compat_distro}-$os->{compat_distrover}-$os->{arch}";
+    OSCAR::PackageSet::new_package_set ($new, $distro);
+}
+
+EXIT_SUCCESS:
+$ENV{OSCAR_VERBOSE} = $initial_verbose_value;
+exit 0;
+
+
+__END__
+
+=head1 NAME
+
+oscar-selector, a command line tool for OSCAR configuration.
+
+=head1 SYNOPSIS
+
+oscar-selector OPTIONS [ARGUMENTS]
+
+Two sets of capabilities are available: one for the management of package sets and one for the actual selection of OSCAR packages within a package set.
+
+=head1 Package Set Management
+
+Recognized options for the management of package sets include:
+
+=over 4
+
+=item --list | -l [PACKAGE_SET_NAME]
+
+This command has two different behaviors. If no package set is specified, it 
+lists all the existing package sets; if a package set is specified, it lists the
+OSCAR packages that are included into the package set.
+
+=item --duplicate | -d
+
+Duplicate an existing package set, the name of the new package set is the 
+first argument of the command.
+
+=item --add-opkgs
+
+Add a list of OPKGs that are specified as command arguments. To get the list of
+available OPKGs, please, execute the "orm --default-opkgs --non-interactive"
+command. Must be used with the "--set" option (see below).
+
+=item --package-set | --set
+
+Specify the package set selected to perform an action. You can get the list of
+existing package set using the "--list" option.
+
+=item --new-set | --new SET_NAME
+
+Create a new package set. Core OSCAR packages are automatically added to the new
+package set.
+
+=back
+
+=head1 Package Selection
+
+Two modes are available for the selection/unselection of OSCAR packages within
+a given package set: (i) the interactive mode, (ii) act based on a input file.
+
+=head2 Interactive Mode
+
+To use oscar-selector in interactive mode, simply use the --interactive option.
+While in interactive mode, users can execute the help command at any time.
+
+=head2 Mode Based on a Input File
+
+To drive oscar-selector based on a input file, simply use the --file or -f
+option followed by the path to the input file.
+
+=head1 Known Limitations
+
+The oscar-selector script only works for the local distribution. It won't work
+for an image based on another Linux distribution.
+
+=cut
+
+
