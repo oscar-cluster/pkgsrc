@@ -1,0 +1,32 @@
+#!/usr/bin/perl
+#
+
+# Copyright (c) 2009 Geoffroy Vallee <valleegr at ornl dot gov>
+#                    Oak Ridge National Laboratory
+#                    All rights reserved.
+#
+
+use strict;
+use warnings "all";
+
+print "[YUME] Testing ptty_try capabilities...\n";
+
+my $cmd = "/usr/bin/ptty_try /bin/false";
+my $rc = system ($cmd);
+if ($rc == 0) {
+    goto ERROR;
+}
+
+$cmd = "/usr/bin/ptty_try /bin/true";
+$rc = system ($cmd);
+if ($rc != 0) {
+    goto ERROR;
+}
+
+SUCCESS:
+	print "[YUME] Package installation testing successful\n";
+	exit 0;
+
+ERROR:
+	die "ERROR: it seems that we do not catch the return code of the command executed with ptty_try ($cmd; $rc)";
+	exit 1;
