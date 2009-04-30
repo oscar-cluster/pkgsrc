@@ -1,3 +1,6 @@
+yume-2.8.10 (not yet released):
+- Include the support for i586 RPMs.
+
 yume-2.8.9:
 - Finer grain management of output.
 
