@@ -1,5 +1,6 @@
 DESTDIR=
 PKGDEST=
+MANDIR=/usr/local/man/man1
 SOURCEDIR=/usr/src/redhat/SOURCES
 PKG=ssh-oscar
 
@@ -10,8 +11,8 @@ all:
 	for dir in ${SUBDIRS} ; do ( cd $$dir ; ${MAKE} all ) ; done
 
 doc:
-	install -d -m 0755 $(DESTDIR)/usr/local/man/man1/
-	for bin in ${MANPAGES} ; do ( pod2man --section=1 $$bin $(DESTDIR)/usr/local/man/man1/$$bin.1 ) ; done
+	install -d -m 0755 $(DESTDIR)$(MANDIR)/man1
+	for bin in ${MANPAGES} ; do ( /usr/bin/pod2man --section=1 $$bin $(DESTDIR)/$(MANDIR)/man1/$$bin.1 ) ; done
 
 install: clean doc
 	for dir in ${SUBDIRS} ; do ( cd $$dir ; ${MAKE} install ) ; done

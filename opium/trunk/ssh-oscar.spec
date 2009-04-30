@@ -34,7 +34,7 @@ compute nodes.
 %setup -n %{name}
 
 %install
-make install
+make install MANDIR=%_mandir
 
 %post
 
@@ -52,11 +52,14 @@ make install
 /etc/profile.d/ssh-oscar.sh
 /etc/profile.d/ssh-oscar.csh
 /etc/profile.d/ssh-oscar
-/usr/local/man/man1/ssh-oscar.1
+%_mandir/man1/ssh-oscar.1*
 
 #==============================================================
 
 %changelog
+* Thu Apr 30 2009 Geoffroy Vallee <valleegr@ornl.gov> 1.3-2
+- Use the mandir macro instead of a hardcoded path.
+
 * Tue Feb 24 2009 Geoffroy Vallee <valleegr@ornl.gov> 1.3-1
 - New upstream version (see ChangeLog for more details).
 
