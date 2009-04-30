@@ -291,7 +291,8 @@ if ($repoquery) {
             if ($archstr ne "i?86") {
                 @requests = ("$pkg.$archstr", "$pkg.noarch");
             } else {
-                @requests = ("$pkg.i386", "$pkg.noarch", "$pkg.i686");
+                @requests = ("$pkg.noarch", "$pkg.i386", "$pkg.i586",
+                             "$pkg.i686");
             }
             my $ret = 0;
             foreach my $r (@requests) {
