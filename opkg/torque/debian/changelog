@@ -1,0 +1,6 @@
+torque-oscar (2.1.10-1) unstable; urgency=low
+
+  * Initial release (Closes: #nnnn)  <nnnn is the bug number of your ITP>
+
+ -- hugues local <hugues@unknown>  Fri,  8 Dec 2006 17:16:11 +0100
+
