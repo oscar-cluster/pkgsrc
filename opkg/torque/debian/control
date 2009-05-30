@@ -2,7 +2,7 @@ Source: torque-oscar
 Section: unknown
 Priority: extra
 Maintainer: hugues Prisker <hugues.prisker@edf.fr>
-Build-Depends: debhelper (>= 5), autotools-dev
+Build-Depends: debhelper (>= 5), autotools-dev, tcl-dev, tk-dev
 Standards-Version: 3.7.2
 
 Package: torque-oscar

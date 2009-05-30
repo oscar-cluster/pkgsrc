@@ -34,7 +34,7 @@ config.status: configure
 	dh_testdir
 	# Add here commands to configure the package.
 	#./configure --host=$(DEB_HOST_GNU_TYPE) --build=$(DEB_BUILD_GNU_TYPE) --prefix=/usr --mandir=\$${prefix}/share/man --infodir=\$${prefix}/share/info CFLAGS="$(CFLAGS)" LDFLAGS="-Wl,-z,defs"
-	./configure --prefix=/usr --with-server-home=/var/spool/torque --with-default-server=`hostname` --with-tmpdir=/tmp --with-rcp=scp
+	./configure --prefix=/usr --with-server-home=/var/spool/torque --with-default-server=`hostname` --with-tmpdir=/tmp --with-rcp=scp --enable-gui --with-tcl
 
 #Architecture 
 build: build-arch build-indep
@@ -95,9 +95,10 @@ install-arch:
 
 	# Move files around for the oscar-torque-server package
 	mkdir -p $(CURDIR)/debian/torque-oscar-server/usr/sbin
-	mkdir -p $(CURDIR)/debian/torque-oscar-server/var/spool/torque/sched_priv
-	mkdir -p $(CURDIR)/debian/torque-oscar-server/var/spool/torque/sched_logs
-	mv $(CURDIR)/debian/torque-oscar/usr/sbin/pbs_sched $(CURDIR)/debian/torque-oscar-server/usr/sbin
+	mkdir -p $(CURDIR)/debian/torque-oscar-server/var/spool/torque/server_priv
+	mkdir -p $(CURDIR)/debian/torque-oscar-server/var/spool/torque/server_logs
+	mv $(CURDIR)/debian/torque-oscar/usr/sbin/pbs_server $(CURDIR)/debian/torque-oscar-server/usr/sbin
+	mv $(CURDIR)/debian/torque-oscar/usr/sbin/momctl $(CURDIR)/debian/torque-oscar-server/usr/sbin
 
 	# Move files around for the oscar-server-client package
 	mkdir -p $(CURDIR)/debian/torque-oscar-client/usr/bin
@@ -115,6 +116,29 @@ install-arch:
 	mv $(CURDIR)/debian/torque-oscar/usr/lib/*.so.* $(CURDIR)/debian/torque-oscar-client/usr/lib
 	mv $(CURDIR)/debian/torque-oscar/usr/sbin/pbs_iff $(CURDIR)/debian/torque-oscar-client/usr/sbin
 	mv $(CURDIR)/debian/torque-oscar/usr/sbin/pbs_demux $(CURDIR)/debian/torque-oscar-client/usr/sbin
+
+    # Move files around for the oscar-torque-scheduler package
+	mkdir -p $(CURDIR)/debian/torque-oscar-scheduler/usr/sbin
+	mv $(CURDIR)/debian/torque-oscar/usr/sbin/pbs_sched $(CURDIR)/debian/torque-oscar-scheduler/usr/sbin
+	mkdir -p $(CURDIR)/debian/torque-oscar-scheduler/var/spool/torque/sched_priv
+	mkdir -p $(CURDIR)/debian/torque-oscar-scheduler/var/spool/torque/sched_logs
+
+    # Move files around for the oscar-torque-mom package
+	mkdir -p $(CURDIR)/debian/torque-oscar-mom/usr/sbin
+	mkdir -p $(CURDIR)/debian/torque-oscar-mom/var/spool/torque/mom_priv
+	mkdir -p $(CURDIR)/debian/torque-oscar-mom/var/spool/torque/mom_logs
+	mkdir -p $(CURDIR)/debian/torque-oscar-mom/var/spool/torque/checkpoint
+	mkdir -p $(CURDIR)/debian/torque-oscar-mom/var/spool/torque/undelivered
+	mv $(CURDIR)/debian/torque-oscar/usr/sbin/pbs_mom $(CURDIR)/debian/torque-oscar-mom/usr/sbin
+
+    # Move files around for the oscar-torque-gui package
+	mkdir -p $(CURDIR)/debian/torque-oscar-gui/usr/bin
+	mkdir -p $(CURDIR)/debian/torque-oscar-gui/usr/lib
+	mv $(CURDIR)/debian/torque-oscar/usr/bin/pbs_wish $(CURDIR)/debian/torque-oscar-gui/usr/bin
+	mv $(CURDIR)/debian/torque-oscar/usr/bin/xpbs $(CURDIR)/debian/torque-oscar-gui/usr/bin
+	mv $(CURDIR)/debian/torque-oscar/usr/bin/xpbsmon $(CURDIR)/debian/torque-oscar-gui/usr/bin
+	mv $(CURDIR)/debian/torque-oscar/usr/lib/xpbs $(CURDIR)/debian/torque-oscar-gui/usr/lib
+	mv $(CURDIR)/debian/torque-oscar/usr/lib/xpbsmon $(CURDIR)/debian/torque-oscar-gui/usr/lib
 
 	dh_install -s
 # Must not depend on anything. This is to be called by
