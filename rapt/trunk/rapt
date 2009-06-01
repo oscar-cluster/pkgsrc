@@ -249,7 +249,6 @@ for (my $i=0; $i<scalar (@ARGV); $i++) {
         $cmd .= "$ARGV[$i] ";
     }
 }
-print STDERR "RAPT cmd: $cmd\n";
 
 if ($installroot) {
     $cmd = "chroot $installroot $cmd";
