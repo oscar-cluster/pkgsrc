@@ -449,7 +449,7 @@ int kvmVM::__boot_vm ()
     /* We get the kvm command */
     cout << "Preparing the command for the VM creation..." << endl;
     cmd = getCommand();
-    cmd += "  ";
+    cmd += " ";
     cmd += data.image;
     /* We manage the amount of memory */
     cmd += " -m ";

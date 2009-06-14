@@ -5,7 +5,7 @@ Build-Depends: debhelper (>= 5), autotools-dev, automake, autoconf, libxml++2.6-
 Standards-Version: 3.7.2
 Section: libs
 
-Package: libv3m-dev
+Package: libv3m
 Section: libdevel
 Architecture: any
 Depends: libxml++2.6-dev, bridge-utils

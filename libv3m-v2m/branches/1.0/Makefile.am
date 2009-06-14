@@ -1,15 +1,25 @@
-lib_LIBRARIES = libv3m.a
+#lib_LIBRARIES = libv3m.a
 
-libv3m_a_SOURCES = libv3m.h vm_status.h nic.h ProfileXMLNode.cpp \
-	ProfileXMLNode.h qemu.h qemu.cpp vm.h vm.cpp VMContainer.h VMSettings.cpp \
-	VMSettings.h xen.h xen.cpp xen-hvm.h xen-hvm.cpp vmware.cpp vmware.h \
-	kvm.cpp kvm.h \
-	vmm-hpc.h vmm-hpc.cpp boot.h etc/v3m_config.dtd etc/v3m_profile.dtd \
-	doxygen_config.in doc/user_guide.sgml doc/example_profile_xen.xml \
-	doc/example_profile_qemu.xml doc/Makefile
+#libv3m_a_SOURCES = libv3m.h vm_status.h nic.h ProfileXMLNode.cpp \
+#	ProfileXMLNode.h qemu.h qemu.cpp vm.h vm.cpp VMContainer.h VMSettings.cpp \
+#	VMSettings.h xen.h xen.cpp xen-hvm.h xen-hvm.cpp vmware.cpp vmware.h \
+#	kvm.cpp kvm.h \
+#	vmm-hpc.h vmm-hpc.cpp boot.h etc/v3m_config.dtd etc/v3m_profile.dtd \
+#	doxygen_config.in doc/user_guide.sgml doc/example_profile_xen.xml \
+#	doc/example_profile_qemu.xml doc/Makefile
 
 include_HEADERS = vm.h ProfileXMLNode.h VMContainer.h qemu.h xen.h vmware.h \
 				  xen-hvm.h nic.h vmm-hpc.h vm_status.h
+libv3mdir = ${prefix}/lib
+libv3m_LTLIBRARIES=libv3m.la
+libv3m_la_SOURCES = libv3m.h vm_status.h nic.h ProfileXMLNode.cpp \
+    ProfileXMLNode.h qemu.h qemu.cpp vm.h vm.cpp VMContainer.h VMSettings.cpp \
+    VMSettings.h xen.h xen.cpp xen-hvm.h xen-hvm.cpp vmware.cpp vmware.h \
+    kvm.cpp kvm.h \
+    vmm-hpc.h vmm-hpc.cpp boot.h etc/v3m_config.dtd etc/v3m_profile.dtd \
+    doxygen_config.in doc/user_guide.sgml doc/example_profile_xen.xml \
+    doc/example_profile_qemu.xml doc/Makefile
+libv3m_la_LDFLAGS = -version 0:0:0
 
 autotools_generated_files = configure Makefile.in config.log depcomp \
               INSTALL .deps Makefile config.status autom4te.cache \

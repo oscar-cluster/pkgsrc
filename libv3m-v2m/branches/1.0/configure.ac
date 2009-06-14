@@ -16,10 +16,12 @@ dnl AM_CONFIG_HEADER([config.h])
 AC_PROG_MAKE_SET
 AC_PROG_CC
 AC_PROG_CXX
+AC_PROG_LIBTOOL
 AC_PROG_CPP
 AC_PROG_INSTALL
 AC_PROG_RANLIB
-
+LT_INIT
+LT_LANG([C++])
 
 dnl === Check for libxml++ 2.6 =================================================
 
@@ -64,6 +66,5 @@ dnl ============================================================================
 dnl === Update the Doxygen configuration ===
 sed -e "s/LIB_V3M_VERSION/$LIBV3M_VERSION/" < doxygen_config.in \
         > doxygen_config
-
 
 AC_OUTPUT(Makefile)

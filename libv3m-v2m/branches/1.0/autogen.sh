@@ -3,5 +3,6 @@
 
 #autoheader
 aclocal
-autoconf
+libtoolize
 automake --add-missing
+autoconf

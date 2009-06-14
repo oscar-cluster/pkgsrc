@@ -26,7 +26,7 @@ high-level description, then all the technical details are managed by libv3m
 
 %prep
 %setup -n %{name}
-./configure
+./configure --prefix=/usr
 
 %build
 make
@@ -40,7 +40,7 @@ make install-etc DESTDIR=${RPM_BUILD_ROOT}
 
 %files 
 %defattr(-,root,root)
-/usr/lib/libv3m.a
+/usr/lib/*
 /usr/include/vmware.h
 /usr/include/vmm-hpc.h
 /usr/include/xen.h
