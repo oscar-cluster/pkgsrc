@@ -103,14 +103,14 @@ void ArgumentParser::printUsage ()
     cout << "v2m usage:" << endl;
     cout << "\tv2m <xml_profile> [OPTION]" << endl;
     cout << "\nv2m [OPTION]:" << endl;
-    cout << "\t--boot-vm: boot a VM instantiation based on the profile." <<
-            endl;
-    cout << "\t--create-vm-image-from-cdrom: create an image for a VM \
-             using a bootable CDROM" << endl;
-    cout << "\t--install-vm-with-oscar: create an image for a \
-             VM using a network installation with OSCAR" << endl;
-    cout << "\t--migrate-vm <destination_node>: migrate a VM on a remote node \
-             (EXPERIMENTAL)" << endl;
+    cout << "\t--boot-vm: boot a VM instantiation based on the profile." 
+         << endl;
+    cout << "\t--create-vm-image-from-cdrom: create an image for a VM " 
+         << "using a bootable CDROM" << endl;
+    cout << "\t--install-vm-with-oscar: create an image for a "
+         << "VM using a network installation with OSCAR" << endl;
+    cout << "\t--migrate-vm <destination_node>: migrate a VM on a remote node "
+         << "(EXPERIMENTAL)" << endl;
     cout << "\t--pause-vm: pause a VM (EXPERIMENTAL)" << endl;
     cout << "\t--unpause-vm: unpause a VM (EXPERIMENTAL)" << endl;
     cout << "\t--validate-profile: validate the VM's profile" << endl;
