@@ -9,7 +9,7 @@ use File::Basename;
 use File::Path;
 use Carp;
 
-my $tarball_url = "http://www.csm.ornl.gov/srt/downloads/oscar/ganglia-3.0.5.tar.gz";
+my $tarball_url = "http://www.csm.ornl.gov/srt/downloads/oscar/ganglia-3.0.6.tar.gz";
 my $filename = File::Basename::basename ($tarball_url);
 my $dir = File::Basename::basename($tarball_url,  ".tar.gz");
 my $dest = "/tmp";

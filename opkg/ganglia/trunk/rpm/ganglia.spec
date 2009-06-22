@@ -8,11 +8,11 @@
 # build mixed architecture packages.  As a workaround, you must build
 # the RPMs using the following commandline
 #
-# % rpmbuild -ta --target noarch,i386 ganglia-3.0.5.tar.gz
+# % rpmbuild -ta --target noarch,i386 ganglia-3.0.6.tar.gz
 #
 Summary: Ganglia Distributed Monitoring System
 Name: ganglia
-Version: 3.0.5
+Version: 3.0.6
 URL: http://ganglia.info/
 Release: 1 
 License: BSD
@@ -42,7 +42,7 @@ Obsoletes: ganglia-webfrontend
 Provides: ganglia-webfrontend
 # We should put rrdtool as a Requires too but rrdtool rpm support is very weak
 # so most people install from source
-#Requires: ganglia-gmetad >=  3.0.5
+#Requires: ganglia-gmetad >=  3.0.6
 Requires: php-gd
 %if 0%{?suse_version}
 %define web_prefixdir /srv/www/htdocs/ganglia
