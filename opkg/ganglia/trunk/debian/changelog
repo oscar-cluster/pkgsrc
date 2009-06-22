@@ -1,0 +1,6 @@
+ganglia (3.0.5-1) hardy; urgency=low
+
+  * New upstream version for OSCAR.
+
+ -- Geoffroy Vallee <valleegr@ornl.gov>  Sun, 21 Jun 2009 23:18:32 -0400
+

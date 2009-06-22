@@ -1,0 +1,11 @@
+--- gmetad.conf.orig	2003-03-12 13:33:52.000000000 -0500
++++ gmetad.conf	2003-03-12 13:34:43.000000000 -0500
+@@ -57,7 +57,7 @@
+ #
+ # User gmetad will setuid to (defaults to "nobody")
+ # default: "nobody"
+-# setuid_username "nobody"
++setuid_username "ganglia"
+ #
+ # The port gmetad will answer requests for XML
+ # default: 8651
