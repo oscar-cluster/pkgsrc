@@ -1,3 +1,9 @@
+libv3m (0.9.7-1) hardy; urgency=low
+
+  * New upstream version. 
+
+ -- Geoffroy Vallee <valleegr@ornl.gov>  Tue, 23 Jun 2009 14:04:34 -0400
+
 libv3m (0.9.6-1) gutsy; urgency=low
 
   * New upstream version.
