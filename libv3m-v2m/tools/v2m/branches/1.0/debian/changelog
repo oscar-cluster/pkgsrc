@@ -1,8 +1,20 @@
+v2m (0.9.7-1) hardy; urgency=low
+
+  * New upstream version.
+
+ -- Geoffroy Vallee <valleegr@ornl.gov>  Tue, 23 Jun 2009 14:17:40 -0400
+
 v2m (0.9.6-1) hardy; urgency=low
 
   * New upstream version.
 
- -- gvallee <gvallee@hugo>  Wed, 03 Dec 2008 11:20:22 -0500
+ -- Geoffroy Vallee <valleegr@ornl.gov>  Wed, 03 Dec 2008 11:20:22 -0500
+
+v2m (0.9.5-1) hardy; urgency=low
+
+  * New upstream version.
+
+ -- Geoffroy Vallee <valleegr@ornl.gov>  Thu, 30 Oct 2008 15:49:32 -0400
 
 v2m (0.9.4) gutsy; urgency=low
 

@@ -5,7 +5,7 @@ dnl   Copyright 2006-2007, Oak Ridge National Laboratory
 dnl   See file LICENCE for conditions.
 dnl
 
-AC_INIT(v2m, [0.9.4])
+AC_INIT(v2m, [0.9.7])
 AM_INIT_AUTOMAKE
 
 dnl AC_CONFIG_HEADERS([config.h])

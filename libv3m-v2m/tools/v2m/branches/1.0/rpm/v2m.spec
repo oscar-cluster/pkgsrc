@@ -17,10 +17,10 @@
 
 Summary:		CLI for libv3m.
 Name:      		v2m
-Version:   		1.0
-Release:   		1gv12
+Version:   		0.9.7
+Release:   		1
 Vendor:			Oak Ridge National Laboratory
-Distribution:   CentOS 4
+Distribution:   CentOS 5
 Packager:		Geoffroy Vallee <valleegr@ornl.gov>
 License: 		GPL
 Group:     		Application/System
@@ -81,6 +81,10 @@ cp contrib/bin/* %{contribtarget}/bin
 %{contribdir}/bin/oscar_bootcd.iso
 
 %changelog
+* Tue Jun 23 2009 Geoffroy Vallee <valleegr@ornl.gov> - 0.9.7-1
+- New upstream version.
+* Thu Oct 30 2007 Geoffroy Vallee <valleegr@ornl.gov> 
+- New upstream version.
 * Mon Apr 23 2007 Geoffroy Vallee <valleegr@ornl.gov>
 - Add a dependency to sudo.
 * Thu Apr 19 2007 Geoffroy Vallee <valleegr@ornl.gov>
