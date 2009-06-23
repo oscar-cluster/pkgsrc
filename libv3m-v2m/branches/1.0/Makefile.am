@@ -9,7 +9,7 @@
 #	doc/example_profile_qemu.xml doc/Makefile
 
 include_HEADERS = vm.h ProfileXMLNode.h VMContainer.h qemu.h xen.h vmware.h \
-				  xen-hvm.h nic.h vmm-hpc.h vm_status.h
+				  xen-hvm.h nic.h vmm-hpc.h vm_status.h kvm.h
 libv3mdir = ${prefix}/lib
 libv3m_LTLIBRARIES=libv3m.la
 libv3m_la_SOURCES = libv3m.h vm_status.h nic.h ProfileXMLNode.cpp \

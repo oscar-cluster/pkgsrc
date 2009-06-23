@@ -1,4 +1,4 @@
-* 0.9.7 (not yet released):
+* 0.9.7:
 	* Add the KVM support, including the automatic networking management
 	(bridges).
 

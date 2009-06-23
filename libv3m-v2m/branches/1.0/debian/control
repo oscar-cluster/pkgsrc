@@ -8,7 +8,7 @@ Section: libs
 Package: libv3m
 Section: libdevel
 Architecture: any
-Depends: libxml++2.6-dev, bridge-utils
+Depends: libxml++2.6-dev, network-configurator
 Description: Library for virtual machine management and monitoring
  libv3m provides an abstraction for different system-level virtualization
  solutions such as Xen or QEMU. For that, libv3m defines the notion of
