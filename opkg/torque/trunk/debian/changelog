@@ -1,3 +1,15 @@
+torque-oscar (2.1.10-3) hardy; urgency=low
+
+  * Deactivate dh_shlibdeps in the rules script to avoid misleading dependencies.
+
+ -- Geoffroy Vallee [gvh] <gvh@gvh1.ornl.gov>  Thu, 25 Jun 2009 16:42:50 -0400
+
+torque-oscar (2.1.10-2) hardy; urgency=low
+
+  * Deactivate dh_makeshlibs in the rules script to avoid misleading dependencies.
+
+ -- Geoffroy Vallee <valleegr@ornl.gov>  Thu, 25 Jun 2009 16:24:23 -0400
+
 torque-oscar (2.1.10-1) unstable; urgency=low
 
   * Initial release (Closes: #nnnn)  <nnnn is the bug number of your ITP>
