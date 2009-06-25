@@ -1,3 +1,9 @@
+sync-files (2.4.1~svn20090625-0gv1) hardy; urgency=low
+
+  * New upstream version.
+
+ -- Geoffroy Vallee <valleegr@ornl.gov>  Thu, 25 Jun 2009 11:28:57 -0400
+
 sync-files (2.4-1) stable; urgency=low
 
   * Initial release

@@ -5,7 +5,7 @@
 
 Summary: OSCARized File Synchronization System
 Name: sync_files
-Version: 2.4
+Version: 2.4.1
 Release: 1
 BuildArchitectures: noarch
 Distribution: OSCAR
@@ -17,7 +17,7 @@ License: GPL
 Group: System
 BuildPreReq: rpm >= 3.0.5
 AutoReq: 0
-Requires: c3 >= 3.0
+Requires: c3 >= 5.0
 Requires: /usr/bin/md5sum
 Requires: /bin/sh 
 Requires: util-linux
@@ -73,6 +73,8 @@ mv /etc/crontab.preun /etc/crontab
 #==============================================================
 
 %changelog
+* Thu Jun 25 2009 Geoffroy Vallee <valleegr@ornl.gov> - 2.4.1-1
+- New upstream version.
 * Tue Oct 25 2006 Erich Focht
 - added filter for image specific templates
 - added options for filter-only

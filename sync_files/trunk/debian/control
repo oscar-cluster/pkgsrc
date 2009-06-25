@@ -7,7 +7,7 @@ Standards-Version: 3.7.2
 
 Package: sync-files
 Architecture: all
-Depends: c3, coreutils, libappconfig-perl, perl, util-linux (>=  2.12)
+Depends: c3 (>= 5.0), coreutils, libappconfig-perl, perl, util-linux (>=  2.12)
 Description: OSCARized File Synchronization System
  The OSCAR File Synchronization System keeps any list of files synchronized
  from the the central OSCAR server out to the OSCAR compute nodes and 

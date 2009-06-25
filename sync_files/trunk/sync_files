@@ -195,11 +195,13 @@ if (!$crononly && ($change||$force)) {
 		    my $dist = $distros[$i];
 		    my $src = $file;
 		    &filter_file($file, \$src, $img, $dist);
-		    !system("/usr/bin/scpush --image $img --writeimg $src $dstfile") or do {
-			$success = 0;
-			print "Can't push file $src to $dstfile for image $img! $!\n";
+            my $cmd = "/usr/bin/scpush --image $img --writeimg $src $dstfile";
+            print "Executing: $cmd" if $verbose;
+		    if (system($cmd)) {
+    			$success = 0;
+	    		print "Can't push file $src to $dstfile for image $img! $!\n";
+		        }
 		    }
-		}
 	    }
 	    #scp can be used as an alternative or as a substitute 
 	    if (scalar(@$scphost)) {    
@@ -423,19 +425,19 @@ sub getentfiles {
 # Detect whether all hosts targetted by c3 are up and responding
 
 sub c3_hosts_up {
-    my @c3out = `. /etc/profile.d/c3.sh; cexec -p echo ALIVE`;
+    my @c3out = `/usr/bin/cexec -p echo ALIVE`;
     my @alive = grep /ALIVE/,@c3out;
     if ($verbose) {
-	print "=== c3_hosts_up():\n";
-	print "c3out:\n";
-	print @c3out;
-	print "alive:\n";
-	print @alive;
+        print "=== c3_hosts_up():\n";
+        print "c3out:\n";
+        print @c3out;
+        print "alive:\n";
+        print @alive;
     }
     if (scalar(@c3out) == scalar(@alive)) {
-	return 1;
+        return 1;
     } else {
-	return 0;
+        return 0;
     }
 }
 
