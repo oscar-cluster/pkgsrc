@@ -17,7 +17,7 @@
 
 Summary:		CLI for libv3m.
 Name:      		v2m
-Version:   		0.9.7
+Version:   		1.0.0
 Release:   		1
 Vendor:			Oak Ridge National Laboratory
 Distribution:   CentOS 5
@@ -81,6 +81,8 @@ cp contrib/bin/* %{contribtarget}/bin
 %{contribdir}/bin/oscar_bootcd.iso
 
 %changelog
+* Fri Jun 26 2009 Geoffroy Vallee <valleegr@ornl.gov> - 1.0.0-1
+- Release of the first stable version.
 * Tue Jun 23 2009 Geoffroy Vallee <valleegr@ornl.gov> - 0.9.7-1
 - New upstream version.
 * Thu Oct 30 2007 Geoffroy Vallee <valleegr@ornl.gov> 
