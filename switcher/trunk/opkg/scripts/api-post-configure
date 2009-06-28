@@ -11,6 +11,7 @@
 #
 
 use strict;
+use Carp;
 
 #
 # In the post_configure step, it is possible that the server noncore

@@ -82,6 +82,11 @@ purpose.</description>
   </clientDeps>
   <apiDeps/>
   <changelog>
+    <versionEntry version="1.0.8-1">
+      <changelogEntry authorName="Geoffroy Vallee" date="2009-06-28T14:28:52-05:00">
+        <item>Update few scripts so they work with the new installation method (based on OPKGC).</item>
+      </changelogEntry>
+    </versionEntry>
     <versionEntry version="1.0.7-3">
       <changelogEntry authorName="Geoffroy Vallee" date="2009-03-04T13:59:09-05:00">
         <item>Fixed bogus dependencies for Debian.</item>

@@ -17,7 +17,7 @@ use Carp;
 # Import some modules just for switcher
 
 if (defined $ENV{OSCAR_PACKAGE_HOME} && -d $ENV{OSCAR_PACKAGE_HOME}) {
-    use lib "$ENV{OSCAR_PACKAGE_HOME}/switcher";
+    use lib "$ENV{OSCAR_PACKAGE_HOME}";
     require package_config;
 } else {
     use lib "/var/lib/oscar/packages/switcher";
@@ -35,7 +35,7 @@ use Data::Dumper;
 
 my $outfile;
 if (defined $ENV{OSCAR_PACKAGE_HOME} && -d $ENV{OSCAR_PACKAGE_HOME}) {
-    $outfile = "$ENV{OSCAR_PACKAGE_HOME}/switcher/configurator.html";
+    $outfile = "$ENV{OSCAR_PACKAGE_HOME}/configurator.html";
 } else {
     $outfile = "/var/lib/oscar/packages/switcher/configurator.html";
 }

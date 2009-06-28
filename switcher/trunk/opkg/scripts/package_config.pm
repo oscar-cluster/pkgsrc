@@ -24,7 +24,8 @@ BEGIN {
 }
 
 use strict;
-use vars qw(@EXPORT $VERSION);
+#use vars qw(@EXPORT $VERSION);
+use vars qw(@EXPORT);
 use base qw(Exporter);
 use Data::Dumper;
 use OSCAR::Database;
@@ -34,7 +35,7 @@ use warnings "all";
 use Carp;
 
 @EXPORT = qw(get);
-$VERSION = sprintf("%d.%02d", q$Revision$ =~ /(\d+)\.(\d+)/);
+#$VERSION = sprintf("%d.%02d", q$Revision$ =~ /(\d+)\.(\d+)/);
 
 
 sub get {

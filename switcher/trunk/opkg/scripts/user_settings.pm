@@ -10,6 +10,17 @@ package scripts::user_settings;
 # $Id$
 #
 
+BEGIN {
+    if (defined $ENV{OSCAR_HOME}) {
+        unshift @INC, "$ENV{OSCAR_HOME}/lib";
+    }
+    if (defined $ENV{OSCAR_PACKAGE_HOME}) {
+        unshift @INC, "$ENV{OSCAR_PACKAGE_HOME}";
+    } else {
+        unshift @INC, "/var/lib/oscar/packages/switcher/";
+    }
+}
+
 use strict;
 use vars qw(@EXPORT $VERSION);
 use base qw(Exporter);
@@ -22,9 +33,7 @@ $VERSION = sprintf("%d.%02d", q$Revision$ =~ /(\d+)\.(\d+)/);
 
 # Import some modules just for switcher
 
-use lib "$ENV{OSCAR_PACKAGE_HOME}";
-use scripts::package_config;
-use lib "$ENV{OSCAR_HOME}/lib";
+use package_config;
 use OSCAR::Configbox;
 
 
