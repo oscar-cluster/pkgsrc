@@ -56,7 +56,7 @@ sub get {
     # Read in all the <switcher> blocks from the package
     # configurations
     
-    my $pkg_config = scripts::package_config::get();
+    my $pkg_config = package_config::get();
 
     # Merge the two together.  Wherever there is no user-specified
     # setting from the configurator, make a default setting.
