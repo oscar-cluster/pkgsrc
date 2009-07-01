@@ -67,7 +67,7 @@ my $logger    = '/usr/bin/logger';
 my $getent    = 0;
 my $usec3     = 1;
 my $scphost;
-my $mydistro = distro_detect("dir", "/");
+my $image_only;
 
 my ($filter, $filter_image, $filter_distro, $filter_out);
 
@@ -84,6 +84,7 @@ sub usage () {
     print "  --image <img>   Image name for file filter option.\n";
     print "  --distro <dist> Distro name for file filter option.\n";
     print "  --out|-o <file> Output of filtered file.\n";
+    print "  --image-only    Perform actions on the image only, do not try to access remote nodes\n";
     print "\n";
     print "Look in /opt/sync_files/etc/sync_files.conf file\n";
     print "to set additional persistent options\n";
@@ -93,15 +94,17 @@ sub usage () {
 
 sub getconfig () {
     #Command line options
-    print "Now parsing command-line options\n" if ($verbose > 1);
-    &GetOptions('force' => sub { $force = 1; $crononly = 0; },
-        'verbose+' => \$verbose,
-        'help|?' => sub { usage; },
-        'filter=s' => \$filter,
-        'image=s'  => \$filter_image,
-        'distro=s' => \$filter_distro,
-        'out|o=s'  => \$filter_out,
-        'crononly' => sub { $crononly = 1; $force = 0; },
+    OSCAR::Logger::oscar_log_subsection "Now parsing command-line options";
+    &GetOptions(
+        'force'         => sub { $force = 1; $crononly = 0; },
+        'verbose+'      => \$verbose,
+        'help|?'        => sub { usage; },
+        'filter=s'      => \$filter,
+        'image=s'       => \$filter_image,
+        'distro=s'      => \$filter_distro,
+        'out|o=s'       => \$filter_out,
+        'crononly'      => sub { $crononly = 1; $force = 0; },
+        'image-only'    => \$image_only,
         );
 
     if ($filter) {
@@ -262,29 +265,36 @@ sub c3_hosts_up () {
     }
 }
 
-sub distro_detect {
+# Detect the distro for a given image or a given host.
+#
+# Input: type, the type of the entity for which we need to discover the distro,
+#              typically "dir" for an image, and "host" for a host.
+#        target, identifier of the target, typically image path or hostname.
+# Return: distro_id (following the OS_Detect framework, or undef if error.
+sub distro_detect ($$) {
     my ($type, $target) = @_;
-    my $distro = "unknown";
-    my %dkeys = ( "redhat-release" => "redhat",
-          "sl-release"     => "redhat",
-          "tao-release"    => "redhat",
-          "fedora-release" => "redhat",
-          "SuSE-release"   => "suse",
-          "mandriva-release" => "mdv",
-          );
-    # find distro
-    foreach my $k (keys %dkeys) {
-    if ($type eq "dir") {
-        if (-e "$target/etc/$k") {
-        $distro = $dkeys{$k};
-        last;
-        }
-    } elsif ($type eq "host") {
-        if (!system("ssh $target test -e /etc/$k")) {
-        $distro = $dkeys{$k};
-        last;
-        }
+    my $distro;
+
+    if ($type ne "dir" && $type ne "host") {
+        carp "ERROR: Unknown type ($type)";
+        return undef;
     }
+
+    # find distro
+    if ($type eq "dir") {
+        require OSCAR::OCA::OS_Detect;
+        my $os = OSCAR::OCA::OS_Detect::open ($target);
+        if (!defined $os) {
+            carp "ERROR: Impossible to detect the OS for $target";
+            return undef;
+        }
+        $distro = "$os->{distro}-$os->{distro_version}-$os->{arch}";
+    } elsif ($type eq "host" || $image_only == 0) {
+        my $distro = `ssh $target /usr/bin/distro-query --short`;
+        if (OSCAR::Utils::is_a_valid_string ($distro)) {
+            carp "ERROR: Impossible to detect the OS for $target";
+            return undef;
+        }
     }
     print "distro_detect: $distro\n" if ($verbose);
     return $distro;
@@ -302,6 +312,7 @@ sub filter_file ($$$$) {
     my ($src, $tgt, $image, $distro) = @_;
 
     my $base = basename($src);
+    my $mydistro = distro_detect("dir", "/");
 
     OSCAR::Logger::oscar_log_subsection "filter_file: $src $$tgt ".
         "dist=$distro, img=$image, mydistro=$mydistro";
@@ -472,13 +483,16 @@ if (!$crononly && ($change||$force)) {
     # Find all the possible image directories
     my @distros;
     my %distroh;
-    foreach my $i (list_image()) {
-	my $iname = $i->name;
-	my $idir = $i->location;
+    foreach my $i (SIS::NewDB::list_image()) {
+	my $iname = $i->{name};
+	my $idir = $i->{location};
 	if (-d $idir) {
 	    push @images, $iname;
 	    # detect and save also: distro
-	    my $d = distro_detect("dir",$idir);
+	    my $d = distro_detect("dir", $idir);
+        if (!defined $d) {
+            die "ERROR: Impossible to detect the distro ($idir)";
+        }
 	    push @distros, $d;
 	    $distroh{$d} = 1;
 	}
@@ -516,7 +530,7 @@ if (!$crononly && ($change||$force)) {
 	    
 	    #C3 is the default transport mechanism, since it tends to perform better
 	    #than scp
-	    if ( $usec3 ) {
+	    if ( $image_only == 0 && $usec3 ) {
 		print "Using c3 to sync $file to $dstfile\n" if ($verbose);
 		
 		# sync files to corresponding image-subcluster
@@ -527,19 +541,22 @@ if (!$crononly && ($change||$force)) {
 		    my $src = $file;
 		    &filter_file($file, \$src, $img, $dist);
             my $cmd = "/usr/bin/scpush --image $img --writeimg $src $dstfile";
-            print "Executing: $cmd" if $verbose;
+            OSCAR::Logger::oscar_log_subsection "Executing: $cmd";
 		    if (system($cmd)) {
-    			$success = 0;
-	    		print "Can't push file $src to $dstfile for image $img! $!\n";
+        			$success = 0;
+	        		die "Can't push file $src to $dstfile for image $img! $!";
 		        }
 		    }
 	    }
 	    #scp can be used as an alternative or as a substitute 
-	    if (scalar(@$scphost)) {    
+	    if ($image_only == 0 && scalar(@$scphost)) {    
 		foreach my $scphn (@$scphost) {
 		    
 		    # - determine distro of host
 		    my $dist = distro_detect("host", $scphn);
+            if (!defined $dist) {
+                die "ERROR: Impossible to detect the distro ($scphn)";
+            }
 		    my $img = "__noimage__";			# fake image name
 		    my $src = $file;
 
