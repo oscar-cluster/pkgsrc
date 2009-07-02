@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 # 'sync_files'
-# Also copies to SIS images
+# Also copies to OSCAR images
 # Supports getent (all PAM auth methods)
 # Supports use of SC3 tools or scp to sync files
 # Does not rewrite $crontab unless necessary
@@ -19,7 +19,9 @@
 #       - adding support for per image templates
 #       - cleaned up code
 #       - options for generating only target file
-# Geoffroy Vallee
+# Copyright (c) 2009    Oak Ridge National Laboratory
+#                       Geoffroy Vallee <valleegr@ornl.gov>
+#                       Al rights reserved
 #
 # $Id$
 #
