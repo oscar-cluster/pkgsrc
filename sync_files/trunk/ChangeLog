@@ -1,0 +1,7 @@
+2.4.2 (not yet released):
+- Switch to the new SIS database backend.
+- Add a image-only option.
+- Clean-up the code to make it easier to maintain.
+- Add templates for Debian based systems.
+- The distro detection is now based on OS_Detect.
+- Add a man page for sync-files.

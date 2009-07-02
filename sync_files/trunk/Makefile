@@ -2,22 +2,24 @@ DESTDIR=
 INSTALLDIR=$(DESTDIR)/opt/sync_files
 TMPDIR=/tmp
 PKG=sync-files
-VERSION=2.4.1
-DISTROS := 
-DISTROS += mdv
-DISTROS += redhat
-DISTROS += suse
+VERSION=2.4.2
+DISTROS := mdv rhel suse debian
+SCRIPTS := sync_files
+
+man:
+	install -d -m 0755 $(DESTDIR)/usr/local/man/man1/
+	for bin in ${SCRIPTS} ; do ( pod2man --section=1 $$bin $(DESTDIR)/usr/local/man/man1/$$bin.1 ) ; done
 
 all:
 
-install:
+install: man
 	mkdir -p $(INSTALLDIR)/bin
 	mkdir -p $(INSTALLDIR)/etc
 	mkdir -p $(INSTALLDIR)/tmp
 	cp -p sync_files $(INSTALLDIR)/bin/sync_files
 	cp -p sync_files.conf $(INSTALLDIR)/etc/sync_files.conf
 	cp -p confmgr $(INSTALLDIR)/bin/confmgr
-	@for distro in $(DISTROS); do \
+	for distro in ${DISTROS} ; do ( \
 		mkdir -p $(INSTALLDIR)/templates/distro/$$distro; \
 		cp templates/distro/$$distro/group \
 			$(INSTALLDIR)/templates/distro/$$distro; \
@@ -25,6 +27,9 @@ install:
 			$(INSTALLDIR)/templates/distro/$$distro; \
 		cp templates/distro/$$distro/shadow \
 			$(INSTALLDIR)/templates/distro/$$distro; \
+		cp templates/distro/$$distro/sudoers \
+			$(INSTALLDIR)/templates/distro/$$distro; \
+    ) ; \
 	done
 
 dist:

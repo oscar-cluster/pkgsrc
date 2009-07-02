@@ -5,7 +5,7 @@
 
 Summary: OSCARized File Synchronization System
 Name: sync_files
-Version: 2.4.1
+Version: 2.4.2
 Release: 1
 BuildArchitectures: noarch
 Distribution: OSCAR
@@ -73,7 +73,9 @@ mv /etc/crontab.preun /etc/crontab
 #==============================================================
 
 %changelog
-* Thu Jun 25 2009 Geoffroy Vallee <valleegr@ornl.gov> - 2.4.1-1
+* Thu Jul 02 2009 Geoffroy Vallee <valleegr@ornl.gov> 2.4.2-1
+- New upstream version.
+* Thu Jun 25 2009 Geoffroy Vallee <valleegr@ornl.gov> 2.4.1-1
 - New upstream version.
 * Tue Oct 25 2006 Erich Focht
 - added filter for image specific templates
