@@ -29,6 +29,8 @@ install: man
 			$(INSTALLDIR)/templates/distro/$$distro; \
 		cp templates/distro/$$distro/sudoers \
 			$(INSTALLDIR)/templates/distro/$$distro; \
+		cp templates/distro/$$distro/modprobe.conf \
+			$(INSTALLDIR)/templates/distro/$$distro; \
     ) ; \
 	done
 

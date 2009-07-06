@@ -30,7 +30,7 @@
 use strict;
 use Getopt::Long;
 use AppConfig::File;
-use File::Copy "cp";
+use File::Copy;
 use File::Basename;
 use lib "/usr/lib/systeminstaller";
 use SIS::NewDB;
@@ -38,6 +38,7 @@ use SIS::Image;
 use Carp;
 use warnings "all";
 
+use OSCAR::ImageMgt;
 use OSCAR::Logger;
 use OSCAR::Utils;
 
@@ -211,7 +212,7 @@ sub cronupdate () {
 # Return: 0 if success, -1 else.
 sub genchksums() {
     OSCAR::Logger::oscar_log_subsection "Generating $checksums";
-    $filelist = join(' ', @$syncfile);
+    $filelist = join(' ', @filestosync);
     !system("/usr/bin/md5sum $filelist > $checksums")
         or (carp "ERROR, could not generate $checksums! $!", return -1);
     return 0;
@@ -221,31 +222,49 @@ sub genchksums() {
 # /opt/sync_files/etc/shadow with the getent(1) command. So, if we're
 # using LDAP, NIS or NIS+, all networked users will be able to use
 # the cluster. Don't forget to set these files in the config file
+#
+# Return: 0 if success, -1 else.
 sub getentfiles () {
     if ( !-d "/opt/sync_files/tmp/etc" ) { 
-        system("mkdir /opt/sync_files/tmp/etc"); 
+        use File::Path;
+        my $path = "/opt/sync_files/tmp/etc";
+        File::Path::mkpath ("mkdir $path") 
+            or (carp "ERROR: Impossible to create $path", return -1);
     }
     our $passwd = "/opt/sync_files/tmp/etc/passwd";
     our $group = "/opt/sync_files/tmp/etc/group";
     our $shadow = "/opt/sync_files/tmp/etc/shadow";
+#    our $modprobe = "/opt/sync_files/tmp/etc/modprobe.conf";
     push (@$syncfile, $passwd);
     push (@$syncfile,  $group);
     push (@$syncfile, $shadow);
+#    push (@$syncfile, $modprobe);
 
     # We must sort the output of getent because it doesn't list users
     # in the same order everytime.
     my $sort = 'sort -n -k 3 -t:';
-    !system("getent passwd | $sort > $passwd")
-    or die "ERROR occured while creating $passwd : $!";
-    chmod 0644, "$passwd" or die "Couldn't chmod $passwd: $!";
-    !system("getent group  | $sort > $group")
-    or die "ERROR occured while creating $group : $!";
-    chmod 0644, "$group" or die "Couldn't chmod $group: $!";
+    if (system("getent passwd | $sort > $passwd")) {
+        carp "ERROR occured while creating $passwd : $!";
+        return -1;
+    }
+    chmod 0644, "$passwd"
+        or (carp "ERROR: Couldn't chmod $passwd: $!", return -1);
+    if (system("getent group  | $sort > $group")) {
+        carp "ERROR occured while creating $group : $!";
+        return -1;
+    }
+    chmod 0644, "$group" 
+        or (carp "ERROR: Couldn't chmod $group: $!", return -1);
     # If you're using pam_ldap, make sure that the current user is
     # able to read the userPassword attribute.
-    !system("getent shadow | sort > $shadow")
-    or die "ERROR occured while creating $shadow : $!";
-    chmod 0400, "$shadow" or die "Couldn't chmod $shadow: $!";
+    if (system("getent shadow | sort > $shadow")) {
+        carp "ERROR occured while creating $shadow : $!";
+        return -1;
+    }
+    chmod (0400, "$shadow")
+        or (carp "ERROR: Couldn't chmod $shadow: $!", return -1);
+
+    return 0;
 }
 
 # Detect whether all hosts targetted by c3 are up and responding
@@ -358,16 +377,65 @@ sub update_temp_passwd_like ($$$) {
     return 0;
 }
 
+sub find_real_file ($$$) {
+    my ($src, $dist, $img) = @_;
+    
+    my $file_name = basename ($src);
+    if (!-e $src) {
+        # If we have the path to a local file and if the file does not exist
+        # on the local system, we try to get the temp file first
+        OSCAR::Logger::oscar_log_subsection "Searching for a temp file ".
+            "($src)...";
+
+        if (!OSCAR::Utils::is_a_valid_string ($dist)) {
+            carp "ERROR: No valid distro";
+            return undef;
+        }
+
+        if (!OSCAR::ImageMgt::image_exists ($img)) {
+            carp "ERROR: Invalid image ($img)";
+            return undef;
+        }
+
+        $src = "/opt/sync_files/tmp/$file_name\_$dist";
+        if (!-e $src) {
+            # if a temp file does not exist, we try to use the template
+            $src = "$templates/distro/$dist/$file_name";
+        } else {
+            carp "ERROR: Impossible to find a candidate for $file_name ".
+                    "(dist: $dist, image: $img)";
+            return undef;
+        }
+    }
+
+    return $src;
+}
+
 sub update_temp_file ($$$$$) {
-    my ($my_src, $tgt, $distro, $image, $base) = @_;
+    my ($my_src, $tgt, $dist, $image, $base) = @_;
     my $tmpl_src;
+
+    if (!defined ($dist)) {
+        carp "ERROR: Invalid distro";
+        return -1;
+    }
+
+    $my_src = find_real_file ($my_src, $dist, $image);
+    if (!defined $my_src) {
+        carp "ERROR: impossible to find a file candidate";
+        return -1;
+    }
+
+    OSCAR::Logger::oscar_log_subsection ("Updating temp files (src=$my_src, ".
+        "target=$tgt, distro=$dist, image=$image, basename=$base)...");
+
 
     if (-f "$templates/image/$image/$base") {
         $tmpl_src = "$templates/image/$image/$base";
         $tgt .= "_img_$image";
-    } elsif (-f "$templates/distro/$distro/$base") {
-        $tmpl_src = "$templates/distro/$distro/$base";
-        $tgt .= "_$distro";
+    } elsif (-f "$templates/distro/$dist/$base") {
+        $tmpl_src = "$templates/distro/$dist/$base";
+        $tgt .= "_$dist";
     } else {
         carp "ERROR: Could not find template for file $base\n".
              "If this contains distro-specific lines, please create a ".
@@ -391,19 +459,32 @@ sub update_temp_file ($$$$$) {
         }
     } else {
         OSCAR::Logger::oscar_log_subsection "This is a normal file, just ".
-            "copying over";
-        require File::Copy;
-        File::Copy::copy ($my_src, $dest) 
-            or (carp "ERROR: Impossible to copy $my_src to $dest", return -1);
+            "copying over (src: $my_src, dest: $dest)";
+        if (! -f $my_src) {
+            carp "ERROR: $my_src does not exist";
+            return -1;
+        }
+        if (-f $dest) {
+            print "[INFO] File $dest already exists, exiting successfully.";
+            return 0;
+        }
+        File::Copy::copy ($my_src, $dest)
+             or (carp "ERROR: Impossible to copy $my_src to $dest\n",
+                 return -1);
     }
 
-    chmod $permission,$dest
-        or (carp "ERROR: Setting permission to file $out failed", return -1);
+    # If the file was already existing, we restore the access rights.
+    if (defined ($permission)) {
+        OSCAR::Logger::oscar_log_subsection "Updating rights of $dest";
+        chmod ($permission, $dest)
+            or (carp "ERROR: Setting permission to file $out failed\n",
+                return -1);
+    }
 
     return 0;
 }
 
-# Create a filtered version of the file by using the templates
+# Create a filtered version of the file by using the templates.
 #
 # Return: 0 if success, -1 else.
 sub filter_file ($$$$) {
@@ -412,7 +493,7 @@ sub filter_file ($$$$) {
     my $base = basename($src);
     my $mydistro = distro_detect("dir", "/");
 
-    OSCAR::Logger::oscar_log_subsection "filter_file: $src $tgt ".
+    OSCAR::Logger::oscar_log_subsection "filter_file: $src $tgt, ".
         "dist=$distro, img=$image, mydistro=$mydistro";
 
     if (update_temp_file ($src, $tgt, $distro, $image, $base)) {
@@ -423,7 +504,145 @@ sub filter_file ($$$$) {
     return 0;
 }
 
+# Update a given image, based on templates or local configuration files.
+#
+# Input: my_image, image name that we need to update, if undef, we update all
+#                  images.
+# Return: 0 if success, -1 else.
+sub update_images ($$$$) {
+    my ($file, $dstfile, $my_image, $distros_ref) = @_;
 
+    if (!defined $distros_ref) {
+        carp "ERROR: Invalid list of distros";
+        return -1;
+    }
+
+    OSCAR::Logger::oscar_log_subsection ("Start the image update (file: $file)...\n");
+    for (my $i=0; $i<=$#images; $i++) {
+        my $img = $images[$i];
+        my $dist = @$distros_ref[$i];
+        if (defined $my_image && $img ne $my_image) {
+            OSCAR::Logger::oscar_log_subsection "Skipping $img, only ".
+                "updating $my_image";
+            next;
+        }
+        OSCAR::Logger::oscar_log_subsection "Upgrading image $img ".
+            "($dist), file $file";
+        if( $file =~ /\/opt\/sync_files\/tmp(.*)/ ) {
+            # Remove the path
+            $file = $1;
+        } else {
+            $dstfile = $file;
+        }
+        my $src = $file;
+        if (filter_file($file, $src, $img, $dist)) {
+            carp "ERROR: Impossible to fitler the files";
+            return -1;
+        }
+        require File::Copy;
+        my $dest = "$directory/$img/$dstfile";
+        $src = find_real_file ($src, $dist, $img);
+        OSCAR::Logger::oscar_log_subsection ("[INFO] Copying $src to $dest");
+        File::Copy::copy ($src, $dest) 
+            or (carp "ERROR: Impossible to copy $src to $dstfile (image $img)",
+                return -1);
+    }
+
+    return 0;
+}
+
+sub update_file ($$) {
+    my ($file, $distref) = @_;
+    my $dstfile;
+    my $success;
+
+    if (!defined $distref || ref($distref) ne "ARRAY") {
+        carp "ERROR: Invalid list of distros";
+        return -1;
+    }
+
+    my $cmd = "$logger -p syslog.info sync_files found an updated $file ".
+              "and is pushing it to the clients";
+    OSCAR::Logger::oscar_log_subsection "Executing: $cmd";
+    if (system($cmd)) {
+        die "ERROR: Impossible to execute $cmd";
+    }
+
+    if( $file =~ /\/opt\/sync_files\/tmp(.*)/ ) {
+        # Remove the path
+        $file =~ /\/opt\/sync_files\/tmp\/(.*)/;
+        $dstfile = '/' . $1;
+    } else {
+        $dstfile = $file;
+    }
+    
+    #C3 is the default transport mechanism, since it tends to perform better
+    #than scp
+    if ( $image_only == 0 && $usec3 ) {
+        print "Using c3 to sync $file to $dstfile\n" if ($verbose);
+    
+        # sync files to corresponding image-subcluster
+        
+        for (my $i=0; $i<=$#images; $i++) {
+            my $img = $images[$i];
+            my $dist = @$distref[$i];
+            my $src = $file;
+            if (defined $filter_image && $img ne $filter_image) {
+                OSCAR::Logger::oscar_log_subsection "Skipping $img, only ".
+                    "updating $filter_image";
+                next;
+            }
+            if (!defined $dist) {
+                die "ERROR: Invalid distro";
+            }
+            if (filter_file($file, $src, $img, $dist)) {
+                die "ERROR: Impossible to apply the file filter";
+            }
+            my $cmd = "/usr/bin/scpush --image $img --writeimg $src $dstfile";
+            OSCAR::Logger::oscar_log_subsection "Executing: $cmd";
+            if (system($cmd)) {
+                    $success = 0;
+                    die "ERROR: Can't push file $src to $dstfile for image $img! $!";
+            }
+        }
+    } else {
+        OSCAR::Logger::oscar_log_subsection "We only update images ";
+        if (update_images ($file, $dstfile, $filter_image, $distref)) {
+            die "ERROR: Impossible to update image(s)";
+        }
+    }
+    #scp can be used as an alternative or as a substitute 
+    if ($image_only == 0 && scalar(@$scphost)) {    
+        foreach my $scphn (@$scphost) {
+            
+            # - determine distro of host
+            my $dist = distro_detect("host", $scphn);
+            if (!defined $dist) {
+                die "ERROR: Impossible to detect the distro ($scphn)";
+            }
+            my $img = "__noimage__";            # fake image name
+            my $src = $file;
+
+            if (filter_file($file, \$src, $img, $dist)) {
+                die "ERROR: Impossible to apply filters";
+            }
+            
+            if ($verbose) { 
+                print "Using scp to sync $src to $scphn:$dstfile\n";
+            }
+            $cmd = "scp -p $src $scphn:$dstfile";
+            if (system($cmd)) {
+                $success = 0;
+                carp "ERROR: Can't scp file $src to $dstfile! $! ($cmd)\n";
+            }
+        }
+    }
+    if ( !$usec3 && !scalar(@$scphost) ) {
+        warn "No transport defined! Only image will be updated.\n";
+    }
+
+    return 0;
+}
 
 ##########################################################
 #               Main program starts here                 #
@@ -437,8 +656,14 @@ if ($verbose) {
 
 OSCAR::Logger::oscar_log_section ("[sync_file]");
 
+if (defined ($filter_image) && !OSCAR::ImageMgt::image_exists ($filter_image)) {
+    die "ERROR: Image $filter_image not defined.";
+}
+
 if ($getent) {
-    getentfiles ();
+    if (getentfiles ()) {
+        die "ERROR: Impossible to run getentfiles";
+    }
 }
 
 # Make sure files exist before trying to checksum or sync them
@@ -452,18 +677,19 @@ foreach my $file (@$syncfile) {
 }
 
 if (scalar (@missing_files) > 0) {
-    print "[WARNING] The following files do not exist, ".
-          "we cannot synchronize them!\n";
+    print "[INFO] The following files do not exist, we cannot synchronize ".
+          "them, we will see later if we can use a distro template.\n";
     OSCAR::Utils::print_array (@missing_files);
 }
 
-OSCAR::Logger::oscar_log_subsection ("[INFO] filestosync: ".
+OSCAR::Logger::oscar_log_subsection ("[INFO] initial list of files to sync: ".
     join(", ",@filestosync));
 
 if ($filter) {
     #
     # only apply to files which would be synced anyway
     #
+    OSCAR::Logger::oscar_log_subsection ("Filter: $filter\n");
     my @gresult = grep /($filter)$/, @filestosync;
     if (scalar(@gresult) != 1) {
         die "ERROR: Filter matched 0 or more than one files!\n";
@@ -477,6 +703,9 @@ if ($filter) {
     my $err = system("mv $tgt $filter_out");
     exit $err;
 }
+
+OSCAR::Logger::oscar_log_subsection ("[INFO] List of files to sync after ".
+    "filtering: ".join(", ",@filestosync));
 
 my @chkout;
 if (! -r $checksums) {
@@ -494,7 +723,9 @@ if (! -r $checksums) {
 if (!$force) {
     # If some checksum fails, then we have changes
     # Force english output
-    open(CMD, "export LC_ALL=C; /usr/bin/md5sum -c $checksums 2>/dev/null | grep FAILED | cut -d : -f 1 |");
+    my $cmd = "export LC_ALL=C; /usr/bin/md5sum -c $checksums 2>/dev/null ".
+              "| grep FAILED |cut -d : -f 1 |";
+    open(CMD, $cmd) or die "ERROR: Impossible to execute $cmd";
     @chkout = <CMD>;
     close CMD;
 }
@@ -516,18 +747,18 @@ if (!$crononly && ($change||$force)) {
     my @distros;
     my %distroh;
     foreach my $i (SIS::NewDB::list_image()) {
-	my $iname = $i->{name};
-	my $idir = $i->{location};
-	if (-d $idir) {
-	    push @images, $iname;
-	    # detect and save also: distro
-	    my $d = distro_detect("dir", $idir);
-        if (!defined $d) {
-            die "ERROR: Impossible to detect the distro ($idir)";
+        my $iname = $i->{name};
+        my $idir = $i->{location};
+        if (-d $idir) {
+            push @images, $iname;
+            # detect and save also: distro
+            my $d = distro_detect("dir", $idir);
+            if (!defined $d) {
+                die "ERROR: Impossible to detect the distro ($idir)";
+            }
+            push @distros, $d;
+            $distroh{$d} = 1;
         }
-	    push @distros, $d;
-	    $distroh{$d} = 1;
-	}
     }
     if ( $image_only == 0 && $usec3 ) {
         my $allup = c3_hosts_up();
@@ -538,116 +769,38 @@ if (!$crononly && ($change||$force)) {
         }
     }
 
-
+    OSCAR::Logger::oscar_log_subsection "Updating files: "
+        .join (", ", @filestosync);
     foreach my $file (@filestosync) {
-	$want_update = 0;
-	if ($force) {
-	    $want_update = 1;
-	} else {
-	    if (scalar(grep /^($file)$/, @chkout)) {
-		$want_update = 1;
-		$change++;
-	    }
-	} #end if $force
-	if ($want_update) {
-        my $cmd = "$logger -p syslog.info sync_files found an updated $file ".
-                  "and is pushing it to the clients";
-	    OSCAR::Logger::oscar_log_subsection "Executing: $cmd";
-	    if (system($cmd)) {
-            die "ERROR: Impossible to execute $cmd";
-        }
-	    if( $file =~ /\/opt\/sync_files\/tmp(.*)/ ) {
-            # Remove the path
-            $file =~ /\/opt\/sync_files\/tmp\/(.*)/;
-            $dstfile = '/' . $1;
-	    } else {
-            $dstfile = $file;
-	    }
-	    
-	    #C3 is the default transport mechanism, since it tends to perform better
-	    #than scp
-	    if ( $image_only == 0 && $usec3 ) {
-		print "Using c3 to sync $file to $dstfile\n" if ($verbose);
-		
-		# sync files to corresponding image-subcluster
-		
-		for (my $i=0; $i<=$#images; $i++) {
-		    my $img = $images[$i];
-		    my $dist = $distros[$i];
-		    my $src = $file;
-            if (defined $filter_image && $img ne $filter_image) {
-                OSCAR::Logger::oscar_log_subsection "Skipping $img, only ".
-                    "updating $filter_image";
-                next;
+        $want_update = 0;
+        if ($force) {
+            $want_update = 1;
+        } else {
+            if (scalar(grep /^($file)$/, @chkout)) {
+            $want_update = 1;
+            $change++;
             }
-		    if (filter_file($file, $src, $img, $dist)) {
-                die "ERROR: Impossible to apply the file filter";
+        } #end if $force
+        if ($want_update) {
+            if (update_file ($file, \@distros)) {
+                die "ERROR: Impossible to update file $file";
             }
-            my $cmd = "/usr/bin/scpush --image $img --writeimg $src $dstfile";
-            OSCAR::Logger::oscar_log_subsection "Executing: $cmd";
-		    if (system($cmd)) {
-        			$success = 0;
-	        		die "Can't push file $src to $dstfile for image $img! $!";
-		        }
-		    }
-	    } else {
-            OSCAR::Logger::oscar_log_subsection "We only update images ";
-            for (my $i=0; $i<=$#images; $i++) {
-                my $img = $images[$i];
-                my $dist = $distros[$i];
-                if (defined $filter_image && $img ne $filter_image) {
-                    OSCAR::Logger::oscar_log_subsection "Skipping $img, only ".
-                        "updating $filter_image";
-                    next;
-                }
-                OSCAR::Logger::oscar_log_subsection "Upgrading image $img ".
-                    "($dist), file $file";
-                if( $file =~ /\/opt\/sync_files\/tmp(.*)/ ) {
-                    # Remove the path
-                    $file = $1;
-                } else {
-                    $dstfile = $file;
-                }
-                my $src = $file;
-                if (filter_file($file, $src, $img, $dist)) {
-                    die "ERROR: Impossible to fitler the files";
-                }
-                require File::Copy;
-                my $dest = "$directory/$img/$dstfile";
-                OSCAR::Logger::oscar_log_subsection ("[INFO] Copying $src to $dest");
-                File::Copy::copy ($src, $dest) 
-                    or die "ERROR: Impossible to copy $src to $dstfile for image $img";
-            }
-        }
-	    #scp can be used as an alternative or as a substitute 
-	    if ($image_only == 0 && scalar(@$scphost)) {    
-		foreach my $scphn (@$scphost) {
-		    
-		    # - determine distro of host
-		    my $dist = distro_detect("host", $scphn);
-            if (!defined $dist) {
-                die "ERROR: Impossible to detect the distro ($scphn)";
-            }
-		    my $img = "__noimage__";			# fake image name
-		    my $src = $file;
-
-		    &filter_file($file, \$src, $img, $dist);
-		    
-		    if ($verbose) { 
-			print "Using scp to sync $src to $scphn:$dstfile\n";
-		    }
-		    
-		    !system("scp -p $src $scphn:$dstfile") or do {
-			$success = 0;
-			print "Can't scp file $src to $dstfile! $!\n";
-		    }
-		}
-	    }
-	    if ( !$usec3 && !scalar(@$scphost) ) {
-		warn "No transport defined! Only image will be updated.\n";
-	    }
-	} #end if $want_update
+        } #end if $want_update
     } #end foreach in @filestosync
+
+    # One may also want to update its own files, using a template or the file on
+    # the local machine (usefull to work with an image). Therefore, we typically
+    # try to see if we can do something with the files tagged as "missing"
+    OSCAR::Logger::oscar_log_subsection "Updating files: "
+        .join (", ", @missing_files);
+    foreach my $file (@missing_files) {
+        if ($want_update) {
+            if (update_file ($file, \@distros)) {
+                die "ERROR: Impossible to update file $file";
+            }
+        } #end if $want_update
+    } #end foreach in @filestosync
+
 
     # If there were changes, we store the new checksums
     if ( $change >= 1 && $crononly == 0 && $success) {
