@@ -5,3 +5,4 @@
 - Add templates for Debian based systems.
 - The distro detection is now based on OS_Detect.
 - Add a man page for sync-files.
+- Add a template for modprobe.conf.
