@@ -4,14 +4,14 @@
 #==============================================================
 
 Summary: OSCARized File Synchronization System
-Name: sync_files
+Name: sync-files
 Version: 2.5.0
 Release: 1
 BuildArchitectures: noarch
 Distribution: OSCAR
 Packager: Erich Focht <efocht@hpce.nec.com>
 URL: http://oscar.sourceforge.net/
-Source0: sync_files.tar.gz
+Source: sync-files-%{version}.tar.gz
 
 License: GPL
 Group: System
@@ -28,7 +28,11 @@ Requires: perl(Getopt::Long)
 
 Obsoletes: sync-users-oscar
 
-BuildRoot: /var/tmp/%{name}-%{version}-buildroot
+Prefix:	   %{install_dir}
+#BuildRoot: $RPM_BUILD_ROOT
+BuildArch: noarch
+AutoReqProv:	no
+
 #==============================================================
 
 %description
@@ -42,17 +46,14 @@ forced update (/opt/sync_files/bin/sync_files --force).
 #==============================================================
 
 %prep
+#%setup -n %{name}-%{version}
+%setup
 
-%setup -n sync_files
+%build
+make install 
+#DESTDIR=$RPM_BUILD_ROOT
 
 %install
-mkdir -p $RPM_BUILD_ROOT%{install_dir}/bin
-mkdir -p $RPM_BUILD_ROOT%{install_dir}/etc
-mkdir -p $RPM_BUILD_ROOT%{install_dir}/tmp
-cp -p sync_files $RPM_BUILD_ROOT%{install_dir}/bin/sync_files
-cp -p sync_files.conf $RPM_BUILD_ROOT%{install_dir}/etc/sync_files.conf
-cp -p confmgr $RPM_BUILD_ROOT%{install_dir}/bin/confmgr
-cp -pr templates $RPM_BUILD_ROOT%{install_dir}
 
 #==============================================================
 
@@ -63,12 +64,12 @@ mv /etc/crontab.preun /etc/crontab
 #==============================================================
 
 %files
-
+%defattr(-,root,root)
 %{install_dir}/bin/sync_files
 %{install_dir}/bin/confmgr
 %config %{install_dir}/etc/sync_files.conf
 %dir %{install_dir}/tmp
-%{install_dir}/templates
+%{install_dir}/templates/*
 
 #==============================================================
 

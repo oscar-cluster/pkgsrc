@@ -1,5 +1,7 @@
 DESTDIR=
+PKGDEST=
 INSTALLDIR=$(DESTDIR)/opt/sync_files
+SOURCEDIR=/usr/src/redhat/SOURCES
 TMPDIR=/tmp
 PKG=sync-files
 VERSION=2.5.0
@@ -38,9 +40,11 @@ dist:
 	rm -rf $(TMPDIR)/$(PKG)-$(VERSION)
 	mkdir -p $(TMPDIR)/$(PKG)-$(VERSION)
 	cp -rf * $(TMPDIR)/$(PKG)-$(VERSION)
-	rm -rf `find $(TMPDIR)/$(PKG)-$(VERSION) .svn`
+	ls -al $(TMPDIR)/$(PKG)-$(VERSION)
+	cd $(TMPDIR) && rm -rf `find $(TMPDIR)/$(PKG)-$(VERSION) -name .svn`
 	cd $(TMPDIR) && tar czf $(PKG)-$(VERSION).tar.gz $(PKG)-$(VERSION)
 	cp $(TMPDIR)/$(PKG)-$(VERSION).tar.gz .
+	rm -rf $(TMPDIR)/$(PKG)-$(VERSION)
 
 uninstall:
 	rm -f $(INSTALLDIR)/bin/sync_files
@@ -53,10 +57,8 @@ clean:
 	rm -f ./*tar.gz
 
 rpm: dist
-	sed -e "s/PERLLIBPATH/$(SEDLIBDIR)/" < $(PKG).spec.in \
-        > $(PKG).spec
 	cp $(PKG)-$(VERSION).tar.gz $(SOURCEDIR)
-	rpmbuild -bb ./$(PKG).spec
+	rpmbuild -bb ./sync_files.spec
 	@if [ -n "$(PKGDEST)" ]; then \
         mv `rpm --eval '%{_topdir}'`/RPMS/noarch/$(PKG)-*.noarch.rpm $(PKGDEST); \
     fi
