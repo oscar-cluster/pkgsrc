@@ -34,7 +34,7 @@ build-stamp: configure-stamp
 	dh_testdir
 
 	# Add here commands to compile the package.
-	$(MAKE)
+#	$(MAKE)
 	#docbook-to-man debian/sync-files.sgml > sync-files.1
 
 	touch $@
@@ -56,7 +56,7 @@ install: build
 	dh_installdirs
 
 	# Add here commands to install the package into debian/sync-files.
-	$(MAKE) DESTDIR=$(CURDIR)/debian/sync-files install
+	$(MAKE) install DESTDIR=$(CURDIR)/debian/sync-files
 
 
 # Build architecture-independent files here.
