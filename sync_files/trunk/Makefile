@@ -2,7 +2,7 @@ DESTDIR=
 INSTALLDIR=$(DESTDIR)/opt/sync_files
 TMPDIR=/tmp
 PKG=sync-files
-VERSION=2.4.2
+VERSION=2.5.0
 DISTROS := mdv rhel suse debian
 SCRIPTS := sync_files
 
@@ -42,11 +42,14 @@ dist:
 	cd $(TMPDIR) && tar czf $(PKG)-$(VERSION).tar.gz $(PKG)-$(VERSION)
 	cp $(TMPDIR)/$(PKG)-$(VERSION).tar.gz .
 
-clean:
+uninstall:
 	rm -f $(INSTALLDIR)/bin/sync_files
 	rm -f $(INSTALLDIR)/etc/sync_files.conf
 	rm -f $(INSTALLDIR)/bin/confmgr
 	rm -f $(INSTALLDIR)/templates
+
+clean:
+	rm -f *~
 	rm -f ./*tar.gz
 
 rpm: dist

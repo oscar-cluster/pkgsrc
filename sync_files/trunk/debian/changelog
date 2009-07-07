@@ -1,8 +1,8 @@
-sync-files (2.4.2-1) jaunty; urgency=low
+sync-files (2.5.0-1) jaunty; urgency=low
 
   * New upstream version.
 
- -- Geoffroy Vallee <valleegr@ornl.gov>  Thu, 02 Jul 2009 01:17:17 -0400
+ -- Geoffroy Vallee <valleegr@ornl.gov>  Thu, 06 Jul 2009 01:17:17 -0400
 
 sync-files (2.4.1~svn20090625-0gv1) hardy; urgency=low
 
