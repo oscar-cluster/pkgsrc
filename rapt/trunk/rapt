@@ -1192,8 +1192,6 @@ sub detect_codename {
 sub detect_codename_repo ($) {
     my ($repo) = @_;
 
-    print "Detecting repo(s) codename(s)\n";
-
     # the codename of a debian-alike repo is the word after the URL
     my ($url,$codename,$dummy) = split(/\+/,$repo);
 
@@ -1224,7 +1222,6 @@ sub detect_codename_repo ($) {
 #       }
     }
 
-    print STDERR "!!!!!!!! codename: $codename\n";
     return $codename;
 }
 
