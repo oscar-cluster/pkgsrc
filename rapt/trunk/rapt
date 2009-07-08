@@ -94,8 +94,20 @@ $verbose = "$ENV{RAPT_VERBOSE}" if ($ENV{RAPT_VERBOSE});
 # any explicit repos (--repo option).
 my $default_repos;
 if (defined $distro) {
+    require OSCAR::PackagePath;
+    my @tmp;
     $default_repos = get_default_repos($distro);
-    @repos = split (" ", $default_repos);
+    @tmp = split (" ", $default_repos);
+    foreach my $r (@tmp) {
+        my @tmp2 = split (",", $r);
+        foreach my $t (@tmp2) {
+            if (OSCAR::PackagePath::repo_local ($t) == 0
+                || (OSCAR::PackagePath::repo_local ($t) == 1
+                    && OSCAR::PackagePath::repo_empty ($t) == 0)) {
+                unshift (@repos, $t);
+            }
+        }
+    }
 }
 
 help() if (!scalar(@repos));
@@ -891,7 +903,7 @@ sub new_aptlist {
         my @data = split(/\+/,$repo);
     	# if there's only one word, add codename info
     	if (scalar(@data) == 1) {
-	        my $codename = &detect_codename();
+	        my $codename = detect_codename_repo($repo);
 	        push @data, ($codename, ".");
     	} elsif (scalar(@data) == 2) {
 	        push @data, ".";
@@ -1153,7 +1165,7 @@ sub detect_codename {
 
     # the environment variable RAPT_DISTRO_CODENAME overrides detections
     if ($ENV{RAPT_DISTRO_CODENAME}) {
-	return $ENV{RAPT_DISTRO_CODENAME};
+        return $ENV{RAPT_DISTRO_CODENAME};
     }
 
     # what are we targetting?
@@ -1188,14 +1200,14 @@ sub detect_codename_repo ($) {
     # for local repositories try some more tricks
     if (!$codename && (($url =~ /^file:(\S+)$/) || -d $url)) {
         my $path = $1;
-        my @cnames = glob("$path/dists/*");
-        if (scalar(@cnames) == 1) {
-            $codename = basename($cnames[0]);
-        } elsif (scalar(@cnames) > 1) {
-            print "Pool seems to contain multiple codenames!\n ".
-            join(", ",@cnames)."\n";
-            print "Cannot identify codename!\n";
-        } else {
+#        my @cnames = glob("$path/dists/*");
+#        if (scalar(@cnames) == 1) {
+#            $codename = basename($cnames[0]);
+#        } elsif (scalar(@cnames) > 1) {
+#            print "Pool seems to contain multiple codenames!\n ".
+#            join(", ",@cnames)."\n";
+#            print "Cannot identify codename!\n";
+#        } else {
             my $distro_id = File::Basename::basename ($url);
             chomp ($distro_id);
             require OSCAR::PackagePath;
@@ -1209,9 +1221,10 @@ sub detect_codename_repo ($) {
                                                           distro_version=>$ver,
                                                           arch=>$arch});
             $codename = $os->{'codename'};
-        }
+#       }
     }
 
+    print STDERR "!!!!!!!! codename: $codename\n";
     return $codename;
 }
 

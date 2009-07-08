@@ -1,5 +1,8 @@
 rapt-2.8.6 (not yet released):
 - Remove debugging messages.
+- Fix a problem when creating the list of repositories, previously the array
+was not correctly created when a config file from /tftpboot included several
+repositories.
 
 rapt-2.8.5:
 - [Ticket #538] The distro codename detection is now based on OS_Detect.
