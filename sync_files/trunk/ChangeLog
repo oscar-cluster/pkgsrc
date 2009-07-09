@@ -1,3 +1,8 @@
+2.5.1:
+- Automatically create a log file.
+- Fix the creation of the /opt/sunc-files/tmp/etc directory.
+- Better execption handling.
+
 2.5.0:
 - Switch to the new SIS database backend.
 - Add a image-only option.
@@ -7,4 +12,3 @@
 - Add a man page for sync-files.
 - Add a template for modprobe.conf.
 - Add a uninstall target to the Makefile.
-- Automatically create a log file.
