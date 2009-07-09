@@ -7,3 +7,4 @@
 - Add a man page for sync-files.
 - Add a template for modprobe.conf.
 - Add a uninstall target to the Makefile.
+- Automatically create a log file.
