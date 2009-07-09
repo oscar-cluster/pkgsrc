@@ -4,7 +4,6 @@ INSTALLDIR=$(DESTDIR)/opt/sync_files
 SOURCEDIR=/usr/src/redhat/SOURCES
 TMPDIR=/tmp
 PKG=sync-files
-VERSION=2.5.0
 DISTROS := mdv rhel suse debian
 SCRIPTS := sync_files
 
@@ -37,14 +36,14 @@ install: man
 	done
 
 dist:
-	rm -rf $(TMPDIR)/$(PKG)-$(VERSION)
-	mkdir -p $(TMPDIR)/$(PKG)-$(VERSION)
-	cp -rf * $(TMPDIR)/$(PKG)-$(VERSION)
-	ls -al $(TMPDIR)/$(PKG)-$(VERSION)
-	cd $(TMPDIR) && rm -rf `find $(TMPDIR)/$(PKG)-$(VERSION) -name .svn`
-	cd $(TMPDIR) && tar czf $(PKG)-$(VERSION).tar.gz $(PKG)-$(VERSION)
-	cp $(TMPDIR)/$(PKG)-$(VERSION).tar.gz .
-	rm -rf $(TMPDIR)/$(PKG)-$(VERSION)
+	rm -rf $(TMPDIR)/$(PKG)
+	mkdir -p $(TMPDIR)/$(PKG)
+	cp -rf * $(TMPDIR)/$(PKG)
+	ls -al $(TMPDIR)/$(PKG)
+	cd $(TMPDIR) && rm -rf `find $(TMPDIR)/$(PKG) -name .svn`
+	cd $(TMPDIR) && tar czf $(PKG).tar.gz $(PKG)
+	cp $(TMPDIR)/$(PKG).tar.gz .
+	rm -rf $(TMPDIR)/$(PKG)
 
 uninstall:
 	rm -f $(INSTALLDIR)/bin/sync_files
@@ -57,7 +56,7 @@ clean:
 	rm -f ./*tar.gz
 
 rpm: dist
-	cp $(PKG)-$(VERSION).tar.gz $(SOURCEDIR)
+	cp $(PKG).tar.gz $(SOURCEDIR)
 	rpmbuild -bb ./sync_files.spec
 	@if [ -n "$(PKGDEST)" ]; then \
         mv `rpm --eval '%{_topdir}'`/RPMS/noarch/$(PKG)-*.noarch.rpm $(PKGDEST); \

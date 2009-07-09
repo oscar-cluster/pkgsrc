@@ -5,13 +5,13 @@
 
 Summary: OSCARized File Synchronization System
 Name: sync-files
-Version: 2.5.0
+Version: 2.5.1
 Release: 1
 BuildArchitectures: noarch
 Distribution: OSCAR
 Packager: Erich Focht <efocht@hpce.nec.com>
 URL: http://oscar.sourceforge.net/
-Source: sync-files-%{version}.tar.gz
+Source: sync-files.tar.gz
 
 License: GPL
 Group: System
@@ -46,8 +46,7 @@ forced update (/opt/sync_files/bin/sync_files --force).
 #==============================================================
 
 %prep
-#%setup -n %{name}-%{version}
-%setup
+%setup -n %{name}
 
 %build
 make install 
@@ -74,6 +73,8 @@ mv /etc/crontab.preun /etc/crontab
 #==============================================================
 
 %changelog
+* Thu Jul 09 2009 Geoffroy Vallee <valleegr@ornl.gov> 2.5.1-1
+- New upstream version.
 * Thu Jul 06 2009 Geoffroy Vallee <valleegr@ornl.gov> 2.5.0-1
 - New upstream version.
 * Thu Jun 25 2009 Geoffroy Vallee <valleegr@ornl.gov> 2.4.1-1
