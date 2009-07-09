@@ -1,3 +1,7 @@
+2.5.2:
+- Correctly deal with the creation of directories both in the images and for
+the templates.
+
 2.5.1:
 - Automatically create a log file.
 - Fix the creation of the /opt/sunc-files/tmp/etc directory.

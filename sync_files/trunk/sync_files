@@ -433,12 +433,18 @@ sub update_temp_file ($$$$$) {
     OSCAR::Logger::oscar_log_subsection ("Updating temp files (src=$my_src, ".
         "target=$tgt, distro=$dist, image=$image, basename=$base)...");
 
-
+    # We try to find a template we could use to synchronize the files.
+    # First we look in the sync_files templates directory (first in the "image"
+    # directory, then in the "distro" directory). If we cannot find a template,
+    # we just use the file on the system as template (if it exists of course).
     if (-f "$templates/image/$image/$base") {
         $tmpl_src = "$templates/image/$image/$base";
         $tgt .= "_img_$image";
     } elsif (-f "$templates/distro/$dist/$base") {
         $tmpl_src = "$templates/distro/$dist/$base";
+        $tgt .= "_$dist";
+    } elsif (-f "$my_src") {
+        $tmpl_src = "$my_src";
         $tgt .= "_$dist";
     } else {
         carp "ERROR: Could not find template for file $base\n".
@@ -471,6 +477,13 @@ sub update_temp_file ($$$$$) {
         if (-f $dest) {
             print "[INFO] File $dest already exists, exiting successfully.";
             return 0;
+        } else {
+            my $dir = File::Basename::dirname ($dest);
+            if (! -d $dir) {
+                File::Path::mkpath ($dir) 
+                    or (carp "ERROR: Impossible to create $dir",
+                        return -1);
+            }
         }
         File::Copy::copy ($my_src, $dest)
              or (carp "ERROR: Impossible to copy $my_src to $dest\n",
@@ -547,6 +560,11 @@ sub update_images ($$$$) {
         my $dest = "$directory/$img/$dstfile";
         $src = find_real_file ($src, $dist, $img);
         OSCAR::Logger::oscar_log_subsection ("[INFO] Copying $src to $dest");
+        my $dir = File::Basename::dirname ($dest);
+        if (!-d $dir) {
+            File::Path::mkpath ($dir)
+                or (carp "ERROR: Impossible to create $dir", return -1);
+        }
         File::Copy::copy ($src, $dest) 
             or (carp "ERROR: Impossible to copy $src to $dstfile (image $img)",
                 return -1);
