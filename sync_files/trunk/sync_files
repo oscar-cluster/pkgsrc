@@ -225,10 +225,11 @@ sub genchksums() {
 #
 # Return: 0 if success, -1 else.
 sub getentfiles () {
-    if ( !-d "/opt/sync_files/tmp/etc" ) { 
+    if ( ! -d "/opt/sync_files/tmp/etc" ) { 
         use File::Path;
         my $path = "/opt/sync_files/tmp/etc";
-        File::Path::mkpath ("mkdir $path") 
+        OSCAR::Logger::oscar_log_subsection ("Creating $path...");
+        File::Path::mkpath ($path) 
             or (carp "ERROR: Impossible to create $path", return -1);
     }
     our $passwd = "/opt/sync_files/tmp/etc/passwd";
@@ -243,22 +244,25 @@ sub getentfiles () {
     # We must sort the output of getent because it doesn't list users
     # in the same order everytime.
     my $sort = 'sort -n -k 3 -t:';
-    if (system("getent passwd | $sort > $passwd")) {
-        carp "ERROR occured while creating $passwd : $!";
+    my $cmd = "getent passwd | $sort > $passwd";
+    if (system($cmd)) {
+        carp "ERROR occured while creating $passwd ($cmd): $!";
         return -1;
     }
-    chmod 0644, "$passwd"
+    chmod (0644, "$passwd")
         or (carp "ERROR: Couldn't chmod $passwd: $!", return -1);
-    if (system("getent group  | $sort > $group")) {
-        carp "ERROR occured while creating $group : $!";
+    $cmd = "getent group  | $sort > $group";
+    if (system($cmd)) {
+        carp "ERROR occured while creating $group ($cmd): $!";
         return -1;
     }
-    chmod 0644, "$group" 
+    chmod (0644, "$group") 
         or (carp "ERROR: Couldn't chmod $group: $!", return -1);
     # If you're using pam_ldap, make sure that the current user is
     # able to read the userPassword attribute.
-    if (system("getent shadow | sort > $shadow")) {
-        carp "ERROR occured while creating $shadow : $!";
+    $cmd = "getent shadow | sort > $shadow";
+    if (system($cmd)) {
+        carp "ERROR occured while creating $shadow ($cmd): $!";
         return -1;
     }
     chmod (0400, "$shadow")
@@ -648,10 +652,16 @@ sub update_file ($$) {
 #               Main program starts here                 #
 ##########################################################
 
+OSCAR::Logger::init_log_file ("/var/log/oscar/sync_files.log");
+# We temporarilty set the OSCAR_VERBOSE var because we want to get output from
+# getconfig, i.e., before to get the value of the verbose variable.
+$ENV{OSCAR_VERBOSE} = 1;
 getconfig ();
 
 if ($verbose) {
     $ENV{OSCAR_VERBOSE} = 5;
+} else {
+    $ENV{OSCAR_VERBOSE} = 0;
 }
 
 OSCAR::Logger::oscar_log_section ("[sync_file]");
