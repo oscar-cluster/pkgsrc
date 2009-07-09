@@ -82,6 +82,11 @@ purpose.</description>
   </clientDeps>
   <apiDeps/>
   <changelog>
+    <versionEntry version="1.0.10-1">
+      <changelogEntry authorName="Geoffroy Vallee" date="2009-07-09T15:22:43-05:00">
+        <item>Revisit the api-post-clientdef script.</item>
+      </changelogEntry>
+    </versionEntry>
     <versionEntry version="1.0.9-1">
       <changelogEntry authorName="Geoffroy Vallee" date="2009-07-09T11:53:26-05:00">
         <item>Fix issues in the api-post-configure script.</item>
