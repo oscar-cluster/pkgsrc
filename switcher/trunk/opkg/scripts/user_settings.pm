@@ -34,7 +34,7 @@ $VERSION = sprintf("%d.%02d", q$Revision$ =~ /(\d+)\.(\d+)/);
 # Import some modules just for switcher
 
 use package_config;
-use OSCAR::Configbox;
+use OSCAR::Configurator_backend;
 
 
 #
@@ -50,7 +50,8 @@ sub get {
     my $infile = "$ENV{OSCAR_PACKAGE_HOME}/configurator.html";
     my $results;
     if (-e $infile) {
-	$results = readInConfigValues($infile,"switcher","",noarray=>1);
+        $results = OSCAR::Configurator_backend::readInConfigValues($infile,
+            "switcher", "", noarray=>1);
     }
 
     # Read in all the <switcher> blocks from the package
