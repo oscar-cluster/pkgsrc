@@ -1,0 +1,990 @@
+#!/usr/bin/perl
+#
+#   This program is free software; you can redistribute it and/or modify
+#   it under the terms of the GNU General Public License as published by
+#   the Free Software Foundation; either version 2 of the License, or
+#   (at your option) any later version.
+#
+#   This program is distributed in the hope that it will be useful,
+#   but WITHOUT ANY WARRANTY; without even the implied warranty of
+#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#   GNU General Public License for more details.
+#
+#   You should have received a copy of the GNU General Public License
+#   along with this program; if not, write to the Free Software
+#   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+#
+# Tool for setting up, exporting yum repositories and
+# executing yum commands for only these repositories.
+# - extended by repoquery capabilities
+# - added rpm groups aware metadata (BLi)
+# - added rpm groups support for install/update/remove
+#
+# $Id$
+#
+# Author and copyright holder:
+# (C)opyright 2005,2006 Erich Focht <efocht@hpce.nec.com>
+# ---------------   All rights reserved. ----------------
+# (C)opyright 2009      Geoffroy Vallee <valleegr at ornl dot gov>
+#                       Oak Ridge National Laboratory
+#                       All rights reserved.
+#
+# Contributions:
+#      grouplist aware metadata: (c) 2006 Bernard Li <bli@bcgsc.ca>
+#
+
+use strict;
+use Getopt::Long;
+use IO::File;
+use POSIX qw(tmpnam);
+use File::Basename;
+use Carp;
+
+use vars qw ( $archstr );
+
+# number of ssh retries for and delay between them
+my $max_ssh_attempts = 30;
+my $ssh_delay = 2;
+
+my ($name, $fh, $verbose, $export, $unexport, $prepare, $listexp, $repoquery);
+my $installroot;
+my (@repos, @repoadd, @repodel, $repolist);
+my $prog = $0;
+my $debug;
+
+Getopt::Long::Configure("pass_through");
+GetOptions(
+            "help"          => \&help_and_exit,
+            "repo=s"        => \@repos,
+            "repoadd=s"     => \@repoadd,
+            "repodel=s"     => \@repodel,
+            "repolist"      => \$repolist,
+            "export"        => \$export,
+            "prepare"       => \$prepare,
+            "unexport"      => \$unexport,
+            "listexp"       => \&list_exported,
+            "installroot=s" => \$installroot,
+            "repoquery|rq"  => \$repoquery,
+            "verbose|v+"    => \$verbose,
+            "debug"         => \$debug,
+          );
+
+# The verbose can be set both via the options or via the env variable.
+# So we make sure that whatever is the case, everything is set correctly
+if ($verbose && $ENV{YUME_VERBOSE}) {
+    $verbose = "$ENV{YUME_VERBOSE}";
+}
+if ($verbose && !defined $ENV{YUME_VERBOSE}) {
+    $ENV{YUME_VERBOSE} = $verbose;
+}
+if ($debug) {
+    $ENV{YUME_VERBOSE} = 10;
+    $verbose = 10;
+}
+
+# query default OSCAR repositories if no repo given
+if (!scalar(@repos)) {
+    &get_default_repos();
+}
+
+if (!scalar(@repos)) {
+    print "ERROR: No repositories passed and none detected!\n";
+    help_and_die ();
+}
+
+my @validarch = qw(i386 x86_64 ia64 ppc64 noarch);
+
+$archstr = &get_arch_repos(@repos);
+if (!defined $archstr || $archstr eq "") {
+    die "ERROR: Impossible to detect the architecture of repos: ".
+       join (", ", @repos);
+}
+$archstr = "i?86" if ($archstr eq "i386");
+
+chomp(my $hostname=`hostname -s`);
+
+if ($export || $unexport || $prepare) {
+    my $err;
+    $err = add_httpd_conf() if ($export);
+    $err = del_httpd_conf() if ($unexport);
+    $err = prep_repodata() if ($prepare);
+    exit $err;
+}
+
+if (scalar(@repoadd) || scalar(@repodel) || $repolist) {
+    if (@repodel) {
+	&oscar_repocmd("repodel", @repodel);
+    }
+    if (@repoadd) {
+	&oscar_repocmd("repoadd", @repoadd);
+    }
+    if ($repolist) {
+	&oscar_repocmd("repolist",);
+    }
+    exit 0;
+}
+
+#####################################
+### go for a yum or repoquery command
+#####################################
+my @cleanfiles;
+# temporary file
+do {$name=tmpnam()} until $fh=IO::File->new($name,O_RDWR|O_CREAT|O_EXCL);
+push @cleanfiles, $name;
+
+# install exit handler which removes the temporary file
+END {my $rc = $?; cleanup(); exit $rc};
+
+# create yum config file
+print $fh <<EOF;
+[main]
+cachedir=/var/cache/yum
+debuglevel=2
+logfile=/var/log/yume.log
+pkgpolicy=newest
+#distroverpkg=redhat-release
+tolerant=1
+exactarch=1
+retries=20
+obsoletes=1
+reposdir=
+gpgcheck=0
+EOF
+
+# chop trailing slashes from repository names
+foreach (@repos) {
+  s:\/$::;
+}
+
+for my $repo (@repos) {
+    if (($repo !~ /^(file|ftp|http|mirror)/) && -d $repo && ($repo=~/^\//)) {
+	$repo = "file:".$repo;
+    }
+    my $base=basename($repo);
+    my $dir=basename(dirname($repo));
+    print $fh "[$dir"."_"."$base]\n";
+    print $fh "name=$base package repository\n";
+    if ($repo =~ /^mirror:(.*)$/) {
+	my $url = $1;
+	print $fh "mirrorlist=$url\n\n";
+    } else {
+	print $fh "baseurl=$repo\n\n";
+    }
+}
+close $fh;
+
+# print temporary config file if required
+if ($verbose) {
+    print STDERR "=== yum.conf file used ($name) ===\n";
+    system("cat $name");
+    print STDERR "==========================================\n";
+}
+
+# Updating meta-data for the target repos
+my ($cmd, $err);
+$cmd = "/usr/bin/yum -c $name makecache 1>/dev/null";
+print "Executing $cmd\n" if $verbose;
+if (system $cmd) {
+    die "ERROR: Impossible to execute $cmd; Impossible to get repos meta-data";
+}
+
+# Array to store error messages catched during the execution of
+# the yum command.
+use vars qw ( @error_msgs @output);
+
+if ($repoquery) {
+
+    # try using native repoquery, if available
+    my $rq = `which repoquery >/dev/null 2>&1`;
+    if ($?) {
+        # fall back to included yum-repoquery
+        my @yum_v = `yum --version`;
+        my $yum_version;
+        for (@yum_v) {
+            next if (!/^\d.*/);
+            s/\..*$//g;
+            $yum_version = $_;
+        }
+        if ($yum_version < 3) {
+            $rq = "/usr/bin/yum-repoquery";
+        } else {
+            $rq = "/usr/bin/yum-repoquery3";
+        }
+    } else {
+        $rq = "repoquery";
+    }
+
+    # run repoquery command
+    $cmd = "$rq -c $name";
+    my @args = @ARGV;
+    $cmd .= " ".join(" ",@args);
+    print STDERR "Executing: $cmd\n" if ($verbose);
+    $err = system($cmd);
+
+} else {
+
+    # run yum command
+    $cmd = "/usr/bin/yum -c $name";
+    if (($verbose > 2) && ($verbose <= 10)) {
+        $cmd .= " -d $verbose -e 2";
+    }
+    if ($installroot) {
+        # special handling for empty images
+        if ((scalar(grep /^install$/, @ARGV) == 1) &&
+            &img_empty($installroot)) {
+            # try creating lock directory, if it fails we'll fail in
+            # other place anyway
+            system("mkdir -p $installroot/var/lock/rpm");
+            if ((&distro_repos() eq "suse") || (&distro_repos() eq "sles")) {
+                &bootstrap_suse($installroot);
+            }
+        }
+        $cmd .= " --installroot $installroot";
+    }
+    my @yumargs = @ARGV;
+
+    #
+    # yum has a very bad return code policy: if you try to install a package
+    # that is not available, yum will be happy and return 0. So we need to check
+    # first if the package is available or not.
+    #
+
+    # First we check if this is an install command or not
+    my $install_cmd = 0; # This is tell us if the command if an install command
+                         # and if so, where it is in the command line, that
+                         # allows us to know where to look to get the list of
+                         # packages.
+    my $phase = "";
+    for (my $i=0; $i < scalar(@yumargs); $i++) {
+        if ($yumargs[$i] eq "install") {
+            $install_cmd = $i; # the number 2 represents the position of the 
+                              # install token within the command, we uset that
+                              # later on to check the availability of the RPMs
+                              # we try to install
+            $phase = "install";
+            last;
+        } elsif ($yumargs[$i] eq "update") {
+            $phase = "update";
+            last;
+        } elsif ($yumargs[$i] eq "remove") {
+            $phase = "remove";
+            last;
+        } elsif ($yumargs[$i] eq "info") {
+            $phase = "info";
+            last;
+        } elsif ($yumargs[$i] eq "search") {
+            $phase = "update";
+            last;
+        }
+    }
+
+    my $search_cmd;
+    print "-> Preparing the $phase command\n" if $verbose > 5;
+    # If we try to install RPMs, we check if all RPMs are available.
+    if ($phase eq "install") {
+        print "-> Checking the RPMs to install are really available (for ".
+              "$archstr)...\n" if $verbose;
+        for (my $i=$install_cmd+1; $i<scalar(@yumargs); $i++) {
+            my $pkg = $yumargs[$i];
+            # We also check the package arch
+            my @requests;
+            if ($archstr ne "i?86") {
+                @requests = ("$pkg.$archstr", "$pkg.noarch");
+            } else {
+                @requests = ("$pkg.noarch", "$pkg.i386", "$pkg.i586",
+                             "$pkg.i686");
+            }
+            my $ret = 0;
+            foreach my $r (@requests) {
+                $search_cmd = "yum -c $name info $r";
+                print "Executing: $search_cmd\n" if ($verbose > 5);
+                my $rc = system($search_cmd);
+                if ($rc == 0) {
+                    $yumargs[$i] = $r;
+                    $ret = 1;
+                    last;
+                }
+            }
+            if ($ret != 1) {
+                die "ERROR: Impossible to execute \"$search_cmd\"; ".
+                    "some packages are not available (".join (", ", @yumargs).")";
+            }
+        }
+    }
+
+    print "-> All packages are available\n" if $verbose;
+
+    # x86_64 needs arch to be specified, otherwise it installs
+    # both i386 and x86_64 rpms (if available)
+#     if ($archstr eq "x86_64") {
+#          @yumargs = &update_rpm_arch($phase, @yumargs);
+#     }
+    @yumargs = &transform_groups(@yumargs);
+
+    if (!scalar(@yumargs)) {
+        print "No arguments passed to yum! Not doing anything.\n";
+        help();
+    }
+
+    $cmd .= " ".join(" ",@yumargs);
+    print "Executing: $cmd\n" if ($verbose);
+
+    # Variable used to track the number of errors during the execution
+    # of the yum command.
+    $err = system ("$cmd");
+
+
+    # EF the following line resets the errno and avoids fake error messages
+#     $! = 0;
+#     use IPC::Open3;
+#     use Symbol qw(gensym);
+#     open(NULL, ">", File::Spec->devnull);
+#     my $pid = open3(gensym, ">&NULL", \*PH, "$cmd");
+#     my ($line);
+#     while($line = <PH> ) {
+#         push (@output, $line);
+#         if ($line =~ /^ERROR/ || $line =~ /^Error/) {
+#             # error detected during the execution of the child
+#             $err ++;
+#             chomp $line;
+#             push (@error_msgs, $line);
+#         }
+#     }
+#     waitpid($pid, 0);
+}
+
+if ($verbose && $err) {
+    #my $output = $!;
+    my $output = join (", ", @error_msgs);
+    print STDERR "ERROR: \"$cmd\" returned $err: $output\n";
+}
+
+print join ("\n", @output) . "\n";
+
+exit $err;
+
+#############################################################################
+
+# is the image directory empty? (i.e. no rpms installed into it)
+sub img_empty {
+    my ($img) = @_;
+    chomp(my $nrpms = `rpm --root $img -qa | wc -l`);
+    return $nrpms == 0 ? 1 : 0;
+}
+
+# Return first detected compat-distro string for the repositories
+# in the variable @repos.
+# Only meaningful on the master node, under OSCAR.
+sub distro_repos {
+    return if (!exists($ENV{OSCAR_HOME}));
+    return if (! -d $ENV{OSCAR_HOME}."/oscarsamples");
+    my $dquery = "$ENV{OSCAR_HOME}/scripts/distro-query";
+    if (-x $dquery) {
+	my $dist;
+	for my $repo (@repos) {
+	    if ($repo =~ /^file:/) {
+		$repo =~ s/^file://;
+	    }
+	    print STDERR "Executing: $dquery --pool $repo\n" if ($verbose);
+	    local *CMD;
+	    open CMD, "$dquery --pool $repo |"
+		or croak("Could not run $dquery --pool $repo");
+	    while (<CMD>) {
+		chomp;
+		if (/^compat distribution: (.*)$/) {
+		    $dist = $1;
+		    last;
+		}
+	    }
+	    close CMD;
+	    last if $dist;
+	}
+	return $dist;
+    }
+}
+
+# EF: Due to SuSE's "special" post scriptlets, we need some special handling
+# when starting with an empty image. This is somewhat equivalent to
+# debootstrap... With sane scriptlets in the packages this should actually
+# not be needed.
+sub bootstrap_suse {
+    my ($img) = @_;
+    # create etc/mtab in image
+    if (! -d "$img/etc") {
+	!system("mkdir $img/etc")
+	    or croak("Couldn't create directory $img/etc");
+    }
+    # create etc/mtab in the image
+    my @mtab = `cat /etc/mtab`;
+    @mtab = map { s:$img:: } @mtab;
+    local *OUT;
+    open OUT, ">$img/etc/mtab" or croak("Could not open $img/etc/mtab");
+    print OUT @mtab;
+    close OUT;
+    # create etc/passwd in the image
+    open OUT, ">$img/etc/passwd" or croak("Could not open $img/etc/passwd");
+    print OUT << 'EOF';
+root:x:0:0:root:/root:/bin/bash
+bin:x:1:1:bin:/bin:/bin/bash
+daemon:x:2:2:Daemon:/sbin:/bin/bash
+lp:x:4:7:Printing daemon:/var/spool/lpd:/bin/bash
+mail:x:8:12:Mailer daemon:/var/spool/clientmqueue:/bin/false
+news:x:9:13:News system:/etc/news:/bin/bash
+uucp:x:10:14:Unix-to-Unix CoPy system:/etc/uucp:/bin/bash
+games:x:12:100:Games account:/var/games:/bin/bash
+man:x:13:62:Manual pages viewer:/var/cache/man:/bin/bash
+wwwrun:x:30:8:WWW daemon apache:/var/lib/wwwrun:/bin/false
+ftp:x:40:49:FTP account:/srv/ftp:/bin/bash
+nobody:x:65534:65533:nobody:/var/lib/nobody:/bin/bash
+EOF
+    close OUT;
+    # create etc/group in the image
+    open OUT, ">$img/etc/group" or croak("Could not open $img/etc/group");
+    print OUT << 'EOF';
+root:x:0:
+bin:x:1:daemon
+daemon:x:2:
+sys:x:3:
+tty:x:5:
+disk:x:6:
+lp:x:7:
+www:x:8:
+kmem:x:9:
+wheel:x:10:
+mail:x:12:
+news:x:13:
+uucp:x:14:
+shadow:x:15:
+dialout:x:16:
+audio:x:17:
+floppy:x:19:
+cdrom:x:20:
+console:x:21:
+utmp:x:22:
+public:x:32:
+video:x:33:
+games:x:40:
+xok:x:41:
+trusted:x:42:
+modem:x:43:
+ftp:x:49:
+man:x:62:
+users:x:100:
+nobody:x:65533:
+nogroup:x:65534:nobody
+EOF
+    close OUT;
+    # locate the glibc package in the repositories
+    my $glibcrpm;
+    my $cmd = "$prog ";
+    map { $cmd .= "--repo $_ " } @repos;
+    $cmd .= "--repoquery --location glibc | egrep '.rpm\$'";
+    print STDERR "Locating glibc in repositories, this can take a while...\n";
+    print STDERR "Executing: $cmd\n" if ($verbose);
+    open OUT, "$cmd |" or croak("Could not run $prog!: $!");
+    while (<OUT>) {
+	chomp;
+	if (/glibc.*rpm$/) {
+	    $glibcrpm = $_;
+	    last;    # first one should be good enough
+	}
+    }
+    close OUT;
+    if (!$glibcrpm) {
+	print STDERR "Could not locate glibc rpm!\n";
+	return;
+    }
+    # is it a local file?
+    if ($glibcrpm =~ /^file:/) {
+	$glibcrpm =~ s/^file://;
+    } else {
+	# get package with wget
+	chomp(my $tmpdir = `mktemp -d`);
+	push @cleanfiles, $tmpdir;
+	if (system("wget -P $tmpdir $glibcrpm")) {
+	    print STDERR "Failed to retrieve $glibcrpm\n";
+	    system("rm -rf $tmpdir");
+	    return;
+	}
+	$glibcrpm = $tmpdir . "/" . basename($glibcrpm);
+    }
+    print STDERR "Installing $glibcrpm into image $img\n" if ($verbose);
+    !system("rpm -ihv --root $img --force --nodeps $glibcrpm")
+	or carp("Failed to install $glibcrpm into $img");
+    $ENV{YAST_IS_RUNNING}="1";
+    # There's a bug in the sysconfig rpm which leaves us with the network
+    # service disabled. This forces us to install everything up to the
+    # sysconfig package and enable "network", then continue with the rest
+    # of the installation.
+    $cmd = "$prog ";
+    map { $cmd .= "--repo $_ " } @repos;
+    $cmd .= "--installroot $img -y install aaa_base sysconfig";
+    print STDERR "Installing aaa_base and sysconfig into the image $img\n";
+    print STDERR "Executing: $cmd\n" if ($verbose);
+    !system($cmd) or croak("Failed to run yum: $!");
+    print STDERR "enabling network service in image $img\n" if ($verbose);
+    !system("chroot $img /sbin/insserv -f network")
+	or croak("Failed to enable network service in image $img: $!");
+}
+
+sub help {
+    print "Usage: $0 OPTIONS [YUM_OPTIONS]\n";
+    print "\n";
+    print "Call yum or repoquery with _only_ the repositories on the command line configured.\n";
+    print "OPTIONS can be:\n";
+    print " --repo URL    : repository which should be included in yum actions\n";
+    print "                 (multiple --repo options are possible).\n";
+    print " --export      : create httpd configuration for local repositories\n";
+    print " --unexport    : delete httpd configuration for local repositories\n";
+    print " --listexp     : list exported local repositories\n";
+    print " --prepare     : generate repodata for local repositories\n";
+    print " --help        : this help information\n";
+    print " --repoquery   : invoke repoquery command instead of yum\n";
+    print " --repoadd URL : add URL to the OSCAR repository list for the\n";
+    print "                 local node's distro/architecture.\n";
+    print " --repodel URL : delete URL from the OSCAR repository list for\n";
+    print "                 the local node's distro/architecture.\n";
+    print " --repolist    : list the OSCAR repository URLs\n";
+    print " --verbose     : verbose output\n";
+    print "\n";
+    print "YUM_OPTIONS are options to be passed to the yum or repoquery command.\n";
+    print "Setting the environment variable \$YUME_VERBOSE to a number\n";
+    print "between 1 and 10 will generate verbose output like multiple\n";
+    print "-v options.\n\n";
+    print "The commands --repolist, --repoadd, --repolist only make sense\n";
+    print "on an OSCAR master node. Multiple --repoadd|--repodel options\n";
+    print "can be used on the command line.\n";
+}
+
+sub help_and_exit {
+    help ();
+    exit 0;
+}
+
+sub help_and_die {
+    help ();
+    exit 1;
+}
+
+sub cleanup {
+    for my $f (@cleanfiles) {
+	if (-d $f) {
+	    !system("rm -rf $f") or carp("Could not remove $f: $!");
+	} elsif (-f $f) {
+	    unlink($f) or carp("Couldn't unlink $f : $!");
+	}
+    }
+}
+
+sub is_ha_running {
+    if (-x "/etc/init.d/heartbeat") {
+	return !system("/etc/init.d/heartbeat status 2>&1 >/dev/null");
+    }
+    return 0;
+}
+
+sub is_failover_mounted {
+    if (-x "/usr/sbin/crm_resource") {
+	my $res = `/usr/sbin/crm_resource -W -r FailoverFS`;
+	my $host = `/bin/hostname -f`;
+	chomp $host;
+	chomp $res;
+	return ($res =~ m/on: $host$/);
+    }
+    return 0;
+	
+}
+
+#
+# We're on an OSCAR master node if $OSCAR_HOME/oscarsamples/ is there.
+#
+# Return: 1 if the machine is the OSCAR headnode, 0 else.
+sub on_oscar_master {
+    return 1 if ($ENV{OSCAR_HOME} && -d $ENV{OSCAR_HOME}."/oscarsamples" 
+	&& ((&is_ha_running && &is_failover_mounted) || !&is_ha_running));
+    return 1 if (-d "/usr/share/oscar/oscarsamples"
+        && ((&is_ha_running && &is_failover_mounted) || !&is_ha_running));
+
+    return 0;
+}
+
+sub get_default_repos {
+    # if OSCAR_HOME is defined, we're on an OSCAR cluster
+    if (&on_oscar_master()) {
+	my $dquery = "/usr/bin/distro-query";
+	if (-x $dquery) {
+	    if ($installroot && (-x "$installroot/bin/bash")) {
+		$dquery = $dquery . " --image $installroot";
+	    }
+	    print STDERR "Executing: $dquery\n" if ($verbose);
+	    local *CMD;
+	    open CMD, "$dquery |" or die "Could not run $dquery: $!";
+	    while (<CMD>) {
+		chomp;
+		if (/Distro package url : (\S+)$/) {
+		    push @repos, split(",",$1);
+		} elsif (/OSCAR package pool : (\S+)$/) {
+		    push @repos, split(",",$1);
+		}
+	    }
+	    close CMD;
+	} else {
+	    print "Command $ENV{OSCAR_HOME}/scripts/distro-query not found\n";
+	    print "Unable to detect default repositories.\n";
+	}
+    } else {
+	my $master = gethostbyname("oscar_server");
+	#
+	# Is there a node called oscar_master? Then we're on a client node
+	#
+	if ($master) {
+	    my $node=`hostname`; chomp $node;
+	    my $cmd = "ssh oscar_server bash -l -c \\\"\\\$OSCAR_HOME/scripts/distro-query --node $node\\\"";
+	    print STDERR "Executing: $cmd\n" if ($verbose);
+	    my $attempts = 0;
+	  REMOTE_QUERY:
+	    local *CMD;
+	    open CMD, "$cmd 2>&1 |" or die "Could not run $cmd : $!";
+	    my $conn_closed = 0;
+	    while (<CMD>) {
+		chomp;
+		if (/Distro package url : (\S+)$/) {
+		    push @repos, split(",",$1);
+		} elsif (/OSCAR package pool : (\S+)$/) {
+		    push @repos, split(",",$1);
+		} elsif (/Connection closed by remote host/) {
+		    $conn_closed = 1;
+		}
+	    }
+	    close CMD;
+	    my $err = $? >> 8;
+	    if ($err) {
+		if ($conn_closed) {
+		    if ($attempts < $max_ssh_attempts) {
+			$attempts++;
+			print STDERR "Connection closed by remote host. Retrying $attempts/$max_ssh_attempts\n" if ($verbose);
+			sleep $ssh_delay;
+			goto REMOTE_QUERY;
+		    } else {
+			print STDERR "Connection closed by remote host while distro-query. Giving up.\n";
+			exit 1;
+		    }
+		} else {
+		    print STDERR "Unexpected error detected ($err) while distro-query. Exiting.\n";
+		    exit $err;
+		}
+	    }
+	} else {
+	    print "ERROR: You are not on an OSCAR cluster. ".
+              "You must specify a repository!\n";
+	    help_and_die ();
+	}
+    }
+    if ($verbose) {
+	print STDERR "Repositories detected:\n\t".join("\n\t",@repos)."\n";
+    }
+}
+
+sub detect_arch_http_repo ($) {
+    my $repo = shift;
+    
+    print "Detect architecture of the only repository $repo...\n" if $verbose;
+    my $varch = join("|",@validarch);
+    if ($repo =~ /^(.*)($varch)(.*)$/) {
+        return $2;
+    }
+    return undef;
+}
+
+# guess architecture from repository name
+sub get_arch_repos {
+    my (@repos) = @_;
+    my $arch;
+    my $varch = join("|",@validarch);
+    for my $r (@repos) {
+        my $a;
+        if ($r =~ /^http:/) {
+            $a = detect_arch_http_repo ($r);
+            $arch = $a if (!$arch);
+        } else {
+            $r =~ s:/$::;
+            if ($r =~ m/\-([^\-]+)$/) {
+                $a = $1;
+                if ($a =~ /^($varch)$/) {
+                    $arch = $a if (!$arch);
+                }
+            }
+        }
+        if ($arch ne $a) {
+            print "WARNING: multiple architecture repos specified.\n";
+        }
+    }
+    if ($arch && $verbose) {
+        print "Repository architecture: $arch\n";
+    }
+    return $arch;
+}
+
+# Unfortunately a big distributor decided that on x86_64 some packages should
+# have identical names for 32 and 64 bits. Therefore yume will install both
+# RPMs (x86_64 and i686) if they are available. Trying to avoid this by
+# renaming packages by $pkg.{x86_64,noarch}
+sub update_rpm_arch ($@) {
+    my ($phase, @args) = @_;
+    my @trans;
+
+    print "Updating the RPM arch from the $phase command ($archstr)\n";
+
+    return @args if ($phase ne "install" && $phase ne "update");
+    return @args if (!$archstr);
+    
+    # We search the phase id in the args
+    my $i;
+    for ($i=0; $i < scalar(@args); $i++) {
+        if ($args[$i] eq $phase) {
+            last;
+        }
+    }
+    return undef if ($args[$i] ne $phase);
+    print "pos: $i\n";
+
+    my $varch = join("|",@validarch);
+
+    for (my $pos = 0; $pos <= $i; $pos++) {
+        push (@trans, $args[$pos]);
+    }
+
+    for (my $n = $i+1; $n < scalar(@args); $n++) {
+        my $rpm = $args[$n];
+        print "RPM: $rpm\n";
+        if (($rpm !~ /(.*).($varch)(.*)$/) 
+            && ($rpm !~ /\.rpm$/)
+            && ($rpm !~ /^@/)) {
+            $rpm = "$rpm.{$archstr,noarch}";
+        }
+        push @trans, $rpm;
+    }
+    
+    return @trans; 
+}
+
+# transform args replacing groups in the arguments (strings starting with @)
+sub transform_groups {
+    my (@args) = @_;
+    my @trans;
+
+    my @groupargs = grep /^@/, @args;
+    return @args if (!scalar(@groupargs));
+
+    my @nogroupargs = grep !/^@/, @args;
+
+    my @ops = grep /^(install|update|remove)$/, @args;
+
+    if (scalar(@ops) > 1) {
+	print "!! The argument line contains multiple install/remove/update operators !!\n";
+	print "!! Only one is allowed with group support !!\n";
+	exit 1;
+    } elsif (!scalar(@ops)) {
+	print STDERR "None of install/remove/update was selected!\n" if ($verbose);
+	return @args;
+    }
+    my $op = $ops[0];
+
+    if (scalar(@nogroupargs) > 1) {
+	push @trans, @nogroupargs;
+    }
+    push @trans, "group$op";
+    @groupargs = map { s/^@//; $_ } @groupargs;
+    push @trans, @groupargs;
+
+    return @trans; 
+}
+
+sub oscar_repocmd {
+    my ($cmd, @r) = @_;
+    if (!&on_oscar_master()) {
+	print STDERR "ERROR: You can only do this on an OSCAR master node!\n";
+	exit 1;
+    }
+    if ($cmd !~ m/^(repolist|repoadd|repodel)$/) {
+	print STDERR "ERROR: Wrong command $cmd!\n";
+	exit 1;
+    }
+    if ($installroot) {
+	print STDERR "ERROR: You can't do this with --installroot!\n";
+	exit 1;
+    }
+    eval "use lib \"$ENV{OSCAR_HOME}/lib\"";
+    eval "use OSCAR::PackagePath";
+    my $oscar_url;
+    my $distro_url;
+    my $pkg;
+    eval "(\$oscar_url, \$pkg) = OSCAR::PackagePath::oscar_urlfile()";
+    eval "\$distr_url = OSCAR::PackagePath::distro_urlfile()";
+    if ($cmd eq "repoadd") {
+	eval "OSCAR::PackagePath::repos_add_urlfile(\$oscar_url, \@r)";
+    } elsif ($cmd eq "repodel") {
+	eval "OSCAR::PackagePath::repos_del_urlfile(\$oscar_url, \@r)";
+    }
+    # repolist in any case
+    my @repos;
+    eval "\@repos = OSCAR::PackagePath::repos_list_urlfile(\$oscar_url)";
+    print "Repositories in $oscar_url:\n    ".join("\n    ", @repos)."\n";
+}
+
+sub find_httpdir {
+    my $httpdir;
+    for my $d ("httpd", "apache", "apache2") {
+	if (-d "/etc/$d/conf.d") {
+	    $httpdir = "/etc/$d/conf.d";
+	    last;
+	}
+    }
+    if ($verbose) {
+	print STDERR "Found httpdir = $httpdir\n";
+    }
+    return $httpdir;
+}
+
+sub add_httpd_conf {
+    my $httpdir = find_httpdir();
+    my $changed = 0;
+    my $err = 0;
+    if ($httpdir) {
+	for my $repo (@repos) {
+	    if ($repo =~ /^(file:\/|\/)/) {
+		$repo =~ s|^file:||;
+		if (!-d $repo) {
+		    print "Could not find directory $repo. Skipping.\n";
+		    $err++;
+		    next;
+		}
+		my $pname = "repo$repo";
+		my $rname = $pname;
+		$rname =~ s:/:_:g;
+		my $cname = "$httpdir/$rname.conf";
+		if (-f $cname) {
+		    print "Config file $cname already existing. Skipping.\n";
+		    next;
+		}
+		print "Exporting $repo through httpd, http://$hostname/$pname\n";
+		open COUT, ">$cname" or die "Could not open $cname : $!";
+		print COUT "Alias /$pname $repo\n";
+		print COUT "<Directory $repo/>\n";
+		print COUT "  Options Indexes\n";
+		print COUT "  order allow,deny\n";
+		print COUT "  allow from all\n";
+		print COUT "</Directory>\n";
+		close COUT;
+		++$changed;
+	    } else {
+		print "Repository URL is not a local absolute path!\n";
+		print "Skipping $repo\n";
+		$err++;
+		next;
+	    }
+	}
+    } else {
+	print "Could not find directory $httpdir!\n";
+	print "Cannot setup httpd configuration for repositories.\n";
+	$err++;
+    }
+    restart_httpd() if ($changed);
+    return $err;
+}
+
+sub del_httpd_conf {
+    my $httpdir = find_httpdir();
+    my $changed = 0;
+    my $err = 0;
+    if ($httpdir) {
+	for my $repo (@repos) {
+	    if ($repo =~ /^(file:\/|\/)/) {
+		$repo =~ s|^file:||;
+		my $pname = "repo$repo";
+		my $rname = $pname;
+		$rname =~ s:/:_:g;
+		my $cname = "$httpdir/$rname.conf";
+		if (-f $cname) {
+		    print "Deleting config file $cname\n";
+		    if (unlink($cname)) {
+			print "WARNING: Could not delete $cname : $!\n";
+			$err++;
+		    } else {
+			++$changed;
+		    }
+		}
+	    } else {
+		print "Repository URL is not a local absolute path!\n";
+		print "Skipping $repo\n";
+		$err++;
+		next;
+	    }
+	}
+    } else {
+	print "Could not find directory $httpdir!\n";
+	print "Cannot delete httpd configuration for repositories.\n";
+	$err++;
+    }
+    restart_httpd() if ($changed);
+    return $err;
+}
+
+sub list_exported {
+    my $httpdir = find_httpdir();
+    if ($httpdir) {
+	for my $repoconf (glob("$httpdir/repo_*.conf")) {
+	    my $rname = basename($repoconf,".conf");
+	    my ($dummy, $alias,$rdir) = split(" ",`grep "^Alias" $repoconf`);
+	    chomp $rdir;
+	    print "URL $alias : Repository --repo $rdir\n";
+	}
+    }
+    exit;
+}
+
+sub restart_httpd {
+    for my $httpd ("httpd", "httpd2", "apache", "apache2") {
+	if (-x "/etc/init.d/$httpd") {
+	    print "Restarting $httpd\n";
+	    system("/etc/init.d/$httpd restart");
+	    last;
+	}
+    }
+}
+
+sub prep_repodata {
+    my $createrepo=`which createrepo`;
+    my $comps = "comps.xml";
+    my $ret = 0;
+    if ($?) {
+	print "ERROR: Could not find createrepo executable! Aborting.\n";
+	return 1;
+    }
+    chomp $createrepo;
+    for my $repo (@repos) {
+	if ($repo =~ /^(file:\/|\/)/) {
+	    if ($repo =~ /^file:/) {
+		$repo =~ s/^file://;
+	    }
+	    if (!-d $repo) {
+		print "Could not find directory $repo. Skipping.\n";
+		$ret++;
+		next;
+	    }
+	    print "Creating repodata cache for $repo\n";
+	    my $cmd = "createrepo -p";
+	    $cmd .= " --verbose" if ($verbose);
+	    my $compsfile = "$repo/$comps";
+	    $cmd .= " --groupfile $compsfile" if (-e $compsfile);
+	    $cmd .= " --cachedir $repo/repocache $repo";
+	    print STDERR "Executing: $cmd\n" if ($verbose);
+	    my $err = system($cmd);
+	    if ($err) {
+		print "... cache creation failed.\n";
+		$ret += abs($err);
+	    }
+	}
+    }
+    return $ret;
+}
