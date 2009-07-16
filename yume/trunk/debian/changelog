@@ -1,3 +1,9 @@
+yume (2.8.10-1) hardy; urgency=low
+
+  * New upstream version.
+
+ -- Geoffroy Vallee <valleegr@ornl.gov>  Thu, 16 Jul 2009 16:44:00 -0400
+
 yume (2.8.9-1) hardy; urgency=low
 
   * New upstream version.
