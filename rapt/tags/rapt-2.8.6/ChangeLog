@@ -1,0 +1,97 @@
+rapt-2.8.6:
+- Remove debugging messages.
+- Fix a problem when creating the list of repositories, previously the array
+was not correctly created when a config file from /tftpboot included several
+repositories.
+
+rapt-2.8.5:
+- [Ticket #538] The distro codename detection is now based on OS_Detect.
+- [Ticket #398] To be able to check whether all Debian packages from a list of
+packages are available, we need to get the list of all available Debian
+packages. A bug previously prevented to get the list of all available
+packages, this is now fixed.
+- [Ticket #545] The generation of repository meta-data is now based on the
+repository codename and not anymore on local distro codename.
+
+rapt-2.8.4:
+- Modify the Makefile so we can choose the directory where the binary packages
+are stored.
+- Enable the creation of unsigned Debian packages by setting the
+UNSIGNED_OSCAR_PKG environment variable.
+
+rapt-2.8.3:
+- Minor modification for the oscar-packager support: add a "make rpm" command
+(which only displays a message).
+- Improve the man page.
+
+rapt-2.8.2:
+- Fix a bug when specifying the architecture for bootstrapping (introduced
+during the last release).
+
+rapt-2.8.1:
+- Fix a bug in get_debootstrap_mirror_and_codename: bad return code check when
+searching for a specific repositories in configuration files.
+- Fix a bug when specifying the architecture (we were not always translating 
+"x86_64" to "amd64").
+
+rapt-2.8:
+- Fix the codename detection for Ubuntu (detect gutsy and hardy).
+- Implement a correct usage of debootstrap, it previously worked only with
+Etch.
+- Include the capability of specifying the distro ID, which allows users to
+not have to specify all other details (such as repositories). It also
+simplifies the distro bootstrapping.
+
+rapt-2.7:
+- Bug fix when searching packages or querying information about packages.
+
+rapt-2.6:
+- Bug fix: the return code should now be correct all the time.
+
+rapt-2.5:
+- Bug fix (#490): repo's meta-data are regenerated even when they already
+exist.
+
+rapt-2.4
+- Bug fix: rapt does not exist if the repos architecture cannot be detacted
+(which is often the case with Debian systems when all OSCAR repos are online
+repos).
+- Minor modifications of RAPT output.
+- Enable the usage of distro_query when distro_query is installed in
+(/usr/bin).
+
+rapt-2.3
+- Include the Ubuntu support.
+
+rapt-2.2
+- Bug fixes.
+- Manpage improvement.
+
+rapt-2.1
+- Switch back to apt-get instead of aptitude (keyring problems).
+- When detecting repositories architecture, skip online repositories.
+- When using multiple repositories, the list of repos is correctly build
+internaly (bug #455).
+- Improve the error handling. This fixes bug #458.
+- Correctly deal with the different repo location notation (i.e., the location
+can start by http|ftp, file:, or even be an absolute path).
+- Automatically detect the mirror that can be used by debootstrap (when
+possible). This fixes bug #450.
+- Support the "names-only" option.
+- Add a 'uninstall' target to the Makefile.
+
+rapt-2.0
+- Support multiple architectures.
+- Enable the building of the Debian package as a normal user (no need to be
+root anymore).
+
+rapt-1.2
+- Improve the Makefile: 
+* 'make dist', creates a tarball that can be used to release RAPT,
+* 'make clean', deletes junky file (e.g. *~),
+* 'make mrproper', deletes all files generated during the compilation and the
+creation of binary packahes.
+- Clean up the RAPT output.
+- Switch to aptitude instead of apt-get.
+- Fix the bug with the error return code. RAPT was previously always returning
+0.
