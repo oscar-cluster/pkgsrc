@@ -1,0 +1,416 @@
+#!/usr/bin/env perl
+#
+# Copyright (c) 2007-2008, Oak Ridge National Laboratory.
+#                          Geoffroy R. Vallee <valleegr@ornl.gov>
+#                          All rights reserved.
+# Copyright (c) 2003, The Board of Trustees of the University of Illinois.
+#                     All rights reserved.
+# Copyright (c) 2002-2003 The Trustees of Indiana University.
+#                     All rights reserved.
+#
+# This file is part of the OSCAR software package.  For license
+# information, see the COPYING file in the top level directory of the
+# OSCAR source distribution.
+#
+# $Id$
+#
+
+BEGIN {
+    if (defined $ENV{OSCAR_HOME}) {
+        unshift @INC, "$ENV{OSCAR_HOME}/lib";
+    }
+}
+
+use strict;
+use Carp;
+use Term::ReadLine;
+use Getopt::Long;
+use OSCAR::ORM;
+use OSCAR::Utils;
+
+my $repository_listing;
+my $repository_selected = -1;
+our $selected_repo = "";
+my $package_listing;
+my $verbose = $ENV{ORM_VERBOSE};
+my @repos;
+
+my ($interactive, $distro, $default_repo, $list_default_repos, $list_repos,
+    $distro, $search, $show, $install, $chroot, $mirror_oscar_repo, 
+    $mirror_distro_repo);
+
+use vars qw ($distro_id);
+
+Getopt::Long::Configure("pass_through");
+GetOptions(
+        "non-interactive"       => \$interactive, 
+        "opkgs"                 => \$default_repo,
+        "chroot=s"              => \$chroot,
+        "distro=s"              => \$distro,
+        "install=s"             => \$install,
+#        "list-repos"    => \$list_default_repos,
+        "distro=s"              => \$distro,
+        "search=s"              => \$search,
+        "show=s"                => \$show,
+        "list-repos"            => \$list_repos,
+        "mirror-oscar-repo=s"   => \$mirror_oscar_repo,
+        "mirror-distro-repo=s"  => \$mirror_distro_repo,
+        "help"                  => \&help,
+        ) || help_and_die();
+
+my $opd_term = new Term::ReadLine 'OPD';
+
+#
+# Loop over the main menu
+#
+# Return: 0 if success, -1 else.
+#
+sub main_menu {
+    my $selection;
+
+#    my $name = $repository_listing->{site}[$repository_selected]->{name};
+#    my $uri = $repository_listing->{site}[$repository_selected]->{uri}[0];
+
+#    my $num_pkgs = $#{$package_listing->{package}} + 1;
+    my $name = "";
+    my $uri = "";
+    my $num_pkgs = "";
+    my $packages = ($num_pkgs == 1) ?
+    "1 package available" :
+    "$num_pkgs packages available";
+
+    my $show_info = 1;
+    my $cmd;
+    my @options;
+
+    # Setup tab completion
+
+    my $attribs = $opd_term->Attribs;
+    $attribs->{completion_entry_function} =
+    $attribs->{list_completion_function};
+    $attribs->{completion_word} =
+    [qw(download help info list print quit exit repository update)];
+
+    # Main prompt loop
+
+    while (1) {
+
+#    if ($show_info) {
+#        print("
+#==> $name
+#==> $uri
+#==> $packages\n\n");
+#        $show_info = 0;
+#    }
+
+    # Use GNU Readline to prompt and get input.  Readline rocks.
+
+    last if (!defined($_ = $opd_term->readline("opd> ")));
+    next if (!$_);
+
+    # Analyze what we got back
+
+    @options = split(/[ \t]/);
+    $cmd = "";
+    while (!$cmd && $#options >= 0) {
+        $cmd = lc($options[0]);
+        shift(@options);
+    }
+    next if (!$cmd);
+
+#    if (/^f/i || /^flush/i) {
+#        OSCAR::ORM::flush_cache ();
+#    }
+
+    # Change repository
+
+#    if (/^a/i || /^add/i) {
+#        my $url = $opd_term->readline("Enter repository URL>");
+#        if (!$url) {
+#            print ("ERROR: no repository has been specified\n");
+#        next;
+#        }
+#        scan_repository ($url);
+
+
+    # List available OSCAR repositories
+
+    if (/^d/i || /^distro/i) {
+        $distro_id = $opd_term->readline("Enter the distro ID> ");
+        print("\n");
+    }
+
+    # List the packages that are available
+
+    elsif (/^l/i || /^li/i || /^list/i || /^ls/i ) {
+        print("\n");
+        print "Querying for available OPKGS; this may take a while, be ".
+              "patient...\n";
+        OSCAR::ORM::list_included_opkgs($distro_id);
+        print("\n");
+#         print "OPKGs available from the official OSCAR repository:\n";
+#         OSCAR::ORM::list_included_opkgs ("debian");
+#         print("\n");
+    }
+
+    # Mirror the OSCAR repository
+
+    elsif (/^o/i || /^omirrir/i) {
+        print "\n";
+        if (OSCAR::ORM::mirror_oscar_repo ($distro_id)) {
+            carp "ERROR: Impossible to mirror the OSCAR repository";
+            return -1;
+        }
+    }
+
+    # Mirror the distro repository
+
+    elsif (/^m/i || /^dmirror/i) {
+        print "\n";
+        if (OSCAR::ORM::mirror_distro_repo ($distro_id)) {
+            carp "ERROR: Impossible to mirror the distro repository";
+            return -1;
+        }
+    }
+
+    # Print the help message
+
+    elsif (/^\?/ || /^h/i || /^help/i) {
+        print("
+[h] help       - This message
+[i] info       - Display information about the selected distribution
+[d] distro     - Specify the distribution that should be used for queries (to
+                 get the list of available distros, please execute the 
+                 \"oscar-config --list-setup-distros\" command
+[l] list       - Display the list of available opkgs
+[o] omirror    - Mirror the OSCAR repository for the current distribution
+[m] dmirror    - Mirror the distribution's repository for the current distribution
+[q] quit       - Quit
+R              - Select the specified package(s)
+
+N has an integer value
+
+R can be a single integer value, a range or an enumeration of all that :
+
+  1,2,5-6         - select packages 1,2,5,6\n\n");
+    }
+
+    # Show repository info
+
+    elsif (/^i/i || /^in/i || /^info/i) {
+        print "\n";
+        if (defined $distro_id) {
+            print "Distro ID: $distro_id\n";
+        } else {
+            print "Using the local distro\n"
+        }
+        print "Repositories: ";
+        OSCAR::ORM::list_available_repositories ($distro_id);
+        print "\n";
+    }
+
+    # Exit
+
+    elsif (/^q/i || /^quit/i ||
+         /^e/i || /^exit/i) {
+        last;
+    }
+
+    # Have no idea -- issue a warning
+
+    else {
+        print("\nIllegal command -- ignored\n\n");
+    }
+    }
+}
+
+# First of all, enforce that the user running this script is 'root'
+# This is necessary for access to /var/cache/oscar/downloads
+croak "You must be 'root' to run this script.  Aborting" if ($< != 0);
+
+if ($interactive) {
+    $verbose = 0;
+}
+
+OSCAR::ORM::init_opd();
+
+if ($interactive) {
+    if ($list_default_repos) {
+        my @list = OSCAR::ORM::get_default_repositories ();
+        # Then we print the result. Remember that the output is used by
+        # other application, only print the strict necessary
+        foreach my $item (@list){
+            print "$item ";
+        }
+        print "\n";
+        exit (0);
+    }
+    if ($search) {
+        print "Search for $search for $distro...\n";
+        require OSCAR::RepositoryManager;
+        my $rm = OSCAR::RepositoryManager->new (distro=>$distro);
+        if (!defined $rm) {
+            die "ERROR: Impossible to create a RepositoryManager object";
+        }
+        my ($rc, @output) = $rm->search_opkgs ($search);
+        print join ("", @output);
+        exit (0);
+    }
+    if ($show) {
+        print "Search for $show for $distro...\n";
+        require OSCAR::RepositoryManager;
+        my $rm = OSCAR::RepositoryManager->new (distro=>$distro);
+        if (!defined $rm) {
+            die "ERROR: Impossible to create a RepositoryManager object";
+        }
+        my ($rc, %output) = $rm->show_opkg ($show);
+        print "----> [ORM] Packages details:\n";
+        OSCAR::Utils::print_hash  ("", "", \%output);
+        print "----> [ORM] end.\n";
+        exit (0);
+    }
+    if ($install) {
+        if (!defined $install || !defined $chroot || !defined $distro) {
+            die "ERROR: Invalid parameters";
+        }
+        print "Installing $install in $chroot for $distro\n";
+        require OSCAR::RepositoryManager;
+        my $rm = OSCAR::RepositoryManager->new (distro=>$distro);
+        if (!defined $rm) {
+            die "ERROR: Impossible to create a RepositoryManager object";
+        }
+        print $rm->status();
+        my ($rc, @output) = $rm->install_pkg ($chroot, $install);
+        print join ("", @output);
+        exit (0);
+    }
+    if ($list_repos) {
+        my @list = OSCAR::ORM::get_available_repositories ();
+        # Then we print the result. Remember that the output is used by
+        # other application, only print the strict necessary
+        foreach my $item (@list){
+            print "$item ";
+        }
+        print "\n";
+        exit (0);
+    }
+    if ($mirror_oscar_repo) {
+        if (OSCAR::ORM::mirror_distro_repo ($distro)) {
+            die "ERROR: Impossible to mirror the oscar repo";
+        }
+        exit (0);
+    }
+    if ($mirror_distro_repo) {
+        if (OSCAR::ORM::mirror_oscar_repo ($distro)) {
+            die "ERROR: Impossible to mirror the distro repo";
+        }
+        exit (0);
+    }
+    if ($default_repo) {
+        @repos = OSCAR::ORM::get_default_repositories ();
+    }
+    if (!defined @repos && !defined $distro) {
+        die "ERROR: you must specify a repository or a distro id\n";
+    } else {
+        my @list = ();
+        foreach my $repo (@repos) {
+            OSCAR::ORM::add_repo_to_cache ($repo);
+            my @opkgs = OSCAR::ORM::get_available_opkgs($repo);
+            foreach my $opkg (@opkgs) {
+                push (@list, $opkg);
+            }
+        }
+        # Then we print the result. Remember that the output is used by
+        # other application, only print the strict necessary
+        foreach my $item (@list){
+            print "$item ";
+        }
+        print "\n";
+    }
+} else {
+    main_menu();
+}
+
+sub help_and_die () {
+    help();
+    exit 1;
+}
+
+sub help ($) {
+    print "Usage: $0 OPTIONS\n";
+    print "\n";
+    print "For usage information, please refer to the man page (man orm).\n";
+    exit;
+}
+
+1;
+
+__END__
+
+=head1 NAME
+
+orm, a tool for OSCAR package management (OSCAR Package Downloader). It enables
+the management OSCAR packages via repositories when managing clusters.
+
+=head1 SYNOPSIS
+
+orm <OPTIONS> 
+
+=head1 DESCRIPTION
+
+ORM (OSCAR Repository Manager) is a tool for the management of OSCAR 
+repositories. 
+ORM can work in two different modes: (i) the interactive mode and (ii) the
+non-interactive mode. In non-interactive mode, users have to specify options 
+when using the command line. In interactive mode, ORM gives a prompt to the
+user how can then use ORM commands (for more information, type the help
+command).
+
+=head1 OPTIONS
+
+Supported options include:
+
+=over 8
+
+=item --non-interactive
+
+Use ORM in non-interactive mode this option enables options --repo and
+--default-repos. In non-interactive mode, each command gives the list of
+available OSCAR packages.
+
+=item --opkgs
+
+Gives the list of OPKGs available via the default OSCAR repositories. 
+
+=item --list-repos
+
+Gives the list of default OSCAR repos for the specified distribution (if the --distro option is not used, we display the repos for the local distribution).
+
+=item --mirror-oscar-repo <DISTRO_ID>
+
+=item --mirror-distro-repo <DISTRO_ID>
+
+=item --distro <DISTRO_ID>
+
+Linux distribution which should be used for queries (multiple --repo options 
+are possible).
+
+=item --help
+
+Some help information.
+
+=back
+
+=head1 AUTHOR
+
+=item Geoffroy Vallee <valleegr@ornl.gov>
+
+=item Jeff Squyres
+
+=head1 SEE ALSO
+
+perl(1),
+perldoc OSCAR::RepositoryManager,
+perldoc OSCAR::PackMam
+
+=cut
