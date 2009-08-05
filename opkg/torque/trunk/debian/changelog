@@ -1,6 +1,7 @@
 torque-oscar (2.1.10-4) hardy; urgency=low
 
   * Add a dependency to tk8.4 for the gui package.
+  * Fix many Torque configuration issues.
 
  -- Geoffroy Vallee <valleegr@ornl.gov>  Wed, 05 Aug 2009 16:51:31 -0400
 

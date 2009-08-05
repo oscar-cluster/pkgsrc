@@ -97,6 +97,10 @@ install-arch:
 	mkdir -p $(CURDIR)/debian/torque-oscar-server/usr/sbin
 	mkdir -p $(CURDIR)/debian/torque-oscar-server/var/spool/torque/server_priv
 	mkdir -p $(CURDIR)/debian/torque-oscar-server/var/spool/torque/server_logs
+	mkdir -p $(CURDIR)/debian/torque-oscar-server/var/spool/torque/spool
+	chmod 1777 /var/spool/torque/spool
+	mkdir -p $(CURDIR)/var/spool/torque/aux
+	chmod 0755 /var/spool/torque/aux
 	mv $(CURDIR)/debian/torque-oscar/usr/sbin/pbs_server $(CURDIR)/debian/torque-oscar-server/usr/sbin
 	mv $(CURDIR)/debian/torque-oscar/usr/sbin/momctl $(CURDIR)/debian/torque-oscar-server/usr/sbin
 
@@ -115,6 +119,7 @@ install-arch:
 	mv $(CURDIR)/debian/torque-oscar/usr/bin/tracejob $(CURDIR)/debian/torque-oscar-client/usr/bin
 	mv $(CURDIR)/debian/torque-oscar/usr/lib/*.so.* $(CURDIR)/debian/torque-oscar-client/usr/lib
 	mv $(CURDIR)/debian/torque-oscar/usr/sbin/pbs_iff $(CURDIR)/debian/torque-oscar-client/usr/sbin
+	sudo chmod 4755 $(CURDIR)/debian/torque-oscar-client/usr/sbin/pbs_iff
 	mv $(CURDIR)/debian/torque-oscar/usr/sbin/pbs_demux $(CURDIR)/debian/torque-oscar-client/usr/sbin
 
     # Move files around for the oscar-torque-scheduler package
@@ -122,10 +127,15 @@ install-arch:
 	mv $(CURDIR)/debian/torque-oscar/usr/sbin/pbs_sched $(CURDIR)/debian/torque-oscar-scheduler/usr/sbin
 	mkdir -p $(CURDIR)/debian/torque-oscar-scheduler/var/spool/torque/sched_priv
 	mkdir -p $(CURDIR)/debian/torque-oscar-scheduler/var/spool/torque/sched_logs
+	touch $(CURDIR)/debian/torque-oscar-scheduler/var/spool/torque/pbs_environment
+	chmod 0644 $(CURDIR)/debian/torque-oscar-scheduler/var/spool/torque/pbs_environment
+	echo "PATH=/bin:/usr/bin" >> $(CURDIR)/debian/torque-oscar-scheduler/var/spool/torque/pbs_environment
+	echo "LANG=en_US.UTF-8"   >> $(CURDIR)/debian/torque-oscar-scheduler/var/spool/torque/pbs_environment
 
     # Move files around for the oscar-torque-mom package
 	mkdir -p $(CURDIR)/debian/torque-oscar-mom/usr/sbin
-	mkdir -p $(CURDIR)/debian/torque-oscar-mom/var/spool/torque/mom_priv
+	mkdir -p $(CURDIR)/debian/torque-oscar-mom/var/spool/torque/mom_priv/jobs
+	chmod 751 $(CURDIR)/debian/torque-oscar-mom/var/spool/torque/mom_priv/jobs
 	mkdir -p $(CURDIR)/debian/torque-oscar-mom/var/spool/torque/mom_logs
 	mkdir -p $(CURDIR)/debian/torque-oscar-mom/var/spool/torque/checkpoint
 	mkdir -p $(CURDIR)/debian/torque-oscar-mom/var/spool/torque/undelivered
