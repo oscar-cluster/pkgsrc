@@ -43,7 +43,7 @@ build-arch: build-arch-stamp
 build-arch-stamp:  config.status
 
 	# Add here commands to compile the arch part of the package.
-	$(MAKE) 
+	$(MAKE) -j 3
 	touch $@
 
 build-indep: build-indep-stamp
@@ -91,18 +91,20 @@ install-arch:
 
 	# Add here commands to install the arch part of the package into 
 	# debian/tmp.
-	$(MAKE) DESTDIR=$(CURDIR)/debian/torque-oscar install
+	$(MAKE) -j 3 DESTDIR=$(CURDIR)/debian/torque-oscar install
 
 	# Move files around for the oscar-torque-server package
 	mkdir -p $(CURDIR)/debian/torque-oscar-server/usr/sbin
+	mkdir -p $(CURDIR)/debian/torque-oscar-server/etc/init.d
 	mkdir -p $(CURDIR)/debian/torque-oscar-server/var/spool/torque/server_priv
 	mkdir -p $(CURDIR)/debian/torque-oscar-server/var/spool/torque/server_logs
 	mkdir -p $(CURDIR)/debian/torque-oscar-server/var/spool/torque/spool
-	chmod 1777 /var/spool/torque/spool
-	mkdir -p $(CURDIR)/var/spool/torque/aux
-	chmod 0755 /var/spool/torque/aux
+	chmod 1777 $(CURDIR)/debian/torque-oscar-server/var/spool/torque/spool
+	mkdir -p $(CURDIR)/debian/torque-oscar-server/var/spool/torque/aux
+	chmod 0755 $(CURDIR)/debian/torque-oscar-server/var/spool/torque/aux
 	mv $(CURDIR)/debian/torque-oscar/usr/sbin/pbs_server $(CURDIR)/debian/torque-oscar-server/usr/sbin
 	mv $(CURDIR)/debian/torque-oscar/usr/sbin/momctl $(CURDIR)/debian/torque-oscar-server/usr/sbin
+	cp $(CURDIR)/contrib/init.d/pbs_server $(CURDIR)/debian/torque-oscar-server/etc/init.d
 
 	# Move files around for the oscar-server-client package
 	mkdir -p $(CURDIR)/debian/torque-oscar-client/usr/bin
@@ -124,6 +126,7 @@ install-arch:
 
     # Move files around for the oscar-torque-scheduler package
 	mkdir -p $(CURDIR)/debian/torque-oscar-scheduler/usr/sbin
+	mkdir -p $(CURDIR)/debian/torque-oscar-scheduler/etc/init.d
 	mv $(CURDIR)/debian/torque-oscar/usr/sbin/pbs_sched $(CURDIR)/debian/torque-oscar-scheduler/usr/sbin
 	mkdir -p $(CURDIR)/debian/torque-oscar-scheduler/var/spool/torque/sched_priv
 	mkdir -p $(CURDIR)/debian/torque-oscar-scheduler/var/spool/torque/sched_logs
@@ -131,15 +134,18 @@ install-arch:
 	chmod 0644 $(CURDIR)/debian/torque-oscar-scheduler/var/spool/torque/pbs_environment
 	echo "PATH=/bin:/usr/bin" >> $(CURDIR)/debian/torque-oscar-scheduler/var/spool/torque/pbs_environment
 	echo "LANG=en_US.UTF-8"   >> $(CURDIR)/debian/torque-oscar-scheduler/var/spool/torque/pbs_environment
+	cp $(CURDIR)/contrib/init.d/pbs_sched $(CURDIR)/debian/torque-oscar-scheduler/etc/init.d
 
     # Move files around for the oscar-torque-mom package
 	mkdir -p $(CURDIR)/debian/torque-oscar-mom/usr/sbin
+	mkdir -p $(CURDIR)/debian/torque-oscar-mom/etc/init.d
 	mkdir -p $(CURDIR)/debian/torque-oscar-mom/var/spool/torque/mom_priv/jobs
 	chmod 751 $(CURDIR)/debian/torque-oscar-mom/var/spool/torque/mom_priv/jobs
 	mkdir -p $(CURDIR)/debian/torque-oscar-mom/var/spool/torque/mom_logs
 	mkdir -p $(CURDIR)/debian/torque-oscar-mom/var/spool/torque/checkpoint
 	mkdir -p $(CURDIR)/debian/torque-oscar-mom/var/spool/torque/undelivered
 	mv $(CURDIR)/debian/torque-oscar/usr/sbin/pbs_mom $(CURDIR)/debian/torque-oscar-mom/usr/sbin
+	cp $(CURDIR)/contrib/init.d/pbs_mom $(CURDIR)/debian/torque-oscar-mom/etc/init.d
 
     # Move files around for the oscar-torque-gui package
 	mkdir -p $(CURDIR)/debian/torque-oscar-gui/usr/bin
