@@ -99,6 +99,7 @@ install-arch:
 	mkdir -p $(CURDIR)/debian/torque-oscar-server/var/spool/torque/server_priv
 	mkdir -p $(CURDIR)/debian/torque-oscar-server/var/spool/torque/server_logs
 	mkdir -p $(CURDIR)/debian/torque-oscar-server/var/spool/torque/spool
+	mkdir -p $(CURDIR)/debian/torque-oscar-server/var/lock/subsys/
 	chmod 1777 $(CURDIR)/debian/torque-oscar-server/var/spool/torque/spool
 	mkdir -p $(CURDIR)/debian/torque-oscar-server/var/spool/torque/aux
 	chmod 0755 $(CURDIR)/debian/torque-oscar-server/var/spool/torque/aux
@@ -144,6 +145,7 @@ install-arch:
 	mkdir -p $(CURDIR)/debian/torque-oscar-mom/var/spool/torque/mom_logs
 	mkdir -p $(CURDIR)/debian/torque-oscar-mom/var/spool/torque/checkpoint
 	mkdir -p $(CURDIR)/debian/torque-oscar-mom/var/spool/torque/undelivered
+	mkdir -p $(CURDIR)/debian/torque-oscar-mom/var/lock/subsys/
 	mv $(CURDIR)/debian/torque-oscar/usr/sbin/pbs_mom $(CURDIR)/debian/torque-oscar-mom/usr/sbin
 	cp $(CURDIR)/contrib/init.d/pbs_mom $(CURDIR)/debian/torque-oscar-mom/etc/init.d
 

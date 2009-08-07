@@ -1,9 +1,17 @@
+torque-oscar (2.1.10-6) hardy; urgency=low
+
+  * Add a dependency to daemon for a few of the sub-packages.
+  * Create automatically the /var/lock/subsys directory (needed by init.d 
+scripts).
+
+ -- Geoffroy Vallee <valleegr@ornl.gov>  Fri, 07 Aug 2009 11:09:51 -0400
+
 torque-oscar (2.1.10-5) hardy; urgency=low
 
   * Create a /etc/rc.d/init.d/functions file (linking to 
 /lib/lsb/init-functions) so the init.d scripts can work.
 
- -- Geoffroy Vallee [gvh] <gvh@gvh1.ornl.gov>  Fri, 07 Aug 2009 10:55:38 -0400
+ -- Geoffroy Vallee <valleegr@ornl.gov>  Fri, 07 Aug 2009 10:55:38 -0400
 
 torque-oscar (2.1.10-4) hardy; urgency=low
 

@@ -19,13 +19,13 @@ Description: <insert up to 60 chars description>
 
 Package: torque-oscar-server
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}
+Depends: ${shlibs:Depends}, ${misc:Depends}, daemon
 Description: <insert up to 60 chars description>
  <insert long description, indented with spaces>
 
 Package: torque-oscar-mom
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}
+Depends: ${shlibs:Depends}, ${misc:Depends}, daemon
 Description: <insert up to 60 chars description>
  <insert long description, indented with spaces>
 
