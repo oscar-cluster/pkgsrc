@@ -1,3 +1,9 @@
+torque-oscar (2.1.10-7) hardy; urgency=low
+
+  * Revisit init.d scripts so they actually work on Debian.
+
+ -- Geoffroy Vallee <valleegr@ornl.gov>  Fri, 07 Aug 2009 13:09:54 -0400
+
 torque-oscar (2.1.10-6) hardy; urgency=low
 
   * Add a dependency to daemon for a few of the sub-packages.
