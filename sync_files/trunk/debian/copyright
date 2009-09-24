@@ -1,25 +1,15 @@
 This package was debianized by Geoffroy Vallee <valleegr@ornl.gov> on
-Mon, 18 Jun 2007 13:46:54 -0400.
+Mon Jun 18 14:12:06 EST 2007
 
-It was downloaded from http://oscar.openclustergroup.org/
+Upstream Author:
 
-Upstream Authors: 
+    OSCAR Developer Team
 
-    Jason Brechin
-    Benoit des Ligneris
-    Frank Crawford
-    Thomas Naughton <naughtont@ornl.gov>
-    Erich Focht <efocht@hpce.nec.com>
+Copyright:
 
-Copyright: 
+    <Copyright (C) 2000-2009 All rights reserved.>
 
-    <Copyright (C) 2004-2005 Erich Focht efocht@hpce.nec.com>
-    <Copyright (C) Revolution Linux>
-    <Copyright (C) Oak Ridge National Laboratory>
-    <Copyright (C) Jason Brechin>
-    <Copyright (C) Frank Crawford>
-
-License:
+License: 
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -36,8 +26,9 @@ License:
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,
     MA 02110-1301, USA.
 
-The Debian packaging is (C) 2007, Geoffroy Vallee <valleegr@ornl.gov> and
+The Debian packaging is (C) 2008, Geoffroy Vallee <valleegr@ornl.gov> and
 is licensed under the GPL, see `/usr/share/common-licenses/GPL'.
 
 # Please also look if there are files or directories which have a
 # different copyright/license attached and list them here.
+

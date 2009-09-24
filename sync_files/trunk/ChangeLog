@@ -1,6 +1,7 @@
-2.5.2:
+2.5.2 (not yet released):
 - Correctly deal with the creation of directories both in the images and for
 the templates.
+- Fix the Debian copyright.
 
 2.5.1:
 - Automatically create a log file.
