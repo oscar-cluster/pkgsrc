@@ -31,9 +31,18 @@ dist: clean
 	@rm -f /tmp/oscar-v.tar.gz
 
 rpm: dist
-	sed -e "s/PERLLIBPATH/$(SEDLIBDIR)/" < oscar-v.spec.in \
-        > oscar-v.spec
-	rpmbuild -bb ./oscar-v.spec
+	sed -e "s/PERLLIBPATH/$(SEDLIBDIR)/" < oscarv.spec.in \
+        > oscarv.spec
+	rpmbuild -bb ./oscarv.spec
 
 deb:
-	dpkg-buildpackage -rfakeroot
+	@if [ -n "$$UNSIGNED_OSCAR_PKG" ]; then \
+        echo "dpkg-buildpackage -rfakeroot -us -uc"; \
+        dpkg-buildpackage -rfakeroot -us -uc; \
+    else \
+        echo "dpkg-buildpackage -rfakeroot"; \
+        dpkg-buildpackage -rfakeroot; \
+    fi
+	@if [ -n "$(PKGDEST)" ]; then \
+        mv ../$(PKG)*.deb $(PKGDEST); \
+    fi

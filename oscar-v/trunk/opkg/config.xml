@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <oscar>
-  <name>oscar-v</name>
-  <class>core</class>
+  <name>oscarv</name>
+  <class>included</class>
   <summary>OSCAR extension for system-level virtualization support.</summary>
   <description>
 OSCAR extension for system-level virtualization support.

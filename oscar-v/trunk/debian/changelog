@@ -1,5 +1,5 @@
-oscarv (1.0-1) hardy; urgency=low
+oscarv (1.0.0-1) hardy; urgency=low
 
   * New upstream version.
 
- -- Geoffroy Vallee <valleegr@ornl.gov>  Wed, 21 Jan 2009 14:20:07 -0500
+ -- Geoffroy Vallee <valleegr@ornl.gov>  Wed, 08 Jul 2009 14:20:07 -0500

@@ -7,6 +7,6 @@ Standards-Version: 3.7.2
 
 Package: oscarv
 Architecture: all
-Depends: ${shlibs:Depends}, ${misc:Depends}, liboscar
+Depends: ${shlibs:Depends}, ${misc:Depends}, liboscar, v2m
 Description: OSCAR extension to support system-level virtualization.
  OSCAR extension to support system-level virtualization such as Xen or KVM.
