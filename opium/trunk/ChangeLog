@@ -1,4 +1,4 @@
-ssh-oscar-1.3.1 (not yet released):
+ssh-oscar-1.3.1:
 - Update the build dependencies for the Debian packages.
 - Fix the Debian copyright.
 

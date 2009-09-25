@@ -2,7 +2,7 @@
 %define name ssh-oscar
 
 # Version of package
-%define version 1.3
+%define version 1.3.1
 
 #==============================================================
 
@@ -57,6 +57,9 @@ make install MANDIR=%_mandir
 #==============================================================
 
 %changelog
+* Fri Sep 25 2009 Geoffroy Vallee <valleegr@ornl.gov> 1.3.1-1
+- New upstream version (see ChangeLog for more details).
+
 * Thu Apr 30 2009 Geoffroy Vallee <valleegr@ornl.gov> 1.3-2
 - Use the mandir macro instead of a hardcoded path.
 
