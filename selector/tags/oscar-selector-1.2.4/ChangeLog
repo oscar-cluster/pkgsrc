@@ -1,0 +1,60 @@
+1.2.4:
+- Fix the Debian copyright.
+
+1.2.3:
+- Fix a sequence issue when loading the OSCAR::RepositoryManager Perl module
+in SelectorTable.pm.
+
+1.2.2:
+- Patch from Thilo: speed up the populate of the GUI table.
+
+1.2.1:
+- Fix various issues with the GUI: because of the code separation between the
+GUI and the rest of the code, we had to create a new namespace for the Perl
+modules related to the GUI. The support of this new namespace were not fully
+implemented.
+
+1.2:
+- Add dependency requirement for binary package creation (build.cfg).
+- Reorganize the code to separate the GUI code.
+- Merge the oscar-selector and selector_cli scripts.
+- Fully support package selection/unselection and package set management via
+the CLI.
+- Update the dependencies for the RPM packages.
+- Fix a problem when selecting a packager set other than "Default".
+
+1.1.1:
+- Remove debugging messages.
+- Slightly improve the Makefile.
+- Fix a bug on some Linux distribution when saving package sets (the way XML
+files are parsed can be slightly different based on the local Linux
+distribution).
+
+1.1:
+- Move the PackageSet.pm Perl module from oscar-base to Selector.
+- Include a oscar-selector script that enables the management of package sets.
+
+1.0.4:
+- Disable the "Manage Set" button since the base code is not ready to support
+such a functionality.
+
+1.0.3:
+- Modify the Makefile so we can choose the directory to save sources when
+creating RPMs.
+- Modify the Makefile so we can choose the directory where the binary packages
+are stored.
+- Enable the creation of unsigned Debian packages by setting the
+UNSIGNED_OSCAR_PKG environment variable.
+
+1.0.2:
+- Core packages are now always checked (a bug prevented to do so before).
+- Core packages cannot be unchecked (a bug prevented to do so before).
+
+1.0.1:
+- Clean up and improve the spec file.
+- Ease the creation of RPMs.
+
+1.0:
+- Separate Selector from the rest of the OSCAR code.
+- Include the specification of Selector capabilities.
+- Make the implementation based on the specification.
