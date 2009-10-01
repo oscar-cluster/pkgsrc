@@ -6,8 +6,7 @@
 Summary: OSCARized File Synchronization System
 Name: sync-files
 Version: 2.5.3
-Release: 1
-BuildArchitectures: noarch
+Release: 2
 Distribution: OSCAR
 Packager: Erich Focht <efocht@hpce.nec.com>
 URL: http://oscar.sourceforge.net/
@@ -29,7 +28,7 @@ Requires: perl(Getopt::Long)
 Obsoletes: sync-users-oscar
 
 Prefix:	   %{install_dir}
-#BuildRoot: $RPM_BUILD_ROOT
+BuildRoot: %{_localstatedir}/tmp/%{name}-root
 BuildArch: noarch
 AutoReqProv:	no
 
@@ -49,8 +48,7 @@ forced update (/opt/sync_files/bin/sync_files --force).
 %setup -n %{name}
 
 %build
-make install 
-#DESTDIR=$RPM_BUILD_ROOT
+make install DESTDIR=$RPM_BUILD_ROOT
 
 %install
 
@@ -69,10 +67,13 @@ mv /etc/crontab.preun /etc/crontab
 %config %{install_dir}/etc/sync_files.conf
 %dir %{install_dir}/tmp
 %{install_dir}/templates/*
+/usr/local/man/man1/sync_files.1
 
 #==============================================================
 
 %changelog
+* Thu Oct 01 2009 Geoffroy Vallee <valleegr@ornl.gov> 2.5.3-2
+- Fix the spec file to prevent errors on some RPM based systems.
 * Thu Sep 24 2009 Geoffroy Vallee <valleegr@ornl.gov> 2.5.3-1
 - New upstream version.
 * Thu Jul 09 2009 Geoffroy Vallee <valleegr@ornl.gov> 2.5.2-1
