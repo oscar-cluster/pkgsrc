@@ -62,7 +62,7 @@ install: build
 	# Add here commands to install the package into debian/ganglia.
 	$(MAKE) install prefix=$(CURDIR)/debian/tmp/usr
 	# Seed the package directories
-	dh_install --sourcedir=debian/tmp
+#	dh_install --sourcedir=debian/tmp
 
 #	cp $(CURDIR)/gmond/gmond.conf $(CURDIR)/debian/ganglia-monitor/etc
 #	patch -d debian/ganglia-monitor/etc -p1 < debian/patches/gmond.conf.diff
