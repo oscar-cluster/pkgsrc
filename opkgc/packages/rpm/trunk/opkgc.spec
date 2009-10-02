@@ -1,7 +1,7 @@
 %{!?python_sitelib: %define python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
 
 Name:           opkgc
-Version:        0.4.2
+Version:        0.4.3
 Release:        1
 Summary:        Compiler for OSCAR package
 
@@ -41,12 +41,16 @@ rm -rf $RPM_BUILD_ROOT
 %{_bindir}/opkgc
 %{_bindir}/opkg-convert
 %{_datadir}/%{name}/
-%{_defaultdocdir}/%{name}/
-%{_mandir}/man1/opkgc.1.gz
-%{_mandir}/man5/opkg.5.gz
+#%{_defaultdocdir}/%{name}/
+#%{_mandir}/man1/opkgc.1.gz
+#%{_mandir}/man5/opkg.5.gz
+/usr/man/man1/opkgc.1.gz
+/usr/man/man5/opkg.5.gz
 %config %{_sysconfdir}/opkgc.conf
 
 %changelog
+* Fri Oct 02 2009 Geoffroy Vallee <valleegr@ornl.gov> 0.4.3-1
+- Update from upstream (0.4.3)
 * Mon Jun 29 2009 Geoffroy Vallee <valleegr@ornl.gov> 0.4.2-1
 - Update from upstream (0.4.2)
 * Thu Dec 04 2008 Geoffroy Vallee <valleegr@ornl.gov> 0.4.1-1
