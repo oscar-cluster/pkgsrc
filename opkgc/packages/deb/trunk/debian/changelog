@@ -1,3 +1,9 @@
+opkgc (0.4.3-1) hardy; urgency=low
+
+  * Update from upstream (0.4.3)
+
+ -- Geoffroy Vallee <valleegr@ornl.gov>  Fri, 02 Oct 2009 02:18:15 -0400
+
 opkgc (0.4.2-1) hardy; urgency=low
 
   * Update from upstream (0.4.2)
