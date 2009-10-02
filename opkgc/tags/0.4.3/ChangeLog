@@ -1,0 +1,77 @@
+0.4.3:
+    * [Ticket #537] If arch filters are specified in the config.xml file, we
+    generate architecture dependent binary packages to avoid conflicts when
+    different architectures have different dependencies.
+	* [Ticket #533] The "output" option is now working on RPM based systems.
+	* [Ticket #501] Correctly include the man page into the OPKGC RPM.
+
+0.4.2:
+	* [Ticket #534] On Debian based systems, scripts in the "scripts"
+	directory of OPKGs are now included.
+
+0.4.1
+	* The Debian changelog is now correct, we use oscar-devel as user id for
+	the changelog entry and we do not sign the packages.
+	* The meta-Debian package now also include the scripts api-post-clientdef and
+	api-post-image (bug #498).
+	Geoffroy Vallee <valleegr@ornl.gov> - December 2008
+
+0.4
+	* Release "It is not that i do not like people, it is just that 
+	i don't like when they speak to me".
+	* Include assert in opkg-convert to avoid a crash if xsltproc is 
+	not installed.
+	Geoffroy Vallée <valleegr@ornl.gov> - September 13th, 2007	
+
+	* Refactoring of code: 
+	  - all description of opkg is in OpkgDescription
+	  - description of output packages are in PkgDescription (super class)
+	    and RpmSpec and DebDescription
+	* Remove validate option definitively (always validate xml file)
+	* Add a new log level: trace (with -v -v)
+	* Add opkg-level dependencies
+	* Fix SRPMS generation
+	Jean Parpaillon <jean.parpaillon@irisa.fr> - September 17th, 2007
+
+	* Add support of automake >= 1.9
+	* RPM template fixes
+	Bernard Li <bernard@vanhpc.org>
+
+	* RPM template fixes
+	Erich Focht <efocht@hpce.nec.com>
+
+	* RPM template fixes
+	* opkg-convert fixes
+	DongInn Kim <dikim@osl.iu.edu>
+
+0.3.1
+	* Release "Vandanaa Trayee"
+	* Add a --version option (Closes #383)
+	* Several fix for generated Debian packages to be 
+	lintian error-free (Closes #355)
+	* Does not fail if uri tag is missing in config.xml 
+	(Closes #352 #360)
+	* Fix duplication of fields in Debian meta-files which caused 
+	error in dependancies (Closes #359)
+
+0.3
+	* Release "Ain Ghazel"
+	* Add strictness for package name
+	* Add formatting of summary and description
+	* Add better support of arch and dist filtering
+
+0.2.1
+        * Release "Los peces"
+	* Fix make install target on some distros
+	Jean Parpaillon <jean.parpaillon@irisa.fr> - June 27th, 2007
+	* Add revision history in opkgc-manual
+	Geoffroy Vallée <valleegr@ornl.gov> - June 22th, 2007
+
+0.2	
+	* Release "Caravan"
+	* Put config.xml file in opkg-<name> package
+	Jean Parpaillon <jean.parpaillon@irisa.fr> - June 19th, 2007
+	
+0.1
+	* Release "I Got Rhythm"
+	Jean Parpaillon <jean.parpaillon@irisa.fr> - April 20th, 2007
