@@ -328,7 +328,7 @@ sub help {
 sub cleanup {
     for my $f (@delfiles) {
         if (-e $f) {
-            !system("rm -f $f") or print "Couldn't remove file $f : $!\n";
+            !system("rm -f $f") or print "ERROR: Couldn't remove file $f: $!\n";
         }
     }
     &restore_aptlist;
