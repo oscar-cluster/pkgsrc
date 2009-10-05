@@ -1,6 +1,10 @@
+rapt-2.8.7 (not yet released):
+- Decrease the sleep time when waiting for the lock release.
+- Clean-up the code.
+- Improve output.
+
 rapt-2.8.6:
 - Remove debugging messages.
-- Improve output.
 - Fix a problem when creating the list of repositories, previously the array
 was not correctly created when a config file from /tftpboot included several
 repositories.

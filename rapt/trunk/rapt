@@ -88,211 +88,8 @@ GetOptions(
         "verbose|v+"    => \$verbose,
         );
 
-$verbose = "$ENV{RAPT_VERBOSE}" if ($ENV{RAPT_VERBOSE});
-
-# WARNING, we currently assume that if the distro is specified, it overwrite
-# any explicit repos (--repo option).
-my $default_repos;
-if (defined $distro) {
-    require OSCAR::PackagePath;
-    my @tmp;
-    $default_repos = get_default_repos($distro);
-    @tmp = split (" ", $default_repos);
-    foreach my $r (@tmp) {
-        my @tmp2 = split (",", $r);
-        foreach my $t (@tmp2) {
-            if (OSCAR::PackagePath::repo_local ($t) == 0
-                || (OSCAR::PackagePath::repo_local ($t) == 1
-                    && OSCAR::PackagePath::repo_empty ($t) == 0)) {
-                unshift (@repos, $t);
-            }
-        }
-    }
-}
-
-help() if (!scalar(@repos));
-
 my @validarch = qw(i386 x86_64 ia64 ppc64 noarch);
-
-if (check_repos (@repos)) {
-    die "ERROR: Invalid repo(s)\n";
-}
-
-my @arches = get_arch_repos(@repos);
-
-print "Supported architecture(s): [".join (" ", @arches)."]\n" if $verbose;
-
-our $err = 0;
 chomp(my $hostname=`hostname -s`);
-
-if ($export || $unexport || $prepare) {
-    if ($prepare) {
-        foreach my $archstr (@arches) {
-            my $march = $archstr;
-            $march = "i?86" if ($archstr eq "i386");
-            $err += prep_repodata($archstr);
-        }
-    }
-
-    $err += add_httpd_conf() if ($export);
-    $err += del_httpd_conf() if ($unexport);
-    exit $err;
-}
-
-if (scalar(@repoadd) || scalar(@repodel) || $repolist) {
-    if (@repodel) {
-        &oscar_repocmd("repodel", @repodel);
-    }
-    if (@repoadd) {
-        &oscar_repocmd("repoadd", @repoadd);
-    }
-    if ($repolist) {
-        &oscar_repocmd("repolist",);
-    }
-    exit 0;
-}
-
-# chop trailing slashes from repository names
-foreach (@repos) {
-    s:\/$::;
-}
-
-#
-# For debian we need to carefully distinguish between local and remote
-# repositories. Installing into the master root filesystem can be done
-# from a local repo (file:), installation into an image has to be done
-# through a remote repo, as it runs in chroot!
-#
-for my $repo (@repos) {
-    # prepend "file:" to absolute path repos
-    if (($repo !~ /^(file|ftp|http)/) && -d $repo && ($repo=~/^\//)) {
-        $repo = "file:".$repo;
-    }
-}
-
-
-# install exit handler which removes the temporary
-# files and releases the lock
-END {my $rc = $?; cleanup(); if ($rc != 0) {print "ERROR during RAPT execution\n";} exit $rc};
-
-$SIG{INT} = \&cleanup;
-
-
-
-##############################
-### go for an apt-get command
-##############################
-
-# if command is "install" into empty image: debootstrap first
-if ($installroot) {
-    if ((scalar(grep /^install$/, @ARGV) == 1) && &img_needs_bootstrap) {
-        if (!defined $distro) {
-            if (debootstrap($installroot, @repos)) {
-                die "ERROR: Impossible to bootstrap the Debian system";
-            }
-        } else {
-            if (debootstrap_distro ($installroot, $distro)) {
-                die "ERROR: Impossible to bootstrap the Debian system";
-            }
-        }
-
-        # Debian/Sarge sucks for one point: if we want to be able to install
-        # kernel packages, the /etc/kernel-img.conf file has to be created
-        # manually
-        my $cmd = "echo \"do_initrd = Yes\" > $installroot/etc/kernel-img.conf";
-        print ("Executing: $cmd\n") if $verbose;
-        if (system($cmd)) {
-            print ("Impossible to create file $installroot/etc/kernel-img.conf");
-        }
-    }
-    @repos = &repo_file2http;
-}
-
-# lock source.list file such that concurrent "rapt"s wait for the lock
-&lock_aptlist;
-
-&backup_aptlist;
-
-# create temporary sources.list file with proper repository paths
-&new_aptlist;
-
-# update Packages cache. Note that we turn off all output (including stderr),
-# we are only interested by the return code.
-my $cmd = "apt-get update";
-$cmd = $cmd . " 1>/dev/null 2>/dev/null" if (!$verbose);
-if ($installroot) {
-    $cmd = "chroot $installroot $cmd";
-}
-print "Executing: $cmd\n" if $verbose;
-$err = system($cmd);
-if ($err) {
-    die("Error occured while running \"$cmd\" ($err)");
-}
-
-
-# mount /proc into image if needed
-if ($installroot) {
-    if (!&img_has_proc) {
-	&img_mount_proc;
-    }
-}
-# shut up debconf
-&shutup_debconf($installroot);
-
-# disable start-stop-daemon
-if ($installroot) {
-    &install_fake_start_stop_daemon($installroot);
-}
-
-# run apt-get command
-my $cmd;
-if ($ARGV[0] eq "search" || $ARGV[0] eq "show") {
-    $cmd = "aptitude ";
-} else {
-    $cmd = "apt-get ";
-}
-for (my $i=0; $i<scalar (@ARGV); $i++) {
-    if ($ARGV[$i] eq "*") {
-        # If by any chance the user is using * to get the list of all packages
-        # we have to modify the star into a regexp that will actually give the
-        # expected output.
-        $cmd .= "\'.*\' ";
-    } else {
-        $cmd .= "$ARGV[$i] ";
-    }
-}
-
-if ($installroot) {
-    $cmd = "chroot $installroot $cmd";
-}
-
-if ($ARGV[0] eq "search" && $name_only) {
-    $cmd .= " -F \"%p\"";
-}
-
-# other preparing commands (cf. sin)
-
-print "Executing: $cmd\n" if ($verbose);
-$err = system($cmd);
-
-# umount /proc into image if needed
-if ($installroot) {
-    &img_umount_proc;
-}
-
-# enable interactive debconf
-&openup_debconf($installroot);
-
-# enable start-stop-daemon
-if ($installroot) {
-    &uninstall_fake_start_stop_daemon($installroot);
-}
-
-&restore_aptlist;
-&unlock_aptlist;
-
-exit $err;
-
 
 #############################################################################
 
@@ -484,10 +281,10 @@ sub img_needs_bootstrap {
 sub repo_file2http {
     my @remote;
     for my $repo (@repos) {
-	if ($repo =~ /^file:/) {
-	    $repo =~ s,^file:,http://127.0.0.1/repo,;
-	}
-	push @remote, $repo;
+    if ($repo =~ /^file:/) {
+        $repo =~ s,^file:,http://127.0.0.1/repo,;
+    }
+    push @remote, $repo;
     }
     return @remote;
 }
@@ -498,10 +295,10 @@ sub img_has_proc {
     my $hasproc;
     open IN, "/proc/mounts" or croak "Cannot open /proc/mounts: $!";
     while (<IN>) {
-	if (m:$installroot/proc:) {
-	    $hasproc = 1;
-	    last;
-	}
+    if (m:$installroot/proc:) {
+        $hasproc = 1;
+        last;
+    }
     }
     close IN;
     return $hasproc;
@@ -510,16 +307,16 @@ sub img_has_proc {
 # check if image already has /proc mounted, mount it otherwise
 sub img_mount_proc {
     if (!&img_has_proc()) {
-	!system("mount --bind /proc $installroot/proc")
-	    or croak "Could not mount /proc into $installroot: $!";
+    !system("mount --bind /proc $installroot/proc")
+        or croak "Could not mount /proc into $installroot: $!";
     }
 }
 
 # unmount /proc from image
 sub img_umount_proc {
     if (&img_has_proc()) {
-	!system("umount $installroot/proc")
-	    or croak "Could not umount /proc in $installroot: $!";
+    !system("umount $installroot/proc")
+        or croak "Could not umount /proc in $installroot: $!";
     }
 }
 
@@ -528,29 +325,29 @@ sub img_umount_proc {
 #####
 sub shutup_debconf {
 # Preconfigure the debconf database for maximum non-interactivity
-# Input:	image path
-# Returns:	1 on success, 0 on failure.
-	my $imgpath = shift;
-	my $config = "$imgpath/var/cache/debconf/config.dat";
+# Input:    image path
+# Returns:  1 on success, 0 on failure.
+    my $imgpath = shift;
+    my $config = "$imgpath/var/cache/debconf/config.dat";
 
-	print "Configuring debconf to use the Noninteractive interface.\n"
-	    if $verbose;
-	open(NEW_CONFIG, ">>$config") or close OLD_CONFIG and return 1;
-	print NEW_CONFIG << 'EOF';
+    print "Configuring debconf to use the Noninteractive interface.\n"
+        if $verbose;
+    open(NEW_CONFIG, ">>$config") or close OLD_CONFIG and return 1;
+    print NEW_CONFIG << 'EOF';
 Name: debconf/frontend
 Template: debconf/frontend
 Value: Noninteractive
 Owners: debconf
 Flags: seen
 EOF
-	close NEW_CONFIG;
-	return 0;
+    close NEW_CONFIG;
+    return 0;
 }
 
 sub openup_debconf {
 # Undo what shutup_debconf did, removing the Noninteractive setting.
-# Input:	image path
-# Returns:	1 on success, 0 on failure.
+# Input:    image path
+# Returns:  1 on success, 0 on failure.
     my $imgpath = shift;
     my $active = 0;
 
@@ -563,18 +360,18 @@ sub openup_debconf {
     open(OLD_CONFIG, "<$tmp") or return 1;
     open(NEW_CONFIG, ">$config") or close OLD_CONFIG and return 1;
     while (<CONFIG>) {
-	if (/^Name: debconf\/frontend$/) {
-	    $active = 1;
-	}
-	if ($active == 1 and /^\s*$/) {
-	    $active = 0;
-	}
-	if ($active == 1 and /^Value: Noninteractive$/) {
-	    print NEW_CONFIG "Value: Dialog\n";
-	    $active = 0;
-	    next;
-	}
-	print NEW_CONFIG;
+    if (/^Name: debconf\/frontend$/) {
+        $active = 1;
+    }
+    if ($active == 1 and /^\s*$/) {
+        $active = 0;
+    }
+    if ($active == 1 and /^Value: Noninteractive$/) {
+        print NEW_CONFIG "Value: Dialog\n";
+        $active = 0;
+        next;
+    }
+    print NEW_CONFIG;
     }
     close OLD_CONFIG;
     close NEW_CONFIG;
@@ -591,7 +388,7 @@ sub install_fake_start_stop_daemon {
 
     print "Installing fake start-stop-daemon.\n" if $verbose;
     rename "$imgpath/sbin/start-stop-daemon", 
-	"$imgpath/sbin/start-stop-daemon.RAPT.tmp" or return 1;
+    "$imgpath/sbin/start-stop-daemon.RAPT.tmp" or return 1;
     open(SSD, ">$imgpath/sbin/start-stop-daemon") or return 1;
     print SSD "#!/bin/sh\n";
     print SSD "echo\n";
@@ -612,7 +409,7 @@ sub uninstall_fake_start_stop_daemon {
     print "Uninstalling fake start-stop-daemon.\n" if $verbose;
     unlink "$imgpath/sbin/start-stop-daemon" or return 1;
     rename "$imgpath/sbin/start-stop-daemon.RAPT.tmp", 
-	"$imgpath/sbin/start-stop-daemon" or return 1;
+    "$imgpath/sbin/start-stop-daemon" or return 1;
 }
 
 ################################################################################
@@ -818,14 +615,16 @@ sub debootstrap ($@) {
 
 
 # this function returns the apt list filename
-sub aptlist_name {
+sub aptlist_name () {
     return $installroot."/etc/apt/sources.list";
 }
 
 # create lock file in safe way
 # function only returns successfully!
-sub lock_aptlist {
-    my $file = &aptlist_name."_lock";
+sub lock_aptlist () {
+    my $file = aptlist_name();
+    $file .= "_lock";
+    my $err;
 
     # create lockfile with other name
     my $tfile = $file."_".$$;
@@ -834,56 +633,57 @@ sub lock_aptlist {
 
   WAIT4LOCK:
     while (-e $file) {
-	my $lpid = &read_pid($file);
-	if ($lpid) {
-	    if (! -d "/proc/$lpid") {
-		print "Stale lock found for non-existing process $lpid.".
-		    " Removing it!\n" if $verbose;
-		unlink($file);
-		last;
-	    } else {
-		print "Waiting for lock $file to be released...\n" if $verbose;
-		sleep(3);
-	    }
-	} else {
-	    print "Lock $file disappeared or empty !?!\n" if $verbose;
-	    last;
-	}
+        my $lpid = &read_pid($file);
+        if ($lpid) {
+            if (! -d "/proc/$lpid") {
+                print "Stale lock found for non-existing process $lpid.".
+                    " Removing it!\n" if $verbose;
+                unlink($file);
+                last;
+            } else {
+                print "Waiting for lock $file to be released...\n";
+                sleep(1);
+            }
+        } else {
+            print "Lock $file disappeared or empty !?!\n" if $verbose;
+            last;
+        }
     }
     # Now try to acquire the lock
     $err = system("mv --reply=no $tfile $file 2>/dev/null");
     if ($err) {
-	print "Couldn't acquire lock $file\n" if $verbose;
-	goto WAIT4LOCK;
+        print "ERROR: Couldn't acquire lock $file\n";
+        goto WAIT4LOCK;
     }
     return;
 }
 
-sub unlock_aptlist {
-    my $file = &aptlist_name . "_lock";
+sub unlock_aptlist () {
+    my $file = aptlist_name();
+    $file .= "_lock";
     my $pid = &read_pid($file);
     if ($pid != "$$") {
-	print "WARNING! Unexpected pid $pid is holding the lock $file\n";
+    print "WARNING! Unexpected pid $pid is holding the lock $file\n";
     } else {
-	!system("rm -f $file") or carp("Could not remove lock $file: $!");
+    !system("rm -f $file") or carp("Could not remove lock $file: $!");
     }
 }
 
 sub backup_aptlist {
-    my $file = &aptlist_name;
+    my $file = aptlist_name();
     my $backup = $file . "_bak$$";
     if (-f $file) {
-	!system("mv $file $backup")
-	    or carp("Could not back up $file to $backup: $!");
+    !system("mv $file $backup")
+        or carp("Could not back up $file to $backup: $!");
     }
 }
 
 sub restore_aptlist {
-    my $file = &aptlist_name;
+    my $file = aptlist_name ();
     my $backup = $file . "_bak$$";
     if (-e $backup) {
-    	!system("mv $backup $file")
-	        or carp("Could not restore $file from $backup: $!");
+        !system("mv $backup $file")
+            or carp("Could not restore $file from $backup: $!");
     # GV: WARNING, not executing "apt-get update", it is not possible to 
     # directly reuse apt-get! Users MUST execute manually "apt-get update"!!
 #        !system("apt-get update")
@@ -893,7 +693,7 @@ sub restore_aptlist {
 
 # create new sources.list file for apt resembling the current repositories
 sub new_aptlist {
-    my $file = &aptlist_name;
+    my $file = aptlist_name ();
     my $backup = $file . "_bak$$";
     # We manually add the OSCAR repository entry.
     copy ($backup, $file);
@@ -901,14 +701,14 @@ sub new_aptlist {
     open OUT, "> $file" or croak("Could not open $file: $!");
     for my $repo (@repos) {
         my @data = split(/\+/,$repo);
-    	# if there's only one word, add codename info
-    	if (scalar(@data) == 1) {
-	        my $codename = detect_codename_repo($repo);
-	        push @data, ($codename, ".");
-    	} elsif (scalar(@data) == 2) {
-	        push @data, ".";
-	    }
-	    print OUT "deb ".join(" ",@data)."\n";
+        # if there's only one word, add codename info
+        if (scalar(@data) == 1) {
+            my $codename = detect_codename_repo($repo);
+            push @data, ($codename, ".");
+        } elsif (scalar(@data) == 2) {
+            push @data, ".";
+        }
+        print OUT "deb ".join(" ",@data)."\n";
     }
 #    print OUT "deb http://oscar.gforge.inria.fr/debian/ stable main oscar";
     close OUT;
@@ -918,10 +718,10 @@ sub read_pid {
     my ($file) = @_;
     local *IN;
     open IN, "$file" 
-	or do {
-	    return 0 if (! -e $file);
-	    croak "Could not open $file";
-	};
+    or do {
+        return 0 if (! -e $file);
+        croak "Could not open $file";
+    };
     my $pid = <IN>;
     close IN;
     return $pid;
@@ -975,16 +775,16 @@ sub oscar_repocmd {
 sub find_httpdir {
     my $httpdir;
     for my $d ("httpd", "apache", "apache2") {
-	if (-d "/etc/$d/conf.d") {
-	    $httpdir = "/etc/$d/conf.d";
-	    last;
-	} elsif (-d "/etc/$d/$d.conf") {
-	    $httpdir = "/etc/$d/$d.conf";
-	    last;
-	}
+    if (-d "/etc/$d/conf.d") {
+        $httpdir = "/etc/$d/conf.d";
+        last;
+    } elsif (-d "/etc/$d/$d.conf") {
+        $httpdir = "/etc/$d/$d.conf";
+        last;
+    }
     }
     if ($verbose) {
-	print "Found httpdir = $httpdir\n";
+    print "Found httpdir = $httpdir\n";
     }
     return $httpdir;
 }
@@ -995,43 +795,43 @@ sub add_httpd_conf {
     my $changed = 0;
     my $err = 0;
     if ($httpdir) {
-	for my $repo (@repos) {
-	    if ($repo =~ /^(file:\/|\/)/) {
-		$repo =~ s|^file:||;
-		if (!-d $repo) {
-		    print "Could not find directory $repo. Skipping.\n";
-		    $err++;
-		    next;
-		}
-		my $pname = "repo$repo";
-		my $rname = $pname;
-		$rname =~ s:/:_:g;
-		my $cname = "$httpdir/$rname.conf";
-		if (-f $cname) {
-		    print "Config file $cname already existing. Skipping.\n";
-		    next;
-		}
-		print "Exporting $repo through httpd, http://$hostname/$pname\n";
-		open COUT, ">$cname" or die "Could not open $cname : $!";
-		print COUT "Alias /$pname $repo\n";
-		print COUT "<Directory $repo/>\n";
-		print COUT "  Options Indexes\n";
-		print COUT "  order allow,deny\n";
-		print COUT "  allow from all\n";
-		print COUT "</Directory>\n";
-		close COUT;
-		++$changed;
-	    } else {
-		print "Repository URL is not a local absolute path!\n";
-		print "Skipping $repo\n";
-		$err++;
-		next;
-	    }
-	}
+    for my $repo (@repos) {
+        if ($repo =~ /^(file:\/|\/)/) {
+        $repo =~ s|^file:||;
+        if (!-d $repo) {
+            print "Could not find directory $repo. Skipping.\n";
+            $err++;
+            next;
+        }
+        my $pname = "repo$repo";
+        my $rname = $pname;
+        $rname =~ s:/:_:g;
+        my $cname = "$httpdir/$rname.conf";
+        if (-f $cname) {
+            print "Config file $cname already existing. Skipping.\n";
+            next;
+        }
+        print "Exporting $repo through httpd, http://$hostname/$pname\n";
+        open COUT, ">$cname" or die "Could not open $cname : $!";
+        print COUT "Alias /$pname $repo\n";
+        print COUT "<Directory $repo/>\n";
+        print COUT "  Options Indexes\n";
+        print COUT "  order allow,deny\n";
+        print COUT "  allow from all\n";
+        print COUT "</Directory>\n";
+        close COUT;
+        ++$changed;
+        } else {
+        print "Repository URL is not a local absolute path!\n";
+        print "Skipping $repo\n";
+        $err++;
+        next;
+        }
+    }
     } else {
-	print "Could not find directory $httpdir!\n";
-	print "Cannot setup httpd configuration for repositories.\n";
-	$err++;
+    print "Could not find directory $httpdir!\n";
+    print "Cannot setup httpd configuration for repositories.\n";
+    $err++;
     }
     restart_httpd() if ($changed);
     return $err;
@@ -1042,33 +842,33 @@ sub del_httpd_conf {
     my $changed = 0;
     my $err = 0;
     if ($httpdir) {
-	for my $repo (@repos) {
-	    if ($repo =~ /^(file:\/|\/)/) {
-		$repo =~ s|^file:||;
-		my $pname = "repo$repo";
-		my $rname = $pname;
-		$rname =~ s:/:_:g;
-		my $cname = "$httpdir/$rname.conf";
-		if (-f $cname) {
-		    print "Deleting config file $cname\n";
-		    if (unlink($cname)) {
-			print "WARNING: Could not delete $cname : $!\n";
-			$err++;
-		    } else {
-			++$changed;
-		    }
-		}
-	    } else {
-		print "Repository URL is not a local absolute path!\n";
-		print "Skipping $repo\n";
-		$err++;
-		next;
-	    }
-	}
+    for my $repo (@repos) {
+        if ($repo =~ /^(file:\/|\/)/) {
+        $repo =~ s|^file:||;
+        my $pname = "repo$repo";
+        my $rname = $pname;
+        $rname =~ s:/:_:g;
+        my $cname = "$httpdir/$rname.conf";
+        if (-f $cname) {
+            print "Deleting config file $cname\n";
+            if (unlink($cname)) {
+            print "WARNING: Could not delete $cname : $!\n";
+            $err++;
+            } else {
+            ++$changed;
+            }
+        }
+        } else {
+        print "Repository URL is not a local absolute path!\n";
+        print "Skipping $repo\n";
+        $err++;
+        next;
+        }
+    }
     } else {
-	print "Could not find directory $httpdir!\n";
-	print "Cannot delete httpd configuration for repositories.\n";
-	$err++;
+    print "Could not find directory $httpdir!\n";
+    print "Cannot delete httpd configuration for repositories.\n";
+    $err++;
     }
     restart_httpd() if ($changed);
     return $err;
@@ -1077,29 +877,30 @@ sub del_httpd_conf {
 sub list_exported {
     my $httpdir = find_httpdir();
     if ($httpdir) {
-	for my $repoconf (glob("$httpdir/repo_*.conf")) {
-	    my $rname = basename($repoconf,".conf");
-	    my ($dummy, $alias,$rdir) = split(" ",`grep "^Alias" $repoconf`);
-	    chomp $rdir;
-	    print "URL $alias : Repository --repo $rdir\n";
-	}
+    for my $repoconf (glob("$httpdir/repo_*.conf")) {
+        my $rname = basename($repoconf,".conf");
+        my ($dummy, $alias,$rdir) = split(" ",`grep "^Alias" $repoconf`);
+        chomp $rdir;
+        print "URL $alias : Repository --repo $rdir\n";
+    }
     }
     exit;
 }
 
 sub restart_httpd {
     for my $httpd ("httpd", "httpd2", "apache", "apache2") {
-	if (-x "/etc/init.d/$httpd") {
-	    print "Restarting $httpd\n";
-	    system("/etc/init.d/$httpd restart");
-	    last;
-	}
+    if (-x "/etc/init.d/$httpd") {
+        print "Restarting $httpd\n";
+        system("/etc/init.d/$httpd restart");
+        last;
+    }
     }
 }
 
 # Return: 0 if success, value > 0 else.
 sub prep_repodata (@) {
     my @list_arch = @_;
+    my $err;
 
     if (system("which dpkg-scanpackages 2>/dev/null")) {
         carp "ERROR: Could not find command dpkg-scanpackages!\n";
@@ -1320,3 +1121,209 @@ sub get_loal_repository_path ($) {
 
     return $repo;
 }
+
+################################################################################
+
+$verbose = "$ENV{RAPT_VERBOSE}" if ($ENV{RAPT_VERBOSE});
+
+# WARNING, we currently assume that if the distro is specified, it overwrite
+# any explicit repos (--repo option).
+my $default_repos;
+if (defined $distro) {
+    require OSCAR::PackagePath;
+    my @tmp;
+    $default_repos = get_default_repos($distro);
+    @tmp = split (" ", $default_repos);
+    foreach my $r (@tmp) {
+        my @tmp2 = split (",", $r);
+        foreach my $t (@tmp2) {
+            if (OSCAR::PackagePath::repo_local ($t) == 0
+                || (OSCAR::PackagePath::repo_local ($t) == 1
+                    && OSCAR::PackagePath::repo_empty ($t) == 0)) {
+                unshift (@repos, $t);
+            }
+        }
+    }
+}
+
+help() if (!scalar(@repos));
+
+if (check_repos (@repos)) {
+    die "ERROR: Invalid repo(s)\n";
+}
+
+my @arches = get_arch_repos(@repos);
+
+print "Supported architecture(s): [".join (" ", @arches)."]\n" if $verbose;
+
+our $err = 0;
+
+if ($export || $unexport || $prepare) {
+    if ($prepare) {
+        foreach my $archstr (@arches) {
+            my $march = $archstr;
+            $march = "i?86" if ($archstr eq "i386");
+            $err += prep_repodata($archstr);
+        }
+    }
+
+    $err += add_httpd_conf() if ($export);
+    $err += del_httpd_conf() if ($unexport);
+    exit $err;
+}
+
+if (scalar(@repoadd) || scalar(@repodel) || $repolist) {
+    if (@repodel) {
+        &oscar_repocmd("repodel", @repodel);
+    }
+    if (@repoadd) {
+        &oscar_repocmd("repoadd", @repoadd);
+    }
+    if ($repolist) {
+        &oscar_repocmd("repolist",);
+    }
+    exit 0;
+}
+
+# chop trailing slashes from repository names
+foreach (@repos) {
+    s:\/$::;
+}
+
+#
+# For debian we need to carefully distinguish between local and remote
+# repositories. Installing into the master root filesystem can be done
+# from a local repo (file:), installation into an image has to be done
+# through a remote repo, as it runs in chroot!
+#
+for my $repo (@repos) {
+    # prepend "file:" to absolute path repos
+    if (($repo !~ /^(file|ftp|http)/) && -d $repo && ($repo=~/^\//)) {
+        $repo = "file:".$repo;
+    }
+}
+
+
+# install exit handler which removes the temporary
+# files and releases the lock
+END {my $rc = $?; cleanup(); if ($rc != 0) {print "ERROR during RAPT execution\n";} exit $rc};
+
+$SIG{INT} = \&cleanup;
+
+
+
+##############################
+### go for an apt-get command
+##############################
+
+# if command is "install" into empty image: debootstrap first
+if ($installroot) {
+    if ((scalar(grep /^install$/, @ARGV) == 1) && &img_needs_bootstrap) {
+        if (!defined $distro) {
+            if (debootstrap($installroot, @repos)) {
+                die "ERROR: Impossible to bootstrap the Debian system";
+            }
+        } else {
+            if (debootstrap_distro ($installroot, $distro)) {
+                die "ERROR: Impossible to bootstrap the Debian system";
+            }
+        }
+
+        # Debian/Sarge sucks for one point: if we want to be able to install
+        # kernel packages, the /etc/kernel-img.conf file has to be created
+        # manually
+        my $cmd = "echo \"do_initrd = Yes\" > $installroot/etc/kernel-img.conf";
+        print ("Executing: $cmd\n") if $verbose;
+        if (system($cmd)) {
+            print ("Impossible to create file $installroot/etc/kernel-img.conf");
+        }
+    }
+    @repos = &repo_file2http;
+}
+
+# lock source.list file such that concurrent "rapt"s wait for the lock
+lock_aptlist ();
+
+backup_aptlist ();
+
+# create temporary sources.list file with proper repository paths
+new_aptlist ();
+
+# update Packages cache. Note that we turn off all output (including stderr),
+# we are only interested by the return code.
+my $cmd = "apt-get update";
+$cmd = $cmd . " 1>/dev/null 2>/dev/null" if (!$verbose);
+if ($installroot) {
+    $cmd = "chroot $installroot $cmd";
+}
+print "Executing: $cmd\n" if $verbose;
+$err = system($cmd);
+if ($err) {
+    die("Error occured while running \"$cmd\" ($err)");
+}
+
+
+# mount /proc into image if needed
+if ($installroot) {
+    if (!&img_has_proc) {
+	&img_mount_proc;
+    }
+}
+# shut up debconf
+&shutup_debconf($installroot);
+
+# disable start-stop-daemon
+if ($installroot) {
+    &install_fake_start_stop_daemon($installroot);
+}
+
+# run apt-get command
+my $cmd;
+if ($ARGV[0] eq "search" || $ARGV[0] eq "show") {
+    $cmd = "aptitude ";
+} else {
+    $cmd = "apt-get ";
+}
+for (my $i=0; $i<scalar (@ARGV); $i++) {
+    if ($ARGV[$i] eq "*") {
+        # If by any chance the user is using * to get the list of all packages
+        # we have to modify the star into a regexp that will actually give the
+        # expected output.
+        $cmd .= "\'.*\' ";
+    } else {
+        $cmd .= "$ARGV[$i] ";
+    }
+}
+
+if ($installroot) {
+    $cmd = "chroot $installroot $cmd";
+}
+
+if ($ARGV[0] eq "search" && $name_only) {
+    $cmd .= " -F \"%p\"";
+}
+
+# other preparing commands (cf. sin)
+
+print "Executing: $cmd\n" if ($verbose);
+$err = system($cmd);
+
+# umount /proc into image if needed
+if ($installroot) {
+    &img_umount_proc;
+}
+
+# enable interactive debconf
+&openup_debconf($installroot);
+
+# enable start-stop-daemon
+if ($installroot) {
+    &uninstall_fake_start_stop_daemon($installroot);
+}
+
+restore_aptlist ();
+unlock_aptlist ();
+
+exit $err;
+
+
