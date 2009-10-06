@@ -464,7 +464,7 @@ sub update_temp_file ($$$$$) {
     #
     if ($base =~ m/(passwd|group)/) {
         if (update_temp_passwd_like ($my_src, $dest, $out)) {
-            carp "ERROR: Impossible to update a file";
+            carp "ERROR: Impossible to update a file ($my_src, $dest, $out)";
             return -1;
         }
     } else {
@@ -514,7 +514,8 @@ sub filter_file ($$$$) {
         "dist=$distro, img=$image, mydistro=$mydistro";
 
     if (update_temp_file ($src, $tgt, $distro, $image, $base)) {
-        carp "ERROR: Impossible to generate the temp file";
+        carp "ERROR: Impossible to generate the temp file ".
+             "($src, $tgt, $distro, $image, $base)";
         return -1;
     }
 
@@ -618,7 +619,8 @@ sub update_file ($$) {
                 die "ERROR: Invalid distro";
             }
             if (filter_file($file, $src, $img, $dist)) {
-                die "ERROR: Impossible to apply the file filter";
+                die "ERROR: Impossible to apply the file filter ".  
+                    "($file, $src, $img, $dist)";
             }
             my $cmd = "/usr/bin/scpush --image $img --writeimg $src $dstfile";
             OSCAR::Logger::oscar_log_subsection "Executing: $cmd";
