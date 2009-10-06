@@ -40,6 +40,7 @@ use warnings "all";
 
 use OSCAR::ImageMgt;
 use OSCAR::Logger;
+use OSCAR::NodeMgt;
 use OSCAR::Utils;
 
 Getopt::Long::Configure ("permute", "auto_abbrev");
@@ -269,25 +270,6 @@ sub getentfiles () {
         or (carp "ERROR: Couldn't chmod $shadow: $!", return -1);
 
     return 0;
-}
-
-# Detect whether all hosts targetted by c3 are up and responding
-
-sub c3_hosts_up () {
-    my @c3out = `/usr/bin/cexec -p echo ALIVE`;
-    my @alive = grep /ALIVE/,@c3out;
-    if ($verbose) {
-        print "=== c3_hosts_up():\n";
-        print "c3out:\n";
-        print @c3out;
-        print "alive:\n";
-        print @alive;
-    }
-    if (scalar(@c3out) == scalar(@alive)) {
-        return 1;
-    } else {
-        return 0;
-    }
 }
 
 # Detect the distro for a given image or a given host.
@@ -626,7 +608,10 @@ sub update_file ($$) {
                 die "ERROR: Impossible to apply the file filter ".  
                     "($file, $src, $img, $dist)";
             }
-            my $cmd = "/usr/bin/scpush --image $img --writeimg $src $dstfile";
+# Gv (2009/10/06): it seems that sc3 is not working correctly on oscar-6.x and
+# since we do not support multiple clusters, we just fall back to C3.
+#            my $cmd = "/usr/bin/scpush --image $img --writeimg $src $dstfile";
+            my $cmd = "/usr/bin/cpush $src $dstfile";
             OSCAR::Logger::oscar_log_subsection "Executing: $cmd";
             if (system($cmd)) {
                     $success = 0;
@@ -795,11 +780,8 @@ if (!$crononly && ($change||$force)) {
         }
     }
     if ( (!defined ($image_only) || $image_only == 0) && $usec3 ) {
-        my $allup = c3_hosts_up();
-        print "c3_hosts_up returned : $allup\n" if ($verbose);
-        if (!$allup) {
-            $success = 0;
-            print "Not all hosts were accessible by c3! Will retry the update later\n";
+        if (OSCAR::NodeMgt::update_list_alive_nodes ()) {
+            die "ERROR: Impossible to update the C3 config file";
         }
     }
 
