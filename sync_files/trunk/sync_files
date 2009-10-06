@@ -579,6 +579,8 @@ sub update_file ($$) {
     my $dstfile;
     my $success;
 
+    OSCAR::Logger::oscar_subsection ("Updating file(s)...");
+
     if (!defined $distref || ref($distref) ne "ARRAY") {
         carp "ERROR: Invalid list of distros";
         return -1;
@@ -599,10 +601,10 @@ sub update_file ($$) {
         $dstfile = $file;
     }
     
-    #C3 is the default transport mechanism, since it tends to perform better
-    #than scp
+    # C3 is the default transport mechanism, since it tends to perform better
+    # than scp
     if ((!defined ($image_only) || $image_only == 0) && $usec3 ) {
-        print "Using c3 to sync $file to $dstfile\n" if ($verbose);
+        OSCAR::Logger::oscar_log_subsection "Using c3 to sync $file to $dstfile";
     
         # sync files to corresponding image-subcluster
         
