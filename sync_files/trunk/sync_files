@@ -600,7 +600,7 @@ sub update_file ($$) {
     
     #C3 is the default transport mechanism, since it tends to perform better
     #than scp
-    if ( $image_only == 0 && $usec3 ) {
+    if ((!defined $image_only) || $image_only == 0) && $usec3 ) {
         print "Using c3 to sync $file to $dstfile\n" if ($verbose);
     
         # sync files to corresponding image-subcluster
@@ -634,7 +634,7 @@ sub update_file ($$) {
         }
     }
     #scp can be used as an alternative or as a substitute 
-    if ($image_only == 0 && scalar(@$scphost)) {    
+    if ( (!defined ($image_only) || $image_only == 0) && scalar(@$scphost)) {    
         foreach my $scphn (@$scphost) {
             
             # - determine distro of host
@@ -788,7 +788,7 @@ if (!$crononly && ($change||$force)) {
             $distroh{$d} = 1;
         }
     }
-    if ( $image_only == 0 && $usec3 ) {
+    if ( (!defined ($image_only) || $image_only == 0) && $usec3 ) {
         my $allup = c3_hosts_up();
         print "c3_hosts_up returned : $allup\n" if ($verbose);
         if (!$allup) {
