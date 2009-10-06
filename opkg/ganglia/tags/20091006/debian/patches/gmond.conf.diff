@@ -1,0 +1,11 @@
+--- gmond/gmond.conf	2002-09-18 19:37:18.000000000 -0500
++++ debian/gmond.conf	2002-09-19 18:36:54.000000000 -0500
+@@ -100,7 +100,7 @@
+ #
+ # Which user should gmond run as?
+ # default: nobody
+-# setuid     nobody
++setuid     ganglia
+ #
+ # If you do not want this host to appear in the gexec host list, set
+ # this value to "on"

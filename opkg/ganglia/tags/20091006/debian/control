@@ -1,0 +1,47 @@
+Source: ganglia
+Section: net
+Priority: optional
+Maintainer: Stuart Teasdale <sdt@debian.org>
+Uploaders: Stephen Quinney <sjq@debian.org>, Andrew Stribblehill <ads@debian.org>
+Build-Depends: debhelper (>> 3.0.0), librrd2-dev
+Standards-Version: 3.6.2
+
+Package: ganglia-monitor
+Architecture: any
+Depends: ${shlibs:Depends}, adduser
+Description: A cluster system monitoring daemon
+ Ganglia is a scalable, real-time cluster monitoring environment 
+ with that collects cluster statistics in an open well-defined XML format. 
+ .
+ This package contains the monitor core program.
+
+Package: gmetad
+Architecture: any
+Depends: ${shlibs:Depends}, adduser
+Suggests: ganglia-monitor, ganglia-webfrontend
+Description: Meta-daemon for ganglia cluster monitoring toolkit
+ Ganglia is a scalable, real-time cluster monitoring environment 
+ with that collects cluster statistics in an open well-defined XML format. 
+ .
+ This package contains the 'gmetad', which collects information from ganglia
+ monitor clients, and writes them to RRD databases.
+
+Package: libganglia1
+Architecture: any
+Section: libs
+Depends: ${shlibs:Depends}
+Description: Ganglia cluster system monitor toolkit (shared libraries)
+ Ganglia is a scalable, real-time cluster monitoring environment 
+ with that collects cluster statistics in an open well-defined XML format. 
+ .
+ This package contains shared libraries.
+
+Package: libganglia1-dev
+Architecture: any
+Section: libdevel
+Depends: libganglia1 (=${Source-Version}), ${shlibs:Depends}
+Description: Ganglia cluster system monitor toolkit (devel libraries)
+ Ganglia is a scalable, real-time cluster monitoring environment 
+ with that collects cluster statistics in an open well-defined XML format. 
+ .
+ This package contains development libraries.
