@@ -1,0 +1,208 @@
+#!/usr/bin/make -f
+# -*- makefile -*-
+# Sample debian/rules that uses debhelper.
+#
+# This file was originally written by Joey Hess and Craig Small.
+# As a special exception, when this file is copied by dh-make into a
+# dh-make output file, you may use that output file without restriction.
+# This special exception was added by Craig Small in version 0.37 of dh-make.
+#
+# Modified to make a template file for a multi-binary package with separated
+# build-arch and build-indep targets  by Bill Allombert 2001
+
+# Uncomment this to turn on verbose mode.
+#export DH_VERBOSE=1
+
+# This has to be exported to make some magic below work.
+export DH_OPTIONS
+
+# These are used for cross-compiling and for saving the configure script
+# from having to guess our platform (since we know it already)
+DEB_HOST_GNU_TYPE   ?= $(shell dpkg-architecture -qDEB_HOST_GNU_TYPE)
+DEB_BUILD_GNU_TYPE  ?= $(shell dpkg-architecture -qDEB_BUILD_GNU_TYPE)
+
+PATCHES=$(sort $(shell find $(CURDIR)/debian/patches -name "*.patch"))
+
+CFLAGS = -Wall -g
+
+ifneq (,$(findstring noopt,$(DEB_BUILD_OPTIONS)))
+	CFLAGS += -O0
+else
+	CFLAGS += -O2
+endif
+
+config.status: configure
+	dh_testdir
+	@echo -n "Applying patches..."
+	@cd $(BUILD_DIR) && \
+		$(foreach patch, $(PATCHES), \
+			echo -n Applying $(patch) \
+			patch -s -p0 < $(patch) && echo done. &&) /bin/true
+	# Add here commands to configure the package.
+	#./configure --host=$(DEB_HOST_GNU_TYPE) --build=$(DEB_BUILD_GNU_TYPE) --prefix=/usr --mandir=\$${prefix}/share/man --infodir=\$${prefix}/share/info CFLAGS="$(CFLAGS)" LDFLAGS="-Wl,-z,defs"
+	./configure --prefix=/usr --with-server-home=/var/spool/torque --with-default-server=`hostname` --with-tmpdir=/tmp --with-rcp=scp --enable-gui --with-tcl
+
+#Architecture 
+build: build-arch build-indep
+
+build-arch: build-arch-stamp
+build-arch-stamp:  config.status
+
+	# Add here commands to compile the arch part of the package.
+	$(MAKE) -j 3
+	touch $@
+
+build-indep: build-indep-stamp
+build-indep-stamp:  config.status
+
+	# Add here commands to compile the indep part of the package.
+	$(MAKE) doc
+	touch $@
+
+clean:
+	dh_testdir
+	dh_testroot
+	rm -f build-arch-stamp build-indep-stamp #CONFIGURE-STAMP#
+
+	# Add here commands to clean up after the build process.
+	-$(MAKE) distclean
+ifneq "$(wildcard /usr/share/misc/config.sub)" ""
+	cp -f /usr/share/misc/config.sub config.sub
+endif
+ifneq "$(wildcard /usr/share/misc/config.guess)" ""
+	cp -f /usr/share/misc/config.guess config.guess
+endif
+
+
+	dh_clean 
+
+install: install-indep install-arch
+install-indep:
+	dh_testdir
+	dh_testroot
+	dh_clean -k -i 
+	dh_installdirs -i
+
+	# Add here commands to install the indep part of the package into
+	# debian/<package>-doc.
+	#INSTALLDOC#
+
+	dh_install -i
+
+install-arch:
+	dh_testdir
+	dh_testroot
+	dh_clean -k -s 
+	dh_installdirs -s
+
+	# Add here commands to install the arch part of the package into 
+	# debian/tmp.
+	$(MAKE) -j 3 DESTDIR=$(CURDIR)/debian/torque-oscar install
+
+	# Move files around for the oscar-torque-server package
+	mkdir -p $(CURDIR)/debian/torque-oscar-server/usr/sbin
+	mkdir -p $(CURDIR)/debian/torque-oscar-server/etc/init.d
+	mkdir -p $(CURDIR)/debian/torque-oscar-server/var/spool/torque/server_priv
+	mkdir -p $(CURDIR)/debian/torque-oscar-server/var/spool/torque/server_logs
+	mkdir -p $(CURDIR)/debian/torque-oscar-server/var/spool/torque/spool
+	mkdir -p $(CURDIR)/debian/torque-oscar-server/var/lock/subsys/
+	chmod 1777 $(CURDIR)/debian/torque-oscar-server/var/spool/torque/spool
+	mkdir -p $(CURDIR)/debian/torque-oscar-server/var/spool/torque/aux
+	chmod 0755 $(CURDIR)/debian/torque-oscar-server/var/spool/torque/aux
+	mv $(CURDIR)/debian/torque-oscar/usr/sbin/pbs_server $(CURDIR)/debian/torque-oscar-server/usr/sbin
+	mv $(CURDIR)/debian/torque-oscar/usr/sbin/momctl $(CURDIR)/debian/torque-oscar-server/usr/sbin
+	cp $(CURDIR)/contrib/init.d/pbs_server $(CURDIR)/debian/torque-oscar-server/etc/init.d
+
+	# Move files around for the oscar-server-client package
+	mkdir -p $(CURDIR)/debian/torque-oscar-client/usr/bin
+	mkdir -p $(CURDIR)/debian/torque-oscar-client/usr/sbin
+	mkdir -p $(CURDIR)/debian/torque-oscar-client/usr/lib
+	mv $(CURDIR)/debian/torque-oscar/usr/bin/q* $(CURDIR)/debian/torque-oscar-client/usr/bin
+	mv $(CURDIR)/debian/torque-oscar/usr/bin/chk_tree $(CURDIR)/debian/torque-oscar-client/usr/bin
+	mv $(CURDIR)/debian/torque-oscar/usr/bin/hostn $(CURDIR)/debian/torque-oscar-client/usr/bin
+	mv $(CURDIR)/debian/torque-oscar/usr/bin/nqs2pbs $(CURDIR)/debian/torque-oscar-client/usr/bin
+	mv $(CURDIR)/debian/torque-oscar/usr/bin/pbsdsh $(CURDIR)/debian/torque-oscar-client/usr/bin
+	mv $(CURDIR)/debian/torque-oscar/usr/bin/pbsnodes $(CURDIR)/debian/torque-oscar-client/usr/bin
+	mv $(CURDIR)/debian/torque-oscar/usr/bin/printjob $(CURDIR)/debian/torque-oscar-client/usr/bin
+	mv $(CURDIR)/debian/torque-oscar/usr/bin/printtracking $(CURDIR)/debian/torque-oscar-client/usr/bin
+	mv $(CURDIR)/debian/torque-oscar/usr/bin/tracejob $(CURDIR)/debian/torque-oscar-client/usr/bin
+	mv $(CURDIR)/debian/torque-oscar/usr/lib/*.so.* $(CURDIR)/debian/torque-oscar-client/usr/lib
+	mv $(CURDIR)/debian/torque-oscar/usr/sbin/pbs_iff $(CURDIR)/debian/torque-oscar-client/usr/sbin
+	sudo chmod 4755 $(CURDIR)/debian/torque-oscar-client/usr/sbin/pbs_iff
+	mv $(CURDIR)/debian/torque-oscar/usr/sbin/pbs_demux $(CURDIR)/debian/torque-oscar-client/usr/sbin
+
+    # Move files around for the oscar-torque-scheduler package
+	mkdir -p $(CURDIR)/debian/torque-oscar-scheduler/usr/sbin
+	mkdir -p $(CURDIR)/debian/torque-oscar-scheduler/etc/init.d
+	mv $(CURDIR)/debian/torque-oscar/usr/sbin/pbs_sched $(CURDIR)/debian/torque-oscar-scheduler/usr/sbin
+	mkdir -p $(CURDIR)/debian/torque-oscar-scheduler/var/spool/torque/sched_priv
+	mkdir -p $(CURDIR)/debian/torque-oscar-scheduler/var/spool/torque/sched_logs
+	touch $(CURDIR)/debian/torque-oscar-scheduler/var/spool/torque/pbs_environment
+	chmod 0644 $(CURDIR)/debian/torque-oscar-scheduler/var/spool/torque/pbs_environment
+	echo "PATH=/bin:/usr/bin" >> $(CURDIR)/debian/torque-oscar-scheduler/var/spool/torque/pbs_environment
+	echo "LANG=en_US.UTF-8"   >> $(CURDIR)/debian/torque-oscar-scheduler/var/spool/torque/pbs_environment
+	cp $(CURDIR)/contrib/init.d/pbs_sched $(CURDIR)/debian/torque-oscar-scheduler/etc/init.d
+
+    # Move files around for the oscar-torque-mom package
+	mkdir -p $(CURDIR)/debian/torque-oscar-mom/usr/sbin
+	mkdir -p $(CURDIR)/debian/torque-oscar-mom/etc/init.d
+	mkdir -p $(CURDIR)/debian/torque-oscar-mom/var/spool/torque/mom_priv/jobs
+	chmod 751 $(CURDIR)/debian/torque-oscar-mom/var/spool/torque/mom_priv/jobs
+	mkdir -p $(CURDIR)/debian/torque-oscar-mom/var/spool/torque/mom_logs
+	mkdir -p $(CURDIR)/debian/torque-oscar-mom/var/spool/torque/checkpoint
+	mkdir -p $(CURDIR)/debian/torque-oscar-mom/var/spool/torque/undelivered
+	mkdir -p $(CURDIR)/debian/torque-oscar-mom/var/lock/subsys/
+	mv $(CURDIR)/debian/torque-oscar/usr/sbin/pbs_mom $(CURDIR)/debian/torque-oscar-mom/usr/sbin
+	cp $(CURDIR)/contrib/init.d/pbs_mom $(CURDIR)/debian/torque-oscar-mom/etc/init.d
+
+    # Move files around for the oscar-torque-gui package
+	mkdir -p $(CURDIR)/debian/torque-oscar-gui/usr/bin
+	mkdir -p $(CURDIR)/debian/torque-oscar-gui/usr/lib
+	mv $(CURDIR)/debian/torque-oscar/usr/bin/pbs_wish $(CURDIR)/debian/torque-oscar-gui/usr/bin
+	mv $(CURDIR)/debian/torque-oscar/usr/bin/xpbs $(CURDIR)/debian/torque-oscar-gui/usr/bin
+	mv $(CURDIR)/debian/torque-oscar/usr/bin/xpbsmon $(CURDIR)/debian/torque-oscar-gui/usr/bin
+	mv $(CURDIR)/debian/torque-oscar/usr/lib/xpbs $(CURDIR)/debian/torque-oscar-gui/usr/lib
+	mv $(CURDIR)/debian/torque-oscar/usr/lib/xpbsmon $(CURDIR)/debian/torque-oscar-gui/usr/lib
+
+	dh_install -s
+# Must not depend on anything. This is to be called by
+# binary-arch/binary-indep
+# in another 'make' thread.
+binary-common:
+	dh_testdir
+	dh_testroot
+	dh_installchangelogs CHANGELOG
+	dh_installdocs
+	dh_installexamples
+#	dh_installmenu
+#	dh_installdebconf	
+#	dh_installlogrotate	
+#	dh_installemacsen
+#	dh_installpam
+#	dh_installmime
+#	dh_python
+#	dh_installinit
+#	dh_installcron
+#	dh_installinfo
+	dh_installman
+	dh_link
+	dh_strip
+	dh_compress 
+	dh_fixperms
+#	dh_perl
+#	dh_makeshlibs
+	dh_installdeb
+#	dh_shlibdeps
+	dh_gencontrol
+	dh_md5sums
+	dh_builddeb
+# Build architecture independant packages using the common target.
+binary-indep: build-indep install-indep
+	$(MAKE) -f debian/rules DH_OPTIONS=-i binary-common
+
+# Build architecture dependant packages using the common target.
+binary-arch: build-arch install-arch
+	$(MAKE) -f debian/rules DH_OPTIONS=-s binary-common
+
+binary: binary-arch binary-indep
+.PHONY: build clean binary-indep binary-arch binary install install-indep install-arch 
