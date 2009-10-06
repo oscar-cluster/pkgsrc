@@ -1,5 +1,6 @@
 2.5.4 (not yet released):
 - Improve output.
+- [Ticket #565] Actually synchronize files on compute nodes.
 
 2.5.3:
 - Fix the Debian copyright.
