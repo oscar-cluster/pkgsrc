@@ -601,7 +601,7 @@ sub update_file ($$) {
     
     #C3 is the default transport mechanism, since it tends to perform better
     #than scp
-    if ((!defined $image_only) || $image_only == 0) && $usec3 ) {
+    if ((!defined ($image_only) || $image_only == 0) && $usec3 ) {
         print "Using c3 to sync $file to $dstfile\n" if ($verbose);
     
         # sync files to corresponding image-subcluster
