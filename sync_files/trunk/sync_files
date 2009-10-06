@@ -353,13 +353,15 @@ sub update_temp_passwd_like ($$$) {
     # write out distro-specific version
     #
     OSCAR::Logger::oscar_log_subsection "Writing output to $dest";
-    open (FOUT, "> $dest")
-        or (carp "ERROR: Could not open file $dest", return -1);
+
+    open (FOUT, ">$dest")
+        or (carp "ERROR: Could not open file $dest\n", return -1);
 
     #
     # Replace lines with matching keys
     # (the first word before the first ":" is the key of a line)
     #
+    OSCAR::Logger::oscar_log_subsection "Replacing lines with matching keys.";
     @fin = map {
         if (/^([^:]+):/) {
             my $k = $1;
@@ -457,7 +459,7 @@ sub update_temp_file ($$$$$) {
     my $permission = (stat $my_src)[2];
 
     my $out = $tgt;
-    my $dest = "/opt/sync_files/tmp$out";
+    my $dest = "$out";
 
     #
     # read target distro/image template as hash
@@ -475,7 +477,7 @@ sub update_temp_file ($$$$$) {
             return -1;
         }
         if (-f $dest) {
-            print "[INFO] File $dest already exists, exiting successfully.";
+            print "[INFO] File $dest already exists, exiting successfully.\n";
             return 0;
         } else {
             my $dir = File::Basename::dirname ($dest);
@@ -579,7 +581,7 @@ sub update_file ($$) {
     my $dstfile;
     my $success;
 
-    OSCAR::Logger::oscar_subsection ("Updating file(s)...");
+    OSCAR::Logger::oscar_log_subsection ("Updating file(s)...");
 
     if (!defined $distref || ref($distref) ne "ARRAY") {
         carp "ERROR: Invalid list of distros";
@@ -714,7 +716,7 @@ if (scalar (@missing_files) > 0) {
     OSCAR::Utils::print_array (@missing_files);
 }
 
-OSCAR::Logger::oscar_log_subsection ("[INFO] initial list of files to sync: ".
+OSCAR::Logger::oscar_log_subsection ("[INFO] Initial list of files to sync: ".
     join(", ",@filestosync));
 
 if ($filter) {
