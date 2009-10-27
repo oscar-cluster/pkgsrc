@@ -3,7 +3,7 @@ Section: net
 Priority: optional
 Maintainer: Stuart Teasdale <sdt@debian.org>
 Uploaders: Stephen Quinney <sjq@debian.org>, Andrew Stribblehill <ads@debian.org>
-Build-Depends: debhelper (>> 3.0.0), librrd2-dev
+Build-Depends: debhelper (>> 3.0.0), librrd-dev
 Standards-Version: 3.6.2
 
 Package: ganglia-monitor
