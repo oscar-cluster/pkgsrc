@@ -36,6 +36,19 @@ rpm: dist get-binaries
 	cp tmp/cbench_release_1.2.0.tar.gz /usr/src/redhat/SOURCES
 	rpmbuild -bb ./cbench.spec
 	rpmbuild -bb ./cbenchsource.spec
+	@if [ -n "$(PKGDEST)" ]; then \
+        mv `rpm --eval '%{_topdir}'`/RPMS/noarch/cbench*-*.noarch.rpm $(PKGDEST); \
+    fi
 
 deb:
-	dpkg-buildpackage -rfakeroot
+	@if [ -n "$$UNSIGNED_OSCAR_PKG" ]; then \
+        echo "dpkg-buildpackage -rfakeroot -us -uc"; \
+        dpkg-buildpackage -rfakeroot -us -uc; \
+    else \
+        echo "dpkg-buildpackage -rfakeroot"; \
+        dpkg-buildpackage -rfakeroot; \
+    fi
+	@if [ -n "$(PKGDEST)" ]; then \
+        mv ../$(PKG)*.deb $(PKGDEST); \
+    fi
+
