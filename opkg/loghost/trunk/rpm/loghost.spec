@@ -3,7 +3,7 @@ Summary: loghost configurator
 Version: 1.0
 Release: 1
 Packager: Jeremy Enos <jenos@ncsa.uiuc.edu>
-Copyright: GPL
+License: GPL
 Group: Applications/System
 Requires: sh-utils
 BuildArch: noarch
