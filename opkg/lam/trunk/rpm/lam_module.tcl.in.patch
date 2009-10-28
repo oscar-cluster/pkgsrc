@@ -1,0 +1,14 @@
+--- lam-7.1.4/config/lam_module.tcl.in.orig	2007-09-14 13:52:44.000000000 -0400
++++ lam-7.1.4/config/lam_module.tcl.in	2007-09-14 13:56:11.000000000 -0400
+@@ -26,9 +26,9 @@
+ 
+ module-whatis "Sets up the LAM/MPI environment for an OSCAR cluster."
+ 
+-# Don't let any other MPI module be loaded while this one is loaded
++# Don't let any other LAM module be loaded while this one is loaded
+ 
+-conflict mpi
++conflict lam
+ 
+ # It's real simple.  Append to the PATH and to the MANPATH.
+ 
