@@ -1,0 +1,11 @@
+--- ./mpe/sbin/mpeinstall.in.orig	2006-05-31 18:35:19.000000000 +0200
++++ ./mpe/sbin/mpeinstall.in	2006-05-31 18:33:14.000000000 +0200
+@@ -434,7 +434,7 @@
+ if [ -x $bindir/mpirun ] ; then
+     $Show "( cd $DESTDIR$examplesdir && \
+              rm -f mpirun && \
+-             ln -s $bindir/mpirun mpirun )"
++             ln -s '../../bin/mpirun' mpirun )"
+     filelist="$filelist $examplesdir/mpirun" 
+ fi
+ 

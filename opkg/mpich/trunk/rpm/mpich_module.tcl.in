@@ -1,0 +1,21 @@
+#%Module -*- tcl -*-
+#
+# MPICH modulefile for OSCAR clusters
+#
+
+proc ModulesHelp { } {
+  puts stderr "\tThis module adds MPICH to the PATH and MANPATH."
+  puts stderr "\tHence, the mpicc, mpiCC, mpif77, and mpirun commands"
+  puts stderr "\tthat you run will be from MPICH."
+}
+
+module-whatis	"Sets up the MPICH environment for an OSCAR cluster."
+
+# Don't let any other MPI module be loaded while this one is loaded
+
+conflict mpi
+
+# It's real simple.  Append to the PATH and to the MANPATH.
+
+prepend-path PATH @prefix@/bin
+prepend-path MANPATH @prefix@/man
