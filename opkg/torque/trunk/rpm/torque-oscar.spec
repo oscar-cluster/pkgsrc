@@ -3,7 +3,7 @@
 %define name torque-oscar
 %define version 2.1.10
 
-%define release 4
+%define release 1
 
 # The following options are supported:
 #   --with server_name=hostname
