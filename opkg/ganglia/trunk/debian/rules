@@ -31,7 +31,7 @@ build-stamp:  config.status
 	dh_testdir
 
 	# Add here commands to compile the package.
-	$(MAKE)
+	$(MAKE) -j3
 	#/usr/bin/docbook-to-man debian/ganglia.sgml > ganglia.1
 
 	touch build-stamp
