@@ -1,3 +1,9 @@
+yume (2.8.11-1) karmic; urgency=low
+
+  * New upstream version.
+
+ -- Geoffroy Vallee <valleegr@ornl.gov>  Fri, 30 Oct 2009 11:22:54 -0400
+
 yume (2.8.10-1) hardy; urgency=low
 
   * New upstream version.
