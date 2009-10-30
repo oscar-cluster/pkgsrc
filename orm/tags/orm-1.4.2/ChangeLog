@@ -1,0 +1,66 @@
+1.4.2:
+- Update the default cache data.
+- Better exception handling.
+- Improve output.
+
+1.4.1:
+- Fix the Debian copyright.
+
+1.4.0:
+- [Ticket #532] Implement a cache when detecting the format of repositories.
+- [Ticket #548] Fixes a bug in the cache management for repositories' formats
+which created the problem in the upper layers of the architecture. 
+- Patch from Thilo: update the default cache file to include the CentOS mirror
+that are currently used.
+- Remove some debugging information.
+
+1.3:
+- Revisit the non-interactive mode to center the capabilities around the
+notion of "distribution" (which is actually the level of abstraction ORM is
+supposed to provide).
+- [Ticket #252] Local caches are not anymore used, we directly query
+repositories (modification due to the fact that we now deal with both online
+and local repositories).
+- [Ticket #512] ORM is now fully based on the abstraction of Linux
+distribution and we can now select different Linux distributions and query
+them.
+- [Ticket #382] It is now possible to query repositories in interactive mode
+(based on the current distribution).
+- [Ticket #513] Add an option to the interactive mode ("info") to display
+repositories associated to the current Linux distribution.
+- Improve the Perldoc documentation.
+
+1.2.2:
+- Improve the Perldoc documentation.
+- Fix a problem when querying the OPKGs available by default for the local 
+distribution.
+- Improve the orm man page and revisit the --help option.
+- RepositoryManager.pm now allows one to remove binary packages.
+
+1.2.1:
+- Fix a problem when using OS_Detect.
+- Modify the Makefile so we can choose the directory to save sources when
+creating RPMs.
+- Modify the Makefile so we can choose the directory where the binary packages
+are stored.
+- Enable the creation of unsigned Debian packages by setting the
+UNSIGNED_OSCAR_PKG environment variable.
+
+1.2:
+- Improve error handling.
+- Improve the spec file.
+- Improve the Makefile.
+
+1.1:
+- Add a spec file for the creation of a RPM for ORM (use "make rpm" to create
+it).
+- Add the missing top-level Makefile.
+- Improve the man page for the ORM script.
+- Add the automatic generation and installation of man pages for all ORM.
+scripts.
+- Add the capability of package install using the orm script (see the orm
+manpage for more details).
+
+1.0:
+- Separate ORM from the rest of the OSCAR code.
+
