@@ -1,0 +1,29 @@
+2.5.5:
+- Clean up the code.
+- Avoid useless warnings.
+
+2.5.4:
+- Improve output.
+- [Ticket #565] Actually synchronize files on compute nodes.
+
+2.5.3:
+- Fix the Debian copyright.
+
+2.5.2:
+- Correctly deal with the creation of directories both in the images and for
+the templates.
+
+2.5.1:
+- Automatically create a log file.
+- Fix the creation of the /opt/sunc-files/tmp/etc directory.
+- Better execption handling.
+
+2.5.0:
+- Switch to the new SIS database backend.
+- Add a image-only option.
+- Clean-up the code to make it easier to maintain.
+- Add templates for Debian based systems.
+- The distro detection is now based on OS_Detect.
+- Add a man page for sync-files.
+- Add a template for modprobe.conf.
+- Add a uninstall target to the Makefile.
