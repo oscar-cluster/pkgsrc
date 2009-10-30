@@ -1,3 +1,6 @@
+yume-2.8.11 (not yet released):
+- [Ticket #575] Fix a problem with the return code for some errors.
+
 yume-2.8.10:
 - Include the support for i586 RPMs.
 
