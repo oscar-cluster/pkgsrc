@@ -184,7 +184,7 @@ sub cronupdate () {
         }
     }
 
-    $sync_bin = "/opt/sync_files/bin/sync_files";
+    my $sync_bin = "/opt/sync_files/bin/sync_files";
     $cronline = "*/$crondelay * * * * root env USER=root $sync_bin".
                 " >/dev/null 2>&1";
     open(CRONTABIN, "$crontab") or (carp "ERROR: Couldn't read $crontab! $!\n",
