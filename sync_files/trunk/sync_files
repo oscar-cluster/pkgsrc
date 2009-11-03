@@ -296,6 +296,11 @@ sub distro_detect ($$) {
         return undef;
     }
 
+    if (! -d $target) {
+        carp "ERROR: $target does not exist";
+        return undef;
+    }
+
     # find distro
     if ($type eq "dir") {
         require OSCAR::OCA::OS_Detect;
