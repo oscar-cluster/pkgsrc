@@ -1,0 +1,7 @@
+The Parallel Environment integration scripts found in this directory
+$SGE_ROOT/pe are based on the HOWTOs available at the SGE website:
+
+http://gridengine.sunsource.net/howto/howto.html
+
+Please refer to the corresponding README files in the sub-directories
+for implementation details.

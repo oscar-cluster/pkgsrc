@@ -1,0 +1,4 @@
+This implementation of the PVM parallel environment for SGE is based on
+"Tight Integration" from the following HOWTO:
+
+http://gridengine.sunsource.net/howto/pvm-integration/pvm-integration.html

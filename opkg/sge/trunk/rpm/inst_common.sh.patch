@@ -1,0 +1,149 @@
+--- source/dist/util/install_modules/inst_common.sh	2005-04-25 10:10:42.000000000 -0500
++++ source/dist/util/install_modules/inst_common.sh.new	2005-08-24 11:45:52.458171512 -0500
+@@ -709,6 +709,7 @@
+ #
+ ProcessSGERoot()
+ {
++   
+    export SGE_ROOT
+ 
+    done=false
+@@ -735,13 +736,19 @@
+          $ECHO
+          SGE_ROOT_VAL=`eval echo $SGE_ROOT`
+ 
+-         $INFOTEXT -n "The Grid Engine root directory is:\n\n" \
+-                      "   \$SGE_ROOT = %s\n\n" \
+-                      "If this directory is not correct (e.g. it may contain an automounter\n" \
+-                      "prefix) enter the correct path to this directory or hit <RETURN>\n" \
+-                      "to use default [%s] >> " $SGE_ROOT_VAL $SGE_ROOT_VAL
++#########################################################
++#      Uncommented the following INFOTEXT section to 
++#      allow for automated Execd install on OSCAR clients
++#      Aug 24, 2005 - Babu Sundaram
++#########################################################
++
++         #$INFOTEXT -n "The Grid Engine root directory is:\n\n" \
++         #             "   \$SGE_ROOT = %s\n\n" \
++         #             "If this directory is not correct (e.g. it may contain an automounter\n" \
++         #             "prefix) enter the correct path to this directory or hit <RETURN>\n" \
++         #             "to use default [%s] >> " $SGE_ROOT_VAL $SGE_ROOT_VAL
+ 
+-         eval SGE_ROOT=`Enter $SGE_ROOT_VAL`
++         #eval SGE_ROOT=`Enter $SGE_ROOT_VAL`
+          $ECHO
+       fi
+       SGE_ROOT_VAL=`eval echo $SGE_ROOT`
+@@ -784,7 +791,8 @@
+    CheckPath
+    $INFOTEXT "Your \$SGE_ROOT directory: %s\n" $SGE_ROOT_VAL
+    $INFOTEXT -log "Your \$SGE_ROOT directory: %s" $SGE_ROOT_VAL
+-   $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
++   # I removed the -wait option -- >$INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
++   $INFOTEXT -auto $AUTO -n "Hit <RETURN> to continue >> "
+    $CLEAR
+ }
+ 
+@@ -819,8 +827,15 @@
+                 $SGE_ROOT_VAL/$SGE_CELL_VAL/common/settings.csh \
+                 $SGE_ROOT_VAL/$SGE_CELL_VAL/common/settings.sh
+ 
+-      $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to see where Grid Engine logs messages >> "
+-      $CLEAR
++#########################################################
++#      Uncommented the following INFOTEXT section to 
++#      allow for automated Execd install on OSCAR clients
++#      Aug 24, 2005 - Babu Sundaram
++#########################################################
++
++#      $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to see where Grid Engine logs messages >> "
++#      $INFOTEXT -auto $AUTO -n "Hit <RETURN> to see where Grid Engine logs messages >> "
++#      $CLEAR
+ 
+       tmp_spool=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep qmaster_spool_dir | awk '{ print $2 }'`
+       master_spool=`dirname $tmp_spool`
+@@ -838,13 +853,19 @@
+                 "   %s (qmaster and scheduler)\n" \
+                 "   %s (execd)\n" $SGE_ROOT/$SGE_CELL/common/sgemaster $SGE_ROOT/$SGE_CELL/common/sgeexecd
+ 
+-      $INFOTEXT -auto $AUTO -ask "y" "n" -def "n" -n \
+-                "Do you want to see previous screen about using Grid Engine again (y/n) [n] >> "
+-      if [ $? = 0 ]; then
+-         :
+-      else
++#########################################################
++#      Uncommented the following INFOTEXT section to 
++#      allow for automated Execd install on OSCAR clients
++#      Aug 24, 2005 - Babu Sundaram
++#########################################################
++
++#      #$INFOTEXT -auto $AUTO -ask "y" "n" -def "n" -n \
++#      #          "Do you want to see previous screen about using Grid Engine again (y/n) [n] >> "
++#      #if [ $? = 0 ]; then
++#      #   :
++#      #else
+          done=true
+-      fi
++#      #fi
+    done
+ 
+    if [ $QMASTER = install ]; then
+@@ -861,6 +882,7 @@
+                   "   # qconf -sh\n\n" \
+                   "and you may add new administrative hosts with the command\n\n" \
+                   "   # qconf -ah <hostname>\n\n"
++#       $INFOTEXT -n "Please hit <RETURN> >> "
+        $INFOTEXT -wait -n "Please hit <RETURN> >> "
+        $CLEAR
+        QMASTER="undef"
+@@ -870,7 +892,6 @@
+    fi
+ }
+ 
+-
+ #-------------------------------------------------------------------------
+ # PrintLocalConf:  print execution host local SGE configuration
+ #
+@@ -1028,7 +1049,8 @@
+ 
+    InstallRcScript 
+ 
+-   $INFOTEXT -wait -auto $AUTO -n "\nHit <RETURN> to continue >> "
++   # I removed the -wait option --> $INFOTEXT -wait -auto $AUTO -n "\nHit <RETURN> to continue >> "
++   $INFOTEXT -auto $AUTO -n "\nHit <RETURN> to continue >> "
+    $CLEAR
+ }
+ 
+@@ -1042,19 +1064,19 @@
+    $INFOTEXT -u "\n%s startup script" $DAEMON_NAME
+ 
+    # --- from here only if root installs ---
+-   $INFOTEXT -auto $AUTO -ask "y" "n" -def "y" -n \
+-             "\nWe can install the startup script that will\n" \
+-             "start %s at machine boot (y/n) [y] >> " $DAEMON_NAME
+-
+-   ret=$?
+-   if [ $AUTO = "true" -a $ADD_TO_RC = "false" ]; then
+-      $CLEAR
+-      return
+-   else
+-      if [ $ret = 1 ]; then
+-         return
+-      fi
+-   fi
++   #$INFOTEXT -auto $AUTO -ask "y" "n" -def "y" -n \
++   #         "\nWe can install the startup script that will\n" \
++   #         "start %s at machine boot (y/n) [y] >> " $DAEMON_NAME
++
++   #ret=$?
++   #if [ $AUTO = "true" -a $ADD_TO_RC = "false" ]; then
++   #   $CLEAR
++   #   return
++   #else
++   #   if [ $ret = 1 ]; then
++   #      return
++   #   fi
++   #fi
+ 
+    # If system is Linux Standard Base (LSB) compliant, use the install_initd utility
+    if [ "$RC_FILE" = lsb ]; then

@@ -1,0 +1,19 @@
+#%Module -*- tcl -*-
+#
+# Sun Grid Engine modulefile for OSCAR clusters
+#
+
+proc ModulesHelp { } {
+   puts stderr "\tThis module adds Sun Grid Engine to the PATH, MANPATH, LD_LIBRARY_PATH and also sets up SGE_ROOT."
+}
+
+module-whatis   "Sets up the Sun Grid Engine environment for an OSCAR cluster."
+
+# Use $SGE_ROOT/util/arch to determine kernel version/arch for use with various environment variables
+setenv SGE_ROOT /opt/sge
+
+set arch [exec $env(SGE_ROOT)/util/arch]
+
+append-path MANPATH /opt/sge/man
+append-path PATH /opt/sge/bin/$arch
+append-path LD_LIBRARY_PATH /opt/sge/lib/$arch

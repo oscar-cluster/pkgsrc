@@ -1,0 +1,153 @@
+--- source/dist/util/install_modules/inst_execd.sh	2005-04-22 11:55:19.000000000 -0500
++++ source/dist/util/install_modules/inst_execd.sh.new	2005-08-24 12:01:25.030398984 -0500
+@@ -48,19 +48,25 @@
+       return
+    fi
+  
+-   $INFOTEXT -u "\nWelcome to the Grid Engine execution host installation"
+-   $INFOTEXT "\nIf you haven't installed the Grid Engine qmaster host yet, you must execute\n" \
+-             "this step (with >install_qmaster<) prior the execution host installation.\n\n" \
+-             "For a sucessfull installation you need a running Grid Engine qmaster. It is\n" \
+-             "also neccesary that this host is an administrative host.\n\n" \
+-             "You can verify your current list of administrative hosts with\n" \
+-             "the command:\n\n" \
+-             "   # qconf -sh\n\n" \
+-             "You can add an administrative host with the command:\n\n" \
+-             "   # qconf -ah <hostname>\n\n" \
+-             "The execution host installation will take approximately 5 minutes.\n"
++   ############################################################################
++   # Commented out the following INFOTEXT section for automated execd install #
++   # Aug 24, 2005 - Babu Sundaram - OSCAR				      #
++   ############################################################################
++   #$INFOTEXT -u "\nWelcome to the Grid Engine execution host installation"
++   #$INFOTEXT "\nIf you haven't installed the Grid Engine qmaster host yet, you must execute\n" \
++   #          "this step (with >install_qmaster<) prior the execution host installation.\n\n" \
++   #          "For a sucessfull installation you need a running Grid Engine qmaster. It is\n" \
++   #          "also neccesary that this host is an administrative host.\n\n" \
++   #          "You can verify your current list of administrative hosts with\n" \
++   #          "the command:\n\n" \
++   #          "   # qconf -sh\n\n" \
++   #          "You can add an administrative host with the command:\n\n" \
++   #          "   # qconf -ah <hostname>\n\n" \
++   #          "The execution host installation will take approximately 5 minutes.\n"
+ 
+-   $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
++
++   # $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
++   
+    $CLEAR
+ }
+ 
+@@ -93,7 +99,7 @@
+     fi
+     $INFOTEXT -n "\nPlease enter cell name which you used for the qmaster\n" \
+                  "installation or press <RETURN> to use [%s] >> " $SGE_CELL
+-    INP=`Enter $SGE_CELL`
++    INP=""
+     if [ "$INP" = "" ]; then
+        SGE_CELL=default
+     else
+@@ -120,7 +126,11 @@
+       $INFOTEXT -log "\nUsing cell: >%s<\n" $SGE_CELL_VAL
+    fi
+ 
+-   $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
++   ############################################################################
++   # Commented out the following INFOTEXT section for automated execd install #
++   # Aug 24, 2005 - Babu Sundaram - OSCAR				      #
++   ############################################################################
++   # $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
+    $CLEAR
+ 
+    GetAdminUser
+@@ -366,7 +376,8 @@
+                exit 1
+             fi
+          else
+-            $INFOTEXT -wait -auto $AUTO -n "\nThis hostname is known at qmaster as an administrative host.\n\n" \
++            # I removes the -wait --> $INFOTEXT -wait -auto $AUTO -n "\nThis hostname is known at qmaster as an administrative host.\n\n" \
++            $INFOTEXT -auto $AUTO -n "\nThis hostname is known at qmaster as an administrative host.\n\n" \
+                             "Hit <RETURN> to continue >>"
+             $CLEAR
+             done=true
+@@ -403,7 +414,12 @@
+       $INFOTEXT "Local configuration for host >%s< created." $HOST
+       $INFOTEXT -log "Local configuration for host >%s< created." $HOST
+    fi
+-   $INFOTEXT -wait -auto $AUTO -n "\nHit <RETURN> to continue >> "
++
++   ############################################################################
++   # Commented out the following INFOTEXT section for automated execd install #
++   # Aug 24, 2005 - Babu Sundaram - OSCAR				      #
++   ############################################################################
++   # $INFOTEXT -wait -auto $AUTO -n "\nHit <RETURN> to continue >> "
+ }
+ 
+ 
+@@ -415,7 +431,11 @@
+    $INFOTEXT -u "\nGrid Engine execution daemon startup"
+    $INFOTEXT "\nStarting execution daemon. Please wait ..."
+    $SGE_STARTUP_FILE 
+-   $INFOTEXT -wait -auto $AUTO -n "\nHit <RETURN> to continue >> "
++   ############################################################################
++   # Commented out the following INFOTEXT section for automated execd install #
++   # Aug 24, 2005 - Babu Sundaram - OSCAR				      #
++   ############################################################################
++   # $INFOTEXT -wait -auto $AUTO -n "\nHit <RETURN> to continue >> "
+    $CLEAR
+ }
+ 
+@@ -466,15 +486,22 @@
+              "You do not need to add this host now, but before running jobs on this host\n" \
+              "it must be added to at least one queue.\n" $slots
+ 
+-   $INFOTEXT -auto $AUTO -ask "y" "n" -def "y" -n \
+-             "Do you want to add a default queue instance for this host (y/n) [y] >> "
++   ############################################################################
++   # Commented out the following INFOTEXT section for automated execd install #
++   # Aug 24, 2005 - Babu Sundaram - OSCAR				      #
++   ############################################################################
++   #$INFOTEXT -auto $AUTO -ask "y" "n" -def "y" -n \
++   #          "Do you want to add a default queue instance for this host (y/n) [y] >> "
+ 
+-   if [ $? = 0 ]; then
++   # The if is not checked, allow for queue setup all the time
++   # No input from user
++
++   #if [ $? = 0 ]; then
+       $SGE_BIN/qconf -aattr hostgroup hostlist $exechost @allhosts
+       $SGE_BIN/qconf -aattr queue slots "[$exechost=$slots]" all.q
+-      $INFOTEXT -wait -auto $AUTO -n "\nHit <RETURN> to continue >> "
+-      $CLEAR
+-   fi
++      #$INFOTEXT -auto $AUTO -n "\nHit <RETURN> to continue >> "
++      #$CLEAR
++   #fi
+ }
+ 
+ GetLocalExecdSpoolDir()
+@@ -484,8 +511,9 @@
+              "a global\nexecd spool directory. This is used, if no local " \
+              "spool directory is configured.\n\n Now you can enter a local spool " \
+              "directory for this host.\n"
+-   $INFOTEXT -n -auto $AUTO -ask "y" "n" -def "n" "Do you want to configure a local spool directory\n for this host (y/n) [n] >> "
+-   ret=$?
++   #$INFOTEXT -n -auto $AUTO -ask "y" "n" -def "n" "Do you want to configure a local spool directory\n for this host (y/n) [n] >> "
++   # I edited this to always circumvent creating local spool dirs -- >ret=$?
++   # ret=$?
+ 
+    while [ $ret = 0 ]; do 
+       $INFOTEXT -n "Please enter the local spool directory now! >> " 
+@@ -496,7 +524,11 @@
+          LOCAL_EXECD_SPOOL="undef"
+       else
+          $INFOTEXT "Using local execd spool directory [%s]" $LOCAL_EXECD_SPOOL
+-         $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
++   	 ############################################################################
++   	 # Commented out the following INFOTEXT section for automated execd install #
++   	 # Aug 24, 2005 - Babu Sundaram - OSCAR				      #
++   	 ############################################################################
++         # $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
+          MakeLocalSpoolDir
+          ret=1
+       fi

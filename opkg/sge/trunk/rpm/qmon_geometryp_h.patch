@@ -1,0 +1,11 @@
+--- source/3rdparty/qmon/spinbox/GeometryP.h.orig	2006-07-07 15:10:11.000000000 -0700
++++ source/3rdparty/qmon/spinbox/GeometryP.h	2006-07-07 15:12:57.000000000 -0700
+@@ -33,7 +33,7 @@
+ ***  (long) may need to be changed on different hardwares.
+ **/
+ 
+-#if defined(ALPHA) || defined(SOLARIS64) || defined(LINUXAMD64_24) || defined(ALINUX_22) || defined(SOLARISAMD64) || defined(LINUXIA64) 
++#if defined(ALPHA) || defined(SOLARIS64) || defined(LINUXAMD64_24) || defined(LINUXAMD64_26) || defined(ALINUX_22) || defined(SOLARISAMD64) || defined(LINUXIA64_24) || defined(LINUXIA64_26)
+ typedef long PointerSizedIntegral;
+ #else
+ typedef int PointerSizedIntegral;

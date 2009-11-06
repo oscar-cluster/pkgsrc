@@ -1,0 +1,11 @@
+--- pvm/rsh.orig	2006-08-01 12:08:26.000000000 -0700
++++ pvm/rsh	2006-08-01 12:08:50.000000000 -0700
+@@ -28,7 +28,7 @@
+ # to start a slave daemon). but in this case,
+ # an option -f must be added to prevent the
+ # forking of the slave.
+-if [ "$rhost" != "`hostname`" ] ; then
++if [ "$rhost" != "`hostname --long`" ] && [ "$rhost" != "`hostname --short`" ] ; then
+    PATH=`echo $PATH|tr : "\012"|grep -v $TMPDIR| tr "\012" :`
+    export PATH
+ 

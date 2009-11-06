@@ -1,0 +1,11 @@
+--- gridengine/source/3rdparty/qtcsh/sh.h.orig	2005-06-16 17:44:47.920091272 +0800
++++ gridengine/source/3rdparty/qtcsh/sh.h	2005-06-16 17:44:53.728208304 +0800
+@@ -458,7 +458,7 @@
+ extern pid_t getpgrp __P((void));
+ #  endif	/* BSD || SUNOS4 || IRISD || DGUX */
+ # endif /* POSIX */
+-extern pid_t setpgrp __P((pid_t, pid_t));
++//extern pid_t setpgrp __P((pid_t, pid_t));
+ #endif /* !WINNT */
+ 
+ typedef sigret_t (*signalfun_t) __P((int));

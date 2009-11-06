@@ -1,0 +1,13 @@
+--- source/clients/qmon/Q	2004-05-25 11:42:35.000000000 -0500
++++ source/clients/qmon/Q.new	2005-08-31 01:17:58.466001184 -0500
+@@ -269,8 +269,8 @@
+ !! %S    the file suffix
+ !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+ !! remove comments for big toolbar icons and comment the following line
+-!! Qmon*pixmapFilePath:  %R/qmon/PIXMAPS/big/%N.xpm:%R/qmon/PIXMAPS/%N.xpm
+-Qmon*pixmapFilePath:   %R/qmon/PIXMAPS/%N.xpm
++Qmon*pixmapFilePath:  %R/qmon/PIXMAPS/big/%N.xpm:%R/qmon/PIXMAPS/%N.xpm
++!! Qmon*pixmapFilePath:   %R/qmon/PIXMAPS/%N.xpm
+ Qmon*contextHelpFile:  qmon_help
+ 
+ !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
