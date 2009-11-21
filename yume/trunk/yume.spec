@@ -1,4 +1,8 @@
 # $Id$
+
+# Check if Suggests: tag can be sused.
+%define has_rpm_suggests %(echo "$(rpm --version |grep -E -o '[0-9]+(\.[0-9]+){0,1}'|head -1) >= 4.6"|bc)
+
 Summary: Wrapper to yum for clusters
 Name: yume
 Version: 2.8.11
@@ -17,6 +21,10 @@ Requires: yum >= 2.4.0
 # actually "createrepo" is also needed, but only on the master node,
 # so don't add it to the requires.
 AutoReqProv: no
+# If rpm version >= 4.6, then Suggests repoquery
+%if %has_rpm_suggests
+Suggests: repoquery
+%endif
 
 %description 
 
