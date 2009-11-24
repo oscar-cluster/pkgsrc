@@ -1,0 +1,29 @@
+configurator (1.0.4-1) hardy; urgency=low
+
+  * New upstream version.
+
+ -- Geoffroy Vallee <valleegr@ornl.gov>  Tue, 24 Nov 2009 00:49:56 -0500
+
+configurator (1.0.3-1) hardy; urgency=low
+
+  * New upstream version.
+
+ -- Geoffroy Vallee <valleegr@ornl.gov>  Fri, 25 Sep 2009 02:51:42 -0400
+
+configurator (1.0.2-1) hardy; urgency=low
+
+  * New upstream version.
+
+ -- Geoffroy Vallee <valleegr@ornl.gov>  Thu, 07 May 2009 03:06:27 -0400
+
+configurator (1.0.1-1) intrepid; urgency=low
+
+  * New upstream version.
+
+ -- Geoffroy Vallee <valleegr@ornl.gov>  Tue, 10 Feb 2009 11:55:46 -0500
+
+configurator (1.0-1) stable; urgency=low
+
+  * New upstream version.
+
+ -- Geoffroy Vallee <valleegr@ornl.gov>  Thu, 08 Jan 2009 13:31:40 -0500
