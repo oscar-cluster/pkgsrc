@@ -1,3 +1,9 @@
+rapt (2.8.7-1) hardy; urgency=low
+
+  * New upstream version.
+
+ -- Geoffroy Vallee <valleegr@ornl.gov>  Mon, 30 Nov 2009 15:49:10 -0500
+
 rapt (2.8.6-1) hardy; urgency=low
 
   * New upstream version.

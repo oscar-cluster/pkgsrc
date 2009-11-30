@@ -1,4 +1,4 @@
-rapt-2.8.7 (not yet released):
+rapt-2.8.7:
 - Decrease the sleep time when waiting for the lock release.
 - Clean-up the code.
 - Improve output.
