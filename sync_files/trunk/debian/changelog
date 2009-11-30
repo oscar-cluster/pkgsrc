@@ -1,3 +1,9 @@
+sync-files (2.5.7-1) hardy; urgency=low
+
+  * New upstream version.
+
+ -- Geoffroy Vallee <valleegr@ornl.gov>  Mon, 30 Nov 2009 15:54:41 -0500
+
 sync-files (2.5.6-1) karmic; urgency=low
 
   * New upstream version.
