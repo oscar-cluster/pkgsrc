@@ -1,0 +1,134 @@
+1.4.13:
+- Separate the initialization of ODA and the population of the basic data into
+ODA.
+
+1.4.12:
+- Fix the confusion between db_type and oda_type when getting data from the
+OSCAR configuration file (reported by Olivier Lahaye).
+- Revisit the initialization of the database: move some tasks that are not ODA
+specific outside of the ODA bootstrapping capability (reported by Olivier
+Lahaye).
+- Handle db services through OSCAR::SystemServices.
+
+1.4.11:
+- Make sure the client's hostname is set (patch from Olivier Lahaye).
+
+1.4.10:
+- Fix a SQL syntax error when updating a table (patch from Olivier Lahaye).
+- Fix a problem when deleting OPKG configuration values (patch from Olivier
+Lahaye).
+
+1.4.9:
+- Improve output.
+- Return an error code when the connection to the database fails.
+
+1.4.8:
+- Improve the "make clean" capability.
+- Add a dependency to ORM for both RPMs and .debs.
+
+1.4.7:
+- [Ticket #430] Avoid misleading message when drop the database in
+non-interactive mode.
+- Code cleaning-up.
+
+1.4.6:
+- Better handling of errors.
+- Fix the Debian copyright.
+- Modification of the spec so we can create the RPM on FC11 (patch from 
+Christophe Trophime).
+
+1.4.5:
+- Include perldoc documentation for OSCAR::ODA_Defs.
+- Add a new function to get the list of all selected OPKGs (avoid code
+duplication in other OSCAR components).
+
+1.4.4:
+- Make sure the make_database_password script will not fail without perl-Tk
+(which happens if users only want to use the CLI).
+- Continue to improve error handling.
+- During initialization, make sure we execute the set_global_oscar_values
+script.
+- get_opkg_selection_data can now return the data for all selected OPKGs.
+
+1.4.3:
+- Update the list of prereqs for ubuntu.
+- Explicitely restart the MYSQL service before to actually initialize the 
+database.
+- Make some return codes more coherent.
+
+1.4.2:
+- Fix the query to get the list of selected OPKGs.
+- Improved error handling.
+
+1.4.1:
+- Before to reset ODA, we try to start the database daemon so we are sure we
+can actually try to delete the OSCAR database.
+- Implement a work around when detecting the database type during a reset.
+- Update the prereqs list for Debian based systems.
+- Fix a bug when saving image data.
+
+1.4:
+- Add the capability of reseting ODA.
+- Force the start of the database daemon during ODA initialization.
+- Fix a problem with the mysql prereq on Debian based system (actually install
+mysql and not only the libraries).
+- Modify the Makefile so we can choose the directory where the binary packages
+are stored.
+- Enable the creation of unsigned Debian packages by setting the
+UNSIGNED_OSCAR_PKG environment variable.
+
+1.3.5:
+- Slightly improve debugging messages.
+- Fix a problem of database disconnection when executing an SQL command.
+- Modify the Makefile so we can choose the directory to save sources when
+creating RPMs.
+- Make the Makefile more generic.
+
+1.3.4:
+- Update the populate_default_package_set script: there are now two options 
+"verbose" and "debug" to manage the level of verbosity while running.
+- Fix a bug in Database.pm (update_node_package_status).
+
+1.3.3:
+- Fix two problems in the populate_oda_packages_table script: we were detecting
+the compatible distro instead of the real distro; the query to detect OPKGs was
+wrong on RPM based systems.
+
+1.3.2:
+- Fix a problem when querying data about a specific node/nic.
+- Improve the perldoc documentation of few Perl modules.
+- Fix a problem when getting cluster data.
+
+1.3.1:
+- Update the prereqs for Debian systems.
+- Fix the spec file.
+- Move Perl module to a noarch directory (perllib).
+
+1.3:
+- Remove useless error messages when OSCAR_HOME is not defined.
+- Print a success message at the end of the ODA initialization.
+- Add a files for the definition of all the ODA constants (ODA_Defs.pm)
+- Add the automatic generation and installation of man pages for all ODA
+scripts.
+- Add a new API for the management of OPKGs selection
+- Improve the documentation, we have now a perldoc documentation for
+Database.pm.
+- Add a basic directory structure for unit tests and add a first set of tests
+related to the management of OPKGs and Selector.
+- Improve the data stored for each OPKG, we get now much more information.
+
+1.2:
+- Fix different bugs in SQL syntax (introduced during the merge of the OSCAR
+branch-5-1 into trunk).
+- Clean up the bootstrapping (the database password was generated twice).
+- Include the missing make_database_password script when using Make commands.
+- Fix a bootstrapping issue: we were refering to OSCAR::oda even where the
+bootstrapping was not complete, ending in errors.
+
+1.1:
+- Add the automatic create and initialization of the database.
+- Continue to move many ODA scripts from OSCAR trunk.
+- Add a dedicated Perl module for the bootstrapping.
+
+1.0:
+- Separate ODA from the rest of the OSCAR code.
