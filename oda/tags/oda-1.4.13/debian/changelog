@@ -1,3 +1,9 @@
+oda (1.4.13-2) hardy; urgency=low
+
+  * The dependency to liboscar should not be >= 6.0.5, but > 6.0.4.
+
+ -- Geoffroy Vallee [gvh] <gvh@gvh1.ornl.gov>  Wed, 16 Dec 2009 18:36:25 -0500
+
 oda (1.4.13-1) hardy; urgency=low
 
   * New upstream version
