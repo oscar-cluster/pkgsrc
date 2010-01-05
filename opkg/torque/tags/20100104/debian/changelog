@@ -1,0 +1,46 @@
+torque-oscar (2.1.10-7) hardy; urgency=low
+
+  * Revisit init.d scripts so they actually work on Debian.
+
+ -- Geoffroy Vallee <valleegr@ornl.gov>  Fri, 07 Aug 2009 13:09:54 -0400
+
+torque-oscar (2.1.10-6) hardy; urgency=low
+
+  * Add a dependency to daemon for a few of the sub-packages.
+  * Create automatically the /var/lock/subsys directory (needed by init.d scripts).
+
+ -- Geoffroy Vallee <valleegr@ornl.gov>  Fri, 07 Aug 2009 11:09:51 -0400
+
+torque-oscar (2.1.10-5) hardy; urgency=low
+
+  * Create a /etc/rc.d/init.d/functions file (linking to 
+/lib/lsb/init-functions) so the init.d scripts can work.
+
+ -- Geoffroy Vallee <valleegr@ornl.gov>  Fri, 07 Aug 2009 10:55:38 -0400
+
+torque-oscar (2.1.10-4) hardy; urgency=low
+
+  * Add a dependency to tk8.4 for the gui package.
+  * Fix many Torque configuration issues.
+  * Include the init.d scripts.
+
+ -- Geoffroy Vallee <valleegr@ornl.gov>  Wed, 05 Aug 2009 16:51:31 -0400
+
+torque-oscar (2.1.10-3) hardy; urgency=low
+
+  * Deactivate dh_shlibdeps in the rules script to avoid misleading dependencies.
+
+ -- Geoffroy Vallee [gvh] <gvh@gvh1.ornl.gov>  Thu, 25 Jun 2009 16:42:50 -0400
+
+torque-oscar (2.1.10-2) hardy; urgency=low
+
+  * Deactivate dh_makeshlibs in the rules script to avoid misleading dependencies.
+
+ -- Geoffroy Vallee <valleegr@ornl.gov>  Thu, 25 Jun 2009 16:24:23 -0400
+
+torque-oscar (2.1.10-1) unstable; urgency=low
+
+  * Initial release (Closes: #nnnn)  <nnnn is the bug number of your ITP>
+
+ -- hugues local <hugues@unknown>  Fri,  8 Dec 2006 17:16:11 +0100
+
