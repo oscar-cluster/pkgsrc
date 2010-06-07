@@ -45,7 +45,7 @@
 
 Summary: OSCAR-specific modulefile for run-time picking of an Open MPI installation to use
 Name: openmpi-switcher-modulefile
-Version: 1.1.1
+Version: 1.1.2
 Release: 1
 Vendor: Open MPI Team
 License: BSD
@@ -224,6 +224,8 @@ fi
 #
 #############################################################################
 %changelog
+* Mon Jun 07 2010 Geoffroy Vallee <valleegr@ornl.gov>
+- Update the TCL file to deal correctly with 64bits systems.
 * Wed Dec 31 2003 Jeff Squyres <jsquyres@lam-mpi.rg>
 - First version.  Hopefully, this RPM won't need to live very long
   because LAM/MPI 7.1 will obviate the need for it.

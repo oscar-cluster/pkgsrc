@@ -22,6 +22,24 @@ proc ModulesHelp { } {
   puts stderr "\tavailable and the environment available on this machine."
 }
 
+proc GetLibDir { } {
+  set unameexe  "/bin/uname"
+  if { [file exists $unameexe] } {
+    set machinetype [ exec /bin/uname -m ]
+    if { $machinetype == "x86" ||
+         $machinetype == "i386" ||
+         $machinetype == "i486" ||
+         $machinetype == "i586" ||
+         $machinetype == "i686" } {
+      return /usr/lib
+    }
+    if { $machinetype == "x86_64" ||
+         $machinetype == "ia64" } {
+      return /usr/lib64
+    }
+  }
+}
+
 module-whatis "Automatically select an appropriate Open MPI modulefile to load."
 
 # Don't let any other MPI module be loaded while this one is loaded
@@ -34,8 +52,8 @@ set modulefiledir /opt/modules/modulefiles
 
 # See if we have BLCR and/or GM
 
-set have_blcr [file exists /usr/lib/libcr.so]
-set have_gm [file exists /usr/lib/libgm.so]
+set have_blcr [file exists [GetLibDir]/libcr.so]
+set have_gm [file exists [GetLibDir]/libgm.so]
 
 # Get the version number of the Open MPI represented by this modulefile
 
