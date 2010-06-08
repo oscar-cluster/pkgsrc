@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<oscar>
+  <name>kadeploy</name>
+  <class>core</class>
+  <summary>kadeploy</summary>
+  <description>kadeploy</description>
+  <license>CeCILL</license>
+  <group>Application/System</group>
+  <uri>https://gforge.inria.fr/projects/kadeploy3</uri>
+  <authors>
+    <author cat="uploader">
+        <name>Geoffroy Vallee</name>
+        <email>valleegr@ornl.gov</email>
+    </author>
+  </authors>
+  <serverDeps>
+    <requires>
+        <pkg>kadeploy-server</pkg>
+    </requires>
+  </serverDeps>
+  <clientDeps>
+    <requires>
+        <pkg>kadeploy-client</pkg>
+    </requires>
+  </clientDeps>
+  <apiDeps/>
+  <changelog>
+    <versionEntry version="0.0.1-1">
+        <changelogEntry authorName="Geoffroy Vallee" date="2010-06-08T10:57:01-05:00">
+            <item>Initial OPKG for Kadeploy</item>
+        </changelogEntry>
+    </versionEntry>
+  </changelog>
+</oscar>
