@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<oscar>
+  <name>oscar-nat</name>
+  <class>included</class>
+  <summary>Setup NAT on the OSCAR headnode</summary>
+  <description>Setup NAT on the headnode so that compute nodes can access the network. This is useful for the automatic update of the compute nodes.
+  </description>
+  <license>GPL</license>
+  <group>System Environment/Base</group>
+  <uri>http://oscar.openclustergroup.org/</uri>
+  <authors>
+    <author cat="maintainer">
+      <name>Geoffroy Vallee</name>
+      <email>valleegr@ornl.gov</email>
+    </author>
+  </authors>
+  <serverDeps/>
+  <clientDeps/>
+  <apiDeps/>
+  <changelog>
+    <versionEntry version="1.0.0-1">
+        <changelogEntry authorName="Geoffroy Vallee" date="2010-06-17T10:47:10-05:00">
+            <item>Initial OPKG</item>
+        </changelogEntry>
+    </versionEntry>
+  </changelog>
+</oscar>
