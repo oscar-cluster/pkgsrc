@@ -29,7 +29,22 @@ use warnings "all";
 use Carp;
 use Fcntl;
 
+use OSCAR::Database;
 use OSCAR::Logger;
+use OSCAR::Utils;
+
+sub get_extif () {
+    my $sql;
+    my $n_id;
+    my $extif;
+
+    $sql = "select n_id from Networks where name='public'";
+    $n_id = OSCAR::Database::oda_query_single_result ($sql, "n_id");
+    $sql = "select name from Nics where network_id='$n_id'";
+    $extif = OSCAR::Database::oda_query_single_result ($sql, "name");
+
+    return $extif;
+}
 
 sub generate_iptable_script ($$) {
     my ($file, $extif) = @_;
@@ -51,4 +66,8 @@ sub generate_iptable_script ($$) {
 
     return 0;
 }
+
+get_extif();
+
+1;
 
