@@ -33,6 +33,14 @@ use OSCAR::Database;
 use OSCAR::Logger;
 use OSCAR::Utils;
 
+use vars qw($VERSION @EXPORT);
+use base qw(Exporter);
+
+@EXPORT = qw (
+            get_extif
+            generate_iptables_script
+             );
+
 sub get_extif () {
     my $sql;
     my $n_id;
@@ -46,7 +54,7 @@ sub get_extif () {
     return $extif;
 }
 
-sub generate_iptable_script ($$) {
+sub generate_iptables_script ($$) {
     my ($file, $extif) = @_;
 
     OSCAR::Logger::oscar_log_subsection ("Generating the NAT script $file");
@@ -66,8 +74,6 @@ sub generate_iptable_script ($$) {
 
     return 0;
 }
-
-get_extif();
 
 1;
 
