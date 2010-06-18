@@ -28,6 +28,9 @@ GetOptions(
         "help"                  => \&help,
         ) || help_and_die();
 
+use OSCAR::PackagePath;
+use OSCAR::PackMan;
+use OSCAR::PackManDefs;
 use OSCAR::SystemUpdate;
 
 # TODO we should have a unique definitation of that path
@@ -64,28 +67,69 @@ sub do_update {
     # We compare the two lists
     my $cmd = "diff -u $remote_list $output_file > $diff_file";
     # Diff returns 0 if no diff, 1 else.
-    if (system ($cmd)) {
-        open (FILE, "$diff_file")
-            or (carp "ERROR: Impossible to open $diff_file", return -1);
-        my @lines = <FILE>;
-        close (FILE);
-        foreach my $l (@lines) {
-            # We want to catch the lines starting with - or + but excluding the
-            # diff header.
-            if ($l !~ /^\-\-(.*)/ && $l =~ /^\-(.*)/) {
-                push (@to_install, $1);
-            }
-            if ($l !~ /^\+\+(.*)/ && $l =~ /^\+(.*)/) {
-                push (@to_remove, $1);
-            }
+    if (!system ($cmd)) {
+        print "[INFO] System is up-to-date\n";
+        return 0;
+    }
+
+    # Initialization of PackMan
+    my $os = OSCAR::OCA::OS_Detect::open ();
+    if (!defined $os) {
+        carp "ERROR: Impossible to decompose the distro ID";
+        return -1;
+    }
+
+    my $pm;
+    if ($os->{pkg} eq "deb") {
+        $pm = PackMan::DEB->new;
+    } elsif ($os->{pkg} eq "rpm") {
+        $pm = PackMan::RPM->new;
+    } else {
+        carp "ERROR: Unknown binary package format (".$os->{pkg}.")";
+        return -1;
+    }
+
+    if (!defined $pm) {
+        carp "ERROR: Impossible to create a PackMan object";
+        return -1;
+    }
+    my $distro = OSCAR::PackagePath::get_distro ();
+    if (!OSCAR::Utils::is_a_valid_string ($distro)) {
+        carp "ERROR: Distro not specified and detection impossible";
+        return -1;
+    }
+    $pm->{Distro} = $distro;
+
+    # We figure out which packages need to be installed/removed
+    open (FILE, "$diff_file")
+        or (carp "ERROR: Impossible to open $diff_file", return -1);
+    my @lines = <FILE>;
+    close (FILE);
+    foreach my $l (@lines) {
+        # We want to catch the lines starting with - or + but excluding the
+        # diff header.
+        if ($l !~ /^\-\-(.*)/ && $l =~ /^\-(.*)/) {
+            push (@to_install, $1);
+        }
+        if ($l !~ /^\+\+(.*)/ && $l =~ /^\+(.*)/) {
+            push (@to_remove, $1);
         }
     }
 
     if (scalar (@to_install)) {
         OSCAR::Utils::print_array (@to_install);
+        print $pm->status;
+        my ($err, @out) = $pm->smart_install (@to_install);
+        if ($err == OSCAR::PackManDefs::ERROR()) {
+            carp "ERROR: $err error(s) occured for prereq "
+                 .join(", ", @to_install)."(".join("\n",@out).")";
+            return -1;
+        }
     }
     if (scalar (@to_remove)) {
         OSCAR::Utils::print_array (@to_remove);
+        print "[WARN] We do not know yet how to coherently remove packages";
+        return -1;
     }
 
     return 0;
