@@ -1,0 +1,6 @@
+#!/bin/sh
+#
+# Descr: Server side of the cron for oscar-system-update.
+#
+
+/usr/bin/oscar-system-update --get-images-config

@@ -19,7 +19,7 @@ BuildRoot:      %{_localstatedir}/tmp/%{name}-root
 BuildArch:      noarch
 AutoReqProv:    no
 Requires:       oscar-base-lib >= 6.0.5
-Requires:       packman
+Requires:       packman >= 3.2.0
 Requires:       diff
 
 %description

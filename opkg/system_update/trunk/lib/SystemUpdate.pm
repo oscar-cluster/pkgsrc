@@ -29,21 +29,22 @@ use warnings "all";
 use Carp;
 use Fcntl;
 
-use OSCAR::Database;
+# We do not include all the needed Perl modules here because some functions
+# are executed in chroot env when dealing with images, in such cases, not all
+# Perl modules are available.use OSCAR::Database;
 use OSCAR::FileUtils;
 use OSCAR::Logger;
-use OSCAR::PackMan;
 use OSCAR::Utils;
-use Data::Dumper;
 
 use vars qw($VERSION @EXPORT);
 use base qw(Exporter);
 
 @EXPORT = qw (
                 get_list_local_binary_packages
+                get_package_list_from_image
              );
 
-our $update_script = "/usr/bin/oscar-update";
+our $update_script = "/usr/bin/oscar-system-update";
 our $file_list_binary = "/tmp/list_binary.txt";
 our $remote_list = "/tmp/image_package_list.txt";
 our $images_dir = "/var/lib/systemimager/images";
@@ -61,6 +62,7 @@ sub get_list_local_binary_packages ($) {
     }
 
     my $pm;
+    require OSCAR::PackMan;
     if ($os->{pkg} eq "deb") {
         $pm = PackMan::DEB->new;
     } elsif ($os->{pkg} eq "rpm") {
@@ -116,13 +118,15 @@ sub get_package_list_from_image ($) {
     my $image_path = "$images_dir/$image_name";
 
     # We check first that the image includes our package
-    if (! -f "$image_path$update_script") {
-        carp "ERROR: The image does not include oscar-update";
+    my $script_in_image = "$image_path$update_script";
+    if (! -f "$script_in_image") {
+        carp "ERROR: Image does not include oscar-update ($script_in_image)";
         return -1;
     }
 
     # We get the list of binary packages from the image
-    my $cmd = "chroot $image_path $update_script";
+    my $cmd = "chroot $image_path $update_script --get-local-config";
+    print "Executing: $cmd\n";
     if (system ($cmd)) {
         carp "ERROR: Impossible to execute $cmd";
         return -1;
@@ -134,6 +138,8 @@ sub get_package_list_from_image ($) {
     }
 
     # We get the list of clients associated to that image
+    require OSCAR::Database;
+    require OSCAR::Database_generic;
     my $sql = "select id from Images where name='$image_name'";
     my $image_id = OSCAR::Database::oda_query_single_result ($sql, "id");
     $sql = "select hostname from Nodes where image_id='$image_id'";

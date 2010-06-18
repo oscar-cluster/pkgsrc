@@ -7,6 +7,6 @@ Standards-Version: 3.7.2
 
 Package: system-update
 Architecture: all
-Depends: ${shlibs:Depends}, ${misc:Depends}, liboscar (>= 6.0.5), packman, diff
+Depends: ${shlibs:Depends}, ${misc:Depends}, liboscar (>= 6.0.5), packman (>= 3.2.0), diff
 Description: OSCAR System Updater
  Set of scripts and Perl modules for the update of OSCAR compute nodes.

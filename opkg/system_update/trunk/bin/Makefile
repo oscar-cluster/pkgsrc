@@ -1,19 +1,20 @@
 DESTDIR=
-PKGDEST=
-SOURCEDIR=/usr/src/redhat/SOURCES
-PKG=
 
 include ../Config.mk
 
-FILES	:= oscar-system-update
+SCRIPTS	:= oscar-system-update
 SUBDIRS := 
+
+man:
+	install -d -m 0755 $(DESTDIR)/usr/local/man/man1/
+	for bin in ${SCRIPTS} ; do ( pod2man --section=1 $$bin $(DESTDIR)/usr/local/man/man1/$$bin.1 ) ; done
 
 all:
 	for dir in ${SUBDIRS} ; do ( cd $$dir ; ${MAKE} all ) ; done
 
-install:
-	install -d -m 0755 $(DESTDIR)$(LIBDIR)/OSCAR
-	install    -m 0755 ${FILES} $(DESTDIR)$(LIBDIR)/OSCAR
+install: man
+	install -d -m 0755 $(DESTDIR)/usr/bin
+	install    -m 0755 ${SCRIPTS} $(DESTDIR)/usr/bin
 	for dir in ${SUBDIRS} ; do ( cd $$dir ; ${MAKE} install ) ; done
 
 uninstall:
