@@ -1,0 +1,117 @@
+#!/usr/bin/env perl
+#
+# Copyright (c) 2010        Oak Ridge National Laboratory.
+#                           Geoffroy R. Vallee <valleegr@ornl.gov>
+#                           All rights reserved.
+#
+# This file is part of the OSCAR software package.  For license
+# information, see the COPYING file in the top level directory of the
+# OSCAR source distribution.
+#
+
+BEGIN {
+    if (defined $ENV{OSCAR_HOME}) {
+        unshift @INC, "$ENV{OSCAR_HOME}/lib";
+    }
+}
+
+use strict;
+use Carp;
+use Getopt::Long;
+
+my ($get_config, $update);
+
+Getopt::Long::Configure("pass_through");
+GetOptions(
+        "get-local-config"      => \$get_config,
+        "update"                => \$update,
+        "help"                  => \&help,
+        ) || help_and_die();
+
+use OSCAR::SystemUpdate;
+
+# TODO we should have a unique definitation of that path
+
+# On the compute nodes, we save the list of binary packages from the image 
+# there:
+our $remote_list = "/tmp/image_package_list.txt";
+# On the compute nodes, we save the list of installed packages there:
+our $output_file = "/tmp/local_package_list.txt";
+# When getting the list of binary packages in the image, we save it there:
+our $list_package = "/tmp/list_binary.txt";
+# File where we save the diff between image packages and local packages
+our $diff_file = "/tmp/oscar-update.diff";
+
+sub do_update {
+    my (@to_install, @to_remove);
+    
+    # We check we have the list of binary packages from the image
+    if (! -f $remote_list) {
+        carp "ERROR: file $remote_list does not exist";
+        return -1;
+    }
+
+    # We get the list of local binary packages
+    if (OSCAR::SystemUpdate::get_list_local_binary_packages ($output_file)) {
+        carp "ERROR: Impossible to get the list of local binary packages";
+        return -1;
+    }
+    if (! -f $output_file) {
+        carp "ERROR: Impossible to get local binary packages ($output_file)";
+        return -1;
+    }
+
+    # We compare the two lists
+    my $cmd = "diff -u $remote_list $output_file > $diff_file";
+    # Diff returns 0 if no diff, 1 else.
+    if (system ($cmd)) {
+        open (FILE, "$diff_file")
+            or (carp "ERROR: Impossible to open $diff_file", return -1);
+        my @lines = <FILE>;
+        close (FILE);
+        foreach my $l (@lines) {
+            # We want to catch the lines starting with - or + but excluding the
+            # diff header.
+            if ($l !~ /^\-\-(.*)/ && $l =~ /^\-(.*)/) {
+                push (@to_install, $1);
+            }
+            if ($l !~ /^\+\+(.*)/ && $l =~ /^\+(.*)/) {
+                push (@to_remove, $1);
+            }
+        }
+    }
+
+    if (scalar (@to_install)) {
+        OSCAR::Utils::print_array (@to_install);
+    }
+    if (scalar (@to_remove)) {
+        OSCAR::Utils::print_array (@to_remove);
+    }
+
+    return 0;
+}
+
+sub get_local_config {
+
+    # We get the list of the installed binary packages on the local system
+    if (OSCAR::SystemUpdate::get_list_local_binary_packages ($list_package)) {
+        carp "ERROR: Impossible to get binary package list ($list_package)";
+        return -1;
+    }
+
+    return 0;
+}
+
+sub help_and_die {
+    die "ERROR";
+}
+
+if ($get_config) {
+    get_local_config ();
+    exit (0);
+}
+
+if ($update) {
+    do_update();
+    exit (0);
+}

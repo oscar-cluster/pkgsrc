@@ -1,4 +1,4 @@
-package SystemUpdate;
+package OSCAR::SystemUpdate;
 
 #   This program is free software; you can redistribute it and/or modify
 #   it under the terms of the GNU General Public License as published by
@@ -29,15 +29,24 @@ use warnings "all";
 use Carp;
 use Fcntl;
 
+use OSCAR::Database;
 use OSCAR::FileUtils;
 use OSCAR::Logger;
 use OSCAR::PackMan;
+use OSCAR::Utils;
+use Data::Dumper;
 
 use vars qw($VERSION @EXPORT);
 use base qw(Exporter);
 
 @EXPORT = qw (
+                get_list_local_binary_packages
              );
+
+our $update_script = "/usr/bin/oscar-update";
+our $file_list_binary = "/tmp/list_binary.txt";
+our $remote_list = "/tmp/image_package_list.txt";
+our $images_dir = "/var/lib/systemimager/images";
 
 # Get the list of binary packages installed on the local system.
 sub get_list_local_binary_packages ($) {
@@ -68,7 +77,6 @@ sub get_list_local_binary_packages ($) {
 
     # We get the list of installed binary packages
     @data = $pm->query_list_installed_pkgs();
-        OSCAR::Utils::print_array (@data);
 
     # We save the list into the output file
     if (-f $output_file) {
@@ -82,6 +90,79 @@ sub get_list_local_binary_packages ($) {
     return 0;
 }
 
-get_list_local_binary_packages ("/tmp/toto");
+# This function translates a list of hostnames to C3 indexes. This allows one to
+# later use C3 cmds. We hide this in a function because the current C3 
+# implementation suffers of limitations regarding the parsing of the results.
+# Having this function, it is easy to simplify the code based on improvements of
+# new C3 versions.
+sub translate_hostnames_to_c3indexes (@) {
+    my (@hosts) = @_;
+    my ($cmd, $output);
+    my @indexes;
+
+    foreach my $host (@hosts) {
+        $cmd = "cnum $host";
+        $output = `$cmd`;
+        if ($output =~ /index (.*) in/) {
+            push (@indexes, $1);
+        }
+    }
+
+    return @indexes;
+}
+
+sub get_package_list_from_image ($) {
+    my ($image_name) = @_;
+    my $image_path = "$images_dir/$image_name";
+
+    # We check first that the image includes our package
+    if (! -f "$image_path$update_script") {
+        carp "ERROR: The image does not include oscar-update";
+        return -1;
+    }
+
+    # We get the list of binary packages from the image
+    my $cmd = "chroot $image_path $update_script";
+    if (system ($cmd)) {
+        carp "ERROR: Impossible to execute $cmd";
+        return -1;
+    }
+
+    if (! -f "$image_path$file_list_binary") {
+        carp "ERROR: $image_path$file_list_binary not available";
+        return -1;
+    }
+
+    # We get the list of clients associated to that image
+    my $sql = "select id from Images where name='$image_name'";
+    my $image_id = OSCAR::Database::oda_query_single_result ($sql, "id");
+    $sql = "select hostname from Nodes where image_id='$image_id'";
+    my @res;
+    if (OSCAR::Database_generic::do_select ($sql, \@res, undef, undef) != 1) {
+        carp "ERROR: Impossible to execute SQL command: $sql";
+        return -1;
+    }
+
+    if (scalar @res <= 0) {
+        carp "ERROR: No nodes are assigned to the image $image_name";
+        return -1;
+    }
+    my @nodes;
+    foreach my $i (@res) {
+        push (@nodes, $i->{'hostname'});
+    }
+
+    # We try to push the file to the nodes
+    my @indexes = translate_hostnames_to_c3indexes (@nodes);
+    OSCAR::Utils::print_array (@indexes);
+    my $args = ":".join (",", @indexes);
+    $cmd = "/usr/bin/cpush $args $image_path$file_list_binary $remote_list";
+    if (system ($cmd)) {
+        carp "ERROR: Impossible to execute $cmd";
+        return -1;
+    }
+
+    return 0;
+}
 
 1;

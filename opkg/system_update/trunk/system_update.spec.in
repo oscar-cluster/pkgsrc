@@ -1,0 +1,45 @@
+%define binpref /usr/bin
+%define manpref /usr/local/man/man1
+%define libpref PERLLIBPATH
+%define bintarget $RPM_BUILD_ROOT%{binpref}
+%define libtarget $RPM_BUILD_ROOT%{libpref}
+%define mantarget $RPM_BUILD_ROOT%{manpref}
+
+Summary:        OSCAR System Updater
+Name:           system-update
+Version:        1.0.0
+Release:        1
+Vendor:         Open Cluster Group <http://OSCAR.OpenClusterGroup.org/>
+Distribution:   OSCAR
+Packager:       Geoffroy Vallee <valleegr@ornl.gov>
+License:        GPL
+Group:          Development/Libraries
+Source:         %{name}.tar.gz
+BuildRoot:      %{_localstatedir}/tmp/%{name}-root
+BuildArch:      noarch
+AutoReqProv:    no
+Requires:       oscar-base-lib >= 6.0.5
+Requires:       packman
+Requires:       diff
+
+%description
+Set of scripts and Perl modules for the update of OSCAR compute nodes.
+
+%prep
+%setup -n %{name}
+
+%build
+make install DESTDIR=$RPM_BUILD_ROOT
+
+%install
+
+%files
+%defattr(-,root,root)
+%{binpref}/*
+%{libpref}/*
+%{manpref}/*
+/var/lib/oscar/*
+
+%changelog
+* Fri Jun 18 2010 Geoffroy Vallee <valleegr@ornl.gov> 1.0.0-1
+- Initial version.

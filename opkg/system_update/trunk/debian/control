@@ -1,0 +1,12 @@
+Source: system-update
+Section: oscar
+Priority: optional
+Maintainer   : Geoffroy Vallee <valleegr@ornl.gov>
+Build-Depends: debhelper (>= 4.0.0)
+Standards-Version: 3.7.2
+
+Package: system-update
+Architecture: all
+Depends: ${shlibs:Depends}, ${misc:Depends}, liboscar (>= 6.0.5), packman, diff
+Description: OSCAR System Updater
+ Set of scripts and Perl modules for the update of OSCAR compute nodes.
