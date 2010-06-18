@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<oscar>
+  <name>cn-update</name>
+  <class>included</class>
+  <summary>Utilities to maintain the compute nodes updated</summary>
+  <description>.
+  </description>
+  <license>GPL</license>
+  <group>System Environment/Base</group>
+  <uri>http://oscar.openclustergroup.org/</uri>
+  <authors>
+    <author cat="maintainer">
+      <name>Geoffroy Vallee</name>
+      <email>valleegr@ornl.gov</email>
+    </author>
+  </authors>
+  <serverDeps/>
+  <clientDeps/>
+  <apiDeps/>
+  <changelog>
+    <versionEntry version="1.0.0-1">
+        <changelogEntry authorName="Geoffroy Vallee" date="2010-06-18T10:41:31-05:00">
+            <item>Initial OPKG</item>
+        </changelogEntry>
+    </versionEntry>
+  </changelog>
+</oscar>
