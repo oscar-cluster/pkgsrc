@@ -55,6 +55,7 @@ sub get_extif () {
     return $extif;
 }
 
+# TODO: extend the iptables script to stop NAT
 sub generate_iptables_script ($$) {
     my ($file, $extif) = @_;
 
@@ -64,12 +65,26 @@ sub generate_iptables_script ($$) {
         unlink ($file);
     }
 
-    sysopen (MYFILE, "$file", O_RDWR|O_CREAT, 0755) or (carp "ERROR: Impossible to write to $file", 
-                                return -1);
+    sysopen (MYFILE, "$file", O_RDWR|O_CREAT, 0755) 
+        or (carp "ERROR: Impossible to write to $file", return -1);
+
     print MYFILE "#!/bin/sh\n#\n\n";
+    print MYFILE "setup_nat() {\n";
     print MYFILE "echo \"1\" > /proc/sys/net/ipv4/ip_forward\n";
     print MYFILE "/sbin/iptables -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT\n";
     print MYFILE "/sbin/iptables -t nat -A POSTROUTING -o $extif -j MASQUERADE\n";
+    print MYFILE "}\n\n";
+    print MYFILE "case \"\$1\" in\n";
+    print MYFILE "\tstart|restart|reload|force-reload)\n";
+    print MYFILE "\t\tsetup_nat\n";
+    print MYFILE "\t\t;;\n";
+    print MYFILE "\tstop\n";
+    print MYFILE "\t\techo \"stop not yet implemented\n";
+    print MYFILE "\t\t;;\n";
+    print MYFILE "\t*)\n";
+    print MYFILE "\t\techo \"\$0 usage: \$0 start|stop|restart|load|force-reload\"\n"; 
+    print MYFILE "\t\t;;\n";
+    print MYFILE "esac\n";
 
     close (MYFILE);
 
