@@ -41,6 +41,7 @@ use base qw(Exporter);
             generate_iptables_script
              );
 
+# TODO: This should be in OSCAR::Network and not here.
 sub get_extif () {
     my $sql;
     my $n_id;

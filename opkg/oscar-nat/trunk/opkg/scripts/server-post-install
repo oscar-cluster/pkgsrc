@@ -36,8 +36,9 @@ my $extif = OSCAR::NAT::get_extif ();
 
 # We create the script to setup NAT
 my $file = "/etc/init.d/setup_nat.sh";
-if (OSCAR::NAT::generate ($file, $extif)) {
+if (OSCAR::NAT::generate_iptables_script ($file, $extif)) {
     die ("ERROR: Impossible to generate $file");
 }
 
-return 0;
+# We should add the service into rc2.d but OSCAR::SystemServices does not
+# support it yet.
