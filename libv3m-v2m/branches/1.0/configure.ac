@@ -7,7 +7,7 @@ dnl
 
 AC_INIT(qemu.cpp)
 
-LIBV3M_VERSION="0.9.5"
+LIBV3M_VERSION="0.9.8"
 
 AM_INIT_AUTOMAKE(libv3m,$LIBV3M_VERSION)
 
@@ -19,9 +19,8 @@ AC_PROG_CXX
 AC_PROG_LIBTOOL
 AC_PROG_CPP
 AC_PROG_INSTALL
-AC_PROG_RANLIB
-LT_INIT
-LT_LANG([C++])
+dnl LT_INIT
+dnl LT_LANG([C++])
 
 dnl === Check for libxml++ 2.6 =================================================
 

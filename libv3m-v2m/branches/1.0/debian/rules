@@ -52,6 +52,7 @@ build-stamp:  config.status
 
 	# Add here commands to compile the package.
 	$(MAKE) -j 2
+	$(MAKE) doc
 
 	touch $@
 
@@ -76,6 +77,8 @@ install: build
 	$(MAKE) DESTDIR=$(CURDIR)/debian/libv3m install
 	# We install configuration files
 	$(MAKE) DESTDIR=$(CURDIR)/debian/libv3m install-etc
+
+	cd doc; $(MAKE) DESTDIR=$(CURDIR)/debian/libv3m install
 
 
 # Build architecture-independent files here.

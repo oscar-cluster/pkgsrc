@@ -1,3 +1,9 @@
+libv3m (0.9.8-1) hardy; urgency=low
+
+  * Support the installation of the documentation.
+ 
+ -- Geoffroy Vallee <valleegr@ornl.gov>  Thu, 19 Aug 2010 14:56:31 -0400
+
 libv3m (0.9.7-2) hardy; urgency=low
 
   * Include a missing header.
