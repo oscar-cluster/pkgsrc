@@ -1,0 +1,1348 @@
+#!/usr/bin/perl
+#
+# Tool for setting up, exporting apt repositories and
+# executing apt commands for only these repositories.
+#
+#   This program is free software; you can redistribute it and/or modify
+#   it under the terms of the GNU General Public License as published by
+#   the Free Software Foundation; either version 2 of the License, or
+#   (at your option) any later version.
+#
+#   This program is distributed in the hope that it will be useful,
+#   but WITHOUT ANY WARRANTY; without even the implied warranty of
+#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#   GNU General Public License for more details.
+#
+#   You should have received a copy of the GNU General Public License
+#   along with this program; if not, write to the Free Software
+#   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+#
+# $Id$
+#
+# Author:
+# (C)opyright Erich Focht <efocht@hpce.nec.com>
+#      All rights reserved
+# Update:
+# (C)opyright Oak Ridge National Laboratory
+#       Geoffroy Vallee <valleegr@ornl.gov>
+#       All rights reserved
+#
+# # # #
+#
+# Local debian repository example (suppose version is 3.1, codename "sarge"):
+#   Location of .deb files:
+#   /tftpboot/distro/debian-3.1-i386/
+#
+#   Location of Packages and Packages.gz files (metadata):
+#   /tftpboot/distro/debian-3.1-i386/dists/sarge/binaries-i386/Packages{,.gz}
+#
+#  This repository should be passed on the command line as:
+#    --repo /tftpboot/distro/debian-3.1-i386
+#  It will lead to the following entry in the temporary sources.list config
+#  file in /etc/apt:
+#  deb file:/tftpboot/distro/debian-3.1-i386/ sarge .
+#
+# # # #
+#
+# A remote debian repository that would e.g. be listed in the
+# /etc/apt/sources.list file as
+# deb http://http.us.debian.org/debian sarge main restricted
+# should be passed on the command line as:
+#  --repo http://http.us.debian.org/debian+sarge+main+restricted
+#
+# # # #
+#
+# WARNING rapt does not support currently multiple architectures.
+#
+# # # #
+
+use strict;
+use Getopt::Long;
+use IO::File;
+use POSIX qw(tmpnam);
+use File::Basename;
+use File::Copy;
+use Carp;
+use Switch;
+
+my ($verbose, $export, $unexport, $prepare, $listexp, $name_only);
+my $installroot;
+my $distro;
+my (@repos, @repoadd, @repodel, $repolist);
+my @delfiles;
+
+Getopt::Long::Configure("pass_through");
+GetOptions(
+        "distro=s"        => \$distro,
+        "export"        => \$export,
+#        "repoadd=s"    => \@repoadd,
+#        "repodel=s"    => \@repodel,
+        "help"          => \&help,
+        "installroot=s" => \$installroot,
+        "listexp"       => \&list_exported,
+        "names-only"    => \$name_only,
+        "repo=s"        => \@repos,
+        "repolist"      => \$repolist,
+        "prepare"       => \$prepare,
+        "unexport"      => \$unexport,
+        "verbose|v+"    => \$verbose,
+        );
+
+
+my @validarch = qw(i386 x86_64 ia64 ppc64 noarch);
+chomp(my $hostname=`hostname -s`);
+
+#############################################################################
+
+sub help {
+    print "Usage: $0 OPTIONS [APT_GET_OPTIONS]\n";
+    print "\n";
+    print "Call apt-get with _only_ the repositories passed on the command line .\n";
+    print "OPTIONS can be:\n";
+    print " --distro DISTRO_ID : specify the Linux distribution we want to\n";
+    print "                      deal with.";
+    print " --repo URL : repository which should be included in apt actions\n";
+    print "              (multiple --repo options are possible).\n";
+    print " --installroot DIR : install/remove packages to/from image DIR\n";
+    print " --export   : create httpd configuration for local repositories\n";
+    print " --unexport : delete httpd configuration for local repositories\n";
+    print " --listexp  : list exported local repositories\n";
+    print " --prepare  : generate repodata for local repositories\n";
+    print " --help     : this help information\n";
+#    print " --repoadd URL : add URL to the OSCAR repository list for the\n";
+#    print "                 local node's distro/architecture.\n";
+#    print " --repodel URL : delete URL from the OSCAR repository list for\n";
+#    print "                 the local node's distro/architecture.\n";
+    print " --repolist    : list the OSCAR repository URLs\n";
+    print " --verbose  : verbose output\n";
+    print "\n";
+    print "APT_GET_OPTIONS are options to be passed to the apt-get command.\n";
+    print "Setting the environment variable \$RAPT_VERBOSE to a number\n";
+    print "between 1 and 10 will generate verbose output like multiple\n";
+    print "-v options.\n\n";
+    exit;
+}
+
+sub cleanup {
+    for my $f (@delfiles) {
+        if (-e $f) {
+            !system("rm -f $f") or print "ERROR: Couldn't remove file $f: $!\n";
+        }
+    }
+    &restore_aptlist;
+}
+
+# Get the default repos for the local distro.
+# TODO: we should be able to query the default repo for other distros (i.e.,
+# not the local one).
+#
+# Input: distro, the distro ID (OS_Detect syntax) or undef for the local distro
+# Return: array with the default repos for the specified distro (local distro 
+#         if no distro specified), undef if error.
+sub get_default_repos ($) {
+    my $distro_id = shift;
+    my $os;
+
+    if (!defined $distro_id) {
+        $os = OSCAR::OCA::OS_Detect::open ();
+    } else {
+        require OSCAR::PackagePath;
+        my ($distro, $ver, $arch) =
+            OSCAR::PackagePath::decompose_distro_id ($distro_id);
+        $os = OSCAR::OCA::OS_Detect::open (fake=>{ distro=>$distro,
+                                                   distro_version=>$ver,
+                                                   arch=>$arch});
+    }
+    my $distro_repos = OSCAR::PackagePath::distro_repo_url (os=>$os);
+    my $oscar_repos = OSCAR::PackagePath::oscar_repo_url (os=>$os);
+
+    if ($verbose) {
+        print "Repositories detected:\n".
+              "\t$distro_repos\n".
+              "\t$oscar_repos\n";
+    }
+    return "$distro_repos $oscar_repos";
+}
+
+################################################################################
+# We add an element in a array avoiding duplication. Note that we write these  #
+# functions from scratch, i.e., we do not use OSCAR modules in order to avoid  #
+# bootstrap issues.                                                            #
+#                                                                              #
+# Input: elt, element to add to the array,                                     #
+#        array, array the element has to be added to.                          #
+# Return: a separate array with the element added if the element was not       #
+# therefore before.                                                            #
+################################################################################
+sub add_to_array ($@) {
+    my ($elt, @array) = @_;
+
+    print "Adding $elt to [".join(" ", @array)."] without duplication\n"
+        if $verbose;
+
+    my $found = 0;
+    foreach my $e (@array) {
+        if ($e eq $elt) {
+            $found = 1;
+            last;
+        }
+    }
+    if ($found == 0) {
+        push (@array, $elt);
+    }
+    print "New array: [".join(" ", @array)."]\n" if $verbose;
+    return @array;
+}
+
+################################################################################
+# Detect architectures from repositories' name.                                #
+# Note that because the Debian repository structure is completely different    #
+# from the yum repositories, we have do little tricks. This is because of two  #
+# reasons:                                                                     #
+#   - An historical reason: OSCAR has been initially designed for RPM-based    #
+#     only systems and therefore some of the basic OSCAR tools are based on    #
+#     RPM stuff and it is a pretty bad idea to want to change them (at least   #
+#     currently the different structures are coherent even if it implies more  #
+#     details to deal with on Debian based systems.                            #
+#   - To make OSCAR coherent, we use OS_Detect for the detection of distros.   #
+#     OS_Detect is pretty powerful, we want to preserve it. However, OS_Detect #
+#     assumes repositories by their structures (common versus distro specific) #
+#     are yum-like repositories.                                               #
+# Based on this context, for common-deb repositories which are completely      #
+# unatural on Debian, we scan for architecture specific pool in                #
+# /tftpboot/oscar, get their architecture and generate the repo for common     #
+# based on EACH of these architectures.                                        #
+#                                                                              #
+# @param: list of repositories.                                                #
+# @return: list of architectures (via an array of strings).                    #
+#                                                                              #
+# TODO: detect format of online repos. This may be usefull if we want to mix   #
+#       online and local repos: the local common-debs repo will also be ready  #
+#       for online repos.                                                      #
+################################################################################
+sub get_arch_repos (@) {
+    my (@repos) = @_;
+    my @arch;
+    my $varch = join("|",@validarch);
+    for my $repo (@repos) {
+        $repo = get_local_repository_path ($repo);
+        # We skip online repos, which is a bad idea when mixing online and
+        # local repos.
+        next if (!defined ($repo));
+        my $r = basename($repo);
+        chomp($r);
+        print "Detecting architecture of $r...\n" if $verbose;
+        $r =~ s:/$::;
+        if (!index ($r,"common-",0)) {
+                # if the repo is a repo for comon packages, it is a special
+                # case since no real architecture is associated. In Debian
+                # packages are supposed to all be in "pool" and only
+                # repository metadata is supposed to be organized by
+                # architecture.
+                # Therefore in our case, for the common repo, we check
+                # architectures within /tftpboot/oscar/distro and create an
+                # assocaited repo for all of them
+                my @sub_repos = `find /tftpboot/oscar -name \"debian-*\"`;
+                my $r2;
+                for $r2 (@sub_repos) {
+                    chomp ($r2);
+                    my @ret = get_arch_repos ($r2);
+                    foreach my $subrep (@ret) {
+                        @arch = add_to_array($subrep, @arch);
+                    }
+                }
+        } elsif (($r =~ /(.*)\-(\d+)\-($varch)(|\.url)$/) ||
+                ($r =~ /(.*)\-(\d+.\d+)\-($varch)(|\.url)$/)) {
+            my $a = $3;
+            if ($a eq "x86_64") {
+                @arch = add_to_array ("amd64", @arch);
+            } else {
+                @arch = add_to_array ($a, @arch);
+            }
+        } else {
+            print "WARNING: repository name doesn't match any valid architecture\n";
+        }
+    }
+    print "Detected architecture(s): ". join (" ", @arch) . "\n" if $verbose;
+    return @arch;
+}
+
+
+# simple check: does image need debootstrap to be installed?
+sub img_needs_bootstrap {
+    if (!$installroot || ($installroot eq "/") || (-d "$installroot/etc/apt")) {
+        return 0;
+    } else {
+        return 1;
+    }
+}
+
+
+# convert local (file:) repositories to remote http: URLs
+sub repo_file2http {
+    my @remote;
+    for my $repo (@repos) {
+    if ($repo =~ /^file:/) {
+        $repo =~ s,^file:,http://127.0.0.1/repo,;
+    }
+    push @remote, $repo;
+    }
+    return @remote;
+}
+
+# is /proc mounted in the image?
+sub img_has_proc {
+    local *IN;
+    my $hasproc;
+    open IN, "/proc/mounts" or croak "Cannot open /proc/mounts: $!";
+    while (<IN>) {
+    if (m:$installroot/proc:) {
+        $hasproc = 1;
+        last;
+    }
+    }
+    close IN;
+    return $hasproc;
+}
+
+# check if image already has /proc mounted, mount it otherwise
+sub img_mount_proc {
+    if (!&img_has_proc()) {
+    !system("mount --bind /proc $installroot/proc")
+        or croak "Could not mount /proc into $installroot: $!";
+    }
+}
+
+# unmount /proc from image
+sub img_umount_proc {
+    if (&img_has_proc()) {
+    !system("umount $installroot/proc")
+        or croak "Could not umount /proc in $installroot: $!";
+    }
+}
+
+#####
+# routines taken from systeminstaller Deboot.pm
+#####
+sub shutup_debconf {
+# Preconfigure the debconf database for maximum non-interactivity
+# Input:    image path
+# Returns:  1 on success, 0 on failure.
+    my $imgpath = shift;
+    my $config = "$imgpath/var/cache/debconf/config.dat";
+
+    print "Configuring debconf to use the Noninteractive interface.\n"
+        if $verbose;
+    open(NEW_CONFIG, ">>$config") or close OLD_CONFIG and return 1;
+    print NEW_CONFIG << 'EOF';
+Name: debconf/frontend
+Template: debconf/frontend
+Value: Noninteractive
+Owners: debconf
+Flags: seen
+EOF
+    close NEW_CONFIG;
+    return 0;
+}
+
+sub openup_debconf {
+# Undo what shutup_debconf did, removing the Noninteractive setting.
+# Input:    image path
+# Returns:  1 on success, 0 on failure.
+    my $imgpath = shift;
+    my $active = 0;
+
+    my $config = "$imgpath/var/cache/debconf/config.dat";
+    my $tmp = "$imgpath/var/cache/debconf/config.dat.RAPT.tmp";
+
+    print "Configuring debconf to use the Dialog interface.\n" if $verbose;
+    rename $config, $tmp or return 1;
+
+    open(OLD_CONFIG, "<$tmp") or return 1;
+    open(NEW_CONFIG, ">$config") or close OLD_CONFIG and return 1;
+    while (<CONFIG>) {
+    if (/^Name: debconf\/frontend$/) {
+        $active = 1;
+    }
+    if ($active == 1 and /^\s*$/) {
+        $active = 0;
+    }
+    if ($active == 1 and /^Value: Noninteractive$/) {
+        print NEW_CONFIG "Value: Dialog\n";
+        $active = 0;
+        next;
+    }
+    print NEW_CONFIG;
+    }
+    close OLD_CONFIG;
+    close NEW_CONFIG;
+    return 0;
+}
+
+sub install_fake_start_stop_daemon {
+# puts a fake start-stop-daemon in place, to prevent daemons from
+# starting on the build system.
+# Input: image path
+# Output: 0 on success, non-zero on failure.
+
+    my $imgpath=shift;
+
+    print "Installing fake start-stop-daemon.\n" if $verbose;
+    rename "$imgpath/sbin/start-stop-daemon", 
+    "$imgpath/sbin/start-stop-daemon.RAPT.tmp" or return 1;
+    open(SSD, ">$imgpath/sbin/start-stop-daemon") or return 1;
+    print SSD "#!/bin/sh\n";
+    print SSD "echo\n";
+    print SSD "echo Warning: Fake start-stop-daemon called, doing nothing\n";
+    close SSD;
+    chmod 0755, "$imgpath/sbin/start-stop-daemon" or return 1;
+}
+
+
+sub uninstall_fake_start_stop_daemon {
+# puts a fake start-stop-daemon in place, to prevent daemons from
+# starting on the build system.
+# Input: image path
+# Output: 0 on success, non-zero on failure.
+
+    my $imgpath=shift;
+
+    print "Uninstalling fake start-stop-daemon.\n" if $verbose;
+    unlink "$imgpath/sbin/start-stop-daemon" or return 1;
+    rename "$imgpath/sbin/start-stop-daemon.RAPT.tmp", 
+    "$imgpath/sbin/start-stop-daemon" or return 1;
+}
+
+################################################################################
+# We try to find the mirror we use for the Debian packages when using online   #
+# repos. Unfortunately, we only have a list of repos and we do not know which  #
+# one can be used by debootstrap. Therefore we check if one f them is from a   #
+# file in /tftpboot/distro. If so, we assume this is the mirror we want to use #
+# with debootstrap.                                                            #
+# The code is kind of ugly but there is not a real alternative since in RAPT   #
+# there is currently no way to know the distribution ID (which is a strong     #
+# limitation). The code could be much more simple if instead of dealing with   #
+# an anonymous list of repositories we could just have the distro ID and only  #
+# then we automatically get the list of associated distros (we can already get #
+# such a list).                                                                #
+#                                                                              #
+# Input: None.                                                                 #
+# Return: the mirror URL, empty string if no mirror is found.                  #
+################################################################################
+sub get_debootstrap_mirror_and_codename (@) {
+    my @repos = @_;
+    my $mirror = "";
+    require OSCAR::FileUtils;
+    require OSCAR::Utils;
+
+    OSCAR::Utils::print_array (@repos);
+
+    # For each repo, we scan files in /tftpboot/distro. If one repo is in a
+    # .url file, we have the distro id!
+
+    # We get the list of .url files in /tftpboot/distro
+    my @files = OSCAR::FileUtils::get_files_in_path ("/tftpboot/distro");
+    OSCAR::Utils::print_array (@files);
+    my @url_files;
+    foreach my $f (@files) {
+        if ($f =~ /^(.*)\.url$/) {
+            push (@url_files, "/tftpboot/distro/$f");
+        }
+    }
+
+    OSCAR::Utils::print_array (@url_files);
+
+    my $file;
+    foreach my $r (@repos) {
+        foreach my $url (@url_files) {
+            if (OSCAR::FileUtils::line_in_file ($r, $url) != -1) {
+                $file = $url;
+                $mirror = $r;
+                last;
+            }
+        }
+    }
+    if (!defined $file) {
+        carp "ERROR: Impossible to get the URL for the distro";
+        return "";
+    }
+
+    require File::Basename;
+    my $distro = File::Basename::fileparse($file,".url");
+    my @data = split (/\+/, $mirror);
+    $mirror = $data[0];
+    print "----> RAPT: we found the target repo for debootstrap ".
+          "($mirror, $distro)\n" if $verbose;
+    return ($mirror, $distro);
+}
+
+# Return: -1 if error, 0 else.
+sub do_debootstrap ($$$$) {
+    my ($target, $mirror, $arch, $codename) = @_;
+
+    if (!OSCAR::Utils::is_a_valid_string ($codename)) {
+        carp "ERROR: Invalid distro codename";
+        return -1;
+    }
+
+    if (system("which debootstrap 2>/dev/null")) {
+        carp "ERROR: Could not find command debootstrap!\n";
+        return -1;
+    }
+
+    # create directory if not existing
+    if (! -d "$target") {
+        !system("mkdir -p $target")
+          or (carp("Could not make directory $target: $!"), return -1);
+    }
+
+    my $cmd = "debootstrap --verbose ";
+    $arch = "amd64" if $arch eq "x86_64";
+    $cmd .= "--arch $arch " if defined $arch;
+    $cmd .= "$codename $target $mirror";
+    print "Executing: $cmd\n" if $verbose;
+    if (system($cmd)) {
+        carp "ERROR: Failed to debootstrap ($cmd), aborting.\n";
+        return -1;
+    }
+    # Debian/Sarge sucks for one point: if we want to be able to install
+    # kernel packages, the /etc/kernel-img.conf file has to be created
+    # manually
+    $cmd = "echo \"do_initrd = Yes\" > $target/etc/kernel-img.conf";
+    print ("Executing: $cmd\n");
+    if (system ($cmd)) {
+        carp ("Error: cannot create the file $target/etc/kernel-img.conf");
+        return -1;
+    }
+    return 0;
+}
+
+# Return: -1 if error, 0 else.
+sub debootstrap_distro ($$) {
+    my ($target, $distro_id) = @_;
+
+    if (!defined $target || !defined $distro_id) {
+        carp "ERROR: Invalid parameters";
+        return -1;
+    }
+
+    #
+    # We need the distro repo that we can use as debootstrap mirror, the 
+    # architecture and the distro codename.
+    #
+
+    # We get the debootstrap mirror
+    require OSCAR::PackagePath;
+    my ($distro, $ver, $arch) = 
+        OSCAR::PackagePath::decompose_distro_id ($distro_id);
+    my $os = OSCAR::OCA::OS_Detect::open (fake=>{ distro=>$distro,
+                                                distro_version=>$ver,
+                                                arch=>$arch});
+    if (!defined $os) {
+        carp "ERROR: Impossible to detect the distro ($distro, $ver, $arch)";
+        return -1;
+    }
+    my $distro_repos = OSCAR::PackagePath::distro_repo_url (os=>$os);
+    my @repo = split (" ", $distro_repos);
+    if (scalar @repo != 1) {
+        carp "ERROR: we can only deal with one and only one repository for ".
+             "debootstrap; we have ". scalar @repo ." repositories";
+        return -1;
+    }
+    my @data = split (/\+/, $repo[0]);
+    my $mirror = $data[0];
+    print "Debootstrap mirror: $mirror\n" if $verbose;
+
+    # We actually already have the architecture
+    print "Architecture: $arch\n" if $verbose;
+
+    # Now we find the distro codename
+    my $codename = $os->{'codename'};
+    if (!OSCAR::Utils::is_a_valid_string ($codename)) {
+        carp "ERROR: Impossible to detect the codename of $distro_id";
+        OSCAR::Utils::print_hash ("Distro data", "", $os);
+        return -1;
+    }
+    print "Distro codename: $codename\n" if $verbose;
+
+    if (do_debootstrap ($target, $mirror, $arch, $codename)) {
+        carp "ERROR: Impossible to run debootstrap ".
+             "($target, $mirror, $arch, $codename)";
+        return -1;
+    }
+
+    return 0;
+}
+
+################################################################################
+# Debootstrap is used to install the base system into a chroot                 #
+#                                                                              #
+# !!!!WARNING: Developers should not use this function anymore but prefer      #
+# debootstrap_distro, for which the implementation is less complex. In order   #
+# to use it, you must specify the distro (rapt --distro <distro_id>) instead   #
+# of repositories!!!!                                                          #
+#                                                                              #
+# Input:      target, suite, mirror                                            #
+# Returns:    -1 if failure, 0 if ok                                            #
+################################################################################
+sub debootstrap ($@) {
+    my ($target, @repos) = @_;
+
+    my ($mirror, $distro_id) = get_debootstrap_mirror_and_codename (@repos);
+    require OSCAR::PackagePath;
+    my ($distro, $ver, $arch) =
+        OSCAR::PackagePath::decompose_distro_id ($distro_id);
+    my $os = OSCAR::OCA::OS_Detect::open (fake=>{ distro=>$distro,
+                                                distro_version=>$ver,
+                                                arch=>$arch});
+    if (!defined $os) {
+        carp "ERROR: Impossible to detect the distro ($distro, $ver, $arch)";
+        return -1;
+    }
+    my $codename = $os->{'codename'};
+
+    if (do_debootstrap ($target, $mirror, undef, $codename)) {
+        carp "ERROR: Impossible to run debootstrap ".
+             "($target, $mirror, $codename)";
+        return -1;
+    }
+
+    return 0;
+}
+
+#######
+# end #
+#######
+
+
+# this function returns the apt list filename
+sub aptlist_name () {
+    return $installroot."/etc/apt/sources.list";
+}
+
+# create lock file in safe way
+# function only returns successfully!
+sub lock_aptlist () {
+    my $file = aptlist_name();
+    $file .= "_lock";
+    my $err;
+
+    # create lockfile with other name
+    my $tfile = $file."_".$$;
+    write_pid($tfile);
+    push @delfiles, $tfile;
+
+  WAIT4LOCK:
+    while (-e $file) {
+        my $lpid = &read_pid($file);
+        if ($lpid) {
+            if (! -d "/proc/$lpid") {
+                print "Stale lock found for non-existing process $lpid.".
+                    " Removing it!\n" if $verbose;
+                unlink($file);
+                last;
+            } else {
+                print "Waiting for lock $file to be released...\n";
+                sleep(1);
+            }
+        } else {
+            print "Lock $file disappeared or empty !?!\n" if $verbose;
+            last;
+        }
+    }
+
+    # We check if the lock is already taken
+    if (-f $file) {
+        print "WARN: Couldn't acquire lock $file\n";
+        goto WAIT4LOCK;
+    }
+
+    # Now try to acquire the lock
+    my $cmd = "mv $tfile $file 2>/dev/null";
+    $err = system($cmd);
+    if ($err) {
+        die "ERROR: Couldn't acquire lock $file ($cmd)\n";
+    }
+    return;
+}
+
+sub unlock_aptlist () {
+    my $file = aptlist_name();
+    $file .= "_lock";
+    my $pid = &read_pid($file);
+    if ($pid != "$$") {
+    print "WARNING! Unexpected pid $pid is holding the lock $file\n";
+    } else {
+    !system("rm -f $file") or carp("Could not remove lock $file: $!");
+    }
+}
+
+sub backup_aptlist {
+    my $file = aptlist_name();
+    my $backup = $file . "_bak$$";
+    if (-f $file) {
+    !system("mv $file $backup")
+        or carp("Could not back up $file to $backup: $!");
+    }
+}
+
+sub restore_aptlist {
+    my $file = aptlist_name ();
+    my $backup = $file . "_bak$$";
+    if (-e $backup) {
+        !system("mv $backup $file")
+            or carp("Could not restore $file from $backup: $!");
+    # GV: WARNING, not executing "apt-get update", it is not possible to 
+    # directly reuse apt-get! Users MUST execute manually "apt-get update"!!
+#        !system("apt-get update")
+#            or carp("Could not execute apt-get update");
+    }
+}
+
+# create new sources.list file for apt resembling the current repositories
+sub new_aptlist {
+    my $file = aptlist_name ();
+    my $backup = $file . "_bak$$";
+    # We manually add the OSCAR repository entry.
+    copy ($backup, $file);
+    local *OUT;
+    open OUT, "> $file" or croak("Could not open $file: $!");
+    for my $repo (@repos) {
+        my @data = split(/\+/,$repo);
+        # if there's only one word, add codename info
+        if (scalar(@data) == 1) {
+            my $codename = detect_codename_repo($repo);
+            push @data, ($codename, ".");
+        } elsif (scalar(@data) == 2) {
+            push @data, ".";
+        }
+        print OUT "deb ".join(" ",@data)."\n";
+    }
+#    print OUT "deb http://oscar.gforge.inria.fr/debian/ stable main oscar";
+    close OUT;
+}
+
+sub read_pid {
+    my ($file) = @_;
+    local *IN;
+    open IN, "$file" 
+    or do {
+        return 0 if (! -e $file);
+        croak "Could not open $file";
+    };
+    my $pid = <IN>;
+    close IN;
+    return $pid;
+}
+
+sub write_pid {
+    my ($file) = @_;
+    local *OUT;
+    open OUT, "> $file" or croak "Could not create $file";
+    print OUT "$$";
+    close OUT;
+}
+
+
+###############################################################
+# stuff below this line should be deleted once packman is used!
+
+sub oscar_repocmd {
+    my ($cmd, @r) = @_;
+    if (!&on_oscar_master()) {
+        print STDERR "ERROR: You can only do this on an OSCAR master node!\n";
+        exit 1;
+    }
+    if ($cmd !~ m/^(repolist|repoadd|repodel)$/) {
+        print STDERR "ERROR: Wrong command $cmd!\n";
+        exit 1;
+    }
+    if ($installroot) {
+        print STDERR "ERROR: You can't do this with --installroot!\n";
+        exit 1;
+    }
+    eval "use lib \"$ENV{OSCAR_HOME}/lib\"";
+    eval "use OSCAR::PackagePath";
+    my $oscar_url;
+    my $distro_url;
+    my $pkg;
+    eval "(\$oscar_url, \$pkg) = OSCAR::PackagePath::oscar_urlfile()";
+    eval "\$distr_url = OSCAR::PackagePath::distro_urlfile()";
+    if ($cmd eq "repoadd") {
+        eval "OSCAR::PackagePath::repos_add_urlfile(\$oscar_url, \@r)";
+    } elsif ($cmd eq "repodel") {
+        eval "OSCAR::PackagePath::repos_del_urlfile(\$oscar_url, \@r)";
+    }
+    # repolist in any case
+    my @repos;
+    eval "\@repos = OSCAR::PackagePath::repos_list_urlfile(\$oscar_url)";
+    print "Repositories in $oscar_url:\n    ".join("\n    ", @repos)."\n";
+}
+
+
+sub find_httpdir {
+    my $httpdir;
+    for my $d ("httpd", "apache", "apache2") {
+    if (-d "/etc/$d/conf.d") {
+        $httpdir = "/etc/$d/conf.d";
+        last;
+    } elsif (-d "/etc/$d/$d.conf") {
+        $httpdir = "/etc/$d/$d.conf";
+        last;
+    }
+    }
+    if ($verbose) {
+    print "Found httpdir = $httpdir\n";
+    }
+    return $httpdir;
+}
+
+# Exports repositories through httpd (http://$hostname/$pname)
+sub add_httpd_conf {
+    my $httpdir = find_httpdir();
+    my $changed = 0;
+    my $err = 0;
+    if ($httpdir) {
+    for my $repo (@repos) {
+        if ($repo =~ /^(file:\/|\/)/) {
+        $repo =~ s|^file:||;
+        if (!-d $repo) {
+            print "Could not find directory $repo. Skipping.\n";
+            $err++;
+            next;
+        }
+        my $pname = "repo$repo";
+        my $rname = $pname;
+        $rname =~ s:/:_:g;
+        my $cname = "$httpdir/$rname.conf";
+        if (-f $cname) {
+            print "Config file $cname already existing. Skipping.\n";
+            next;
+        }
+        print "Exporting $repo through httpd, http://$hostname/$pname\n";
+        open COUT, ">$cname" or die "Could not open $cname : $!";
+        print COUT "Alias /$pname $repo\n";
+        print COUT "<Directory $repo/>\n";
+        print COUT "  Options Indexes\n";
+        print COUT "  order allow,deny\n";
+        print COUT "  allow from all\n";
+        print COUT "</Directory>\n";
+        close COUT;
+        ++$changed;
+        } else {
+        print "Repository URL is not a local absolute path!\n";
+        print "Skipping $repo\n";
+        $err++;
+        next;
+        }
+    }
+    } else {
+    print "Could not find directory $httpdir!\n";
+    print "Cannot setup httpd configuration for repositories.\n";
+    $err++;
+    }
+    restart_httpd() if ($changed);
+    return $err;
+}
+
+sub del_httpd_conf {
+    my $httpdir = find_httpdir();
+    my $changed = 0;
+    my $err = 0;
+    if ($httpdir) {
+    for my $repo (@repos) {
+        if ($repo =~ /^(file:\/|\/)/) {
+        $repo =~ s|^file:||;
+        my $pname = "repo$repo";
+        my $rname = $pname;
+        $rname =~ s:/:_:g;
+        my $cname = "$httpdir/$rname.conf";
+        if (-f $cname) {
+            print "Deleting config file $cname\n";
+            if (unlink($cname)) {
+            print "WARNING: Could not delete $cname : $!\n";
+            $err++;
+            } else {
+            ++$changed;
+            }
+        }
+        } else {
+        print "Repository URL is not a local absolute path!\n";
+        print "Skipping $repo\n";
+        $err++;
+        next;
+        }
+    }
+    } else {
+    print "Could not find directory $httpdir!\n";
+    print "Cannot delete httpd configuration for repositories.\n";
+    $err++;
+    }
+    restart_httpd() if ($changed);
+    return $err;
+}
+
+sub list_exported {
+    my $httpdir = find_httpdir();
+    if ($httpdir) {
+    for my $repoconf (glob("$httpdir/repo_*.conf")) {
+        my $rname = basename($repoconf,".conf");
+        my ($dummy, $alias,$rdir) = split(" ",`grep "^Alias" $repoconf`);
+        chomp $rdir;
+        print "URL $alias : Repository --repo $rdir\n";
+    }
+    }
+    exit;
+}
+
+sub restart_httpd {
+    for my $httpd ("httpd", "httpd2", "apache", "apache2") {
+    if (-x "/etc/init.d/$httpd") {
+        print "Restarting $httpd\n";
+        system("/etc/init.d/$httpd restart");
+        last;
+    }
+    }
+}
+
+# Return: 0 if success, value > 0 else.
+sub prep_repodata (@) {
+    my @list_arch = @_;
+    my $err;
+
+    if (system("which dpkg-scanpackages 2>/dev/null")) {
+        carp "ERROR: Could not find command dpkg-scanpackages!\n";
+        return 1;
+    }
+
+    require OSCAR::Utils;
+
+    foreach my $a (@list_arch) {
+        my $err = 0;
+        for my $repo (@repos) {
+            next if ($repo =~ /^(http|ftp):/);
+            next if ($repo =~ /(.url)$/);
+            $repo =~ s/^file://;
+            $repo =~ s/\/$//;
+            die "ERROR: the repository directory does not exists" 
+                if (! -d $repo);
+            next if ($repo !~ m:^/:);
+
+            my $codename = detect_codename_repo($repo);
+            if (!OSCAR::Utils::is_a_valid_string ($codename)) {
+                carp "ERROR: Impossible to detect the codename for $repo";
+                return 1;
+            }
+            my $subdir = "dists/$codename/binary-$a";
+
+            # create directory for package metadata
+            if (! -d "$repo/$subdir") {
+                !system("mkdir -p $repo/$subdir")
+                    or (carp "ERROR: Could not create directory $repo/$subdir",
+                        return 1);
+            }
+
+            # now generate the Package.gz file
+            my $path = "$repo/$subdir/Packages*";
+            if ( -f "$path" ) {
+                require File::Path;
+                print "Deleting $path...\n" if $verbose;
+                File::Path::rmtree ("$path", 0, 0);
+            }
+            my $cmd = "cd $repo; dpkg-scanpackages ./ /dev/null";
+            $cmd .= "| tee $subdir/Packages | gzip -c9 >$subdir/Packages.gz";
+            print "Executing command: $cmd\n";
+            $err += abs(system($cmd));
+        }
+    }
+    return $err;
+}
+
+#
+# Detect codename of the targetted debian distro (sarge, breezy, ...)
+# Try to do the right thing:
+# - if we're installing into an image and it is already bootstrapped:
+#   read the /etc/debian-release or /etc/lsb-release files in the image
+# - if we're installing into a non-debootstrapped image:
+#   detect codename from the first repository name (first word after the URL)
+# - if we're installing locally, detect codename by reading the local files
+#   /etc/debian-release or /etc/lsb-release
+#
+sub detect_codename {
+    my (%args) =@_;
+    my $codename;
+
+    # the environment variable RAPT_DISTRO_CODENAME overrides detections
+    if ($ENV{RAPT_DISTRO_CODENAME}) {
+        return $ENV{RAPT_DISTRO_CODENAME};
+    }
+
+    # what are we targetting?
+    if (!$installroot) {
+        # local node
+        $codename = &detect_codename_dir();
+    } else {
+        # image
+        $codename = &detect_codename_dir($installroot);
+        if (!$codename) {
+            $codename = &detect_codename_repos(@repos);
+        }
+    }
+    if (!$codename) {
+        croak("Could not detect distribution codename!");
+    }
+    return $codename;
+}
+
+#
+# This needs improvement. For a local repo it should be able to detect the
+# codename by unpacking the debian-release or lsb-release file.
+# 
+sub detect_codename_repo ($) {
+    my ($repo) = @_;
+
+    # the codename of a debian-alike repo is the word after the URL
+    my ($url,$codename,$dummy) = split(/\+/,$repo);
+
+    # for local repositories try some more tricks
+    if (!$codename && (($url =~ /^file:(\S+)$/) || -d $url)) {
+        my $path = $1;
+#        my @cnames = glob("$path/dists/*");
+#        if (scalar(@cnames) == 1) {
+#            $codename = basename($cnames[0]);
+#        } elsif (scalar(@cnames) > 1) {
+#            print "Pool seems to contain multiple codenames!\n ".
+#            join(", ",@cnames)."\n";
+#            print "Cannot identify codename!\n";
+#        } else {
+            my $distro_id = File::Basename::basename ($url);
+            chomp ($distro_id);
+            require OSCAR::PackagePath;
+            my ($dist, $ver, $arch) 
+                = OSCAR::PackagePath::decompose_distro_id ($distro_id);
+            if (!defined $dist || !defined $ver || !defined $arch) {
+                carp "ERROR: Impossible to detect the distro ID ($path)";
+                return undef;
+            }
+            my $os = OSCAR::OCA::OS_Detect::open (fake=>{ distro=>$dist,
+                                                          distro_version=>$ver,
+                                                          arch=>$arch});
+            $codename = $os->{'codename'};
+#       }
+    }
+
+    return $codename;
+}
+
+sub detect_codename_repos (@) {
+    my @repos = @_;
+    my $codename;
+    my $c;
+
+    foreach my $r (@repos) {
+        $c = detect_codename_repo ($r);
+        if (defined $codename && $codename ne $c) {
+            carp "ERROR: Multiple codenames detected ($codename, $c)";
+            return undef;
+        }
+        if (!defined $codename) {
+            $codename = $c;
+        }
+    }
+
+    return $codename;
+}
+
+# Return: the distro codename (e.g., lenny, hardy); undef if error.
+sub detect_codename_dir ($) {
+    my ($dir) = @_;
+    my $os;
+
+    require OSCAR::OCA::OS_Detect;
+    require OSCAR::Utils;
+
+    if (OSCAR::Utils::is_a_valid_string ($dir)) {
+        $os = OSCAR::OCA::OS_Detect::open(chroot=>$dir);
+    } else {
+        $os = OSCAR::OCA::OS_Detect::open();
+    }
+
+    if (!defined $os) {
+        carp "ERROR: Impossible to detect the codenane";
+        return undef;
+    }
+
+    return $os->{'codename'};
+}
+
+################################################################################
+# This function does basic checking about the repos we are supposed to deal    #
+# with.                                                                        #
+#                                                                              #
+# Input: repos, an array with a list of repos path.                            #
+# Return: 0 if repos are valid, -1 else.                                       #
+################################################################################
+sub check_repos (@) {
+    my @repos = @_;
+
+    print "Checking repositories validity...\n" if $verbose;
+    # Currently we only check if the directory of the repo exists (it should!).
+    foreach my $repo (@repos) {
+        print "Checking repo $repo.\n" if $verbose;
+        $repo = get_local_repository_path ($repo);
+        if ( defined ($repo) ) {
+            print "Repository $repo is valid\n" if $verbose;
+        } else {
+            print "Online repository, we assume the repo is correct\n" 
+                if $verbose;
+        }
+    }
+    print "Repositories are valid.\n" if $verbose;
+    return 0;
+}
+
+################################################################################
+# This function just format the repo path; three cases are possible:           #
+# - the repo path is "file:/tftpboot/...", in that case, we remove "file:",    #
+# - the repo is online and therefore starts by http or ftp, in that case we    #
+#   return undef,                                                              #
+# - the repo is just a normal path (e.g., /tftpboot/oscar/debian-4-x86_64), in #
+#   that case, we check if the directory exists and if so, return the path.    #
+#                                                                              #
+# Input: repo, the repository "path" we need to "clean up".                    #
+# Return: the local directory path for the repo (directly usable by Perl),     #
+#         undef if it is an online repository and die if the local repo does   #
+#         not exist.                                                           #
+################################################################################
+sub get_local_repository_path ($) {
+    my $repo = shift;
+
+    return undef if ($repo =~ /^(http|ftp)/);
+
+    $repo =~ s/^file://;
+
+    if ($repo =~ /(.url)$/) {
+        print "URL file, looks valid\n" if $verbose;
+    } elsif ( ! -d $repo) {
+        die "ERROR: Invalid repo path ($repo)\n";
+    }
+
+    return $repo;
+}
+
+################################################################################
+
+$verbose = "$ENV{RAPT_VERBOSE}" if ($ENV{RAPT_VERBOSE});
+
+# WARNING, we currently assume that if the distro is specified, it overwrite
+# any explicit repos (--repo option).
+my $default_repos;
+if (defined $distro) {
+    @repos = ();
+    require OSCAR::PackagePath;
+    my @tmp;
+    $default_repos = get_default_repos($distro);
+    @tmp = split (" ", $default_repos);
+    foreach my $r (@tmp) {
+        my @tmp2 = split (",", $r);
+        foreach my $t (@tmp2) {
+            if (OSCAR::PackagePath::repo_local ($t) == 0) {
+                print "->[$t] is online, we assume it is a valid repo\n" if $verbose;
+                unshift (@repos, $t);
+            } else {
+                if (OSCAR::PackagePath::repo_empty ($t) == 1) {
+                    print "->local repo [$t] is empty, skipping it...\n" if $verbose;
+                } else {
+                    print "->local repo [$t] is valid.\n" if $verbose;
+                    unshift (@repos, $t);
+                }
+            }
+        }
+    }
+}
+
+help() if (!scalar(@repos));
+
+if ($verbose) {
+    print "Using the following repositories: ".join (",", @repos)."\n";
+}
+
+if (check_repos (@repos)) {
+    die "ERROR: Invalid repo(s)\n";
+}
+
+my @arches = get_arch_repos(@repos);
+
+print "Supported architecture(s): [".join (" ", @arches)."]\n" if $verbose;
+
+our $err = 0;
+
+if ($export || $unexport || $prepare) {
+    if ($prepare) {
+        foreach my $archstr (@arches) {
+            my $march = $archstr;
+            $march = "i?86" if ($archstr eq "i386");
+            $err += prep_repodata($archstr);
+        }
+    }
+
+    $err += add_httpd_conf() if ($export);
+    $err += del_httpd_conf() if ($unexport);
+    exit $err;
+}
+
+if (scalar(@repoadd) || scalar(@repodel) || $repolist) {
+    if (@repodel) {
+        &oscar_repocmd("repodel", @repodel);
+    }
+    if (@repoadd) {
+        &oscar_repocmd("repoadd", @repoadd);
+    }
+    if ($repolist) {
+        &oscar_repocmd("repolist",);
+    }
+    exit 0;
+}
+
+# chop trailing slashes from repository names
+foreach (@repos) {
+    s:\/$::;
+}
+
+#
+# For debian we need to carefully distinguish between local and remote
+# repositories. Installing into the master root filesystem can be done
+# from a local repo (file:), installation into an image has to be done
+# through a remote repo, as it runs in chroot!
+#
+for my $repo (@repos) {
+    # prepend "file:" to absolute path repos
+    if (($repo !~ /^(file|ftp|http)/) && -d $repo && ($repo=~/^\//)) {
+        $repo = "file:".$repo;
+    }
+}
+
+
+# install exit handler which removes the temporary
+# files and releases the lock
+END {my $rc = $?; cleanup(); if ($rc != 0) {print "ERROR during RAPT execution\n";} exit $rc};
+
+$SIG{INT} = \&cleanup;
+
+
+
+##############################
+### go for an apt-get command
+##############################
+
+# if command is "install" into empty image: debootstrap first
+if ($installroot) {
+    if ((scalar(grep /^install$/, @ARGV) == 1) && &img_needs_bootstrap) {
+        if (!defined $distro) {
+            if (debootstrap($installroot, @repos)) {
+                die "ERROR: Impossible to bootstrap the Debian system";
+            }
+        } else {
+            if (debootstrap_distro ($installroot, $distro)) {
+                die "ERROR: Impossible to bootstrap the Debian system";
+            }
+        }
+
+        # Debian/Sarge sucks for one point: if we want to be able to install
+        # kernel packages, the /etc/kernel-img.conf file has to be created
+        # manually
+        my $cmd = "echo \"do_initrd = Yes\" > $installroot/etc/kernel-img.conf";
+        print ("Executing: $cmd\n") if $verbose;
+        if (system($cmd)) {
+            print ("Impossible to create file $installroot/etc/kernel-img.conf");
+        }
+    }
+    @repos = &repo_file2http;
+}
+
+# lock source.list file such that concurrent "rapt"s wait for the lock
+lock_aptlist ();
+
+backup_aptlist ();
+
+# create temporary sources.list file with proper repository paths
+new_aptlist ();
+
+# update Packages cache. Note that we turn off all output (including stderr),
+# we are only interested by the return code.
+my $cmd = "apt-get update";
+$cmd = $cmd . " 1>/dev/null 2>/dev/null" if (!$verbose);
+if ($installroot) {
+    $cmd = "chroot $installroot $cmd";
+}
+print "Executing: $cmd\n" if $verbose;
+$err = system($cmd);
+if ($err) {
+    die("Error occured while running \"$cmd\" ($err)");
+}
+
+
+# mount /proc into image if needed
+if ($installroot) {
+    if (!&img_has_proc) {
+	&img_mount_proc;
+    }
+}
+# shut up debconf
+&shutup_debconf($installroot);
+
+# disable start-stop-daemon
+if ($installroot) {
+    &install_fake_start_stop_daemon($installroot);
+}
+
+# run apt-get command
+my $cmd;
+if ($ARGV[0] eq "search" || $ARGV[0] eq "show") {
+    $cmd = "aptitude ";
+} else {
+    $cmd = "apt-get ";
+}
+for (my $i=0; $i<scalar (@ARGV); $i++) {
+    if ($ARGV[$i] eq "*") {
+        # If by any chance the user is using * to get the list of all packages
+        # we have to modify the star into a regexp that will actually give the
+        # expected output.
+        $cmd .= "\'.*\' ";
+    } else {
+        $cmd .= "$ARGV[$i] ";
+    }
+}
+
+if ($installroot) {
+    $cmd = "chroot $installroot $cmd";
+}
+
+if ($ARGV[0] eq "search" && $name_only) {
+    $cmd .= " -F \"%p\"";
+}
+
+# other preparing commands (cf. sin)
+
+print "Executing: $cmd\n" if ($verbose);
+$err = system($cmd);
+
+# umount /proc into image if needed
+if ($installroot) {
+    &img_umount_proc;
+}
+
+# enable interactive debconf
+&openup_debconf($installroot);
+
+# enable start-stop-daemon
+if ($installroot) {
+    &uninstall_fake_start_stop_daemon($installroot);
+}
+
+restore_aptlist ();
+unlock_aptlist ();
+
+exit $err;
+
+
