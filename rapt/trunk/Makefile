@@ -2,7 +2,7 @@ DESTDIR=
 PKGDEST=
 DEBTMP=/tmp/rapt
 BUILDTMP=/tmp/rapt-build
-VERSION=2.8.6
+VERSION=2.8.8
 PKG=rapt
 
 all:

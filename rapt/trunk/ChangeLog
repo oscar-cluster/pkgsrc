@@ -1,4 +1,4 @@
-rapt-2.8.8 (not yet released):
+rapt-2.8.8:
 - Fix a problem when dealing with the lock file.
 - Fix a typo in a function's name.
 - Improve the man page.
