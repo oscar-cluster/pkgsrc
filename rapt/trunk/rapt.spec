@@ -1,7 +1,7 @@
 # $Id$
 Summary: Wrapper to apt-get for clusters
 Name: rapt
-Version: 2.8.7
+Version: 2.8.8
 Vendor: NEC HPCE
 Release: 1
 License: GPL
@@ -45,6 +45,8 @@ rm -rf $RPM_BUILD_ROOT
 %{_mandir}/man8/rapt*
 
 %changelog
+* Sat Aug 21 2010 Geoffroy Vallee - 2.8.8-1
+- New upstream version (see ChangeLog file for more details).
 * Mon Nov 30 2009 Geoffroy Vallee - 2.8.7-1
 - New upstream version (see ChangeLog file for more details).
 * Thu Jul 16 2009 Geoffroy Vallee - 2.8.6-1
