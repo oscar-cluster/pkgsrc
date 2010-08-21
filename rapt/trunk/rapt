@@ -88,6 +88,7 @@ GetOptions(
         "verbose|v+"    => \$verbose,
         );
 
+
 my @validarch = qw(i386 x86_64 ia64 ppc64 noarch);
 chomp(my $hostname=`hostname -s`);
 
@@ -224,7 +225,7 @@ sub get_arch_repos (@) {
     my @arch;
     my $varch = join("|",@validarch);
     for my $repo (@repos) {
-        $repo = get_loal_repository_path ($repo);
+        $repo = get_local_repository_path ($repo);
         # We skip online repos, which is a bad idea when mixing online and
         # local repos.
         next if (!defined ($repo));
@@ -649,11 +650,18 @@ sub lock_aptlist () {
             last;
         }
     }
-    # Now try to acquire the lock
-    $err = system("mv --reply=no $tfile $file 2>/dev/null");
-    if ($err) {
-        print "ERROR: Couldn't acquire lock $file\n";
+
+    # We check if the lock is already taken
+    if (-f $file) {
+        print "WARN: Couldn't acquire lock $file\n";
         goto WAIT4LOCK;
+    }
+
+    # Now try to acquire the lock
+    my $cmd = "mv $tfile $file 2>/dev/null";
+    $err = system($cmd);
+    if ($err) {
+        die "ERROR: Couldn't acquire lock $file ($cmd)\n";
     }
     return;
 }
@@ -1081,7 +1089,7 @@ sub check_repos (@) {
     # Currently we only check if the directory of the repo exists (it should!).
     foreach my $repo (@repos) {
         print "Checking repo $repo.\n" if $verbose;
-        $repo = get_loal_repository_path ($repo);
+        $repo = get_local_repository_path ($repo);
         if ( defined ($repo) ) {
             print "Repository $repo is valid\n" if $verbose;
         } else {
@@ -1106,7 +1114,7 @@ sub check_repos (@) {
 #         undef if it is an online repository and die if the local repo does   #
 #         not exist.                                                           #
 ################################################################################
-sub get_loal_repository_path ($) {
+sub get_local_repository_path ($) {
     my $repo = shift;
 
     return undef if ($repo =~ /^(http|ftp)/);
@@ -1130,6 +1138,7 @@ $verbose = "$ENV{RAPT_VERBOSE}" if ($ENV{RAPT_VERBOSE});
 # any explicit repos (--repo option).
 my $default_repos;
 if (defined $distro) {
+    @repos = ();
     require OSCAR::PackagePath;
     my @tmp;
     $default_repos = get_default_repos($distro);
@@ -1137,16 +1146,26 @@ if (defined $distro) {
     foreach my $r (@tmp) {
         my @tmp2 = split (",", $r);
         foreach my $t (@tmp2) {
-            if (OSCAR::PackagePath::repo_local ($t) == 0
-                || (OSCAR::PackagePath::repo_local ($t) == 1
-                    && OSCAR::PackagePath::repo_empty ($t) == 0)) {
+            if (OSCAR::PackagePath::repo_local ($t) == 0) {
+                print "->[$t] is online, we assume it is a valid repo\n" if $verbose;
                 unshift (@repos, $t);
+            } else {
+                if (OSCAR::PackagePath::repo_empty ($t) == 1) {
+                    print "->local repo [$t] is empty, skipping it...\n" if $verbose;
+                } else {
+                    print "->local repo [$t] is valid.\n" if $verbose;
+                    unshift (@repos, $t);
+                }
             }
         }
     }
 }
 
 help() if (!scalar(@repos));
+
+if ($verbose) {
+    print "Using the following repositories: ".join (",", @repos)."\n";
+}
 
 if (check_repos (@repos)) {
     die "ERROR: Invalid repo(s)\n";

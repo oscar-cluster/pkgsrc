@@ -1,7 +1,15 @@
+rapt-2.8.8 (not yet released):
+- Fix a problem when dealing with the lock file.
+- Fix a typo in a function's name.
+- Improve the man page.
+
 rapt-2.8.7:
 - Decrease the sleep time when waiting for the lock release.
 - Clean-up the code.
 - Improve output.
+- Improve the man page.
+- Fix a problem when using the --distro option (repos were not correctly
+handled).
 
 rapt-2.8.6:
 - Remove debugging messages.

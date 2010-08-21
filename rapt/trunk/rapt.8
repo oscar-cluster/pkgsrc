@@ -44,6 +44,13 @@ for example:
 ftp://ftp.debian.org/debian/+stable+main+non-free+contrib
 
 .TP
+.B --distro DISTRO_ID :
+Specify which distro the command is targeting. It will automacitally get the
+list of repositories to use from the OSCAR configuration files.
+This option overwrite the --repo options. 
+Example: /usr/bin/rapt --distro ubuntu-904-x86_64 -y  install librrd-dev
+
+.TP
 .B --export :
 create httpd configuration for local repositories. The repositories have to be
 passed by using --repo. The URL will be /repo/repopath on the local
