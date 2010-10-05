@@ -122,11 +122,15 @@ sub getconfig () {
         }
     }
 
-    #Distro checking
+    # Distro checking
     if ( -f "/etc/SuSE-release" ) {
         $logger = "/bin/logger";
     }
-    #.conf file handling
+
+    # TODO: We should never implicitely update the conf file, the configuration
+    #       phase should be separated from the execution phase. Basis sysadmin
+    #       stuff
+    # .conf file handling
     if ( -f "$configfile" ) {
         my $state   = AppConfig::State->new();
         my $config  = AppConfig->new();
@@ -136,16 +140,22 @@ sub getconfig () {
         $config->define("crondelay=i");
         $config->define("crontab=s");
         $config->define("cronmodify!", { DEFAULT => 1 });
-        $config->define("getent!", { DEFAULT => 1 });
+        # On the compute nodes, we always got the files from the headnode so
+        # we do not kill the system in a NIS environment
+        if (is_nis_env () == 1) {
+            if (OSCAR::NodeMgr::is_headnode () == 1) {
+                $config->define("getent!", { DEFAULT => 1 });
+            } else {
+                $config->define("getent!", { DEFAULT => 0 });
+            }
+        } else {
+            $config->define("getent!", { DEFAULT => 1 });
+        }
         $config->define("usec3!",  { DEFAULT => 1 });
         $config->define("scphost=s@");
         $config->file($configfile);
-        OSCAR::Logger::oscar_log_subsection "Ignore weird lines in the next ".
-            "Setting x to y section";
         foreach my $var qw(syncfile checksums crondelay crontab cronmodify 
             getent usec3 scphost) {
-            #print "$var - _" . $config->get($var) . "_\n";
-            #print "defined? " . defined($config->get($var)) . "\n";
             if ( defined($config->get($var)) ) {
                 OSCAR::Logger::oscar_log_subsection "Setting $var to " . 
                     $config->get($var);

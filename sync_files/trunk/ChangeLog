@@ -1,3 +1,6 @@
+2.5.8 (not yet released):
+- [Ticket #286] Make sure we do not use getent in a NIS environment.
+
 2.5.7:
 - Improve error handling.
 

@@ -24,6 +24,7 @@ Requires: perl
 Requires: /usr/bin/perl
 Requires: perl-AppConfig
 Requires: perl(Getopt::Long)
+Requires: oscar-base-lib > 6.0.5
 
 Obsoletes: sync-users-oscar
 
