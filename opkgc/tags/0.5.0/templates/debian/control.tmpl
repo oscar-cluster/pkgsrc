@@ -1,0 +1,33 @@
+Source: opkg-$name
+Section: oscar/$opkg_class
+Priority: optional
+$debAuthors#slurp
+Build-Depends: debhelper (>= 5)
+Standards-Version: 3.7.2
+
+Package: opkg-${name}
+Architecture: $arch
+$depends('apiDeps', 'requires')$depends('apiDeps', 'conflicts')$depends('apiDeps', 'provides')$depends('apiDeps', 'suggests')$depends('apiDeps', 'Opkg-conflicts')#slurp
+Description: $summary
+$description
+ .
+ This package contains cluster wide scripts for $name.
+$uri#slurp
+
+Package: opkg-$name-server
+Architecture: $arch
+$depends('serverDeps', 'requires')$depends('serverDeps', 'conflicts')$depends('serverDeps', 'provides')$depends('serverDeps', 'suggests')#slurp
+Description: $summary, server part
+$description
+ .
+ This package contains the server part of the package.
+$uri#slurp
+
+Package: opkg-$name-client
+Architecture: $arch
+$depends('clientDeps', 'requires')$depends('clientDeps', 'conflicts')$depends('clientDeps', 'provides')$depends('clientDeps', 'suggests')#slurp
+Description: $summary, client part
+$description
+ .
+ This package contains the client part of the package.
+$uri#slurp
