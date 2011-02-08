@@ -1,0 +1,66 @@
+sync-files (2.5.8-1) lucid; urgency=low
+
+  * New upstream version.
+
+ -- Geoffroy Vallee <valleegr@ornl.gov>  Tue, 08 Feb 2011 14:42:51 -0500
+
+sync-files (2.5.7-1) hardy; urgency=low
+
+  * New upstream version.
+
+ -- Geoffroy Vallee <valleegr@ornl.gov>  Mon, 30 Nov 2009 15:54:41 -0500
+
+sync-files (2.5.6-1) karmic; urgency=low
+
+  * New upstream version.
+
+ -- Geoffroy Vallee <valleegr@ornl.gov>  Mon, 02 Nov 2009 10:49:32 -0500
+
+sync-files (2.5.5-1) karmic; urgency=low
+
+  * New upstream version.
+
+ -- Geoffroy Vallee <valleegr@ornl.gov>  Fri, 30 Oct 2009 11:31:57 -0400
+
+sync-files (2.5.4-1) hardy; urgency=low
+
+  * New upstream version.
+
+ -- Geoffroy Vallee <valleegr@ornl.gov>  Wed, 07 Oct 2009 11:25:44 -0400
+
+sync-files (2.5.3-1) hardy; urgency=low
+
+  * New upstream version.
+
+ -- Geoffroy Vallee <valleegr@ornl.gov>  Fri, 25 Sep 2009 03:02:05 -0400
+
+sync-files (2.5.2-1) jaunty; urgency=low
+
+  * New upstream version.
+
+ -- Geoffroy Vallee <valleegr@ornl.gov>  Thu, 09 Jul 2009 15:37:56 -0400
+
+sync-files (2.5.1-1) hardy; urgency=low
+
+  * New upstream version.
+
+ -- Geoffroy Vallee <valleegr@ornl.gov>  Thu, 09 Jul 2009 12:25:04 -0400
+
+sync-files (2.5.0-1) jaunty; urgency=low
+
+  * New upstream version.
+
+ -- Geoffroy Vallee <valleegr@ornl.gov>  Thu, 06 Jul 2009 01:17:17 -0400
+
+sync-files (2.4.1~svn20090625-0gv1) hardy; urgency=low
+
+  * New upstream version.
+
+ -- Geoffroy Vallee <valleegr@ornl.gov>  Thu, 25 Jun 2009 11:28:57 -0400
+
+sync-files (2.4-1) stable; urgency=low
+
+  * Initial release
+
+ -- Geoffroy Vallee <valleegr@ornl.gov>  Mon, 18 Jun 2007 13:46:54 -0400
+
