@@ -1,0 +1,141 @@
+#!/usr/bin/env python
+# coding=utf8
+
+###################################################################
+# Copyright (c) 2007 Kerlabs
+#                    Jean Parpaillon <jean.parpaillon@kerlabs.com>
+#                    All rights reserved
+# Copyright (c) 2007-2010   Oak Ridge National Laboratory,
+#                           Geoffroy Vallee <valleegr@ornl.gov>,
+#                           All rights reserved
+# Copyright (c) 2007 INRIA-IRISA,
+#                    Jean Parpaillon <jean.parpaillon@inria.fr>
+#                    All rights reserved
+# For license information, see the COPYING file in the top level
+# directory of the source
+###################################################################
+
+###################################################################
+#
+# Description:
+#   Transform opkg (OSCAR package) description into Debian or RPM
+#
+# Requires:
+#   python-lxml
+#
+###################################################################
+
+import sys
+import getopt
+import re
+from OpkgcLib.Compiler import *
+from OpkgcLib.Config import *
+from OpkgcLib.Logger import *
+
+version = '''opkgc 0.5
+
+Copyright (C) 2007 IRISA-INRIA
+              2007-2011 ORNL
+This is free software.  You may redistribute copies of it under the terms of
+the GNU General Public License <http://www.gnu.org/licenses/gpl.html>.
+There is NO WARRANTY, to the extent permitted by law.
+
+Written by Jean Parpaillon and Geoffroy Vallée.'''
+
+def usage():
+    """ Print command usage
+    """
+    print "Usage: " + sys.argv[0] + " [-h] [-u|--supported-dist] [-V|--version]"
+    print "               [-o|--output=dir] [-i|--input=dir] [--source]"
+    print "               [-q|--quiet] [-v|--verbose]"
+    print "               --dist=targetDist"
+    print ""
+    print "\t--version : print version and exit"
+    print ""
+    print "\t--supported-dist : list supported distributions for --dist option"
+    print "\t--dist           : target distibution"
+    print ""
+    print "\t--source : build only source package"
+    print "\t--input  : opkg directory, default current dir"
+    print "\t--output : build packages in specified dir"
+    print "\t-v       : increase verbosity level (can be repeated)"
+    print "\t-q       : decrease verbosity level"
+
+def printVersion():
+    print version
+    
+def distList():
+    """ Print supported target distributions
+    """
+    print "Supported target distributions are:"
+    for compiler in Compiler.compilers:
+        for target in eval(compiler).supportedDist:
+            print target
+
+def main():
+    try:
+        opts, args = getopt.getopt(sys.argv[1:],
+                                   "Vhusi:o:d:vq",
+                                   ["version",
+                                    "help",
+                                    "supported-dist",
+                                    "source",
+                                    "input=",
+                                    "output=",
+                                    "dist=",
+                                    "verbose",
+                                    "quiet"])
+    except getopt.GetoptError:
+        # Print help information
+        usage()
+        raise SystemExit(2)
+
+    # Default values
+    targets = ['source', 'binary']
+    inputdir = "."
+    output = "."
+    dist = ''
+    debug = Logger.INFO
+    
+    for o, a in opts:
+        if o in ("-h", "--help"):
+            usage()
+            raise SystemExit(0)
+        if o in ("-V", "--version"):
+            printVersion()
+            raise SystemExit(0)
+        if o in ("-u", "--supported-dist"):
+            distList()
+            raise SystemExit(0)
+        if o in ("-s", "--source"):
+            targets = ['source']
+        if o in ("-i", "--input"):
+            inputdir = a
+        if o in ("-o", "--output"):
+            output = a
+        if o in ("-d", "--dist"):
+            dist = a
+        if o in ("-v", "--verbose"):
+            debug = debug+1
+        if o in ("-q", "--quiet"):
+            debug = debug-1
+
+    if not dist:
+        usage()
+        raise SystemExit(1)
+
+    Logger().level(debug)
+
+    # Initialize config file. Here just to detect early lack of config file
+    Config()
+
+    # Check if dist is supported
+    if not Compiler.SupportDist(dist):
+        distList()
+        raise SystemExit(2)
+
+    c = Compiler(inputdir, output, dist)
+    c.compile(targets)
+
+if __name__ == "__main__":
+    main()

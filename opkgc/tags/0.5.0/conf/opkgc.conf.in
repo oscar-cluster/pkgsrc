@@ -1,0 +1,8 @@
+[GENERAL]
+xsdfile: _pkgdatadir_/opkg.xsd
+
+[DEBIAN]
+templatedir: _pkgdatadir_/tmpl/debian
+
+[RPM]
+templatedir: _pkgdatadir_/tmpl/rpm
