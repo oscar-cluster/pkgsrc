@@ -1,3 +1,9 @@
+sync-files (2.5.8-1) lucid; urgency=low
+
+  * New upstream version.
+
+ -- Geoffroy Vallee <valleegr@ornl.gov>  Tue, 08 Feb 2011 14:42:51 -0500
+
 sync-files (2.5.7-1) hardy; urgency=low
 
   * New upstream version.

@@ -5,10 +5,10 @@
 
 Summary: OSCARized File Synchronization System
 Name: sync-files
-Version: 2.5.7
+Version: 2.5.8
 Release: 1
 Distribution: OSCAR
-Packager: Erich Focht <efocht@hpce.nec.com>
+Packager: Geoffroy Vallee <valleegr@ornl.gov>
 URL: http://oscar.sourceforge.net/
 Source: sync-files.tar.gz
 
@@ -73,6 +73,8 @@ mv /etc/crontab.preun /etc/crontab
 #==============================================================
 
 %changelog
+* Tue Feb 08 2011 Geoffroy Vallee <valleegr@ornl.gov> 2.5.8-1
+- New upstream version.
 * Mon Nov 30 2009 Geoffroy Vallee <valleegr@ornl.gov> 2.5.7-1
 - New upstream version.
 * Mon Nov 02 2009 Geoffroy Vallee <valleegr@ornl.gov> 2.5.6-1
