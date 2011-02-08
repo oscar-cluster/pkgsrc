@@ -1,3 +1,9 @@
+opkgc (0.5.0-1) lucid; urgency=low
+
+  * New upstream version.
+
+ -- Geoffroy Vallee <valleegr@ornl.gov>  Tue, 08 Feb 2011 13:28:13 -0500
+
 opkgc (0.4.5-1) lucid; urgency=low
 
   * New upstream version.
