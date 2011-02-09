@@ -576,8 +576,6 @@ OSCAR cluster software system.
 
 #==============================================================
 
-%prep
-
 %setup -q -n %{untarring_directory}
 %setup -a 1 -n %{untarring_directory}
 #%patch0 -p1
