@@ -22,6 +22,7 @@ Release: 8
 Packager: Bernard Li <bli@bcgsc.ca>
 URL: http://www.clusterresources.com/pages/products/maui-cluster-scheduler.php
 Source0: maui-%{version}.tar.gz
+#Source1: maui-oscar-extra.tgz
 License: Maui Scheduler General Public License
 Group: Applications/batch
 Obsoletes: maui
@@ -51,6 +52,19 @@ BuildRoot: %{_tmppath}/%{name}-buildroot
 
 %description
 MAUI scheduler
+
+#==============================================================
+
+%description
+Maui is an advanced job scheduler for use on clusters and supercomputers.
+It is a highly configurable tool capable of supporting a large array of
+fairness policies, dynamic priorities, extensive reservations, and fairshare.
+It is currently in use at many of the leading government and academic labs
+throughtout the US and around the world.  It is running on machines ranging
+from clusters of a few processors to multi-teraflop supercomputers.
+
+This version of Maui has been modified slightly to be usable under the
+OSCAR cluster software system.
 
 #==============================================================
 
@@ -132,4 +146,60 @@ fi
 
 %changelog
 * Wed Feb 09 2011 Geoffroy Vallee
-- Create a separate spec file for maui so we can maintain the different packagesmore easily.
+- Create a separate spec file for maui so we can maintain the different packagesmore easily. Since i am missing the tarball for 3.2.6p21, i am going back to 3.2.6p19
+
+* Sat Sep 19 2009 Emir Imamagic 3.2.6p21
+- Updated Maui
+
+* Mon Feb 05 2007 Erich Focht 3.2.6p18.5
+- Using maui-3.2.6p19-snap.1169758944 snapshot of p19. According to the
+  mailing lists the bugs seen in 3.2.6p18 should be fixed here. As this
+  is not yet the official p19 release, I called it p18.5.
+
+* Tue Jan 30 2007 Erich Focht 3.2.6p18-4nec
+- Updated to 3.2.6p18 : fixes issue with building with newer torque
+- Removed patch for BUILD_ROOT added by BLi, the version already has support
+  for that
+- Added ifdefs for suse/non-suse in order to deal with /etc/init.d/pbs_server
+  location
+
+* Fri Jun 23 2006 Bernard Li <bli@bcgsc.ca> 3.2.6p14-4
+- Substitute RMCFG from buildhost's hostname to the hostname of the
+  machine that RPM is being installed on
+- Hardcode ADMIN1 to be the root user
+
+* Thu Jun 15 2006 Bernard Li <bli@bcgsc.ca>
+- Added "status" for SUSE init script
+
+* Wed Jun 14 2006 Bernard Li <bli@bcgsc.ca> 3.2.6p14-3
+- Added SUSE init script (adapted from Moab script by Martin Siegert)
+- Removed src/ and maui.cfg.old from maui-oscar-extra.tgz
+
+* Wed Oct 26 2005 Bernard Li <bli@bcgsc.ca>
+- Update to 3.2.6p13
+- Removed expect script
+
+* Thu Oct 28 2004 David N. Lombard <dnl@speakeasy.net>
+- Use canonical /etc/init.d path; use RPM_BUILD_ROOT, not live system!!!
+- Updated to 3.2.5p2-9
+
+* Thu Sep 2 2004 Benoit des Ligneris <benoit.des.ligneris@revolutionlinux.com>
+- Remove the dependency on openpbs for building and install
+
+* Thu Apr 17 2003 Jason Brechin <brechin@ncsa.uiuc.edu>
+- Updated to "new" 3.2.5p2
+
+* Wed Mar 05 2003 Jason Brechin <brechin@ncsa.uiuc.edu>
+- Updated to 3.2.5p2 and added an expect script to do configure
+
+* Wed Jul 25 2002 Jeremy Enos <jenos@ncsa.uiuc.edu>
+- Changed maui.cfg so NODEACCESSPOLICY is DEDICATED.
+
+* Thu Jul 25 2002 Jason Brechin <brechin@ncsa.uiuc.edu>
+- Minor updates and spec file changes.
+
+* Fri Jun 14 2002 Jason Brechin <brechin@ncsa.uiuc.edu>
+- Updated to 3.0.7p8
+
+* Thu Aug 23 2001 Neil Gorsuch <ngorsuch@ncsa.uiuc.edu>
+- Initial RPMification
