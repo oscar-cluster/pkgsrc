@@ -580,8 +580,6 @@ OSCAR cluster software system.
 %setup -a 1 -n %{untarring_directory}
 #%patch0 -p1
 
-%build
-
 ./configure --prefix=%{maui_prefix} --with-spooldir=%{maui_prefix} --with-key=21303 --with-pbs=%{pbs_prefix}
 make
 
