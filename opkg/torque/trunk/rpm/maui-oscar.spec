@@ -1,29 +1,44 @@
+%define name maui-oscar
+%define version 3.2.6p19
+%define maui_prefix /opt/maui
+# Do we want to use PBS as the resource manager (1=yes 0=no)
+%define yes_pbs 1
+%define pbs_prefix /opt/pbs
+%define pbs_server_home /var/pool/pbs
+%define server_name_file server_name
+%define default_server pbs_oscar
+%define untarring_directory maui-%{version}
+
+#==================================================
+# Option for Maui version:
+# rpm -ba|--rebuild --define "pbs 1"
+%{?pbs:%define yes_pbs 1}
+%{?nopbs:%define yes_pbs 0}
+
 Summary: OSCARified Maui Scheduler
-Name: %{name}
+Name: maui-oscar
 Version: %{version}
 Release: 8
 Packager: Bernard Li <bli@bcgsc.ca>
 URL: http://www.clusterresources.com/pages/products/maui-cluster-scheduler.php
 Source0: maui-%{version}.tar.gz
-%define untarring_directory maui-%{version}
-Source1: maui-oscar-extra.tgz
-
 License: Maui Scheduler General Public License
 Group: Applications/batch
 Obsoletes: maui
 BuildPreReq: rpm >= 3.0.5
+BuildPreReq: torque-oscar-devel
 # pbs/torque client
-BuildPreReq: /opt/pbs/bin/qalter
+# BuildPreReq: /opt/pbs/bin/qalter
 # pbs/torque server
 %if %{?suse_version:1}0
-BuildPreReq: /etc/init.d/pbs_server
+# BuildPreReq: /etc/init.d/pbs_server
 Requires: /etc/init.d/pbs_server
 %else
-BuildPreReq: /etc/rc.d/init.d/pbs_server
+# BuildPreReq: /etc/rc.d/init.d/pbs_server
 Requires: /etc/rc.d/init.d/pbs_server
 %endif
 # pbs/torque 
-BuildPreReq: /var/spool/pbs/pbs_environment
+#BuildPreReq: /var/spool/pbs/pbs_environment
 #BuildPreReq: glibc >= 2.2.4
 AutoReqProv: no
 Requires: rpm >= 3.0.5
@@ -34,13 +49,15 @@ Requires: /var/spool/pbs/pbs_environment
 Requires: glibc >= 2.2.4
 BuildRoot: %{_tmppath}/%{name}-buildroot
 
+%description
+MAUI scheduler
 
 #==============================================================
 
 %prep
 
-%setup -q -n %{untarring_directory}
-%setup -a 1 -n %{untarring_directory}
+%setup -n %{untarring_directory}
+#%setup -a 1 -n %{untarring_directory}
 #%patch0 -p1
 
 %build
@@ -55,7 +72,7 @@ if [ -d ${RPM_BUILD_ROOT}/etc/init.d ] ; then
 %if %{?suse_version:1}0
     cp -p maui.SuSE ${RPM_BUILD_ROOT}/etc/init.d/maui
 %else
-    cp -p maui ${RPM_BUILD_ROOT}/etc/init.d
+    cp -p bin/maui ${RPM_BUILD_ROOT}/etc/init.d
 %endif
 fi
 install -m 0755 -d ${RPM_BUILD_ROOT}%{maui_prefix}/traces/
