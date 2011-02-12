@@ -143,7 +143,7 @@ sub getconfig () {
         # On the compute nodes, we always got the files from the headnode so
         # we do not kill the system in a NIS environment
         if (is_nis_env () == 1) {
-            if (OSCAR::NodeMgr::is_headnode () == 1) {
+            if (OSCAR::NodeMgt::is_headnode () == 1) {
                 $config->define("getent!", { DEFAULT => 1 });
             } else {
                 $config->define("getent!", { DEFAULT => 0 });
