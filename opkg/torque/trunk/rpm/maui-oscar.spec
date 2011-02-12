@@ -18,7 +18,7 @@
 Summary: OSCARified Maui Scheduler
 Name: maui-oscar
 Version: %{version}
-Release: 8
+Release: 9
 Packager: Bernard Li <bli@bcgsc.ca>
 URL: http://www.clusterresources.com/pages/products/maui-cluster-scheduler.php
 Source0: maui-%{version}.tar.gz
@@ -95,10 +95,14 @@ make BUILDROOT=${RPM_BUILD_ROOT} setup
 cp -f LICENSE LICENSE.mcompat CHANGELOG ${RPM_BUILD_ROOT}%{maui_prefix}
 
 
+#%post
+# GV: maui does NOT support chkconfig, therefore this create problems, i 
+# deactivate it
+#if [ -e /sbin/chkconfig ] ; then
+#    /sbin/chkconfig --add maui
+#fi
+
 %post
-if [ -e /sbin/chkconfig ] ; then
-    /sbin/chkconfig --add maui
-fi
 perl -pi -e "s~SERVERHOST.*~SERVERHOST\t\t`hostname`~" %{maui_prefix}/maui.cfg
 perl -pi -e "s~RMPOLLINTERVAL.*~RMPOLLINTERVAL\t00:00:10~" %{maui_prefix}/maui.cfg
 perl -pi -e "s~BACKFILLPOLICY.*~BACKFILLPOLICY\tON~" %{maui_prefix}/maui.cfg
@@ -116,11 +120,14 @@ rm -rf ${RPM_BUILD_ROOT}
 if [ -e /etc/init.d/maui ] ; then
   /etc/init.d/maui stop
 fi
-if [ "$1" = 0 ] ; then
-  if [ -e /sbin/chkconfig ] ; then
-    /sbin/chkconfig --del maui
-  fi
-fi
+
+
+#if [ "$1" = 0 ] ; then
+# GV maui doe NOT support chkconfig with the current version
+#  if [ -e /sbin/chkconfig ] ; then
+#    /sbin/chkconfig --del maui
+#  fi
+#fi
 
 #==============================================================
 
@@ -145,7 +152,10 @@ fi
 #==============================================================
 
 %changelog
-* Wed Feb 09 2011 Geoffroy Vallee
+* Fri Feb 11 2011 Geoffroy Vallee 3.2.6p19-9
+- Do NOT use chkconfig with maui, the binary does NOT support chkconfig
+
+* Wed Feb 09 2011 Geoffroy Vallee 3.2.6p19-8
 - Create a separate spec file for maui so we can maintain the different packagesmore easily. Since i am missing the tarball for 3.2.6p21, i am going back to 3.2.6p19
 
 * Sat Sep 19 2009 Emir Imamagic 3.2.6p21

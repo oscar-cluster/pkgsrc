@@ -2,7 +2,7 @@
 %define name torque-oscar
 %define version 2.3.7
 
-%define release 4
+%define release 5
 
 # The following options are supported:
 #   --with server_name=hostname
@@ -219,17 +219,19 @@ cp -p torque-modulefile %{buildroot}/opt/modules/oscar-modulefiles/%{name}/%{ver
 if %__grep -q "PBS services" /etc/services;then
    : PBS services already installed
 else
-   cat<<-__EOF__>>/etc/services
-    # Standard PBS services
-    pbs           15001/tcp           # pbs server (pbs_server)
-    pbs           15001/udp           # pbs server (pbs_server)
-    pbs_mom       15002/tcp           # mom to/from server
-    pbs_mom       15002/udp           # mom to/from server
-    pbs_resmom    15003/tcp           # mom resource management requests
-    pbs_resmom    15003/udp           # mom resource management requests
-    pbs_sched     15004/tcp           # scheduler
-    pbs_sched     15004/udp           # scheduler
-    __EOF__
+
+cat >> /etc/services << EOF
+# Standard PBS services
+pbs           15001/tcp           # pbs server (pbs_server)
+pbs           15001/udp           # pbs server (pbs_server)
+pbs_mom       15002/tcp           # mom to/from server
+pbs_mom       15002/udp           # mom to/from server
+pbs_resmom    15003/tcp           # mom resource management requests
+pbs_resmom    15003/udp           # mom resource management requests
+pbs_sched     15004/tcp           # scheduler
+pbs_sched     15004/udp           # scheduler
+EOF
+
 fi
 
 
@@ -290,6 +292,7 @@ Group: System Environment/Daemons
 Summary: server part of Torque
 Requires: %{name} = %{?epoch:%{epoch}:}%{version}-%{release}
 Provides: pbs-server
+AutoReqProv: no
 %description server
 %shared_description
 This package holds the server.
@@ -487,6 +490,8 @@ is used to set the corresponding PATH and MANPATH.
 %endif
 
 %changelog
+* Fri Feb 11 2011 Geoffroy Vallee <valleegr@ornl.gov> 2.3.7-5
+- Fix the post script of torque-oscar-server.
 * Fri Sep 11 2009 Emir Imamagic <eimamagi@srce.hr> 2.3.7-4
 - Upgraded torque version
 * Tue Jun 10 2008 DongInn Kim <dikim@osl.iu.edu> 2.1.10-4
