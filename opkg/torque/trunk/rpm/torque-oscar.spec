@@ -2,7 +2,7 @@
 %define name torque-oscar
 %define version 2.3.7
 
-%define release 5
+%define release 6
 
 # The following options are supported:
 #   --with server_name=hostname
@@ -322,6 +322,7 @@ Provides: pbs-mom
 %description mom
 %shared_description
 This package holds the execute daemon required on every node.
+AutoReqProv: no
 
 %files mom
 %defattr(-, root, root)
@@ -353,6 +354,7 @@ Provides: pbs-client
 %description client
 %shared_description
 This package holds the command-line client programs.
+AutoReqProv: no
 
 %files client
 %defattr(-, root, root)
@@ -381,6 +383,7 @@ Provides: xpbs xpbsmon
 %description gui
 %shared_description
 This package holds the graphical clients.
+AutoReqProv: no
 
 
 %if %{build_gui}
@@ -490,6 +493,8 @@ is used to set the corresponding PATH and MANPATH.
 %endif
 
 %changelog
+* Mon Feb 14 2011 Geoffroy Vallee <valleegr@ornl.gov> 2.3.7-6
+- Deactivate the automatic management of dependencies for a few packages since it was creating issues.
 * Fri Feb 11 2011 Geoffroy Vallee <valleegr@ornl.gov> 2.3.7-5
 - Fix the post script of torque-oscar-server.
 * Fri Sep 11 2009 Emir Imamagic <eimamagi@srce.hr> 2.3.7-4
