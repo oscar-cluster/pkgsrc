@@ -415,18 +415,18 @@ This package installs and configures a minimal localhost-only batch queue system
 /bin/hostname --long > %{torquehomedir}/server_priv/nodes
 /bin/hostname --long > %{torquehomedir}/server_name
 /bin/hostname --long > %{torquehomedir}/mom_priv/config
-pbs_server -t create
-qmgr -c "s s scheduling=true"
-qmgr -c "c q batch queue_type=execution"
-qmgr -c "s q batch started=true"
-qmgr -c "s q batch enabled=true"
-qmgr -c "s q batch resources_default.nodes=1"
-qmgr -c "s q batch resources_default.walltime=3600"
-qmgr -c "s s default_queue=batch"
+%{torquebindir}/pbs_server -t create
+%{torquebindir}/qmgr -c "s s scheduling=true"
+%{torquebindir}/qmgr -c "c q batch queue_type=execution"
+%{torquebindir}/qmgr -c "s q batch started=true"
+%{torquebindir}/qmgr -c "s q batch enabled=true"
+%{torquebindir}/qmgr -c "s q batch resources_default.nodes=1"
+%{torquebindir}/qmgr -c "s q batch resources_default.walltime=3600"
+%{torquebindir}/qmgr -c "s s default_queue=batch"
 %{_initrddir}/pbs_mom restart
 %{_initrddir}/pbs_sched restart
 %{_initrddir}/pbs_server restart
-qmgr -c "s n `/bin/hostname --long` state=free" -e
+%{torquebindir}/qmgr -c "s n `/bin/hostname --long` state=free" -e
 
 %package devel
 Summary: Development tools for programs which will use the %{name} library.
@@ -493,6 +493,8 @@ is used to set the corresponding PATH and MANPATH.
 %endif
 
 %changelog
+* Tue Feb 15 2011 Geoffroy Vallee <valleegr@ornl.gov> 
+- Fix the post install script of the localhost package.
 * Mon Feb 14 2011 Geoffroy Vallee <valleegr@ornl.gov> 2.3.7-6
 - Deactivate the automatic management of dependencies for a few packages since it was creating issues.
 * Fri Feb 11 2011 Geoffroy Vallee <valleegr@ornl.gov> 2.3.7-5
