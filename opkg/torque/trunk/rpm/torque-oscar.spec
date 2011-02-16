@@ -415,7 +415,7 @@ This package installs and configures a minimal localhost-only batch queue system
 /bin/hostname --long > %{torquehomedir}/server_priv/nodes
 /bin/hostname --long > %{torquehomedir}/server_name
 /bin/hostname --long > %{torquehomedir}/mom_priv/config
-%{torquebindir}/pbs_server -t create
+%{torquesbindir}/pbs_server -t create
 %{torquebindir}/qmgr -c "s s scheduling=true"
 %{torquebindir}/qmgr -c "c q batch queue_type=execution"
 %{torquebindir}/qmgr -c "s q batch started=true"
