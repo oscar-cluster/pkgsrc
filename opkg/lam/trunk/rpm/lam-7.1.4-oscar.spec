@@ -115,6 +115,7 @@ Requires: %__rm %__make %__mkdir %__sed %__mv %__chmod
 Provides: mpi
 Requires: %{requires}
 BuildRequires: rsh %{requires}
+AutoReqProv: no
 
 %description 
 This RPM is created specifically for the OSCAR distribution.  The main
@@ -165,6 +166,7 @@ Group: Development/Libraries
 Requires: modules-oscar
 Requires: env-switcher
 Requires: lam-oscar
+AutoReqProv: no
 
 %description modulefile
 This RPM contains a modulefile for LAM/MPI on OSCAR clusters.  Loading
