@@ -1,7 +1,8 @@
 # $Id$
 
 # Check if Suggests: tag can be sused.
-%define has_rpm_suggests %(echo "$(rpm --version |grep -E -o '[0-9]+(\.[0-9]+){0,1}'|head -1) >= 4.6"|bc)
+%define has_rpm_suggests %(echo "$(rpm --version | grep "\-\-suggests" | wc -l
+rep -E -o '[0-9]+(\.[0-9]+){0,1}'|head -1) >= 4.6"|bc)
 
 Summary: Wrapper to yum for clusters
 Name: yume
