@@ -1,3 +1,7 @@
+sc3-1.2.4 (not yet released):
+- Automatically detect the source directory on RPM based systems (patch from
+O. Lahaye).
+
 sc3-1.2.3:
 - Update to c3-5.x.
 

@@ -1,7 +1,6 @@
 DESTDIR=
 PKGDEST=
 MANDIR=/usr/local/man/man1
-SOURCEDIR=/usr/src/redhat/SOURCES
 PKG=ssh-oscar
 
 MANPAGES := ssh-oscar
@@ -53,7 +52,7 @@ dist: clean
 	rm -f /tmp/$(PKG).tar.gz
 
 rpm: dist
-	cp $(PKG).tar.gz $(SOURCEDIR)
+	cp $(PKG).tar.gz `rpm --eval '%_sourcedir'`
 	rpmbuild -bb ./$(PKG).spec
 	@if [ -n "$(PKGDEST)" ]; then \
         mv `rpm --eval '%{_topdir}'`/RPMS/noarch/$(PKG)-*.noarch.rpm $(PKGDEST); \

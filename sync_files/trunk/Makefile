@@ -1,7 +1,6 @@
 DESTDIR=
 PKGDEST=
 INSTALLDIR=$(DESTDIR)/opt/sync_files
-SOURCEDIR=/usr/src/redhat/SOURCES
 TMPDIR=/tmp
 PKG=sync-files
 DISTROS := mdv rhel suse debian
@@ -56,7 +55,7 @@ clean:
 	rm -f ./*tar.gz
 
 rpm: dist
-	cp $(PKG).tar.gz $(SOURCEDIR)
+	cp $(PKG).tar.gz `rpm --eval '%_sourcedir'`
 	rpmbuild -bb ./sync_files.spec
 	@if [ -n "$(PKGDEST)" ]; then \
         mv `rpm --eval '%{_topdir}'`/RPMS/noarch/$(PKG)-*.noarch.rpm $(PKGDEST); \

@@ -35,7 +35,7 @@ dist: clean
 rpm: dist
 	sed -e "s/PERLLIBPATH/$(SEDLIBDIR)/" < $(PKG).spec.in \
         > $(PKG).spec
-	cp $(PKG).tar.gz /usr/src/redhat/SOURCES
+	cp $(PKG).tar.gz `rpm --eval '%_sourcedir'`
 	rpmbuild -bb ./$(PKG).spec
 
 deb:

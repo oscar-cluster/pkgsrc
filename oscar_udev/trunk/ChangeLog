@@ -1,3 +1,7 @@
+1.0.1 (not yet released):
+- Automatically detect the source directory on RPM based systems (patch from
+O. Lahaye).
+
 1.0:
 - Initial release allowing the configuration of the NIC used by OSCAR on
 compute nodes (modifying udev rules).

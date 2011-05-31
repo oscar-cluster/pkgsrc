@@ -1,6 +1,5 @@
 DESTDIR=
 PKGDEST=
-SOURCEDIR=/usr/src/redhat/SOURCES
 
 NAME:=sc3
 LIBS := Subcluster.pm
@@ -44,7 +43,7 @@ deb:
     fi
 
 rpm: dist
-	cp $(NAME).tar.gz $(SOURCEDIR)
+	cp $(NAME).tar.gz `rpm --eval '%_sourcedir'`
 	rpmbuild -bb ./$(NAME).spec
 	@if [ -n "$(PKGDEST)" ]; then \
         mv `rpm --eval '%{_topdir}'`/RPMS/noarch/$(NAME)-*.noarch.rpm $(PKGDEST); \

@@ -1,5 +1,7 @@
 2.5.9 (not yet released):
 - Fix a typo creating a problem in NIS environments (Patch from Nikolay Khokhlov).
+- Automatically detect the source directory on RPM based systems (patch from
+O. Lahaye).
 
 2.5.8:
 - [Ticket #286] Make sure we do not use getent in a NIS environment.

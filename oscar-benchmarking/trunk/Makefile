@@ -33,7 +33,7 @@ dist: clean
 	@rm -f /tmp/$(PKG).tar.gz
 
 rpm: dist get-binaries
-	cp tmp/cbench_release_1.2.0.tar.gz /usr/src/redhat/SOURCES
+	cp tmp/cbench_release_1.2.0.tar.gz `rpm --eval '%_sourcedir'`
 	rpmbuild -bb ./cbench.spec
 	rpmbuild -bb ./cbenchsource.spec
 	@if [ -n "$(PKGDEST)" ]; then \
