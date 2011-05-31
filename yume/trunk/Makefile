@@ -3,7 +3,6 @@ PKGDEST=
 BINDIR=$(DESTDIR)/usr/bin
 DATADIR=$(DESTDIR)/usr/share
 MANDIR=$(DESTDIR)/usr/share/man
-SOURCEDIR=/usr/src/redhat/SOURCES
 NAME=yume
 VERSION=2.8.11
 
@@ -58,7 +57,7 @@ deb:
     fi
 
 rpm: dist
-	cp $(NAME)-$(VERSION).tar.gz $(SOURCEDIR)
+	cp $(NAME)-$(VERSION).tar.gz `rpm --eval '%_sourcedir'`
 	rpmbuild -bb ./$(NAME).spec
 	@if [ -n "$(PKGDEST)" ]; then \
         mv `rpm --eval '%{_topdir}'`/RPMS/noarch/$(NAME)-*.noarch.rpm $(PKGDEST); \

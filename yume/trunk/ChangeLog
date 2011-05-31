@@ -1,6 +1,8 @@
 yume-2.8.12 (not yet released):
 - Suggest repoquery if the rpm version supporting the "suggest" tag is 
 installed (patch from Olivier Lahaye).
+- Automatically detect the source directory for RPM based system (patch from
+O. Lahaye).
 
 yume-2.8.11:
 - [Ticket #575] Fix a problem with the return code for some errors.
