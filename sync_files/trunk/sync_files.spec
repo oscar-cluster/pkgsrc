@@ -48,10 +48,9 @@ forced update (/opt/sync_files/bin/sync_files --force).
 %prep
 %setup -n %{name}
 
-%build
-make install DESTDIR=$RPM_BUILD_ROOT
-
 %install
+%__make install DESTDIR=$RPM_BUILD_ROOT
+
 
 #==============================================================
 
