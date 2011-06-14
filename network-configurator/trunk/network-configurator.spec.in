@@ -1,7 +1,6 @@
 %define binpref /usr/bin
 %define libpref PERLLIBPATH
 %define manpref /usr/local/man/man1
-%define sharepref /usr/share/oscar/prereqs/oda/
 %define bintarget $RPM_BUILD_ROOT%{binpref}
 %define libtarget $RPM_BUILD_ROOT%{libpref}
 %define mantarget $RPM_BUILD_ROOT%{manpref}
@@ -26,16 +25,13 @@ Script that helps at setting up the network with various configurations, e.g., b
 %prep
 %setup -n %{name}
 
-%build
-make install DESTDIR=$RPM_BUILD_ROOT
-
-%install 
+%install
+%__make install DESTDIR=$RPM_BUILD_ROOT
 
 %files
 %defattr(-,root,root)
 %{binpref}/*
 %{libpref}/*
-%{sharepref}/*
 %{manpref}/*
 
 %changelog
