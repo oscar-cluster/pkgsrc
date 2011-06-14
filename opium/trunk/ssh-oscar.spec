@@ -34,7 +34,7 @@ compute nodes.
 %setup -n %{name}
 
 %install
-make install MANDIR=%_mandir
+%__make install DESTDIR=RPM_BUILD_ROOT MANDIR=%_mandir
 
 %post
 

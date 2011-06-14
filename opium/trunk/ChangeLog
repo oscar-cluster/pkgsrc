@@ -1,6 +1,7 @@
 ssh-oscar-1.3.2 (not yet released):
 - Automatically detect the source directory on RPM based systems (patch from
 O. Lahaye).
+- Update the spec file so it works on Scientific Linux (patch from O. Lahaye).
 
 ssh-oscar-1.3.1:
 - Update the build dependencies for the Debian packages.
