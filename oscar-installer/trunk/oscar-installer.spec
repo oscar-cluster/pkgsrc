@@ -11,25 +11,20 @@
 # AND PLEASE, DO NOT MODIFY THIS SPEC FILE IN ORDER TO NOT USE ANY MORE THE 
 # MAKEFILE OR THE TARBALL, IF YOU DO THAT, THAT WILL QUICKLY BECOME MESSY!!!
 
-%define binpref /usr/lib/perl5/site_perl
-%define manpref /usr/share/man/man3
-%define bintarget $RPM_BUILD_ROOT%{binpref}
-%define mantarget $RPM_BUILD_ROOT%{manpref}
-
 Summary:		A tool to ease the OSCAR installation.
 Name:      		oscar-installer
-Version:   		5.0
-Release:   		2
+Version:   		6.1.2
+Release:   		1
 Vendor:			Open Cluster Group <http://OSCAR.OpenClusterGroup.org/>
-Distribution:	OSCAR
+Distribution:		OSCAR
 Packager:		Geoffroy Vallee <valleegr@ornl.gov>
 License: 		GPL
 Group:     		Development/Libraries
 Source:			%{name}-%{version}.tar.gz
 BuildRoot: 		/usr/src/redhat/BUILD/%{name}-%{version}
-#BuildRoot:      /var/tmp/%{name}-buildroot
+#BuildRoot:		/var/tmp/%{name}-buildroot
 BuildArch:		noarch
-Requires:       perl-AppConfig
+Requires:		perl-AppConfig
 
 %description
 oscar-installer is a tool that installs OSCAR in a transparent manner. Two 
@@ -43,31 +38,34 @@ specified. In order to get the list of supported Linux distributions, just type
 "oscar-installer".
 
 %prep
-%__rm -rf /tmp/oscar-installer-sourceroot
-mkdir -p /tmp/oscar-installer-sourceroot
-cd /tmp/oscar-installer-sourceroot
-%__tar -xzf $RPM_SOURCE_DIR/%{name}-%{version}.tar.gz
-cd /tmp/oscar-installer-sourceroot/%{name}-%{version}
-perl Makefile.PL
-make manifest
+%setup -q
 
-make
+%build
+%__perl Makefile.PL INSTALLDIRS=vendor # INSTALLDIRS=vendor tells perl that we are in a package
+%__make manifest
+
+%__make
 %__rm -rf $RPM_BUILD_ROOT
-make install SITEPREFIX=/usr DESTDIR=$RPM_BUILD_ROOT \
-    INSTALLSITEMAN1DIR=/usr/share/man/man1
+%__make install SITEPREFIX=/usr DESTDIR=$RPM_BUILD_ROOT
+
 # For some reasons weird files are installed. We remove them.
-%__rm -f $RPM_BUILD_ROOT/usr/lib64/perl5/5.8.8/x86_64-linux-thread-multi/perllocal.pod
-%__rm -f $RPM_BUILD_ROOT/usr/lib64/perl5/site_perl/5.8.8/x86_64-linux-thread-multi/auto/oscar-installer/.packlist
+%__rm -f $RPM_BUILD_ROOT/usr/lib64/perl5/perllocal.pod
+%__rm -f $RPM_BUILD_ROOT/usr/lib64/perl5/vendor_perl/auto/oscar-installer/.packlist
 
 %files 
 %defattr(-,root,root)
-/usr/bin/oscar-installer
-/usr/share/man/man1/oscar-installer.1
-/usr/lib/perl5/site_perl/5.8.8/OSCARInstaller/ConfigManager.pm
-/usr/lib/perl5/site_perl/5.8.8/OSCARInstaller/Installer.pm
-/etc/oscar-installer/oscar-installer.conf
+%{_bindir}/oscar-installer
+%{_mandir}/man1/oscar-installer.1
+%{perl_vendorlib}/OSCARInstaller/ConfigManager.pm
+%{perl_vendorlib}/OSCARInstaller/Installer.pm
+%{_sysconfdir}/oscar-installer/oscar-installer.conf
 
 
 %changelog
+* Wed Jul 08 2012 Olivier Lahaye <olivier.lahaye@cea.fr>
+- v6.1.2, new upstream version.
+- use setup macro to prepare build env
+- use INSTALLDIRS=vendor to build the Makefile
+- use of macros when it is possible
 * Sun Mar 17 2008 Geoffroy Vallee <valleegr@ornl.gov>
 - v5.0, new upstream version.

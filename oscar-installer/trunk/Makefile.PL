@@ -28,9 +28,7 @@ EOF
 
 WriteMakefile(
 	'VERSION' => $version,
-	'NAME' => 'oscar-installer',
-	'INSTALLBIN' => "/usr/bin",
-#	'INSTALLSITELIB' => "/usr/lib/oscar",
+	'NAME' => "oscar-installer",
 	'EXE_FILES' => [qw(
 		oscar-installer
 	)],
