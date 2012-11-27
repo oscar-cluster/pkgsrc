@@ -387,15 +387,33 @@ sub install_fake_start_stop_daemon {
 
     my $imgpath=shift;
 
-    print "Installing fake start-stop-daemon.\n" if $verbose;
-    rename "$imgpath/sbin/start-stop-daemon", 
-    "$imgpath/sbin/start-stop-daemon.RAPT.tmp" or return 1;
-    open(SSD, ">$imgpath/sbin/start-stop-daemon") or return 1;
-    print SSD "#!/bin/sh\n";
-    print SSD "echo\n";
-    print SSD "echo Warning: Fake start-stop-daemon called, doing nothing\n";
-    close SSD;
-    chmod 0755, "$imgpath/sbin/start-stop-daemon" or return 1;
+    # Historically Debian based systems have been using start-stop-daemon
+    # to handle servvices.
+    if (-e "$imgpath/sbin/start-stop-daemon") {
+        print "Installing fake start-stop-daemon.\n" if $verbose;
+        rename "$imgpath/sbin/start-stop-daemon", 
+            "$imgpath/sbin/start-stop-daemon.RAPT.tmp" or return 1;
+        open (SSD, ">$imgpath/sbin/start-stop-daemon") or return 1;
+        print SSD "#!/bin/sh\n";
+        print SSD "echo\n";
+        print SSD "echo Warning: Fake start-stop-daemon called, doing nothing\n";
+        close SSD;
+        chmod 0755, "$imgpath/sbin/start-stop-daemon" or return 1;
+    }
+
+    if (-e "$imgpath/usr/sbin/service") {
+        print "Installing fake service tool.\n" if $verbose;
+        rename "$imgpath/usr/sbin/service", "/usr/sbin/service.RAPT.tmp"
+            or return 1;
+        open (SSD, ">$imgpath/usr/sbin/service") or return 1;
+        print SSD #!/bin/sh\n";
+        print SSD "echo\n";
+        print SSD "echo Warning: Fake service tool called, doing nothing\n";
+        close SSD;
+        chmod 0755, "$imgpath/usr/sbin/service" or return 1;
+    }
+
+    return 0;
 }
 
 
@@ -407,10 +425,22 @@ sub uninstall_fake_start_stop_daemon {
 
     my $imgpath=shift;
 
-    print "Uninstalling fake start-stop-daemon.\n" if $verbose;
-    unlink "$imgpath/sbin/start-stop-daemon" or return 1;
-    rename "$imgpath/sbin/start-stop-daemon.RAPT.tmp", 
-    "$imgpath/sbin/start-stop-daemon" or return 1;
+    if (-e "$imgpath/sbin/start-stop-daemon.RAPT.tmp") {
+        print "Uninstalling fake start-stop-daemon.\n" if $verbose;
+        unlink "$imgpath/sbin/start-stop-daemon" or return 1;
+        rename "$imgpath/sbin/start-stop-daemon.RAPT.tmp", 
+        "$imgpath/sbin/start-stop-daemon" or return 1;
+    }
+
+    if (-e "$imgpath/usr/sbin/service.RAPT.tmp") {
+        print "Uninstalling fake service tool.\n" if $verbose;
+        unlink "$imgpath/usr/sbin/service" or return 1;
+        rename "$imgpath/usr/sbin/service.RAPT.tmp",
+               "$imgpath/usr/sbin/service"
+            or return 1;
+    }
+
+    return 0;
 }
 
 ################################################################################
@@ -514,6 +544,34 @@ sub do_debootstrap ($$$$) {
         carp ("Error: cannot create the file $target/etc/kernel-img.conf");
         return -1;
     }
+
+    # Ubuntu (at least from Precise) sucks for one point: if we want to be
+    # able to install any package successfully, we need to create a few
+    # files or directory
+    if ($codename eq "precise") {
+        # Create various directories
+        my @dirs = ("/etc/apt/preferences.d/");
+        foreach my $dir (@dirs) {
+            print "Creating $dir\n";
+            $dir = "$target/$dir";
+            File::Path::mkpath ($dir);
+        }
+
+        # Create various files
+        use OSCAR::ImageMgt;
+        my $grub_path = "$target/boot/grub/";
+
+        print "Creating $grub_path\n";
+        if (! -e $grub_path) {
+            File::Path::mkpath ($grub_path)
+                or die ("Impossible to create $grub_path");
+        }
+
+        if (OSCAR::ImageMgt::update_grub_config ($target)) {
+            die "ERROR: Impossible to update the grub config file in $target";
+        }
+    }
+
     return 0;
 }
 
@@ -1270,15 +1328,16 @@ new_aptlist ();
 
 # update Packages cache. Note that we turn off all output (including stderr),
 # we are only interested by the return code.
-my $cmd = "apt-get update";
+my $cmd = "/usr/bin/apt-get update";
 $cmd = $cmd . " 1>/dev/null 2>/dev/null" if (!$verbose);
 if ($installroot) {
     $cmd = "chroot $installroot $cmd";
 }
 print "Executing: $cmd\n" if $verbose;
 $err = system($cmd);
+$err = $err >> 8;
 if ($err) {
-    die("Error occured while running \"$cmd\" ($err)");
+    die("ERROR: Impossible to execute \"$cmd\" ($err, $@)");
 }
 
 

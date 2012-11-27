@@ -1,3 +1,6 @@
+rapt-2.8.9 (not yet released):
+- Port to Ubuntu 12.04.
+
 rapt-2.8.8:
 - Fix a problem when dealing with the lock file.
 - Fix a typo in a function's name.
