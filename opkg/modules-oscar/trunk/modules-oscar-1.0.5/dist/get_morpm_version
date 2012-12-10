@@ -1,0 +1,76 @@
+#!/bin/sh
+#
+# Copyright (c) 2002 The Trustees of Indiana University.  
+#                    All rights reserved.
+#
+# This file is part of the modules-oscar software package.  For
+# license information, see the LICENSE file in the top-level directory
+# of the modules-oscar source distribution.
+#
+# $Id: get_morpm_version,v 1.2 2002/10/27 12:24:07 jsquyres Exp $
+#
+
+srcdir="$1/dist"
+option="$2"
+
+if test "$srcdir" = ""; then
+    option="--help"
+else
+    MAJOR_VERSION="`cat $srcdir/VERSION | grep major | cut -d= -f2`"
+    MINOR_VERSION="`cat $srcdir/VERSION | grep minor | cut -d= -f2`"
+    RELEASE_VERSION="`cat $srcdir/VERSION | grep release | cut -d= -f2`"
+    ALPHA_VERSION="`cat $srcdir/VERSION | grep alpha | cut -d= -f2`"
+    BETA_VERSION="`cat $srcdir/VERSION | grep beta | cut -d= -f2`"
+    if test "$RELEASE_VERSION" != "0" -a "$RELEASE_VERSION" != ""; then
+	VERSION="$MAJOR_VERSION.$MINOR_VERSION.$RELEASE_VERSION"
+    else
+	VERSION="$MAJOR_VERSION.$MINOR_VERSION"
+    fi
+
+    if test "`expr $ALPHA_VERSION \> 0`" = "1"; then
+	VERSION="${VERSION}a$ALPHA_VERSION"
+    elif test "`expr $BETA_VERSION \> 0`" = "1"; then
+	VERSION="${VERSION}b$BETA_VERSION"
+    fi
+
+    if test "$option" = ""; then
+	option="--full"
+	fi
+fi
+
+case "$option" in
+    --full|-v|--version)
+	echo $VERSION
+	;;
+    --major)
+	echo $MAJOR_VERSION
+	;;
+    --minor)
+	echo $MINOR_VERSION
+	;;
+    --release)
+	echo $RELEASE_VERSION
+	;;
+    --alpha)
+	echo $ALPHA_VERSION
+	;;
+    --beta)
+	echo $BETA_VERSION
+	;;
+    -h|--help)
+	cat <<EOF
+$0 <srcdir> [<option>]
+
+<srcdir>  - Top-level directory of the LAM source tree
+<option>  - One of:
+    --full    - Full version number
+    --major   - Major version number
+    --minor   - Minor version number
+    --release - Release version number
+    --alpha   - Alpha version number
+    --beta    - Beta version nmumber
+    --help    - This message
+EOF
+esac
+
+exit 0

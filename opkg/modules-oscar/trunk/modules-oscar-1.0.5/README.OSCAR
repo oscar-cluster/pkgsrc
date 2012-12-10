@@ -1,0 +1,120 @@
+-*- text -*-
+
+Copyright (c) 2002-2004 The Trustees of Indiana University.  
+                        All rights reserved.
+
+This file is part of the modules-oscar software package.  For
+license information, see the LICENSE file in the top-level directory
+of the modules-oscar source distribution.
+
+$Id: README.OSCAR,v 1.3 2004/03/08 16:45:46 jsquyres Exp $
+
+
+Introduction
+============
+
+This is the RPM for the modules package
+(http://modules.sourceforge.net/), specifically tailored for OSCAR
+clusters (http://oscar.sourceforge.net/).  The goal is to take the
+default modules distribution tarball, add a few customizations, and
+make an RPM that is suitable for an OSCAR cluster.  As such,
+copyrights and licenses included in this package can be broken down as
+follows:
+
+- Indiana University copyrights and licenses apply to the packaging
+  and specific "OSCAR-izations" of the modules package.
+
+- All others apply to the base modules package itself.
+
+
+What this RPM contains
+======================
+
+The RPM is built from 2 source tarballs:
+
+1. modules-<modules_version>.tar.gz
+2. modules-oscar-<morpm_version>.tar.gz
+
+The first is a vanilla modules distribution tarball.  The second is a
+small set of files that are used to customize the default installation
+of the modules package for an OSCAR cluster (the string "morpm" is an
+abbreviation for "modules OSCAR RPM").
+
+
+What this RPM does upon install
+===============================
+
+The bulk of the modules package is installed into /opt/modules.
+Some notable changes are made to the system's default environment that
+should be considered by the system administrator:
+
+1. Two files are installed in /etc/profile.d:
+
+   00-modules.csh
+   00-modules.sh
+
+These files are run for every interactive shell.  They are the
+combinations of the modules one-time setup and every-shell setup
+scripts.  Appropriate variables and environment variables are used to
+ensure that these scripts are not run multiple times for the same
+shell.  
+
+Additional protections are enabled for "the 'su' problem", where a
+user logs in with one default shell and then uses "su" to switch to
+another user (e.g., root) that has a different shell.  These scripts
+will recognize this situation and re-initialize the modules
+environment as apporpriate.
+
+2. A short shell snipit is appended to both the /etc/bashrc and
+/etc/csh.cshrc files to ensure that the 00-modules.* are *always* run,
+even for non-interactive shells.
+
+The reason for this is that popular parallel programming environments
+depend on the fact that $PATH (and other associated environment
+variables) is set appropriately in the following case:
+
+       rsh somehost somecommand
+or     ssh somehost somecommand
+
+Since this will be a non-interactive shell on the host "somehost",
+default distro flavors of /etc/bashrc and /etc/csh.cshrc typically do
+not run all the /etc/profile.d scripts.  If a somecommand executable
+cannot be found in the $PATH, the rsh/ssh will fail.
+
+The code snipits at the ends of these files will *only* source the
+appropriate 00-modules.* file if they have not already been sourced.
+
+3. The 00-modules.* scripts load a default module named
+"oscar-modules".  This module does two main things:
+
+  a) executes "module use /opt/modules/oscar-modulefiles"
+  b) executes a "module load" for every directory name in
+     /opt/modules/oscar-modulefiles 
+
+This allows OSCAR packages to install modules under /opt/modules/ that
+will be setup for *every* shell (regardless of whether it is
+interactive or not, also including when "su" is used to change default
+shells).
+
+
+What this RPM does upon uninstall
+=================================
+
+It goes without saying that all files that are installed are removed.
+
+More importantly, the changes to /etc/bashrc and /etc/csh.cshrc are
+backed out by a "grep -v" (special comments were insertted on each
+line that was added to each file so that "grep -v" can easily
+eliminate them without touching the rest of the file).  
+
+As such, it is safe to modify /etc/bashrc and /etc/csh.cshrc after the
+this RPM is installed and not hamper this RPM's ability to be removed.
+
+
+Contact Information
+===================
+
+Don't look for a web page or public CVS archive for this project
+anyway -- there [currently] isn't one.  Maybe someday.  In the
+meantime, send mail to the OSCAR mailing lists with comments,
+suggestions, and bug reports (see http://oscar.sourceforge.net/).
