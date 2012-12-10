@@ -403,7 +403,7 @@ sub install_fake_start_stop_daemon {
 
     if (-e "$imgpath/usr/sbin/service") {
         print "Installing fake service tool.\n" if $verbose;
-        rename "$imgpath/usr/sbin/service", "/usr/sbin/service.RAPT.tmp"
+        rename "$imgpath/usr/sbin/service", "$imgpath/usr/sbin/service.RAPT.tmp"
             or return 1;
         open (SSD, ">$imgpath/usr/sbin/service") or return 1;
         print SSD #!/bin/sh\n";
