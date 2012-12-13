@@ -1,7 +1,7 @@
 # $Id$
 Summary: Wrapper to apt-get for clusters
 Name: rapt
-Version: 2.8.8
+Version: 2.8.9
 Vendor: NEC HPCE
 Release: 1
 License: GPL
