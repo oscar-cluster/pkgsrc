@@ -406,11 +406,23 @@ sub install_fake_start_stop_daemon {
         rename "$imgpath/usr/sbin/service", "$imgpath/usr/sbin/service.RAPT.tmp"
             or return 1;
         open (SSD, ">$imgpath/usr/sbin/service") or return 1;
-        print SSD #!/bin/sh\n";
+        print SSD "#!/bin/sh\n";
         print SSD "echo\n";
         print SSD "echo Warning: Fake service tool called, doing nothing\n";
         close SSD;
         chmod 0755, "$imgpath/usr/sbin/service" or return 1;
+    }
+
+    if (-e "$imgpath/usr/sbin/invoke-rc.d") {
+        print "Installing fake invoke-rc.d tool.\n" if $verbose;
+        rename "$imgpath/usr/sbin/invoke-rc.d", "$imgpath/usr/sbin/invoke-rc.d.RAPT.tmp"
+            or return 1;
+        open (SSD, ">$imgpath/usr/sbin/invoke-rc.d") or return 1;
+        print SSD "#!/bin/sh\n";
+        print SSD "echo\n";
+        print SSD "echo Warning: Fake invoke-rc.d tool called, doing nothing\n";
+        close SSD;
+        chmod 0755, "$imgpath/usr/sbin/invoke-rc.d" or return 1;
     }
 
     return 0;
@@ -437,6 +449,14 @@ sub uninstall_fake_start_stop_daemon {
         unlink "$imgpath/usr/sbin/service" or return 1;
         rename "$imgpath/usr/sbin/service.RAPT.tmp",
                "$imgpath/usr/sbin/service"
+            or return 1;
+    }
+
+    if (-e "$imgpath/usr/sbin/invoke-rc.d.RAPT.tmp") {
+        print "Uninstalling fake invoke-rc.d tool.\n" if $verbose;
+        unlink "$imgpath/usr/sbin/invoke-rc.d" or return 1;
+        rename "$imgpath/usr/sbin/invoke-rc.d.RAPT.tmp",
+               "$imgpath/usr/sbin/invoke-rc.d"
             or return 1;
     }
 
