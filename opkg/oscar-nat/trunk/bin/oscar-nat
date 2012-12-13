@@ -1,0 +1,29 @@
+#!/usr/bin/perl
+
+# Copyright (c) 2012        Oak Ridge National Laboratory
+#                           Geoffroy Vallee <valleegr@ornl.gov>
+#                           All right reserved
+# Copyright (c) 2012        UT-Battelle, LLC
+#                           All right reserved
+
+use strict;
+use OSCAR::NAT;
+use OSCAR::Utils;
+use warnings "all";   
+
+my $extif = OSCAR::NAT::get_extif ();
+
+if (!OSCAR::Utils::is_a_valid_string ($extif)) {
+    die ("ERROR: Impossible to detect the public network interface");
+}
+
+print "External Network Interface: $extif\n";
+
+# Not sure yet how to handle the script so we put it in /tmp so it can be used
+# for occasional needs.
+my $nat_script = "/tmp/nat.sh";
+print "Generating $nat_script...\n";
+my $rc = OSCAR::NAT::generate_iptables_script ($nat_script, $extif);
+if ($rc != 0) {
+    die ("Impossible to generate script $nat_script\n");
+}
