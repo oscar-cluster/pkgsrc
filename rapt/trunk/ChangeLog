@@ -1,5 +1,6 @@
-rapt-2.8.9 (not yet released):
+rapt-2.8.9:
 - Port to Ubuntu 12.04.
+- Update copyrights.
 
 rapt-2.8.8:
 - Fix a problem when dealing with the lock file.
