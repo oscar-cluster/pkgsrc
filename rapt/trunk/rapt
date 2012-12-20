@@ -580,7 +580,7 @@ sub do_debootstrap ($$$$) {
         }
 
         # Create various files
-        use OSCAR::ImageMgt;
+        require OSCAR::ImageMgt;
         my $grub_path = "$target/boot/grub/";
 
         print "Creating $grub_path\n";
