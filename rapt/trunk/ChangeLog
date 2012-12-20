@@ -1,3 +1,7 @@
+rapt-2.8.10:
+- Do not require the dependency to OSCAR::ImageMgt except when really required
+(dynamic versus static load of the Perl module).
+
 rapt-2.8.9:
 - Port to Ubuntu 12.04.
 - Update copyrights.
