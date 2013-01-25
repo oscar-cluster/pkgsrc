@@ -229,17 +229,21 @@ if ($repoquery) {
         $cmd .= " -d $verbose -e 2";
     }
     if ($installroot) {
-        # special handling for empty images
-        if ((scalar(grep /^install$/, @ARGV) == 1) &&
-            &img_empty($installroot)) {
-            # try creating lock directory, if it fails we'll fail in
-            # other place anyway
-            system("mkdir -p $installroot/var/lock/rpm");
-            if ((&distro_repos() eq "suse") || (&distro_repos() eq "sles")) {
-                &bootstrap_suse($installroot);
+        # Avoid treating / (current system) as an image. (and avoid --installroot /)
+	# In fact, avoid doing bootstrap stuffs if we run on current system
+        if ($installroot ne "/") {
+            # special handling for empty images
+            if ((scalar(grep /^install$/, @ARGV) == 1) &&
+                &img_empty($installroot)) {
+                # try creating lock directory, if it fails we'll fail in
+                # other place anyway
+                system("mkdir -p $installroot/var/lock/rpm");
+                if ((&distro_repos() eq "suse") || (&distro_repos() eq "sles")) {
+                    &bootstrap_suse($installroot);
+                }
             }
-        }
         $cmd .= " --installroot $installroot";
+        }
     }
     my @yumargs = @ARGV;
 
