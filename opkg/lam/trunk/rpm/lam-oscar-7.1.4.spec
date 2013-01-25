@@ -61,7 +61,7 @@
 
 # Arbitrary options to pass to LAM's configure script.
 
-%{!?config_options: %define config_options --without-blcr --with-gm=/opt/gm --with-tm=/opt/pbs}
+%{!?config_options: %define config_options --with-blcr --with-gm=/opt/gm --with-tm=/opt/pbs --with-wrapper-extra-ldflags="-L/usr/lib64 /usr/lib64/libcr.so" --with-fc=/usr/bin/gfortran --enable-shared}
 
 # Passed to LAM's configure script, this is meant to provide a default
 # RPI for LAM.
@@ -103,18 +103,19 @@
 Summary: OSCAR-specific LAM/MPI programming environment
 Name: %{lam_name}
 Version: 7.1.4
-Release: 1
+Release: 2
 Vendor: LAM/MPI Team
 License: BSD
 Group: Development/Libraries
 Source: lam-%{version}.tar.gz
-Patch: lam_module.tcl.in.patch
+Patch0: lam_module.tcl.in.patch
+Patch1: lam_blcr_64bit.patch
 URL: http://www.lam-mpi.org/
 BuildRoot: %{_tmppath}/%{name}-%{version}-root
 Requires: %__rm %__make %__mkdir %__sed %__mv %__chmod
 Provides: mpi
-Requires: %{requires}
-BuildRequires: rsh %{requires}
+Requires: %{requires} blcr-libs
+BuildRequires: rsh %{requires} blcr-devel
 AutoReqProv: no
 
 %description 
@@ -182,6 +183,10 @@ this module will add LAM/MPI to the PATH and MANPATH.
 %setup -q -n lam-%{version}
 %patch0 -p1
 
+%ifarch x86_64
+%patch1 -p0
+%endif
+
 # Otherwise, this directory shows up on security reports
 %__chmod -R o-w "$RPM_BUILD_DIR/lam-%{version}"
 
@@ -192,7 +197,21 @@ this module will add LAM/MPI to the PATH and MANPATH.
 #
 #############################################################################
 %build
+
+%ifarch x86_64
+# Can't figure out where to cleanly patch the configure stuff, thus do it the hard way.
+for file2patch in $(grep -rl '/usr/lib/libcr.so' .)
+do
+  sed -i -e 's|/usr/lib/libcr.so|/usr/lib64/libcr.so|g' $file2patch
+done
+
+for file2patch in $(grep -rl 'lib="$searchdir/lib${name}${search_ext}"' .)
+do
+  sed -i -e 's|searchdir/lib|searchdir/lib64|g' $file2patch
+done
+%endif
 %configure %{rpi} %{rsh} %{config_options}
+
 %ifnarch noarch
 %__make all
 %endif
@@ -300,6 +319,9 @@ fi
 #
 #############################################################################
 %changelog
+* Fri May 21 2010 Olivier Lahaye <olivier.lahaye1@free.fr> 7.1.4-2
+- Patch for x86_64 blcr (Berkley Checkpoint/Restart) support
+
 * Tue Apr 04 2006 Bernard Li <bli@bcgsc.ca>
 - modulefile was conflicting mpi instead of lam
 

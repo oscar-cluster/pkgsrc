@@ -1,0 +1,15 @@
+--- share/ssi/crlam/blcr/configure.orig	2010-05-21 16:49:22.000000000 +0200
++++ share/ssi/crlam/blcr/configure	2010-05-21 16:51:02.000000000 +0200
+@@ -5373,9 +5373,9 @@
+ 	LIBCR_LIBS="-lcr"
+ 	if test ! "$lam_cr_blcr_dir" = "0"; then
+ 	    LIBCR_INCLUDE="-I$lam_cr_blcr_dir/include"
+-	    LIBCR_LDFLAGS="-L$lam_cr_blcr_dir/lib"
+-	    WRAPPER_EXTRA_LDFLAGS="-L$lam_cr_blcr_dir/lib"
+-	    LIBMPI_EXTRA_LDFLAGS="$LIBMPI_EXTRA_LDFLAGS -L$lam_cr_blcr_dir/lib"
++	    LIBCR_LDFLAGS="-L$lam_cr_blcr_dir/lib64"
++	    WRAPPER_EXTRA_LDFLAGS="-L$lam_cr_blcr_dir/lib64"
++	    LIBMPI_EXTRA_LDFLAGS="$LIBMPI_EXTRA_LDFLAGS -L$lam_cr_blcr_dir/lib64"
+ 	fi
+      fi
+ fi
