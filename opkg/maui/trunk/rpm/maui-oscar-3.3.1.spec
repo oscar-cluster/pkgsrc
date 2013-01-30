@@ -1,8 +1,9 @@
 # Name of package
 %define name maui-oscar
+%define torque_name torque-oscar
 
 # Version of maui
-%define version 3.2.6p19
+%define version 3.3.1
 
 # Maui installation directory
 %define maui_prefix /opt/maui
@@ -14,7 +15,7 @@
 %define pbs_prefix /opt/pbs
 
 # Execution home/spool directory for PBS
-%define pbs_server_home /var/spool/pbs
+%define pbs_server_home /var/lib/torque
 
 # Name of file that contains the default server for clients to use
 %define server_name_file server_name
@@ -34,36 +35,21 @@
 Summary: OSCARified Maui Scheduler
 Name: %{name}
 Version: %{version}
-Release: 8
+Release: 3%{?dist}
 Packager: Bernard Li <bli@bcgsc.ca>
 URL: http://www.clusterresources.com/pages/products/maui-cluster-scheduler.php
 Source0: maui-%{version}.tar.gz
 %define untarring_directory maui-%{version}
 Source1: maui-oscar-extra.tgz
+Patch0: maui-torque4.patch
 
 License: Maui Scheduler General Public License
 Group: Applications/batch
 Obsoletes: maui
-BuildPreReq: rpm >= 3.0.5
-# pbs/torque client
-BuildPreReq: /opt/pbs/bin/qalter
-# pbs/torque server
-%if %{?suse_version:1}0
-BuildPreReq: /etc/init.d/pbs_server
-Requires: /etc/init.d/pbs_server
-%else
-BuildPreReq: /etc/rc.d/init.d/pbs_server
-Requires: /etc/rc.d/init.d/pbs_server
-%endif
-# pbs/torque 
-BuildPreReq: /var/spool/pbs/pbs_environment
-#BuildPreReq: glibc >= 2.2.4
+BuildRequires: rpm >= 3.0.5
+BuildRequires: %{torque_name}-client %{torque_name}-server %{torque_name}
+Requires: %{torque_name}-client %{torque_name}-server %{torque_name}
 AutoReqProv: no
-Requires: rpm >= 3.0.5
-# pbs/torque client
-Requires: /opt/pbs/bin/qalter
-# pbs/torque 
-Requires: /var/spool/pbs/pbs_environment
 Requires: glibc >= 2.2.4
 BuildRoot: %{_tmppath}/%{name}-buildroot
 
@@ -86,33 +72,39 @@ OSCAR cluster software system.
 
 %setup -q -n %{untarring_directory}
 %setup -a 1 -n %{untarring_directory}
-#%patch0 -p1
+%patch0
 
 %build
 
-./configure --prefix=%{maui_prefix} --with-spooldir=%{maui_prefix} --with-key=21303 --with-pbs=%{pbs_prefix}
-make
+export LDFLAGS=-L/opt/pbs/lib64
+%configure --prefix=%{maui_prefix} --with-spooldir=%{maui_prefix} --with-key=21303 --with-pbs=%{pbs_prefix}
+%{__make}  %{?_smp_mflags}
 
 %install
-make BUILDROOT=${RPM_BUILD_ROOT} install
-install -m 0755 -d ${RPM_BUILD_ROOT}/etc/init.d
-if [ -d ${RPM_BUILD_ROOT}/etc/init.d ] ; then
+%__make BUILDROOT=${RPM_BUILD_ROOT} install
+
+# Install the service init script
+install -m 0755 -d ${RPM_BUILD_ROOT}/%{_initrddir}
+if [ -d ${RPM_BUILD_ROOT}/%{_initrddir} ] ; then
 %if %{?suse_version:1}0
-	cp -p maui.SuSE ${RPM_BUILD_ROOT}/etc/init.d/maui
+	cp -p maui.SuSE ${RPM_BUILD_ROOT}/%{_initrddir}/maui
 %else
-	cp -p maui ${RPM_BUILD_ROOT}/etc/init.d
+	cp -p maui ${RPM_BUILD_ROOT}/%{_initrddir}
 %endif
 fi
+
+# Install user profile scripts
+install -m 0755 -d ${RPM_BUILD_ROOT}/%{_sysconfdir}/profile.d
+install -p -m 0755 etc/maui.sh ${RPM_BUILD_ROOT}/%{_sysconfdir}/profile.d/
+install -p -m 0755 etc/maui.csh ${RPM_BUILD_ROOT}/%{_sysconfdir}/profile.d/
+
 install -m 0755 -d ${RPM_BUILD_ROOT}%{maui_prefix}/traces/
 #cp $RPM_BUILD_DIR/%{untarring_directory}/traces/* ${RPM_BUILD_ROOT}%{maui_prefix}/traces/
-make BUILDROOT=${RPM_BUILD_ROOT} setup
+%__make BUILDROOT=${RPM_BUILD_ROOT} setup
 cp -f LICENSE LICENSE.mcompat CHANGELOG ${RPM_BUILD_ROOT}%{maui_prefix}
 
 
 %post
-if [ -e /sbin/chkconfig ] ; then
-	/sbin/chkconfig --add maui
-fi
 perl -pi -e "s~SERVERHOST.*~SERVERHOST\t\t`hostname`~" %{maui_prefix}/maui.cfg
 perl -pi -e "s~RMPOLLINTERVAL.*~RMPOLLINTERVAL\t00:00:10~" %{maui_prefix}/maui.cfg
 perl -pi -e "s~BACKFILLPOLICY.*~BACKFILLPOLICY\tON~" %{maui_prefix}/maui.cfg
@@ -120,6 +112,9 @@ perl -pi -e "s~RMCFG\[.*\]~RMCFG[$HOSTNAME]~" %{maui_prefix}/maui.cfg
 perl -pi -e 's~\@RMNMHOST@~~' %{maui_prefix}/maui.cfg
 perl -pi -e "s~ADMIN1.*~ADMIN1\t\t\troot~" %{maui_prefix}/maui.cfg
 echo "NODEACCESSPOLICY	DEDICATED" >> %{maui_prefix}/maui.cfg
+if [ -e /sbin/chkconfig ] ; then
+	/sbin/chkconfig --add maui
+fi
 
 %clean
 rm -rf ${RPM_BUILD_ROOT}
@@ -127,13 +122,13 @@ rm -rf ${RPM_BUILD_ROOT}
 #==============================================================
 
 %preun
-if [ -e /etc/init.d/maui ] ; then
-  /etc/init.d/maui stop
-fi
-if [ "$1" = 0 ] ; then
-  if [ -e /sbin/chkconfig ] ; then
-    /sbin/chkconfig --del maui
-  fi
+if [ $1 = 0 ]; then
+# This is an uninstall
+  /sbin/service maui status && /sbin/service maui stop
+  /sbin/chkconfig --del maui
+else
+  # This is an upgrade
+  /sbin/service maui status && /sbin/service maui restart
 fi
 
 #==============================================================
@@ -154,11 +149,22 @@ fi
 %{maui_prefix}/LICENSE.mcompat
 %config %{maui_prefix}/maui.cfg
 %config %{maui_prefix}/maui-private.cfg
-/etc/init.d/maui
+%{_initrddir}/maui
+%{_sysconfdir}/profile.d/maui.*sh
 
 #==============================================================
 
 %changelog
+* Tue Dec 11 2012 Olivier Lahaye 3.3.1-3
+- Rebuild with torque-4.1.4.snap.201211201307
+- Use LDFLAGS to ease libtorque.so link.
+* Thu Nov 15 2011 Olivier Lahaye 3.3.1-2
+- Fix build with torque-4.1.3
+- Spec cleanup.
+- Fixed %preun when upgrading
+- Add user profiles scripts.
+* Thu Apr 22 2010 Olivier Lahaye 3.3.1-1
+- New release.
 * Mon Feb 05 2007 Erich Focht 3.2.6p18.5
 - Using maui-3.2.6p19-snap.1169758944 snapshot of p19. According to the
   mailing lists the bugs seen in 3.2.6p18 should be fixed here. As this
