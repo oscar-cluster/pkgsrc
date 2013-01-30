@@ -4,9 +4,9 @@
 
 Summary: Tools and addons to Ganglia to monitor and archive batch job info
 Name: jobmonarch
-Version: 0.1.2
+Version: 0.3.1
 URL: https://subtrac.sara.nl/oss/jobmonarch
-Release: 9
+Release: 1
 License: GPL
 Packager: Erich Focht (NEC HPCE)
 Group: Applications/Base
@@ -14,7 +14,7 @@ Source: jobmonarch-%{version}.tar.gz
 BuildArch: noarch
 BuildRoot: %{_tmppath}/%{name}
 
-BuildRequires: ganglia-web >= 3.0
+BuildRequires: ganglia-web >= 3.1
 Requires: python >= 2.3 ganglia-gmetad >= 3.0 ganglia-web >= 3.0
 
 # Following requires were moved to the config.xml file in order to keep the
@@ -42,7 +42,8 @@ jobmond data and (optionally) the jobarchived and presents the data and
 graphs. It does this in a similar layout/setup as Ganglia itself, so the
 navigation and usage is intuitive.
 
-%define jobmonarchinstdir /opt/jobmonarch
+#define jobmonarchinstdir /opt/jobmonarch
+%define jobmonarchinstdir /usr
 
 %prep
 %setup -q
@@ -53,15 +54,19 @@ navigation and usage is intuitive.
 rm -rf $RPM_BUILD_ROOT
 install -m 0755 -d $RPM_BUILD_ROOT/%{jobmonarchinstdir}/sbin
 install -m 0755 -d $RPM_BUILD_ROOT/etc/init.d
+install -m 0755 -d $RPM_BUILD_ROOT/etc/sysconfig
 install -m 0755 -d $RPM_BUILD_ROOT/var/www/html/ganglia/templates
 install -m 0755 -d $RPM_BUILD_ROOT/var/www/html/ganglia/addons
 install -m 0644 jobmond/jobmond.conf $RPM_BUILD_ROOT/etc/
 install -m 0644 jobarchived/jobarchived.conf $RPM_BUILD_ROOT/etc/
 install -m 0755 jobmond/jobmond.py $RPM_BUILD_ROOT/%{jobmonarchinstdir}/sbin/jobmond
 install -m 0755 jobarchived/jobarchived.py $RPM_BUILD_ROOT/%{jobmonarchinstdir}/sbin/jobarchived
-install -m 0755 jobarchived/DBClass.py $RPM_BUILD_ROOT/%{jobmonarchinstdir}/sbin/
-install -m 0755 jobmond/jobmond.init $RPM_BUILD_ROOT/etc/init.d/jobmond
-install -m 0755 jobarchived/jobarchived.init $RPM_BUILD_ROOT/etc/init.d/jobarchived
+#install -m 0755 jobarchived/DBClass.py $RPM_BUILD_ROOT/%{jobmonarchinstdir}/sbin/
+install -m 0755 pkg/rpm/init.d/jobmond $RPM_BUILD_ROOT/etc/init.d/jobmond
+install -m 0755 pkg/rpm/init.d/jobarchived $RPM_BUILD_ROOT/etc/init.d/jobarchived
+install -m 0755 pkg/rpm/sysconfig/jobmond $RPM_BUILD_ROOT/etc/sysconfig/jobmond
+install -m 0755 pkg/rpm/sysconfig/jobarchived $RPM_BUILD_ROOT/etc/sysconfig/jobarchived
+
 cp /var/www/html/ganglia/templates/default/images/logo.jpg web/templates/job_monarch/images
 cp -r web/templates/job_monarch $RPM_BUILD_ROOT/var/www/html/ganglia/templates/job_monarch
 cp -r web/addons/job_monarch $RPM_BUILD_ROOT/var/www/html/ganglia/addons/job_monarch
@@ -89,6 +94,8 @@ fi
 %{jobmonarchinstdir}/sbin/*
 %config /etc/jobmond.conf
 %config /etc/jobarchived.conf
+%config /etc/sysconfig/jobmond
+%config /etc/sysconfig/jobarchived
 /etc/init.d/*
 /var/www/html/ganglia/templates/job_monarch/*
 /var/www/html/ganglia/addons/job_monarch/*
