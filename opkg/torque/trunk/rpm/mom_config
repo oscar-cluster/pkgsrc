@@ -1,0 +1,5 @@
+# Configuration for pbs_mom.
+$logevent 127
+$pbsserver pbs_oscar
+$restricted pbs_oscar
+$usecp pbs_oscar:/home /home

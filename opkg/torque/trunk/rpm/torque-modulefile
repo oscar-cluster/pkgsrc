@@ -1,0 +1,16 @@
+#%Module -*- tcl -*-
+#
+# TORQUE modulefile for OSCAR clusters
+#
+
+proc ModulesHelp { } {
+   puts stderr "\tThis module adds TORQUE to the PATH and MANPATH."
+}
+
+module-whatis   "Sets up the TORQUE environment for an OSCAR cluster."
+
+# Hardcoding the path/arch and setting up the MANPATH and PATH too.
+
+append-path MANPATH /opt/pbs/man
+append-path PATH /opt/pbs/bin
+append-path PATH /opt/pbs/lib/xpbs/bin
