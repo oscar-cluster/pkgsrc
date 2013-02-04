@@ -1,14 +1,7 @@
-%define binpref /usr/bin
-%define libpref PERLLIBPATH
-%define manpref /usr/local/man/man1
-%define bintarget $RPM_BUILD_ROOT%{binpref}
-%define libtarget $RPM_BUILD_ROOT%{libpref}
-%define mantarget $RPM_BUILD_ROOT%{manpref}
-
 Summary:        Script that helps at setting up the network.
 Name:           network-configurator
 Version:        1.0.0
-Release:        1
+Release:        2
 Vendor:         Open Cluster Group <http://OSCAR.OpenClusterGroup.org/>
 Distribution:   OSCAR
 Packager:       Geoffroy Vallee <valleegr@ornl.gov>
@@ -30,10 +23,13 @@ Script that helps at setting up the network with various configurations, e.g., b
 
 %files
 %defattr(-,root,root)
-%{binpref}/*
-%{libpref}/*
-%{manpref}/*
+%{_bindir}/*
+%{perl_vendorlib}/*
+%{_mandir}/*
 
 %changelog
+* Mon Feb  4 2013 Olivier Lahaye <olivier.lahaye@cea.fr> 1.0.0-2
+- Use rpm standard macro locations.
+
 * Wed Jan 21 2009 Geoffroy Vallee <valleegr@ornl.gov> 1.0.0-1
 - new upstream version (see ChangeLog for more details).

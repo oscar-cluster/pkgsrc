@@ -1,4 +1,6 @@
 1.0.1 (not yet released):
+- Use standard rpm macros in spec file. No need to generate the spec file
+  anymore
 - Automatically detect the source directory on RPM based systems (patch from
 O. Lahaye).
 
