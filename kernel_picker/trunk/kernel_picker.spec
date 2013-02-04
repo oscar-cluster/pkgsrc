@@ -71,3 +71,9 @@ install -m 644 %{version}.%{release} $RPM_BUILD_ROOT/opt/modules/oscar-modulefil
 /opt/kernel_picker/man/man1/kernel_picker.1
 /opt/modules/oscar-modulefiles/kernel_picker/%{version}.%{release}
 
+%changelog
+* Mon Feb  4 2013 Olivier Lahaye <olivier.lahaye@cea.Fr>
+- Fix #install trying to install in system dirs instead of $RPM_BUILD_ROOT
+
+* Fri Nov 16 2012 Terry Fleury <tfleury@ncsa.uiuc.edu>
+- Initial packaging
