@@ -6,3 +6,4 @@ oscar-installer
 lib/OSCARInstaller/ConfigManager.pm
 lib/OSCARInstaller/Installer.pm
 conf/oscar-installer.conf
+oscar-installer.spec
