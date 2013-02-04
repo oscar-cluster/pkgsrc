@@ -44,15 +44,15 @@ program to prompt you for that information.
 ########################################################################
 %install
 rm -rf /opt/kernel_picker
-install -d 755 /opt/kernel_picker/bin /opt/kernel_picker/doc /opt/kernel_picker/html /opt/kernel_picker/man/man1 /opt/modules/oscar-modulefiles/kernel_picker
-install -m 755 kernel_picker.pl   /opt/kernel_picker/bin/kernel_picker
-install -m 644 kernel_picker.txt  /opt/kernel_picker/doc/kernel_picker.txt
-install -m 644 kernel_picker.tex  /opt/kernel_picker/doc/kernel_picker.tex
-install -m 644 kernel_picker.ps   /opt/kernel_picker/doc/kernel_picker.ps
-install -m 644 kernel_picker.pdf  /opt/kernel_picker/doc/kernel_picker.pdf
-install -m 644 kernel_picker.html /opt/kernel_picker/html/kernel_picker.html
-install -m 644 kernel_picker.1    /opt/kernel_picker/man/man1/kernel_picker.1
-install -m 644 %{version}.%{release} /opt/modules/oscar-modulefiles/kernel_picker/%{version}.%{release}
+install -d 755 $RPM_BUILD_ROOT/opt/kernel_picker/bin $RPM_BUILD_ROOT/opt/kernel_picker/doc $RPM_BUILD_ROOT/opt/kernel_picker/html $RPM_BUILD_ROOT/opt/kernel_picker/man/man1 $RPM_BUILD_ROOT/opt/modules/oscar-modulefiles/kernel_picker
+install -m 755 kernel_picker.pl   $RPM_BUILD_ROOT/opt/kernel_picker/bin/kernel_picker
+install -m 644 kernel_picker.txt  $RPM_BUILD_ROOT/opt/kernel_picker/doc/kernel_picker.txt
+install -m 644 kernel_picker.tex  $RPM_BUILD_ROOT/opt/kernel_picker/doc/kernel_picker.tex
+install -m 644 kernel_picker.ps   $RPM_BUILD_ROOT/opt/kernel_picker/doc/kernel_picker.ps
+install -m 644 kernel_picker.pdf  $RPM_BUILD_ROOT/opt/kernel_picker/doc/kernel_picker.pdf
+install -m 644 kernel_picker.html $RPM_BUILD_ROOT/opt/kernel_picker/html/kernel_picker.html
+install -m 644 kernel_picker.1    $RPM_BUILD_ROOT/opt/kernel_picker/man/man1/kernel_picker.1
+install -m 644 %{version}.%{release} $RPM_BUILD_ROOT/opt/modules/oscar-modulefiles/kernel_picker/%{version}.%{release}
 
 %files 
 %dir /opt/kernel_picker
