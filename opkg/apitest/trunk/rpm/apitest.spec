@@ -1,7 +1,7 @@
 %define name apitest
 %define version 1.0.0
 %define libvers 1.0
-%define release 12.2
+%define release 12.3
 %define _unpackaged_files_terminate_build 0
 
 %{expand:%%define py_ver %(python -V 2>&1| awk '{print $2}')}
@@ -22,8 +22,10 @@ BuildArch: noarch
 Requires: python-twisted >= 1.3
 BuildRequires: python-twisted >= 1.3
 
+%if 0%(echo %{?python_version}|tr '.' '0') < 206
 Requires: python-elementtree
 BuildRequires: python-elementtree
+%endif
 
 Requires: python >= 2.2
 BuildRequires: python >= 2.2
@@ -71,6 +73,9 @@ echo "cleaning $RPM_BUILD_ROOT"
 rm -rf $RPM_BUILD_ROOT
 
 %changelog
+* Fri May 04 2012    Olivier Lahaye <olivier.lahaye@cea.fr>
+- Made BuildRequires: python-elementtree conditional (included in python >= 2.6)
+
 * Thu Jan 12 2006    Thomas Naughton  <naughtont@ornl.gov>
 - (1.0.0-12) Removed unused profile.d portions.
 - Changed to use (what appears) more standard 'python-twisted', doesn't
