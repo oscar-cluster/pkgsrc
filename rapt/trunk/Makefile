@@ -2,7 +2,7 @@ DESTDIR=
 PKGDEST=
 DEBTMP=/tmp/rapt
 BUILDTMP=/tmp/rapt-build
-VERSION=2.8.8
+VERSION=2.8.10
 PKG=rapt
 
 all:
@@ -17,8 +17,12 @@ uninstall:
 	rm -f $(DESTDIR)/usr/share/man/man8/rapt.8
 	rm -f $(DESTDIR)/usr/bin/rapt
 
-rpm ::
-	@echo "RAPT is not yet supported on RPM system"
+rpm: dist
+	cp $(PKG)-$(VERSION).tar.gz `rpm --eval '%_sourcedir'`
+	rpmbuild -bb ./$(PKG).spec
+	@if [ -n "$(PKGDEST)" ]; then \
+		mv `rpm --eval '%{_topdir}'`/RPMS/noarch/$(PKG)-*.noarch.rpm $(PKGDEST); \
+	fi
 
 deb ::
 	@if [ -n "$$UNSIGNED_OSCAR_PKG" ]; then \
