@@ -1,5 +1,3 @@
-%define libpref PERLLIBPATH
-%define libtarget $RPM_BUILD_ROOT%{libpref}
 
 Summary:        OSCAR udev configuration tool.
 Name:           oscar-udev
@@ -21,15 +19,16 @@ Set of scripts and Perl modules for the management of udev within an OSCAR clust
 %prep
 %setup -n %{name}
 
-%build
-make install DESTDIR=$RPM_BUILD_ROOT
-
 %install 
+make install DESTDIR=$RPM_BUILD_ROOT
 
 %files
 %defattr(-,root,root)
-%{libpref}/*
+%{perl_vendorlib}/*
 
 %changelog
+* Mon Feb  4 2013 Olivier Lahaye <olivier.lahaye@cea.fr> 1.0-2
+- Use rpm macros for paths.
+
 * Wed Feb 25 2009 Geoffroy Vallee <valleegr@ornl.gov> 1.0-1
 - New upstream version (see ChangeLog for more details).
