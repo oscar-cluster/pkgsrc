@@ -5,11 +5,12 @@
 
 Summary: The Cbench sources
 Name: cbench-sources
-Version: 1.1.5
+Version: 1.2.2
 Release: 1
 Group: Development
 License: GPL
-Source:cbench_sources.tar.gz
+Source: cbench-%{version}.tar.gz
+Source1: oscar-benchmarking.tar.gz
 BuildRoot: /var/tmp/%{name}-buildroot
 
 Provides: cbench-sources
@@ -21,15 +22,17 @@ The cbench sources to build cbench rpms later per user.
 
 %prep
 %setup -c -n cbench-sources  
-mkdir -p $RPM_BUILD_ROOT/home/oscartst/SOURCES
-mkdir $RPM_BUILD_ROOT/home/oscartst/SPECS
 
 
 %build
 
 %install
-cp -r *.gz $RPM_BUILD_ROOT/home/oscartst/SOURCES
-cp cbench.spec $RPM_BUILD_ROOT/home/oscartst/SPECS
+mkdir -p $RPM_BUILD_ROOT/home/oscartst/rpmbuild/SOURCES
+mkdir $RPM_BUILD_ROOT/home/oscartst/rpmbuild/SPECS
+cp %SOURCE1 $RPM_BUILD_ROOT/home/oscartst/rpmbuild/SOURCES/
+#cp -r *.gz $RPM_BUILD_ROOT/home/oscartst/rpmbuild/SOURCES
+cp opensource/hpcc/hpcc-1.2.0.tar.gz $RPM_BUILD_ROOT/home/oscartst/rpmbuild/SOURCES/
+cp cbench.spec $RPM_BUILD_ROOT/home/oscartst/rpmbuild/SPECS
 
 
 %clean
@@ -37,6 +40,7 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %files
-/home/oscartst/SOURCES/cbench_hpcc.tar.gz
-/home/oscartst/SOURCES/hpcc-1.0.0.tar.gz
-/home/oscartst/SPECS/cbench.spec
+#/home/oscartst/rpmbuild/SOURCES/cbench_hpcc.tar.gz
+/home/oscartst/rpmbuild/SOURCES/oscar-benchmarking.tar.gz
+/home/oscartst/rpmbuild/SOURCES/hpcc-1.3.1.tar.gz
+/home/oscartst/rpmbuild/SPECS/cbench.spec

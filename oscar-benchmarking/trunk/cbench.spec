@@ -1,16 +1,17 @@
-
+# cbench version is 1.2.2 but hpcc version in cbenc source is still 1.2.0
 %define debug_packages	%{nil}
 %define debug_package %{nil}
 
 
 Summary: The Cbench infrastructure
 Name: Cbench
-Version: 1.1.5
+Version: 1.3.1
 Release: 1
 Group: Development
 License: GPL
 Source0:cbench_hpcc.tar.gz
-Source1:hpcc-1.0.0.tar.gz
+Source1:hpcc-1.3.1.tar.gz
+#Source2:oscar-benchmarking.tar.gz
 BuildRoot: /var/tmp/%{name}-buildroot
 
 Provides: Cbench
@@ -22,7 +23,7 @@ The cbench infrastructure.
 
 %package hpcc
 Summary: The HPCC benchmark suite
-Version: 1.0.0
+Version: 1.3.1
 Release: 1
 Group: Development
 License: GPL
@@ -32,11 +33,12 @@ Provides: hpcc
 Autoreqprov: no
 Requires: Cbench blas libaio libaio-devel
 
-%description -n Cbench-hpcc
+%description hpcc
 The hpcc benchmark suite
 
 %prep
-%setup -n cbench -T -b 0 -n cbench/opensource -a 1 -q
+%setup -n cbench -b 0 -n cbench/opensource -a 1 -q
+
 mkdir $RPM_BUILD_ROOT
 
 
