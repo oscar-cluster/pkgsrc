@@ -9,7 +9,7 @@ fi
 
 export PATH=/opt/lam-7.1.2/bin:/opt/lam-7.1.2/lib:$PATH
 export CBENCHCLUSTER="xtorc"
-export CBENCHOME="/home/anand/cbench"
+export CBENCHOME="/home/oscartst/cbench"
 export CBENCHTEST="$CBENCHOME/testset_cbench"
 export MPIHOME="/opt/lam-7.1.2"
 export COMPILERCOLLECTION="gcc"
