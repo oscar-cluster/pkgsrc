@@ -4,18 +4,20 @@
 
 Summary: Tools and addons to Ganglia to monitor and archive batch job info
 Name: jobmonarch
-Version: 0.3.1
+Version: 0.4
 URL: https://subtrac.sara.nl/oss/jobmonarch
-Release: 1
+Release: 0.1
 License: GPL
 Packager: Erich Focht (NEC HPCE)
 Group: Applications/Base
-Source: jobmonarch-%{version}.tar.gz
+Source: jobmonarch-%{version}-pre.tar.gz
 BuildArch: noarch
 BuildRoot: %{_tmppath}/%{name}
 
 BuildRequires: ganglia-web >= 3.1
 Requires: python >= 2.3 ganglia-gmetad >= 3.0 ganglia-web >= 3.0
+Requires: postgresql >= 8.1.22
+Requires: postgresql-server >= 8.1.22
 
 # Following requires were moved to the config.xml file in order to keep the
 # RPM distro-independent
@@ -42,8 +44,9 @@ jobmond data and (optionally) the jobarchived and presents the data and
 graphs. It does this in a similar layout/setup as Ganglia itself, so the
 navigation and usage is intuitive.
 
-#define jobmonarchinstdir /opt/jobmonarch
-%define jobmonarchinstdir /usr
+%define jobmonarchinstdir /opt/jobmonarch
+%define gangliatemplatedir %{_datadir}/ganglia/templates
+%define gangliaaddonsdir /var/www/html/ganglia/addons
 
 %prep
 %setup -q
@@ -52,39 +55,54 @@ navigation and usage is intuitive.
 
 %install
 rm -rf $RPM_BUILD_ROOT
+sed -i -e 's|/usr/sbin|%{jobmonarchinstdir}/sbin|g' pkg/rpm/init.d/jobmond pkg/rpm/init.d/jobarchived
+
 install -m 0755 -d $RPM_BUILD_ROOT/%{jobmonarchinstdir}/sbin
-install -m 0755 -d $RPM_BUILD_ROOT/etc/init.d
-install -m 0755 -d $RPM_BUILD_ROOT/etc/sysconfig
-install -m 0755 -d $RPM_BUILD_ROOT/var/www/html/ganglia/templates
-install -m 0755 -d $RPM_BUILD_ROOT/var/www/html/ganglia/addons
-install -m 0644 jobmond/jobmond.conf $RPM_BUILD_ROOT/etc/
-install -m 0644 jobarchived/jobarchived.conf $RPM_BUILD_ROOT/etc/
+install -m 0755 -d $RPM_BUILD_ROOT%{_initrddir}
+install -m 0755 -d $RPM_BUILD_ROOT%{_sysconfdir}/sysconfig
+install -m 0755 -d $RPM_BUILD_ROOT%{gangliatemplatedir}
+install -m 0755 -d $RPM_BUILD_ROOT%{gangliaaddonsdir}
+install -m 0755 -d $RPM_BUILD_ROOT%{_datadir}/jobarchived/
+install -m 0644 jobmond/jobmond.conf $RPM_BUILD_ROOT%{_sysconfdir}/
+sed -i -e 's|/etc/gmetad.conf|/etc/ganglia/gmetad.conf|g' jobarchived/jobarchived.conf
+install -m 0644 jobarchived/jobarchived.conf $RPM_BUILD_ROOT%{_sysconfdir}/
 install -m 0755 jobmond/jobmond.py $RPM_BUILD_ROOT/%{jobmonarchinstdir}/sbin/jobmond
 install -m 0755 jobarchived/jobarchived.py $RPM_BUILD_ROOT/%{jobmonarchinstdir}/sbin/jobarchived
 #install -m 0755 jobarchived/DBClass.py $RPM_BUILD_ROOT/%{jobmonarchinstdir}/sbin/
-install -m 0755 pkg/rpm/init.d/jobmond $RPM_BUILD_ROOT/etc/init.d/jobmond
-install -m 0755 pkg/rpm/init.d/jobarchived $RPM_BUILD_ROOT/etc/init.d/jobarchived
-install -m 0755 pkg/rpm/sysconfig/jobmond $RPM_BUILD_ROOT/etc/sysconfig/jobmond
-install -m 0755 pkg/rpm/sysconfig/jobarchived $RPM_BUILD_ROOT/etc/sysconfig/jobarchived
-
-cp /var/www/html/ganglia/templates/default/images/logo.jpg web/templates/job_monarch/images
-cp -r web/templates/job_monarch $RPM_BUILD_ROOT/var/www/html/ganglia/templates/job_monarch
-cp -r web/addons/job_monarch $RPM_BUILD_ROOT/var/www/html/ganglia/addons/job_monarch
+install -m 0755 pkg/rpm/init.d/jobmond $RPM_BUILD_ROOT%{_initrddir}/
+install -m 0755 pkg/rpm/sysconfig/jobmond $RPM_BUILD_ROOT%{_sysconfdir}/sysconfig/
+install -m 0755 pkg/rpm/init.d/jobarchived $RPM_BUILD_ROOT%{_initrddir}/
+install -m 0755 pkg/rpm/sysconfig/jobarchived $RPM_BUILD_ROOT%{_sysconfdir}/sysconfig/
+install -m 0755 jobarchived/job_dbase.sql $RPM_BUILD_ROOT%{_datadir}/jobarchived/
+cp %{gangliatemplatedir}/default/images/logo.jpg web/templates/job_monarch/images
+cp -r web/templates/job_monarch $RPM_BUILD_ROOT%{gangliatemplatedir}/job_monarch
+cp -r web/addons/job_monarch $RPM_BUILD_ROOT%{gangliaaddonsdir}/job_monarch
 
 %clean
 %__rm -rf $RPM_BUILD_ROOT
 
 %post
+echo "Make sure to set your Ganglia template to job_monarch now"
+echo ""
+echo "In your Ganglia conf.php, set this line:"
+echo "$template_name = \"job_monarch\";"
+
 if [ -x /sbin/chkconfig ]; then
     /sbin/chkconfig --add jobmond
     /sbin/chkconfig --add jobarchived
+    if [ ! -d /var/lib/pgsql/data ]; then
+        /service/service postgresql initdb
+    fi
+    /sbin/service postgresql start
+    su -l postgres -c "/usr/bin/createdb jobarchive"
+    su -l postgres -c "/usr/bin/psql -f /usr/share/jobarchived/job_dbase.sql jobarchive"
 fi
 
 %preun
 if [ "$1" = 0 ]; then
     if [ -x /sbin/chkconfig ]; then
-	/etc/init.d/jobmond stop
-	/etc/init.d/jobarchived stop
+	/sbin/service jobmond stop
+	/sbin/service jobarchived stop
 	/sbin/chkconfig --del jobmond
 	/sbin/chkconfig --del jobarchived
     fi
@@ -92,15 +110,23 @@ fi
 
 %files
 %{jobmonarchinstdir}/sbin/*
-%config /etc/jobmond.conf
-%config /etc/jobarchived.conf
-%config /etc/sysconfig/jobmond
-%config /etc/sysconfig/jobarchived
-/etc/init.d/*
-/var/www/html/ganglia/templates/job_monarch/*
-/var/www/html/ganglia/addons/job_monarch/*
+%config %{_sysconfdir}/jobmond.conf
+%config %{_sysconfdir}/jobarchived.conf
+%{_initddir}/*
+%{_sysconfdir}/sysconfig/*
+%{gangliatemplatedir}/job_monarch/*
+%{gangliaaddonsdir}/job_monarch/*
+%{_datadir}/jobarchived/*
 
 %changelog
+
+* Fri May 11 2012 Olivier Lahaye <olivier.lahaye1@free.fr>
+- Update to support EPEL/RF ganglia rpm.
+- Using 0.4 prerelease as there is an important bugfix over 0.3.1
+- Use macros
+
+* Fri Jul 29 2011 Olivier Lahaye <olivier.lahaye1@free.fr>
+- Update to V0.4SVN
 
 * Sun Aug 12 2006 Babu Sundaram <babu@cs.uh.edu>
 - Prepare first rpm for Job Monarch's jobmond Daemon
