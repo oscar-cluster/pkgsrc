@@ -1,5 +1,5 @@
 all: 
-#	wget -nc http://www.csm.ornl.gov/srt/downloads/oscar/cbench-1.2.2.tar.gz
+#	wget -nc http://svn.oscar.openclustergroup.org/pkgs/downloads/cbench-1.2.2.tar.gz
 
 install:
 

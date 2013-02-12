@@ -10,8 +10,8 @@
 
 %define  name       pvm
 %define  dname      pvm3
-%define  ver        3.4.5+6
-%define  rel        2
+%define  ver        3.4.6
+%define  rel        1
 %define  prefix     /opt/pvm3
 %ifarch x86_64
 %define  arch       LINUX64
@@ -37,7 +37,7 @@ Release: %{rel}
 License: freely distributable
 Group: Development/Libraries
 Vendor: Oak Ridge National Laboratory
-Source0: %{name}%{ver}.tar.gz 
+Source0: %{name}%{ver}.tgz 
 Patch0: pvm-3.4.5-Pvmtev.patch
 Packager: Thomas Naughton <naughtont@ornl.gov>
 URL: http://www.csm.ornl.gov/pvm/pvm_home.html
@@ -261,6 +261,9 @@ chown -R pvm:pvm $RPM_BUILD_ROOT/%{prefix}
 # ChangeLog section
 #---------------------------------------------------------------------
 %changelog
+* Thu Jun 14 2012    Olivier Lahaye <olivier.lahaye@cea.fr>
+- (3.4.6-1)  New upstream version
+
 * Wed Jun 14 2006    Thomas Naughton  <naughtont@ornl.gov>
 - (3.4.5+6-2) Add pvm group using groupadd (not RH-centric "useradd -g")
 
