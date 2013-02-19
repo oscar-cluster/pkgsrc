@@ -3,7 +3,7 @@ Summary: Manage next network boot action for a cluster
 Name: netbootmgr
 Version: 1.7
 Vendor: NEC HPCE
-Release: 1
+Release: 3%{?dist}
 License: GPL
 Packager: Erich Focht <efocht@hpce.nec.com>
 Source: %{name}-%{version}.tar.gz
@@ -26,9 +26,23 @@ files.
 
 
 %build
-# currently the puic path is hardcoded
-/opt/perl-Qt/bin/puic -o netBootMgr.pm netbootmgr.ui
-/opt/perl-Qt/bin/puic -o sureDialog.pm suredialog.ui
+export PUIC=""
+for PUIC_PATH in /usr/bin /opt/kde3/bin /opt/perl-Qt/bin
+do
+	if -x ${PUIC_PATH}/puic
+	then
+		PUIC=${PUIC_PATH}/puic
+		break
+	fi
+done
+
+if test -n "$PUIC"
+then
+	${PUIC} -o netBootMgr.pm netbootmgr.ui
+	${PUIC} -o sureDialog.pm suredialog.ui
+else
+	echo Unable to find puic from perl-Qt
+fi
 
 %install
 
@@ -76,6 +90,10 @@ if [ $1 -eq 0 ]; then
 fi
 
 %changelog
+* Tue Feb 19 2013 Olivier Lahaye 1.7-3
+- Try to find the puic binary (no hardcoded path)
+* Fri Feb  8 2013 Olivier Lahaye 1.7-2
+- Fixed perl Qt path (puic path)
 * Fri Apr 13 2007 Erich Focht 1.7-1
 - added verbose variable for netbootlib
 - added netbootmgr-cmd as command line interface for netbootmgr functionality
