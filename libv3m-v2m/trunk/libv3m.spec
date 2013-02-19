@@ -16,6 +16,7 @@ License: 		GPL
 Group:     		Development/Libraries
 Source:			%{name}-%{version}.tar.gz
 BuildRoot: 		%{_localstatedir}/tmp/%{name}
+BuildRequires:		libxml++-devel
 BuildArch:		i686
 
 %description
