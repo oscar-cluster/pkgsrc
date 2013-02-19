@@ -103,7 +103,7 @@
 Summary: OSCAR-specific LAM/MPI programming environment
 Name: %{lam_name}
 Version: 7.1.4
-Release: 2
+Release: 2%{?dist}
 Vendor: LAM/MPI Team
 License: BSD
 Group: Development/Libraries
