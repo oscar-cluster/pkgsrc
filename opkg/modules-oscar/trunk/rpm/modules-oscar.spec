@@ -15,9 +15,10 @@
 #
 #############################################################################
 
-%define _moddir /opt/modules
+%define _moddir opt/modules
 %define _profiledir /etc/profile.d
 %define _modrpmfilelist /etc/%{name}-%{version}-rpmfiles
+%define main_version 3.2.9
 
 # Added to get around RPM 4.2 debugging additions (starting in RH 8.0)
 #%define debug_package %{nil}
@@ -32,12 +33,15 @@
 
 Summary: Modules package
 Name: modules-oscar
-Version: 3.2.5
+Version: %{main_version}c
 Release: 2
 License: GPL
 Group: Applications/Environment
 Source0: modules-oscar-1.0.5.tar.gz
-Source1: modules-%{version}.tar.gz
+Source1: modules-%{version}.tar.bz2
+Source2: Modules-Paper.pdf
+Source3: Modules-Paper.doc
+Patch0: modules-3.2.9_bashrc.patch
 URL: http://modules.sourceforge.net/
 Packager: Open Cluster Group / OSCAR working group
 AutoReqProv: no
@@ -71,12 +75,16 @@ vanilla Modules install suitable for OSCAR clusters.
 %prep
 %setup -q -n modules-oscar-1.0.5
 cd ..
-%setup -q -T -D -b 1 -n modules-%{version}
+%setup -q -T -D -b 1 -n modules-%{main_version}
 
+cp %SOURCE2 ./doc/
+cp %SOURCE3 ./doc/
+
+%patch0
 # Otherwise, this directory shows up on security reports
 
 chmod -R o-w $RPM_BUILD_DIR/modules-oscar-1.0.5
-chmod -R o-w $RPM_BUILD_DIR/modules-%{version}
+chmod -R o-w $RPM_BUILD_DIR/modules-%{main_version}
 
 
 #############################################################################
@@ -99,9 +107,9 @@ chmod -R o-w $RPM_BUILD_DIR/modules-%{version}
 #export CFLAGS
 
 ./configure \
-	--prefix=%{_moddir} \
-	--with-module-path=%{_moddir}/modulefiles \
-	--with-version-path=%{_moddir}/version \
+	--prefix=/%{_moddir} \
+	--with-module-path=/%{_moddir}/modulefiles \
+	--with-version-path=/%{_moddir}/version \
 	--with-etc-path=/etc \
 	--with-skel-path=/etc/skel \
 	--with-split-size=960 \
@@ -118,31 +126,20 @@ make
 #############################################################################
 %install
 
-# it seems that modules does not support the ability to change the 
-# installation directory during 'make install'.  Therefore, we need
-# to install in the final resting spot, which could cause some
-# problems with an existing install.  Move the existing install for
-# a couple minutes...
-if [ -d %{_moddir} ]; then
-  %__rm -rf %{_moddir}.tmp
-  %__mv %{_moddir} %{_moddir}.tmp
-  %__rm -rf %{_moddir}
-fi
+#__cp %SOURCE2 %SOURCE3 ./doc/
+#makeinstall # DESTDIR=%{buildroot}
+#makeinstall
+%__make install DESTDIR=%{buildroot}
 
-# argh!  The modules install process isn't the brightest in the world.
-# It won't make directories before they are installed...
-%__mkdir_p %{_moddir}
-%__make install
+# Set the default symlink, which is used in modules...
+%__mkdir_p %{buildroot}/%{_moddir}/Modules
+(cd %{buildroot}; %__ln_s /%{_moddir}/Modules/%{main_version} %{_moddir}/Modules/default)
 
-# and it doesn't set the default symlink, which is used in modules...
-%__ln_s %{_moddir}/Modules/%{version} %{_moddir}/Modules/default
-
-# and it doesn't make the directory where people are supposed to
-# install their own config files...
-%__mkdir_p %{_moddir}/modulefiles
+# Make the directory where people are supposed to install their own config files...
+%__mkdir_p %{buildroot}/%{_moddir}/modulefiles
 
 # Now make a directory where OSCAR-specific modulefiles will go
-%__mkdir_p %{_moddir}/oscar-modulefiles
+%__mkdir_p %{buildroot}/%{_moddir}/oscar-modulefiles
 
 # Install the *.OSCAR files
 srcdir="$RPM_BUILD_DIR/modules-oscar-1.0.5"
@@ -151,7 +148,7 @@ srcdir="$RPM_BUILD_DIR/modules-oscar-1.0.5"
 %__cp $srcdir/AUTHORS.OSCAR .
 
 # Install the "oscar" module and set its default
-destdir="%{_moddir}/modulefiles/oscar-modules"
+destdir="%{buildroot}/%{_moddir}/modulefiles/oscar-modules"
 %__mkdir_p $destdir
 
 %__cp $srcdir/src/oscar.tcl $destdir/1.0.5
@@ -198,11 +195,14 @@ unset destdir
 
 # Save any original %{_profiledir}/00-modules.* files
 
-for file in 00-modules.csh 00-modules.sh; do
-	if test -f %{_profiledir}/$file; then
-		cp %{_profiledir}/$file %{_profiledir}/$file.rpmbuild
-	fi
-done
+#for file in 00-modules.csh 00-modules.sh; do
+#	if test -f %{_profiledir}/$file; then
+#		cp %{_profiledir}/$file %{buildroot}%{_profiledir}/$file.rpmbuild
+#	fi
+#done
+
+# Now create the profile directory were modules environment init files will go.
+%__mkdir_p %{buildroot}%{_profiledir}
 
 # Take our OSCAR-ized template files and insert the files from the
 # modules distribution.
@@ -228,8 +228,8 @@ ed $srcdir/src/00-modules.sh < ed-commands.txt
 
 # Copy the resulting file to %{_profiledir}.
 
-%__cp $srcdir/src/00-modules.sh %{_profiledir}
-%__chmod +x %{_profiledir}/00-modules.sh
+%__cp $srcdir/src/00-modules.sh %{buildroot}%{_profiledir}
+%__chmod +x %{buildroot}%{_profiledir}/00-modules.sh
 
 # Now do the csh version.
 
@@ -250,8 +250,8 @@ ed $srcdir/src/00-modules.csh < ed-commands.txt
 
 # Copy the resulting file to the %{_profiledir}.
 
-%__cp $srcdir/src/00-modules.csh %{_profiledir}
-%__chmod +x %{_profiledir}/00-modules.csh
+%__cp $srcdir/src/00-modules.csh %{buildroot}%{_profiledir}
+%__chmod +x %{buildroot}%{_profiledir}/00-modules.csh
 
 
 #############################################################################
@@ -259,6 +259,9 @@ ed $srcdir/src/00-modules.csh < ed-commands.txt
 # Post Section
 #
 #############################################################################
+# Not needed on rhel >= 5 and Fedora >= 10
+%if ! (0%{?fedora} >= 10 || 0%{?rhel} >= 6)
+
 %post
 
 # Now make the bash system startup file source the
@@ -372,9 +375,10 @@ if test -f %{_modrpmfilelist}; then
 	%__cp $file.tmp $file
 	%__rm -f $file.tmp
     done
-    rm -f %{_moddir}/%{version}/share/rpmfiles
+    rm -f /%{_moddir}/%{main_version}/share/rpmfiles
 fi
 
+%endif
 
 #############################################################################
 #
@@ -382,26 +386,6 @@ fi
 #
 #############################################################################
 %clean
-
-# Fix the hacks we did in "% install" to save an existing modules
-# install...
-
-%__rm -rf %{_moddir}
-if [ -d %{_moddir}.tmp ]; then
-  %__mv %{_moddir}.tmp %{_moddir}
-fi
-
-# Restore any 00-modules files that may have previously existed
-
-for file in 00-modules.csh 00-modules.sh; do
-	if test -f %{_profiledir}/$file.rpmbuild; then
-		%__cp %{_profiledir}/$file.rpmbuild %{_profiledir}/$file
-		%__rm %{_profiledir}/$file.rpmbuild
-	else
-		%__rm %{_profiledir}/$file
-	fi
-done
-
 
 #############################################################################
 #
@@ -412,9 +396,8 @@ done
 
 %defattr(-,root,root)
 %doc doc/Modules-Paper.pdf ChangeLog INSTALL INSTALL.RH7x LICENSE.GPL 
-%doc MACHINES PROBLEMS README README.perl 
-%doc README.OSCAR AUTHORS.OSCAR LICENSE.OSCAR
-%{_moddir}
+%doc README README.OSCAR AUTHORS.OSCAR LICENSE.OSCAR
+/%{_moddir}
 %{_profiledir}/00-modules.*
 
 
@@ -424,6 +407,14 @@ done
 #
 #############################################################################
 %changelog
+* Fri Nov 23 2012 Olivier Lahaye <olivier.lahaye@cea.fr> 3.2.9c-2
+- Fixed module version path (does not include the "c")
+- Removes %post* on modern redhat distro (unneeded)
+
+* Thu Jun 14 2012 Olivier Lahaye <olivier.lahaye@cea.fr> 3.2.9c-1
+- Upgrade module from 3.2.5 to 3.2.9c
+- Use DESTDIR in make install
+
 * Thu Oct 11 2007 DongInn Kim <dikim@osl.iu.edu>
 - Upgrade module from 3.1.6 to 3.2.5
 
@@ -491,7 +482,7 @@ done
 - Install oscar module in oscar-modulefiles
 
 * Sun Feb 17 2002 Jeff Squyres <jsquyres@lam-mpi.org>
-- Added use of %{_moddir} just in case we ever move the location of
+- Added use of /%{_moddir} just in case we ever move the location of
   where modules are installed
 - Moved four scripts into separate files and added additional SourceN
   lines in the preamble
