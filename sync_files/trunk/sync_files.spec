@@ -37,7 +37,7 @@ AutoReqProv:	no
 
 %description
 The OSCAR File Synchronization System keeps any list of files 
-synchronizaed from the the central OSCAR server out to the OSCAR
+synchronized from the the central OSCAR server out to the OSCAR
 compute nodes and (optionally) client image(s).  Whenever any of the 
 following happens, the files on the OSCAR server are copied to the OSCAR clients:
 periodically if changed (defaults to every 15 minutes)
