@@ -52,7 +52,7 @@ set modulefiledir /opt/modules/modulefiles
 
 # See if we have BLCR and/or GM
 
-set have_blcr [file exists [GetLibDir]/libcr.so]
+set have_blcr [file exists [GetLibDir]/libcr.so.0]
 set have_gm [file exists [GetLibDir]/libgm.so]
 
 # Get the version number of the Open MPI represented by this modulefile
