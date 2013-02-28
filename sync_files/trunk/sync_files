@@ -156,9 +156,17 @@ sub getconfig () {
         $config->file($configfile);
         foreach my $var qw(syncfile checksums crondelay crontab cronmodify 
             getent usec3 scphost) {
-            if ( defined($config->get($var)) ) {
-                OSCAR::Logger::oscar_log_subsection "Setting $var to " . 
-                    $config->get($var);
+            my $var_cleartext="";
+            my $var_ref=$config->get($var);
+            if (defined($var_ref) ) {
+		if (ref $config->get($var)) {
+			# We have an array: convert it to human readable format
+			$var_cleartext=join(" ",@$var_ref);
+                } else {
+			$var_cleartext=$var_ref
+		}
+                OSCAR::Logger::oscar_log_subsection "Setting $var to: " . 
+                    $var_cleartext;
                 my $line = '$' . "$var = " . '$config->get($var)';
                 eval "$line;";
             }
