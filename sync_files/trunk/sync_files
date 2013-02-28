@@ -693,7 +693,7 @@ sub update_file ($$) {
 #               Main program starts here                 #
 ##########################################################
 
-OSCAR::Logger::init_log_file ("/var/log/oscar/sync_files.log");
+OSCAR::Logger::update_log_file ("/var/log/oscar/sync_files.log");
 # We temporarilty set the OSCAR_VERBOSE var because we want to get output from
 # getconfig, i.e., before to get the value of the verbose variable.
 $ENV{OSCAR_VERBOSE} = 1;
