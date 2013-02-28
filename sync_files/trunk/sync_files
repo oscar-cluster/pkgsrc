@@ -813,7 +813,7 @@ if (!$crononly && ($change||$force)) {
     }
     if ( (!defined ($image_only) || $image_only == 0) && $usec3 ) {
         if (OSCAR::NodeMgt::update_list_alive_nodes ()) {
-            die "ERROR: Impossible to update the C3 config file";
+            die "ERROR: [sync_files] Impossible to update the C3 config file";
         }
     }
 
