@@ -6,7 +6,7 @@ Summary: Tools and addons to Ganglia to monitor and archive batch job info
 Name: jobmonarch
 Version: 0.4
 URL: https://subtrac.sara.nl/oss/jobmonarch
-Release: 0.1
+Release: 0.3
 License: GPL
 Packager: Erich Focht (NEC HPCE)
 Group: Applications/Base
@@ -18,6 +18,7 @@ BuildRequires: ganglia-web >= 3.1
 Requires: python >= 2.3 ganglia-gmetad >= 3.0 ganglia-web >= 3.0
 Requires: postgresql >= 8.1.22
 Requires: postgresql-server >= 8.1.22
+Requires: pyPgSQL >= 2.5.1
 
 # Following requires were moved to the config.xml file in order to keep the
 # RPM distro-independent
@@ -119,15 +120,17 @@ fi
 %{_datadir}/jobarchived/*
 
 %changelog
+* Mon Mar  4 2013 Olivier Lahaye <olivier.lahaye1@free.fr> 0.4-0.3
+- Added Requires: pyPgSQL
 
-* Fri May 11 2012 Olivier Lahaye <olivier.lahaye1@free.fr>
+* Fri May 11 2012 Olivier Lahaye <olivier.lahaye1@free.fr> 0.4-0.2
 - Update to support EPEL/RF ganglia rpm.
 - Using 0.4 prerelease as there is an important bugfix over 0.3.1
 - Use macros
 
-* Fri Jul 29 2011 Olivier Lahaye <olivier.lahaye1@free.fr>
+* Fri Jul 29 2011 Olivier Lahaye <olivier.lahaye1@free.fr> 0.4-0.1
 - Update to V0.4SVN
 
-* Sun Aug 12 2006 Babu Sundaram <babu@cs.uh.edu>
+* Sun Aug 12 2006 Babu Sundaram <babu@cs.uh.edu> 0.3.1-1
 - Prepare first rpm for Job Monarch's jobmond Daemon
 
