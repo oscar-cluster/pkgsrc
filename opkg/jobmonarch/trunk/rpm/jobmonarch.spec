@@ -19,6 +19,7 @@ Requires: python >= 2.3 ganglia-gmetad >= 3.0 ganglia-web >= 3.0
 Requires: postgresql >= 8.1.22
 Requires: postgresql-server >= 8.1.22
 Requires: pyPgSQL >= 2.5.1
+Requires: python-rrdtool
 
 # Following requires were moved to the config.xml file in order to keep the
 # RPM distro-independent
@@ -91,8 +92,8 @@ echo "$template_name = \"job_monarch\";"
 if [ -x /sbin/chkconfig ]; then
     /sbin/chkconfig --add jobmond
     /sbin/chkconfig --add jobarchived
-    if [ ! -d /var/lib/pgsql/data ]; then
-        /service/service postgresql initdb
+    if [ ! -d /var/lib/pgsql/data/base ]; then
+        /sbin/service postgresql initdb
     fi
     /sbin/service postgresql start
     su -l postgres -c "/usr/bin/createdb jobarchive"
@@ -121,7 +122,8 @@ fi
 
 %changelog
 * Mon Mar  4 2013 Olivier Lahaye <olivier.lahaye1@free.fr> 0.4-0.3
-- Added Requires: pyPgSQL
+- Added Requires: pyPgSQL python-rrdtool
+- Fixed postinstall (Postgress initdb if required)
 
 * Fri May 11 2012 Olivier Lahaye <olivier.lahaye1@free.fr> 0.4-0.2
 - Update to support EPEL/RF ganglia rpm.
