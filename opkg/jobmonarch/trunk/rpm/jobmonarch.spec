@@ -11,6 +11,8 @@ License: GPL
 Packager: Erich Focht (NEC HPCE)
 Group: Applications/Base
 Source: jobmonarch-%{version}-pre.tar.gz
+Patch0: jobmonarch-0.4_pbs_python_array.patch
+Patch1: jobmonarch-0.4_pbs_python_attr.patch
 BuildArch: noarch
 BuildRoot: %{_tmppath}/%{name}
 
@@ -48,10 +50,18 @@ navigation and usage is intuitive.
 
 %define jobmonarchinstdir /opt/jobmonarch
 %define gangliatemplatedir %{_datadir}/ganglia/templates
-%define gangliaaddonsdir /var/www/html/ganglia/addons
+%define gangliaaddonsdir   %{_datadir}/ganglia/addons
 
 %prep
 %setup -q
+
+# Patch from Daems Dirk <dirk.daems@vi...>
+# Fix the fact that pbs_python now returns an array
+%patch0 -p1
+
+# Patch from  Jeffrey J. Zahari <jeffreyz@bii.a-star.edu.sg>
+# Fix the retrieval of jobs attributes
+%patch1 -p1
 
 %build
 
@@ -59,12 +69,36 @@ navigation and usage is intuitive.
 rm -rf $RPM_BUILD_ROOT
 sed -i -e 's|/usr/sbin|%{jobmonarchinstdir}/sbin|g' pkg/rpm/init.d/jobmond pkg/rpm/init.d/jobarchived
 
+# Restore the correct GANGLIA_PATH.
+sed -i -e '/test-ganglia/d' -e 's|//$GANGLIA_PATH|$GANGLIA_PATH|g' web/addons/job_monarch/conf.php
+
+# Set the correct PATH for the rrd database
+sed -i -e 's|/path/to/my/archive|%{_sharedstatedir}/jobarchived|g' web/addons/job_monarch/conf.php
+
+# Fix default gmond.conf location.
+for FILE in ./jobmond/jobmond.conf ./jobmond/jobmond.py
+do
+	sed -i -e 's|/etc/gmond.conf|/etc/ganglia/gmond.conf|g' $FILE
+done
+# Fix gmetad.conf path (correct in ./jobarchived/jobarchived.conf but not in example)
+sed -i -e 's|/etc/gmetad.conf|/etc/ganglia/gmetad.conf|g' ./jobarchived/examples/jobarchived.conf
+
+# Fix rrdtool web link in footer:
+sed -i -e 's|http://www.rrdtool.com/|http://oss.oetiker.ch/rrdtool/|g' ./web/addons/job_monarch/templates/footer.tpl
+
+# Fix real version (0.4-pre instead of 0.3.1)
+for FILE in ./jobmond/jobmond.py ./jobarchived/jobarchived.py ./web/addons/job_monarch/version.php
+do
+	sed -i -e 's/0.3.1/0.4-pre/g' $FILE
+done
+
 install -m 0755 -d $RPM_BUILD_ROOT/%{jobmonarchinstdir}/sbin
 install -m 0755 -d $RPM_BUILD_ROOT%{_initrddir}
 install -m 0755 -d $RPM_BUILD_ROOT%{_sysconfdir}/sysconfig
 install -m 0755 -d $RPM_BUILD_ROOT%{gangliatemplatedir}
 install -m 0755 -d $RPM_BUILD_ROOT%{gangliaaddonsdir}
 install -m 0755 -d $RPM_BUILD_ROOT%{_datadir}/jobarchived/
+install -m 0755 -d $RPM_BUILD_ROOT%{_sharedstatedir}/jobarchived
 install -m 0644 jobmond/jobmond.conf $RPM_BUILD_ROOT%{_sysconfdir}/
 sed -i -e 's|/etc/gmetad.conf|/etc/ganglia/gmetad.conf|g' jobarchived/jobarchived.conf
 install -m 0644 jobarchived/jobarchived.conf $RPM_BUILD_ROOT%{_sysconfdir}/
@@ -87,7 +121,7 @@ cp -r web/addons/job_monarch $RPM_BUILD_ROOT%{gangliaaddonsdir}/job_monarch
 echo "Make sure to set your Ganglia template to job_monarch now"
 echo ""
 echo "In your Ganglia conf.php, set this line:"
-echo "$template_name = \"job_monarch\";"
+echo "\$template_name = \"job_monarch\";"
 
 if [ -x /sbin/chkconfig ]; then
     /sbin/chkconfig --add jobmond
@@ -116,14 +150,27 @@ fi
 %config %{_sysconfdir}/jobarchived.conf
 %{_initddir}/*
 %{_sysconfdir}/sysconfig/*
+%dir %{gangliatemplatedir}/job_monarch
 %{gangliatemplatedir}/job_monarch/*
+%dir %{gangliaaddonsdir}/job_monarch
 %{gangliaaddonsdir}/job_monarch/*
 %{_datadir}/jobarchived/*
+%dir %{_sharedstatedir}/jobarchived
 
 %changelog
 * Mon Mar  4 2013 Olivier Lahaye <olivier.lahaye1@free.fr> 0.4-0.3
 - Added Requires: pyPgSQL python-rrdtool
 - Fixed postinstall (Postgress initdb if required)
+- Fixed gangliaaddonsdir
+- Add %dir in file sections for gangliaaddonsdir and gangliatemplatedir
+  so rpm -qf know those dirs belong to jobmonarch package.
+- Fix web/addons/job_monarch/conf.php (GANGLIA_PATH and JOB_ARCHIVE_DIR)
+- Fix default gmond.conf path (/etc/ganglia/gmond.conf)
+- Mark %{_sharedstatedir}/jobarchived directory as part of the package
+- Fix rrdtool web URL in footer
+- Fix VERSION (it is a 0.4-pre, not a 0.3.1)
+- Patch from Daems Dirk: new pbs_python with arrays
+- Patch from Jeffrey J. Zahari: jobs attributes retrieval
 
 * Fri May 11 2012 Olivier Lahaye <olivier.lahaye1@free.fr> 0.4-0.2
 - Update to support EPEL/RF ganglia rpm.
