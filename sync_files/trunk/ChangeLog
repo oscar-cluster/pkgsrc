@@ -1,11 +1,12 @@
 2.5.9 (not yet released):
-- Updated the log output do dispay the content of arrays n human readable
+- Updated the log output do dispay the content of arrays in human readable
 format instead of "ARRAY(0x1234567)" (more usefull in a log file)
 - Fix a typo creating a problem in NIS environments (Patch from Nikolay Khokhlov).
 - Automatically detect the source directory on RPM based systems (patch from
 O. Lahaye).
 - Update the spec file so it works on Scientific Linux 6.0 (patch from O. 
 Lahaye).
+- Remove the redundant sync-files log files. (dikim)
 
 2.5.8:
 - [Ticket #286] Make sure we do not use getent in a NIS environment.
