@@ -15,7 +15,7 @@ Group: System Environment/Tools
 BuildArch: noarch
 BuildRoot: %{_tmppath}/%{name}
 Requires: yum >= 2.4.0
-Requires: /usr/bin/distro-query
+Requires: oscar-utils >= 6.1.2
 # perl-IO-Tty required by ptty_try which is used in tests.
 Requires: perl-IO-Tty
 # actually "createrepo" is also needed, but only on the master node,
@@ -63,6 +63,8 @@ rm -rf $RPM_BUILD_ROOT
 %{_mandir}/man1/ptty_try*
 
 %changelog
+* Wed Mar  6 2013 Olivier Lahaye <olivier.lahaye@cea.fr> 2.8.12-0.2
+- Updated the requirement for distro-query: => oscar-utils
 * Wed Mar  6 2013 Olivier Lahaye <olivier.lahaye@cea.fr> 2.8.12-0.1
 - new upstream version (see ChangeLog for more details).
 - Use make install instead of manual copy of files.
