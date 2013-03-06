@@ -4,11 +4,11 @@ BINDIR=$(DESTDIR)/usr/bin
 DATADIR=$(DESTDIR)/usr/share
 MANDIR=$(DESTDIR)/usr/share/man
 NAME=yume
-VERSION=2.8.11
+VERSION=2.8.12
 
 FILES := ChangeLog ptty_try yume yume-opkg-4.2.1 yume-opkg yum-repoquery3 \
 		rhel4-i386.rpmlist yume.8 yume.spec Makefile rhel4-x86_64.rpmlist \
-		yum-repoquery 
+		yum-repoquery
 MANSCRIPTS := ptty_try
 DEBIANFILES := debian/changelog debian/compat debian/control debian/copyright \
 		debian/rules
@@ -16,8 +16,8 @@ DEBIANFILES := debian/changelog debian/compat debian/control debian/copyright \
 all:
 
 manpages:
-	install -d -m 0755 $(DESTDIR)/usr/local/man/man1/
-	for bin in ${MANSCRIPTS} ; do ( pod2man --section=1 $$bin $(DESTDIR)/usr/local/man/man1/$$bin.1 ) ; done
+	install -d -m 0755 $(MANDIR)/man1
+	for bin in ${MANSCRIPTS} ; do ( pod2man --section=1 $$bin $(MANDIR)/man1/$$bin.1 ) ; done
 
 install: manpages
 	install -d -o root -g root -m 755 $(BINDIR)
@@ -26,6 +26,7 @@ install: manpages
 	install -o root -g root -m 755  yume $(BINDIR)
 	install -o root -g root -m 755  yume-opkg $(BINDIR)
 	install -o root -g root -m 755  yum-repoquery $(BINDIR)
+	install -o root -g root -m 755  yum-repoquery3 $(BINDIR)
 	install -o root -g root -m 755  ptty_try $(BINDIR)
 	install -o root -g root -m 755  *.rpmlist $(DATADIR)/$(NAME)
 	install -o root -g root -m 755  yume.8 $(MANDIR)/man8
