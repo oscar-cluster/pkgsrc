@@ -6,7 +6,7 @@
 Summary: OSCARized File Synchronization System
 Name: sync-files
 Version: 2.5.9
-Release: 0.2
+Release: 0.3
 Distribution: OSCAR
 Packager: Geoffroy Vallee <valleegr@ornl.gov>
 URL: http://oscar.sourceforge.net/
@@ -25,6 +25,7 @@ Requires: /usr/bin/perl
 Requires: perl-AppConfig
 Requires: perl(Getopt::Long)
 Requires: oscar-base-lib > 6.0.5
+Requires: oscar-utils >= 6.1.2
 
 Obsoletes: sync-users-oscar
 
@@ -72,6 +73,8 @@ mv /etc/crontab.preun /etc/crontab
 #==============================================================
 
 %changelog
+* Wed Mar  6 2013 Olivier Lahaye <olivier.lahaye@cea.fr> 2.5.9-0.3
+- Added Requires: oscar-utils (/usr/bin/distro-query)
 * Tue Feb 28 2013 DongInn Kim <dikim@cs.indiana.edu> 2.5.9-0.2
 - Remove the redundant sync-files log files.
 * Tue Feb 26 2013 Olivier Lahaye <olivier.lahaye@cea.fr> 2.5.9-0.1
