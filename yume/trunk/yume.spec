@@ -5,9 +5,9 @@
 
 Summary: Wrapper to yum for clusters
 Name: yume
-Version: 2.8.11
+Version: 2.8.12
 Vendor: Open Source Cluster Group
-Release: 1
+Release: 0.1
 License: GPL
 Packager: Geoffroy Vallee <valleegr@ornl.gov>
 Source: %{name}-%{version}.tar.gz
@@ -15,15 +15,15 @@ Group: System Environment/Tools
 BuildArch: noarch
 BuildRoot: %{_tmppath}/%{name}
 Requires: yum >= 2.4.0
-# removed perl-IO-Tty requirement, it is actually only needed by packman,
-# and it works even without it.
-#Requires: perl-IO-Tty
+Requires: /usr/bin/distro-query
+# perl-IO-Tty required by ptty_try which is used in tests.
+Requires: perl-IO-Tty
 # actually "createrepo" is also needed, but only on the master node,
-# so don't add it to the requires.
+# so don't add it to the requires. (opkg-yume-server handles this Requires:)
 AutoReqProv: no
-# If rpm version >= 4.6, then Suggests repoquery
+# If rpm version >= 4.6, then Suggests yum-utils (need for repoquery)
 %if %has_rpm_suggests
-Suggests: repoquery
+Suggests: yum-utils
 %endif
 
 %description 
@@ -50,16 +50,7 @@ repoquery.
 
 %install
 
-install -d -o root -g root -m 755 $RPM_BUILD_ROOT%{_bindir}
-install -d -o root -g root -m 755 $RPM_BUILD_ROOT%{_datadir}/%{name}
-install -d -o root -g root -m 755 $RPM_BUILD_ROOT%{_mandir}/man8
-install -o root -g root -m 755  yume $RPM_BUILD_ROOT%{_bindir}
-install -o root -g root -m 755  yume-opkg $RPM_BUILD_ROOT%{_bindir}
-install -o root -g root -m 755  yum-repoquery $RPM_BUILD_ROOT%{_bindir}
-install -o root -g root -m 755  yum-repoquery3 $RPM_BUILD_ROOT%{_bindir}
-install -o root -g root -m 755  ptty_try $RPM_BUILD_ROOT%{_bindir}
-install -o root -g root -m 755  *.rpmlist $RPM_BUILD_ROOT%{_datadir}/%{name}
-install -o root -g root -m 755  yume.8 $RPM_BUILD_ROOT%{_mandir}/man8
+%__make install DESTDIR=$RPM_BUILD_ROOT
 
 %clean
 rm -rf $RPM_BUILD_ROOT
@@ -69,8 +60,15 @@ rm -rf $RPM_BUILD_ROOT
 %{_bindir}/*
 %{_datadir}/%{name}/*
 %{_mandir}/man8/yume*
+%{_mandir}/man1/ptty_try*
 
 %changelog
+* Wed Mar  6 2013 Olivier Lahaye <olivier.lahaye@cea.fr> 2.8.12-0.1
+- new upstream version (see ChangeLog for more details).
+- Use make install instead of manual copy of files.
+- Made ptty_try man correctly generated and packaged.
+- Restored perl-IO-Tty requirement so ptty_try works (used in tests)
+- Added /usr/bin/distro-query requirement (yume needs this even on nodes)
 * Fri Oct 30 2009 Geoffroy Vallee <valleegr@ornl.gov> 2.8.11-1
 - new upstream version (see ChangeLog for more details).
 * Thu Jul 16 2009 Geoffroy Vallee <valleegr@ornl.gov> 2.8.10-1
