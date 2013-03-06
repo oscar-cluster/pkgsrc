@@ -380,9 +380,8 @@ sub img_empty {
 # in the variable @repos.
 # Only meaningful on the master node, under OSCAR.
 sub distro_repos {
-    return if (!exists($ENV{OSCAR_HOME}));
-    return if (! -d $ENV{OSCAR_HOME}."/oscarsamples");
-    my $dquery = "$ENV{OSCAR_HOME}/scripts/distro-query";
+    return if (!on_oscar_master());
+    my $dquery = "/usr/bin/distro-query";
     if (-x $dquery) {
 	my $dist;
 	for my $repo (@repos) {
@@ -480,6 +479,7 @@ EOF
     close OUT;
     # locate the glibc package in the repositories
     my $glibcrpm;
+    # OL: BUG: $prog seems unitialized.
     my $cmd = "$prog ";
     map { $cmd .= "--repo $_ " } @repos;
     $cmd .= "--repoquery --location glibc | egrep '.rpm\$'";
@@ -633,7 +633,9 @@ sub get_default_repos {
 	    }
 	    close CMD;
 	} else {
-	    print "Command $ENV{OSCAR_HOME}/scripts/distro-query not found\n";
+	    # The line below is not coherent with the $dquery variable
+	    # print "Command $ENV{OSCAR_HOME}/scripts/distro-query not found\n";
+	    print "Command $dquery not found\n";
 	    print "Unable to detect default repositories.\n";
 	}
     } else {
@@ -643,7 +645,8 @@ sub get_default_repos {
 	#
 	if ($master) {
 	    my $node=`hostname`; chomp $node;
-	    my $cmd = "ssh oscar_server bash -l -c \\\"\\\$OSCAR_HOME/scripts/distro-query --node $node\\\"";
+	    #my $cmd = "ssh oscar_server bash -l -c \\\"\\\$OSCAR_HOME/scripts/distro-query --node $node\\\"";
+	    my $cmd = "ssh oscar_server bash -l -c \\\"/usr/bin/distro-query --node $node\\\"";
 	    print STDERR "Executing: $cmd\n" if ($verbose);
 	    my $attempts = 0;
 	  REMOTE_QUERY:
@@ -652,9 +655,9 @@ sub get_default_repos {
 	    my $conn_closed = 0;
 	    while (<CMD>) {
 		chomp;
-		if (/Distro package url : (\S+)$/) {
+		if (/Distro package url: (\S+)$/) {
 		    push @repos, split(",",$1);
-		} elsif (/OSCAR package pool : (\S+)$/) {
+		} elsif (/OSCAR package pool: (\S+)$/) {
 		    push @repos, split(",",$1);
 		} elsif (/Connection closed by remote host/) {
 		    $conn_closed = 1;
