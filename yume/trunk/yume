@@ -625,9 +625,9 @@ sub get_default_repos {
 	    open CMD, "$dquery |" or die "Could not run $dquery: $!";
 	    while (<CMD>) {
 		chomp;
-		if (/Distro package url : (\S+)$/) {
+		if (/Distro package url: (\S+)$/) {
 		    push @repos, split(",",$1);
-		} elsif (/OSCAR package pool : (\S+)$/) {
+		} elsif (/OSCAR package pool: (\S+)$/) {
 		    push @repos, split(",",$1);
 		}
 	    }
