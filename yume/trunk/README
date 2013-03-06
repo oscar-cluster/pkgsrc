@@ -1,7 +1,16 @@
 = Creation of a new release =
 
 To create a new release of yume, please do the following:
-- Check and update if necessary the ChangeLog.
-- Update the version in the Makefile.
-- Update the version in the spec file.
-- Update the version in the Debian changelog.
+- Check and update if necessary the ChangeLog if needed (at least remove the "not yet released")
+- Check and Update the version in the Makefile if needed
+- Check and Update the version in the spec file if needed
+- Set the spec file release tag to a number >= 1
+- Check and Update Update the version in the Debian changelog.
+
+After the release:
+- Update the version in the ChangeLog (with the "not yet released comment")
+- Update the version in the Makefile
+- Update the version in the spec file
+- Set the spec file release to 0.1
+- Update the version in the debian/changelog
+
