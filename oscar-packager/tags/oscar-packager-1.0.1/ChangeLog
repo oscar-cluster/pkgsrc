@@ -1,0 +1,11 @@
+1.0.1:
+- Add configuration files for oscar-6.1.1 and oscar-6.1.2.
+- Updated configuration files for oscar-unstable
+- Various bug fixes.
+- Fix spec file Summary.
+
+1.0:
+- Add configuration file for oscar-6.0, oscar-6.0.1, and oscar-6.0.2.
+- Initial release.
+- Allows the creation of binary packages for OSCAR core (stable and unstable)
+on both RPM and Debian based systems.
