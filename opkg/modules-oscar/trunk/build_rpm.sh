@@ -72,13 +72,13 @@ cp $SRC_FILE.tar.gz $SRC_BUILD/
 make distclean
 rm -f $SRC_FILE.tar.gz
 
+cp $CWD/rpm/modules-3.2.9_bashrc.patch $SRC_BUILD/
 
 if [[  $manual == 1 ]]; then
     cd $SRC_BUILD/
     wget $DL_URL/$SRC_FILE_1/modules-3.2.9c.tar.bz2
     wget $DL_URL/$SRC_FILE_1/Modules-Paper.doc
     wget $DL_URL/$SRC_FILE_1/Modules-Paper.pdf
-    wget $DL_URL/$SRC_FILE_1/modules-3.2.9_bashrc.patch
 
     SPEC_DIR="$CWD/rpm"
     rpmbuild -bb --define "_topdir $BUILD_ROOT" "$SPEC_DIR/$SRC_FILE_1.spec"
