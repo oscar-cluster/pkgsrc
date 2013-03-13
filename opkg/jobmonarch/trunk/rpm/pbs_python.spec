@@ -4,7 +4,7 @@
 
 Name: pbs_python
 Version: 4.3.3
-Release: 1%{?dist}
+Release: 2%{?dist}
 License: See LICENSE
 Group: Development/Libraries
 Summary: This package contains the PBS python module.
@@ -40,9 +40,12 @@ rm -rf $RPM_BUILD_ROOT
 %defattr(-,root,root,0755)
 %doc README TODO examples
 %{python_sitearch}/pbs.pth
+%dir %{python_sitearch}/pbs
 %{python_sitearch}/pbs/*
 
 %changelog
+* Wed Mar 13 2013 Olivier Lahaye <olivier.lahaye@cea.fr>
+- Fixed %{python_sitearch}/pbs package ownership
 * Fri May 11 2011 Olivier Lahaye <olivier.lahaye@cea.fr>
 - Updates for new version 4.3.3
 * Tue Mar 24 2010 Ramon Bastiaans <ramon.bastiaans@sara.nl>
