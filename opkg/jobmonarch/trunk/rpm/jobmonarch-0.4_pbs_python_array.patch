@@ -1,0 +1,45 @@
+--- jobmonarch-0.4/jobmond/jobmond.py.orig	2013-03-04 16:24:24.960254398 +0100
++++ jobmonarch-0.4/jobmond/jobmond.py	2013-03-04 16:26:07.968132921 +0100
+@@ -1299,8 +1299,8 @@
+ 			display_queue		= 1
+ 			job_id			= name.split( '.' )[0]
+ 
+-			name			= self.getAttr( attrs, 'Job_Name' )
+-			queue			= self.getAttr( attrs, 'queue' )
++			name			= self.getAttr( attrs, 'Job_Name' )[0]
++			queue			= self.getAttr( attrs, 'queue' )[0]
+ 
+ 			if QUEUE:
+ 				for q in QUEUE:
+@@ -1314,7 +1314,7 @@
+ 				continue
+ 
+ 
+-			owner			= self.getAttr( attrs, 'Job_Owner' ).split( '@' )[0]
++			owner			= self.getAttr( attrs, 'Job_Owner' )[0].split( '@' )[0]
+ 			requested_time		= self.getAttr( attrs, 'Resource_List.walltime' )
+ 			requested_memory	= self.getAttr( attrs, 'Resource_List.mem' )
+ 
+@@ -1332,18 +1332,18 @@
+ 
+ 						ppn	= mynoderequest_field.split( 'ppn=' )[1]
+ 
+-			status			= self.getAttr( attrs, 'job_state' )
++			status			= self.getAttr( attrs, 'job_state' )[0]
+ 
+ 			if status in [ 'Q', 'R' ]:
+ 
+ 				jobs_processed.append( job_id )
+ 
+-			queued_timestamp	= self.getAttr( attrs, 'ctime' )
++			queued_timestamp	= self.getAttr( attrs, 'ctime' )[0]
+ 
+ 			if status == 'R':
+ 
+-				start_timestamp		= self.getAttr( attrs, 'mtime' )
+-				nodes			= self.getAttr( attrs, 'exec_host' ).split( '+' )
++				start_timestamp		= self.getAttr( attrs, 'mtime' )[0]
++				nodes			= self.getAttr( attrs, 'exec_host' )[0].split( '+' )
+ 
+ 				nodeslist		= do_nodelist( nodes )
+ 

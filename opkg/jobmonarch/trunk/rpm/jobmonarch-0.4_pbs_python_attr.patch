@@ -1,0 +1,43 @@
+--- jobmonarch-0.4/jobmond/jobmond.py.orig	2013-03-04 16:39:16.152115549 +0100
++++ jobmonarch-0.4/jobmond/jobmond.py	2013-03-04 16:47:25.260193359 +0100
+@@ -607,11 +607,11 @@
+ 		
+ 			for name, node in self.pq.getnodes().items():
+ 
+-				if ( node[ 'state' ].find( "down" ) != -1 ):
++				if ( node[ 'state' ][0].find( "down" ) != -1 ):
+ 
+ 					downed_nodes.append( name )
+ 
+-				if ( node[ 'state' ].find( "offline" ) != -1 ):
++				if ( node[ 'state' ][0].find( "offline" ) != -1 ):
+ 
+ 					offline_nodes.append( name )
+ 
+@@ -1315,8 +1315,10 @@
+ 
+ 
+ 			owner			= self.getAttr( attrs, 'Job_Owner' )[0].split( '@' )[0]
+-			requested_time		= self.getAttr( attrs, 'Resource_List.walltime' )
+-			requested_memory	= self.getAttr( attrs, 'Resource_List.mem' )
++			# requested_time		= self.getAttr( attrs, 'Resource_List.walltime' )
++			requested_time		= bternop(self.getAttr(resource_list,'walltime')!='',self.getAttr(resource_list,'walltime'),'')
++			# requested_memory	= self.getAttr( attrs, 'Resource_List.mem' )
++			requested_memory	= bternop(self.getAttr(resource_list,'mem')!='',self.getAttr(resource_list,'mem'),'')
+ 
+ 			mynoderequest		= self.getAttr( attrs, 'Resource_List.nodes' )
+ 
+@@ -1584,6 +1586,13 @@
+ 		pidfile.write( str( pid ) )
+ 		pidfile.close()
+ 
++def bternop(cond,tv,fv):
++	"""z: returns the first element of tv because it throws an error on a zero return type"""
++	if cond:
++		return tv[0]
++	else:
++		return fv
++
+ def main():
+ 
+ 	"""Application start"""
