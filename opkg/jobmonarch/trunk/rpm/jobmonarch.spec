@@ -6,7 +6,7 @@ Summary: Tools and addons to Ganglia to monitor and archive batch job info
 Name: jobmonarch
 Version: 0.4
 URL: https://subtrac.sara.nl/oss/jobmonarch
-Release: 0.3
+Release: 0.4%{?dist}
 License: GPL
 Packager: Erich Focht (NEC HPCE)
 Group: Applications/Base
@@ -18,6 +18,7 @@ BuildRoot: %{_tmppath}/%{name}
 
 BuildRequires: ganglia-web >= 3.1
 Requires: python >= 2.3 ganglia-gmetad >= 3.0 ganglia-web >= 3.0
+Requires: pbs_python
 Requires: postgresql >= 8.1.22
 Requires: postgresql-server >= 8.1.22
 Requires: pyPgSQL >= 2.5.1
@@ -158,6 +159,8 @@ fi
 %dir %{_sharedstatedir}/jobarchived
 
 %changelog
+* Wed Mar 13 2013 Olivier Lahaye <olivier.lahaye1@free.fr> 0.4-0.4
+- Added Requires: pbs_python
 * Mon Mar  4 2013 Olivier Lahaye <olivier.lahaye1@free.fr> 0.4-0.3
 - Added Requires: pyPgSQL python-rrdtool
 - Fixed postinstall (Postgress initdb if required)
