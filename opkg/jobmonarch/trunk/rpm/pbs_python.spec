@@ -27,6 +27,10 @@ This package contains the pbs python module.
 %setup -q -n pbs_python-%{version}
 
 %build
+if test -d /opt/pbs/bin
+then
+	export PATH=/opt/pbs/bin:$PATH
+fi
 %configure
 %{__python} setup.py build
 
