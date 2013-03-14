@@ -5,7 +5,7 @@
 Summary: Tools and addons to Ganglia to monitor and archive batch job info
 Name: jobmonarch
 Version: 0.4
-URL: https://subtrac.sara.nl/oss/jobmonarch
+URL: https://oss.trac.surfsara.nl/jobmonarch
 Release: 0.4%{?dist}
 License: GPL
 Packager: Erich Focht (NEC HPCE)
