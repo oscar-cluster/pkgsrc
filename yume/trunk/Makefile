@@ -40,7 +40,7 @@ dist: clean
 
 clean:
 	rm -f *~
-	rm -rf debian/files debian/yume
+	rm -rf debian/files debian/yume*
 	rm -f build-stamp configure-stamp
 	rm -rf /tmp/$(NAME)-$(VERSION)
 	rm -f $(NAME)-$(VERSION).tar.gz
