@@ -54,3 +54,7 @@ clean:
 	rm -f *~
 	rm -f $(PKG)-*.tar.gz
 	rm -rf deb
+	rm -rf debian/rapt*
+	rm -f  debian/files
+	rm -f  build-stamp configure-stamp
+
