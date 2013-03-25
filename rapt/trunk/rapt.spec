@@ -3,7 +3,7 @@ Summary: Wrapper to apt-get for clusters
 Name: rapt
 Version: 2.8.10
 Vendor: NEC HPCE
-Release: 1
+Release: 2
 License: GPL
 Packager: Erich Focht <efocht@hpce.nec.com>
 Source: %{name}-%{version}.tar.gz
@@ -11,8 +11,9 @@ Group: System Environment/Tools
 BuildArch: noarch
 BuildRoot: %{_tmppath}/%{name}
 #Requires: apt
+Requires: dpkg-devel
 Requires: debootstrap
-Requires: deb
+#Requires: deb
 AutoReqProv: no
 
 %description 
@@ -45,6 +46,8 @@ rm -rf $RPM_BUILD_ROOT
 %{_mandir}/man8/rapt*
 
 %changelog
+* Thu Dec 20 2012 Olivier Lahaye <olivier.lahaye@cea.fr> - 2.8.10-2
+- Updated Requirements so it works on fedora-17.
 * Thu Dec 20 2012 Geoffroy Vallee - 2.8.10-1
 - New upstream version (see ChangeLog file for more details).
 * Sat Aug 21 2010 Geoffroy Vallee - 2.8.8-1
