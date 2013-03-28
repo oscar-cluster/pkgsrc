@@ -6,7 +6,7 @@ Summary: Python bindings for DRMAA libraries
 Name: drmaa-python
 Version: 0.5
 URL: http://www.drmaa.org
-Release: 1 
+Release: 2 
 License: GPL
 Group: Applications/Base
 Source: drmaa-%{version}.tar.gz
@@ -46,13 +46,16 @@ submission and control of jobs to one or more Distributed Resource Management (D
 %__rm -rf $RPM_BUILD_ROOT
 
 %files
-%dir %{python_sitelib}/drmaa-0.5-py2.6.egg-info
-%{python_sitelib}/drmaa-0.5-py2.6.egg-info/*
+%dir %{python_sitelib}/drmaa-0.5-py%{python_version}.egg-info
+%{python_sitelib}/drmaa-0.5-py%{python_version}.egg-info/*
 %dir %{python_sitelib}/drmaa
 %{python_sitelib}/drmaa/*
 
 %changelog
-* Thu May 10 2012 Olivier Lahaye <olivier.lahaye@cea.fr> 0.5
+* Thu Mar 28 2013 Olivier Lahaye <olivier.lahaye@cea.fr> 0.5-2
+- Fix egg-info path (avoid hardcoding python version)
+
+* Thu May 10 2012 Olivier Lahaye <olivier.lahaye@cea.fr> 0.5-1
 - New upstream release.
 - New depend on libdrmaa.so.0 (should work with SGE or torque-drmaa)
 - lowercase name for compliance with python rpm naming scheme
