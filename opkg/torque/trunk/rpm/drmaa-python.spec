@@ -1,6 +1,7 @@
 # Don't need debuginfo RPM
 %define debug_package %{nil}
 %define __check_files %{nil}
+%define host_arch %(arch)
 
 Summary: Python bindings for DRMAA libraries
 Name: drmaa-python
@@ -12,7 +13,12 @@ Group: Applications/Base
 Source: drmaa-%{version}.tar.gz
 BuildArch:      noarch
 # Libdrmaa.so.0 is provided either by oscar-SGE or by torque-drmaa from EPEL
+%if "%{host_arch}" == "x86_64"
 Requires: libdrmaa.so.0()(64bit)
+%else
+Requires: libdrmaa.so.0()(32bit)
+%endif
+
 
 %description
 Distributed Resource Management Application API (DRMAA) is a uniform specification for the 
@@ -53,6 +59,7 @@ submission and control of jobs to one or more Distributed Resource Management (D
 
 %changelog
 * Thu Mar 28 2013 Olivier Lahaye <olivier.lahaye@cea.fr> 0.5-2
+- Fix libdrmaa.so arch dependancy using %%__isa_bits
 - Fix egg-info path (avoid hardcoding python version)
 
 * Thu May 10 2012 Olivier Lahaye <olivier.lahaye@cea.fr> 0.5-1
