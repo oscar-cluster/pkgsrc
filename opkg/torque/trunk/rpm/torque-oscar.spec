@@ -1,6 +1,6 @@
 # comment out snap if building a real release
 %define name torque-oscar
-%define version 4.1.4
+%define version 4.1.5.1
 
 %define release 1
 
@@ -252,7 +252,7 @@ Patch0:         torque-4.1.1-initdserver.patch
 Patch1:         torque-4.1.1-initdsched.patch
 Patch2:         torque-4.1.1-initdmom.patch
 Patch3:         torque-4.1.1-initdtrqauthd.patch
-Patch4:         torque_413_chk_file_sec_linkbug.patch
+#Patch4:         torque_413_chk_file_sec_linkbug.patch
 
 %description
 %shared_description
@@ -267,7 +267,7 @@ This package holds just a few shared files and directories.
 %patch1 -p1 -b .old
 %patch2 -p1 -b .old
 %patch3 -p1 -b .old
-%patch4 -p1 -b .old
+#patch4 -p1 -b .old
 install -pm 644 %{SOURCE1} \
                 %{SOURCE2} \
                 %{SOURCE3} \
@@ -1077,6 +1077,9 @@ is used to set the corresponding PATH and MANPATH.
 %endif
 
 %changelog
+* Tue Apr 02 2013 Olivier Lahaye <olivier.lahaye1@free.fr> 4.1.5.1-1
+- Final release of upstream version 4.1.5.1.
+
 * Wed Jan 30 2013 Olivier Lahaye <olivier.lahaye1@free.fr> 4.1.4-1
 - Final release of upstream version 4.1.4.
 
