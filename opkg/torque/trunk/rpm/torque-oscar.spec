@@ -312,6 +312,9 @@ chmod 644 torque.setup
 [ "$RPM_BUILD_ROOT" != "/" ] && %{__rm} -rf "$RPM_BUILD_ROOT"
 %ifnarch noarch
 %{__make} DESTDIR=$RPM_BUILD_ROOT install
+# On some distros, a buggy man is generated and installed. Remove this buggy
+# man: _home_<user>_rpmbuild_BUILD_torque-4.1.5.1_src_drmaa_src_.3.gz
+find $RPM_BUILD_ROOT -name \*_rpmbuild_BUILD_torque-\* -exec rm {} \;
 %endif
 
 %ifnarch noarch
