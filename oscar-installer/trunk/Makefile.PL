@@ -1,9 +1,42 @@
 use ExtUtils::MakeMaker;
 
-my $version = `cat VERSION`;
+chomp (my $version = `cat VERSION`);
 
 sub MY::postamble {
     my $string = <<EOF;
+
+PKGDEST=
+
+deb :: manifest rpm_prep dist
+\tmkdir -p /tmp/scdeb
+\tmv \$(NAME)-$version.tar.gz /tmp/scdeb \\
+\t\t&& cd /tmp/scdeb && tar -xvzf \$(NAME)-$version.tar.gz
+\t\@if [ -n "\$\$UNSIGNED_OSCAR_PKG" ]; then \\
+\t\techo "dpkg-buildpackage -rfakeroot -us -uc"; \\
+\t\tcd /tmp/scdeb/\$(NAME)-$version && dpkg-buildpackage -rfakeroot -us -uc; \\
+\telse \\
+\t\techo "dpkg-buildpackage -rfakeroot";\\
+\t\tcd /tmp/scdeb/\$(NAME)-$version && dpkg-buildpackage -rfakeroot; \\
+\tfi
+\t\@if [ -n "\$(PKGDEST)" ]; then \\
+\t\tmv /tmp/scdeb/\$(NAME)*.deb \$(PKGDEST); \\
+\t\techo "Debian packages are available in \$(PKGDEST)"; \\
+\telse \\
+\t\techo "Debian packages are available in /tmp/scdeb"; \\
+\tfi
+\trm -rf /tmp/scdeb/\$(NAME)-$version
+
+rpm_prep ::
+\tsed -e 's/__VERSION__/$version/g' oscar-installer.spec.in > oscar-installer.spec
+
+rpm :: srpm
+\trpmbuild -tb --target noarch \$(NAME)-\$(VERSION).tar.gz
+\t\@if [ -n "\$(PKGDEST)" ]; then \\
+\t\tmv `rpm --eval '%{_topdir}'`/RPMS/noarch/\$(NAME)-*.noarch.rpm \$(PKGDEST); \\
+\tfi
+
+srpm :: rpm_prep manifest dist
+\trpmbuild -ts --target noarch --nodeps \$(NAME)-\$(VERSION).tar.gz
 
 ext_install :: conf
 
@@ -15,11 +48,11 @@ ext_install :: conf
 
 conf: \$(DESTDIR)\$(PREFIX)/../etc/oscar-installer/oscar-installer.conf
 
-manifest :
-\t if [[ -f MANIFEST ]]; then \\
-\t\t mv MANIFEST MANIFEST.bak; \\
-\t fi
-\t cp MANIFEST.stub MANIFEST
+#manifest :
+#\t if [[ -f MANIFEST ]]; then \\
+#\t\t mv MANIFEST MANIFEST.bak; \\
+#\t fi
+#\t cp MANIFEST.stub MANIFEST
 
 install :: all pure_install ext_install
 

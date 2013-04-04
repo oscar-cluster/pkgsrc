@@ -13,7 +13,7 @@
 
 Summary:		A tool to ease the OSCAR installation.
 Name:      		oscar-installer
-Version:   		6.1.2
+Version:   		__VERSION__
 Release:   		1
 Vendor:			Open Cluster Group <http://OSCAR.OpenClusterGroup.org/>
 Distribution:		OSCAR
