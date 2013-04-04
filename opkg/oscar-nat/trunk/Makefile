@@ -1,11 +1,10 @@
 DESTDIR=
 PKGDEST=
-SOURCEDIR=/usr/src/redhat/SOURCES
-PKG=orm
+VERSION=$(shell cat VERSION)
+NAME=oscar-nat
+PKG=$(NAME)-$(VERSION)
 
-include ./Config.mk
-
-SUBDIRS := lib
+SUBDIRS := bin lib
 
 all:
 	for dir in ${SUBDIRS} ; do ( cd $$dir ; ${MAKE} all ) ; done
@@ -20,7 +19,6 @@ clean:
 	@rm -f build-stamp configure-stamp
 	@rm -rf debian/$(PKG) debian/files
 	@rm -f $(PKG).tar.gz
-	@rm -f $(PKG).spec
 	for dir in ${SUBDIRS} ; do ( cd $$dir ; ${MAKE} clean ) ; done
 
 dist: clean
@@ -28,28 +26,26 @@ dist: clean
 	@mkdir -p /tmp/$(PKG)
 	@cp -rf * /tmp/$(PKG)
 	@cd /tmp/$(PKG); rm -rf `find . -name ".svn"`
-	@cd /tmp; tar czf $(PKG).tar.gz orm
+	@cd /tmp; tar czf $(PKG).tar.gz $(PKG)
 	@cp -f /tmp/$(PKG).tar.gz .
 	@rm -rf /tmp/$(PKG)/
 	@rm -f /tmp/$(PKG).tar.gz
 
 rpm: dist
-	sed -e "s/PERLLIBPATH/$(SEDLIBDIR)/" < $(PKG).spec.in \
-		> $(PKG).spec
-	cp $(PKG).tar.gz $(SOURCEDIR)
-	rpmbuild -bb ./$(PKG).spec
+	cp $(PKG).tar.gz `rpm --eval '%_sourcedir'`
+	rpmbuild -bb ./$(NAME).spec
 	@if [ -n "$(PKGDEST)" ]; then \
-		mv `rpm --eval '%{_topdir}'`/RPMS/noarch/$(PKG)-*.noarch.rpm $(PKGDEST); \
-	fi
+        mv `rpm --eval '%{_topdir}'`/RPMS/noarch/$(PKG)-*.noarch.rpm $(PKGDEST); \
+    fi
 
 deb:
 	@if [ -n "$$UNSIGNED_OSCAR_PKG" ]; then \
-		echo "dpkg-buildpackage -rfakeroot -us -uc"; \
-		dpkg-buildpackage -rfakeroot -us -uc; \
-	else \
-		echo "dpkg-buildpackage -rfakeroot"; \
-		dpkg-buildpackage -rfakeroot; \
-	fi
+        echo "dpkg-buildpackage -rfakeroot -us -uc"; \
+        dpkg-buildpackage -rfakeroot -us -uc; \
+    else \
+        echo "dpkg-buildpackage -rfakeroot"; \
+        dpkg-buildpackage -rfakeroot; \
+    fi
 	@if [ -n "$(PKGDEST)" ]; then \
-		mv ../$(PKG)*.deb $(PKGDEST); \
-	fi
+        mv ../$(PKG)*.deb $(PKGDEST); \
+    fi
