@@ -6,6 +6,7 @@ PKG=$(NAME)-$(VERSION)
 
 SUBDIRS := bin lib
 
+
 all:
 	for dir in ${SUBDIRS} ; do ( cd $$dir ; ${MAKE} all ) ; done
 
@@ -32,11 +33,20 @@ dist: clean
 	@rm -f /tmp/$(PKG).tar.gz
 
 rpm: dist
-	cp $(PKG).tar.gz `rpm --eval '%_sourcedir'`
+	cp $(PKG).tar.gz $(shell rpm --eval '%_sourcedir')
 	rpmbuild -bb ./$(NAME).spec
 	@if [ -n "$(PKGDEST)" ]; then \
-        mv `rpm --eval '%{_topdir}'`/RPMS/noarch/$(PKG)-*.noarch.rpm $(PKGDEST); \
-    fi
+		RPMDIR=$(shell rpm --eval '%{_rpmdir}') ;\
+		RPMSPEC_CMD="/usr/bin/rpm --specfile -q"; \
+		[ -f /usr/bin/rpmspec ] && RPMSPEC_CMD="/usr/bin/rpmspec -q";\
+		FILES=$$($${RPMSPEC_CMD} --target noarch $(NAME).spec --qf '%{name}-%{version}-%{release}.%{arch}.rpm ');\
+		echo "Moving file(s) ($${FILES}) to $(PKGDEST)"; \
+		for FILE in $${FILES}; \
+		do \
+			echo "   $${FILE} --> $(PKGDEST)"; \
+			mv $${RPMDIR}/noarch/$${FILE} $(PKGDEST); \
+		done; \
+	fi
 
 deb:
 	@if [ -n "$$UNSIGNED_OSCAR_PKG" ]; then \

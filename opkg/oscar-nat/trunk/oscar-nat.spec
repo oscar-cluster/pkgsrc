@@ -7,7 +7,7 @@ Distribution:   OSCAR
 Packager:       Olivier Lahaye <olivier.lahaye@cea.fr>
 License:        GPL
 Group:          Development/Libraries
-Source:         %{name}.tar.gz
+Source:         %{name}-%{version}.tar.gz
 BuildRoot:      %{_localstatedir}/tmp/%{name}-root
 BuildArch:      noarch
 #AutoReqProv: 	no
@@ -27,6 +27,7 @@ Set of scripts and Perl modules for the management of OSCAR nat tables.
 %defattr(-,root,root)
 %{_bindir}/*
 %{perl_vendorlib}/*
+%{_mandir}/man1/%{name}.1*
 
 %changelog
 * Thu Apr 04 2013 Olivier Lahaye <olivier.lahaye@cea.fr> 1.0-1
