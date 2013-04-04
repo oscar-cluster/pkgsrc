@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <oscar>
-  <name>cn-update</name>
+  <name>system-update</name>
   <class>included</class>
   <summary>Utilities to maintain the compute nodes updated</summary>
   <description>.

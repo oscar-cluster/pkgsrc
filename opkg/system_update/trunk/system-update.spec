@@ -1,10 +1,3 @@
-%define binpref /usr/bin
-%define manpref /usr/local/man/man1
-%define libpref PERLLIBPATH
-%define bintarget $RPM_BUILD_ROOT%{binpref}
-%define libtarget $RPM_BUILD_ROOT%{libpref}
-%define mantarget $RPM_BUILD_ROOT%{manpref}
-
 Summary:        OSCAR System Updater
 Name:           system-update
 Version:        1.0.0
@@ -14,7 +7,7 @@ Distribution:   OSCAR
 Packager:       Geoffroy Vallee <valleegr@ornl.gov>
 License:        GPL
 Group:          Development/Libraries
-Source:         %{name}.tar.gz
+Source:         %{name}-%{version}.tar.gz
 BuildRoot:      %{_localstatedir}/tmp/%{name}-root
 BuildArch:      noarch
 AutoReqProv:    no
@@ -26,20 +19,25 @@ Requires:       diff
 Set of scripts and Perl modules for the update of OSCAR compute nodes.
 
 %prep
-%setup -n %{name}
+%setup
 
 %build
-make install DESTDIR=$RPM_BUILD_ROOT
 
 %install
+%{__make} install DESTDIR=$RPM_BUILD_ROOT
 
 %files
 %defattr(-,root,root)
-%{binpref}/*
-%{libpref}/*
-%{manpref}/*
-/var/lib/oscar/*
+%doc VERSION
+%{_bindir}/oscar-%{name}
+%{perl_vendorlib}/OSCAR/*
+%{_mandir}/man1/oscar-%{name}.1*
+%{_defaultdocdir}/%{name}/templates
 
 %changelog
+* Thu Apr 04 2012 Olivier Lahaye <olivier.lahaye@cea.fr> 1.0.0-2
+- Updated spec file using macros.
+- Now tarball name includes version.
+
 * Fri Jun 18 2010 Geoffroy Vallee <valleegr@ornl.gov> 1.0.0-1
 - Initial version.
