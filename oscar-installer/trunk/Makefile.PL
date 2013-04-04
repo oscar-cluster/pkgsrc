@@ -29,10 +29,10 @@ deb :: manifest rpm_prep dist
 rpm_prep ::
 \tsed -e 's/__VERSION__/$version/g' oscar-installer.spec.in > oscar-installer.spec
 
-rpm :: srpm
+rpm :: rpm_prep manifest dist
 \trpmbuild -tb --target noarch \$(NAME)-\$(VERSION).tar.gz
 \t\@if [ -n "\$(PKGDEST)" ]; then \\
-\t\tmv `rpm --eval '%{_topdir}'`/RPMS/noarch/\$(NAME)-*.noarch.rpm \$(PKGDEST); \\
+\t\tmv \$(shell rpm --eval '%{_rpmdir}')/noarch/\$(NAME)-*.noarch.rpm \$(PKGDEST); \\
 \tfi
 
 srpm :: rpm_prep manifest dist
@@ -48,11 +48,11 @@ ext_install :: conf
 
 conf: \$(DESTDIR)\$(PREFIX)/../etc/oscar-installer/oscar-installer.conf
 
-#manifest :
-#\t if [[ -f MANIFEST ]]; then \\
-#\t\t mv MANIFEST MANIFEST.bak; \\
-#\t fi
-#\t cp MANIFEST.stub MANIFEST
+manifest :
+\t if [[ -f MANIFEST ]]; then \\
+\t\t mv MANIFEST MANIFEST.bak; \\
+\t fi
+\t cp MANIFEST.stub MANIFEST
 
 install :: all pure_install ext_install
 
@@ -75,5 +75,5 @@ WriteMakefile(
 	'PREREQ_PM' => {
 		AppConfig => '1.52',
 	},
-	'realclean' => {FILES => "*.old *.bak *~ *.tar.gz Makefile MANIFEST"},
+	'realclean' => {FILES => "*.old *.bak *~ *.tar.gz oscar-installer.spec Makefile MANIFEST"},
 );
