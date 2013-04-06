@@ -1,5 +1,6 @@
 DESTDIR=
-PKG=network-configurator
+NAME=network-configurator
+PKG=$(NAME)
 
 include ./Config.mk
 
