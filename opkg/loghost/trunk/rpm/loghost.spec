@@ -5,7 +5,8 @@ Release: 1
 Packager: Jeremy Enos <jenos@ncsa.uiuc.edu>
 License: GPL
 Group: Applications/System
-Requires: sh-utils
+#Requires: sh-utils
+Requires: init-scripts
 BuildArch: noarch
 Summary: Configures server to accept remote syslog entries
 Group: Applications/System
@@ -30,8 +31,8 @@ for option in $SYSLOGD_OPTIONS; do
 done
 
 cat %{syslogd_conf} |sed "s/SYSLOGD_OPTIONS=.*$/SYSLOGD_OPTIONS=\"$new_options\"/g" > %{tmp_file}
-/bin/mv -f %{tmp_file} %{syslogd_conf}
-/sbin/service syslog restart 2> /dev/null > /dev/null
+%__mv -f %{tmp_file} %{syslogd_conf}
+service syslog restart 2> /dev/null > /dev/null
 
 %post
 
@@ -53,8 +54,8 @@ if [ $set_option = 1 ]; then
 fi
 
 cat %{syslogd_conf} |sed "s/SYSLOGD_OPTIONS=.*$/SYSLOGD_OPTIONS=\"$new_options\"/g" > %{tmp_file}
-/bin/mv -f %{tmp_file} %{syslogd_conf}
-/sbin/service syslog restart 2> /dev/null > /dev/null
+%__mv -f %{tmp_file} %{syslogd_conf}
+service syslog restart 2> /dev/null > /dev/null
 
 %files
 
