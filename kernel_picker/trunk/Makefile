@@ -1,6 +1,8 @@
 DESTDIR=
 PKGDEST=
-PKG=kernel_picker
+VERSION=1.4.1
+NAME=kernel_picker
+PKG=$(NAME)-$(VERSION)
 
 include ./Config.mk
 
@@ -21,11 +23,13 @@ clean:
 	@rm -rf debian/$(PKG)
 	@rm -f debian/files
 	@rm -f $(PKG).tar.gz
+	@rm -f $(PKG).spec
 	for dir in ${SUBDIRS} ; do ( cd $$dir ; ${MAKE} clean ) ; done
 
 dist: clean
 	@rm -rf /tmp/$(PKG)
 	@mkdir -p /tmp/$(PKG)
+	@sed -e 's/__VERSION__/$(VERSION)/g' $(NAME).spec.in > $(NAME).spec
 	@cp -rf * /tmp/$(PKG)
 	@cd /tmp/$(PKG); rm -rf `find . -name ".svn"`
 	@cd /tmp; tar czf $(PKG).tar.gz $(PKG)
@@ -35,10 +39,20 @@ dist: clean
 
 rpm: dist
 	cp $(PKG).tar.gz `rpm --eval '%_sourcedir'`
-	rpmbuild -bb ./$(PKG).spec
+	rpmbuild -bb ./$(NAME).spec
 	@if [ -n "$(PKGDEST)" ]; then \
-        mv `rpm --eval '%{_topdir}'`/RPMS/noarch/$(PKG)-*.noarch.rpm $(PKGDEST); \
-    fi
+		RPMDIR=$(shell rpm --eval '%{_rpmdir}') ;\
+		(which rpmspec 2>/dev/null) && RPMSPEC_CMD="rpmspec --target noarch" || RPMSPEC_CMD="rpm --specfile --define '%_target_cpu noarch'"; \
+		CMD="$$RPMSPEC_CMD -q $(NAME).spec --qf '%{name}-%{version}-%{release}.%{arch}.rpm '"; \
+		echo "Determining which files to retreive using: $$CMD";\
+		FILES=`eval $$CMD`;\
+		echo "Moving file(s) ($$FILES) to $(PKGDEST)"; \
+		for FILE in $$FILES; \
+		do \
+			echo "   $${FILE} --> $(PKGDEST)"; \
+			mv $${RPMDIR}/noarch/$${FILE} $(PKGDEST); \
+		done; \
+	fi
 
 deb:
 	@if [ -n "$$UNSIGNED_OSCAR_PKG" ]; then \
