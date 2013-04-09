@@ -18,7 +18,7 @@ Source: ftp://ftp.sara.nl/pub/outgoing/%{name}-%{version}.tar.gz
 ### Build Dependencies ###
 
 BuildRequires: libtorque-devel >= %{libtorque_version}
-BuildRequires: python2-devel >= %{python_version}
+BuildRequires: python-devel >= %{python_version}
 
 %description
 This package contains the pbs python module.
