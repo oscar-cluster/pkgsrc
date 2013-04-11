@@ -1,4 +1,6 @@
 yume-2.8.12 (not yet released):
+- Added the possibility to install, update, remove a "feature".
+  A feature can be: a package name, a file (with absolute path), a "provide".
 - Added a requirement for oscar-utils (/usr/bin/distro-query needed even on nodes)
 - Updated the spec file and Makefile so it ptty_try.1 is generated and
 packaged
