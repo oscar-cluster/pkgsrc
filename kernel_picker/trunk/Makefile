@@ -22,8 +22,8 @@ clean:
 	@rm -f build-stamp configure-stamp
 	@rm -rf debian/$(PKG)
 	@rm -f debian/files
-	@rm -f $(PKG).tar.gz
-	@rm -f $(PKG).spec
+	@rm -f $(NAME).tar.gz
+	@rm -f $(NAME).spec
 	for dir in ${SUBDIRS} ; do ( cd $$dir ; ${MAKE} clean ) ; done
 
 dist: clean
