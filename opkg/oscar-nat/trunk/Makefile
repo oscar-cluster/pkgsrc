@@ -51,12 +51,17 @@ rpm: dist
 
 deb:
 	@if [ -n "$$UNSIGNED_OSCAR_PKG" ]; then \
-        echo "dpkg-buildpackage -rfakeroot -us -uc"; \
-        dpkg-buildpackage -rfakeroot -us -uc; \
-    else \
-        echo "dpkg-buildpackage -rfakeroot"; \
-        dpkg-buildpackage -rfakeroot; \
-    fi
+		echo "dpkg-buildpackage -rfakeroot -us -uc"; \
+		dpkg-buildpackage -rfakeroot -us -uc; \
+	else \
+		echo "dpkg-buildpackage -rfakeroot"; \
+		dpkg-buildpackage -rfakeroot; \
+	fi
 	@if [ -n "$(PKGDEST)" ]; then \
-        mv ../$(PKG)*.deb $(PKGDEST); \
-    fi
+		cd ..; \
+		for FILE in $(NAME)_$(VERSION)*.deb; \
+		do \
+			echo "   $${FILE} --> $(PKGDEST)"; \
+			mv $${FILE} $(PKGDEST); \
+		done; \
+	fi
