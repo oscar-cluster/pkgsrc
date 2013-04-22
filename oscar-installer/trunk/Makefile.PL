@@ -49,7 +49,7 @@ ext_install :: conf
 conf: \$(DESTDIR)\$(PREFIX)/../etc/oscar-installer/oscar-installer.conf
 
 manifest :
-\t if [[ -f MANIFEST ]]; then \\
+\t if [ -f MANIFEST ]; then \\
 \t\t mv MANIFEST MANIFEST.bak; \\
 \t fi
 \t cp MANIFEST.stub MANIFEST

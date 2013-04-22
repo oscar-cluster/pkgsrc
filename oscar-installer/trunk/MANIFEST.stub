@@ -7,3 +7,8 @@ lib/OSCARInstaller/ConfigManager.pm
 lib/OSCARInstaller/Installer.pm
 conf/oscar-installer.conf
 oscar-installer.spec
+debian/control
+debian/rules
+debian/changelog
+debian/copyright
+debian/compat
