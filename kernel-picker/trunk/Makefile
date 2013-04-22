@@ -63,5 +63,5 @@ deb:
         dpkg-buildpackage -rfakeroot; \
     fi
 	@if [ -n "$(PKGDEST)" ]; then \
-        mv ../$(PKG)*.deb $(PKGDEST); \
+        mv ../$(NAME)_$(VERSION)*.deb $(PKGDEST); \
     fi
