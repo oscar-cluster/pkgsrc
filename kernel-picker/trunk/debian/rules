@@ -1,0 +1,20 @@
+#!/usr/bin/make -f
+
+BUILD_ROOT=$$(pwd)/debian/kernel-picker
+VERSION=1.4.1
+RELEASE=3
+%:
+	dh $@
+
+override_dh_auto_install:
+	test -d $(BUILD_ROOT) && rm -rf $(BUILD_ROOT)
+	mkdir $(BUILD_ROOT)
+	install -m 755 -d $(BUILD_ROOT)/opt/kernel_picker/bin $(BUILD_ROOT)/opt/kernel_picker/doc $(BUILD_ROOT)/opt/kernel_picker/html $(BUILD_ROOT)/opt/kernel_picker/man/man1 $(BUILD_ROOT)/opt/modules/oscar-modulefiles/kernel_picker
+	install -m 755 kernel_picker.pl   $(BUILD_ROOT)/opt/kernel_picker/bin/kernel_picker
+	install -m 644 kernel_picker.txt  $(BUILD_ROOT)/opt/kernel_picker/doc/kernel_picker.txt
+	install -m 644 kernel_picker.tex  $(BUILD_ROOT)/opt/kernel_picker/doc/kernel_picker.tex
+	install -m 644 kernel_picker.ps   $(BUILD_ROOT)/opt/kernel_picker/doc/kernel_picker.ps
+	install -m 644 kernel_picker.pdf  $(BUILD_ROOT)/opt/kernel_picker/doc/kernel_picker.pdf
+	install -m 644 kernel_picker.html $(BUILD_ROOT)/opt/kernel_picker/html/kernel_picker.html
+	install -m 644 kernel_picker.1    $(BUILD_ROOT)/opt/kernel_picker/man/man1/kernel_picker.1
+	install -m 644 $(VERSION).$(RELEASE) $(BUILD_ROOT)/opt/modules/oscar-modulefiles/kernel_picker/$(VERSION).$(RELEASE)

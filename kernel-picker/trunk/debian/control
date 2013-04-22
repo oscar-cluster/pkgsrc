@@ -1,0 +1,17 @@
+Source: kernel-picker
+Maintainer: Terry Fleury <tfleury@ncsa.uiuc.edu>
+Section: misc
+Priority: optional
+Standards-Version: 1.4.1
+Build-Depends: debhelper (>=8)
+
+Package: kernel-picker
+Architecture: all
+Depends: ${shlibs:Depends}, ${misc:Depends}, perl (>=5.5), systemconfigurator (>=2.0)
+Description: A Perl script to substitute a kernel into an OSCAR (SIS) image.
+ kernel_picker allows you to substitute a given kernel into your OSCAR (SIS)
+ image prior to building your nodes.  If executed with no command line
+ options, you will be prompted for all required information.  You can also
+ specify command line options for (mostly) non-interactive execution.  Any
+ necessary information that you do not give via an option will cause the
+ program to prompt you for that information.

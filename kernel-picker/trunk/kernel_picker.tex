@@ -1,0 +1,198 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%  Documentation for kernel_picker.  You must process this file with        %%
+%%  latex2man for proper output.  latex2man is available at:                 %%
+%%       http://www.ctan.org/tex-archive/support/latex2man/                  %%
+%%  For RedHat Linux, download the .tar.gz file, extract the files, and      %%
+%%  copy all of the latex2man.* files to the following directory:            %%
+%%       /usr/share/texmf/tex/latex/latex2man                                %%
+%%  Then type "texhash".  You should now be able to run latex on this file   %%
+%%  and do whatever you want.  Some possible outputs:                        %%
+%%  * man page   : latex2man kernel_picker.tex kernel_picker.1               %%
+%%  * HTML       : latex2man -H kernel_picker.tex kernel_picker.html         %%
+%%  * PostScript : latex kernel_picker.tex; dvips kernel_picker.dvi          %%
+%%  * PDF        : pdflatex kernel_picker.tex                                %%
+%%  * Plain text : Use lynx's "p(rint)" command to "Save to a local file" OR %%
+%%                 man ./kernel_picker.1 > kernel_picker.txt                 %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%  $COPYRIGHT$
+
+\documentclass[english]{article}
+\usepackage[latin1]{inputenc}
+\usepackage{babel}
+
+%% do we have the `fancyhdr' package?
+\IfFileExists{fancyhdr.sty}{
+\usepackage[fancyhdr,pdf]{latex2man}
+}{
+%% do we have the `fancyheadings' package?
+\IfFileExists{fancyheadings.sty}{
+\usepackage[fancy,pdf]{latex2man}
+}{
+\usepackage[nofancy,pdf]{latex2man}
+\message{no fancyhdr or fancyheadings package present, discard it}
+}}
+
+%% do we have the `rcsinfo' package?
+\IfFileExists{rcsinfo.sty}{
+\usepackage[nofancy]{rcsinfo}
+\rcsInfo $Id: kernel_picker.tex,v 1.2 2003/09/03 22:15:40 tfleury Exp $
+\setDate{\rcsInfoLongDate}
+}{
+\setDate{2003/09/03}    %%%% must be manually set, if rcsinfo is not present
+\message{package rcsinfo not present, discard it}
+}
+
+\setVersionWord{Version:}  %%% that's the default, no need to set it.
+\setVersion{1.4}
+
+\begin{document}
+
+\begin{Name}{1}{kernel\_picker}{Terry Fleury}{OSCAR Tools}{kernel\_picker\\--\\ An OSCAR Helper Tool}
+
+  \Prog{kernel\_picker} is a Perl script which allows the user to install
+  a given kernel into an OSCAR image different from the one which is
+  installed by default.
+\end{Name}
+
+\section{Synopsis}
+%%%%%%%%%%%%%%%%%%
+
+\Prog{kernel\_picker} 
+    \oOptoArg{--oscarimage }{image\_name}
+    \oOptArg{--bootkernel }{boot\_kernel}
+    \oOptArg{--bootlabel }{boot\_label}
+    \oOptoArg{--bootramdisk }{Y/n}
+    \oOptoArg{--networkboot }{Y/n}
+    \oOptArg{--kernelversion }{version\_number}
+    \oOptArg{--modulespath }{modules\_path}
+    \oOptArg{--systemmap }{system\_map}
+    \oOpt{--version}
+    \oOpt{--help}
+
+\section{Description}
+%%%%%%%%%%%%%%%%%%%%%
+\Prog{kernel\_picker} allows you to substitute a given kernel into your
+      OSCAR (SIS) image prior to building your nodes.  If executed with no
+      command line options, you will be prompted for all required
+      information.  You can also specify command line options as shown
+      below.  Any necessary information that you do not give via an option
+      will cause the program to prompt you for that information.
+
+      The program assumes that the optional OSCAR image files you wish to
+      use reside in a subdirectory in the
+      \File{/var/lib/systemimager/images} directory.  By default, the
+      original OSCAR image is in a subdirectory named \File{oscarimage}.  
+
+\section{Options}
+%%%%%%%%%%%%%%%%%
+\begin{Description}\setlength{\itemsep}{0cm}
+\item[\oOptoArg{--oscarimage }{image\_name}] The name of the OSCAR image
+     directory.  If you use this option but do not specify
+     \Arg{image\_name}, the default directory '\File{oscarimage}' will be
+     used.
+\item[\oOpt{--autoselectimage}] In the event that there are two or more
+     OSCAR image directories but you do not want to have to specify one via
+     the '--oscarimage' option (e.g. when you want to call
+     \Prog{kernel\_picker} from another program), use this option.  (The
+     first OSCAR image directory, alphabetcially ignoring case, will be
+     used.) Otherwise, you will be presented with a list of OSCAR image
+     directories and be asked to choose one to use.
+\item[\oOptArg{--bootkernel }{boot\_kernel}] The full path specifier of the
+     kernel to use at boot time.  This kernel file will be copied to the
+     system's boot directory.  Also, \File{systemconfig.conf}'s PATH option
+     will be set approriately.
+\item[\oOptArg{--bootlabel }{boot\_label}] The label for the kernel to use at
+     boot time.  This value is set as the LABEL option in the
+     \File{systemconfig.conf} file.  If you provide the \Arg{boot\_kernel}
+     but do not provide the \Arg{kernel\_label}, the \Arg{kernel\_label}
+     defaults to the file name specified by the \Arg{boot\_kernel} (without
+     any leading path information).
+\item[\oOptoArg{--bootramdisk }{Y/n}] Whether or not to configure a ram disk
+     for booting.  This value is set as the CONFIGRD option in the
+     \File{systemconfig.conf} file.  If you do not specify Y or N, it
+     defaults to YES.
+\item[\oOptoArg{--networkboot }{Y/n}] Whether or not to use the specified
+     \Arg{boot\_kernel} for network booting the nodes during the build
+     process.  If so, the kernel gets copied to '\File{/tftpboot}'.  If you
+     do not specify Y or N, it defaults to YES.
+\item[\oOptArg{--kernelversion }{version\_number}] If your boot kernel uses
+     loadable modules, you must provide the full version number/name of the
+     kernel.  This is the value output by the Unix command 
+     '\Prog{uname -r}'.
+\item[\oOptArg{--modulespath }{modules\_path}] If your boot kernel uses
+     loadable modules, you must profide the source directory containing the
+     \File{/lib/modules/version\_number} directory tree.  There is no
+     need to prepend \File{/lib/modules/version\_number} to this
+     option (but it doesn't hurt if you do).
+\item[\oOptArg{--systemmap }{system\_map}] If your boot kernel uses loadable
+     modules, you may optionally provide the full path specifier of the
+     \File{System.map} file to use by depmod.  Enter the full path/file name
+     of the source file.  This file will be copied to the boot directory.
+\item[\oOpt{--version}] Prints out the version string of the program and
+     then quits.
+\item[\oOpt{--help}] Prints out a help message and then quits.
+\end{Description}
+
+
+\section{General Remarks}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{enumerate}\setlength{\itemsep}{0cm}
+\item \Prog{kernel\_picker} does not modify any configuration on the host
+      machine.
+\item When you run the program without any command line options, you will be
+      prompted for all required information.  If you use any command line
+      options, the program will assume that you know what you are doing and
+      prompt you ONLY for information which is required for correct
+      execution.  For example, if you specify the \Opt{--bootlabel} but not
+      any of the options required for loadable modules
+      (\Opt{--kernelversion}, \Opt{--modulespath}, and \Opt{--systemmap}),
+      the program will assume that your kernel does not require loadable
+      modules and will not prompt you for any of those options.  
+\item All of the required information is gathered prior to acutally running
+      any commands.  So you can abort execution before the end and no files
+      will be modified/copied.
+\item Many of the questions have a default value indicated by bracketed text
+      at the end of the question.  If this value is okay, simply hit
+      $<$ENTER$>$ to accept it.  For most of the questions, the default
+      value is probably what you want.
+\item If there is only one subdirectory in the
+      \File{/var/lib/systemimager/images} directory, it will be used as the
+      \Opt{--oscarimage}.  
+\item When you enter the \Arg{boot\_kernel}, it will be scanned for a
+      version number string.  If found, this will be used as the default
+      values for the \Arg{kernel\_label} and \Arg{version\_number}.  You can
+      override this by entering your own label and version.
+\item If you want to run the program from the command line and not be
+      prompted for any information, you should invoke the program as
+      follows:
+
+      \Prog{kernel\_picker} 
+      \OptArg{--bootkernel}{ boot\_kernel} 
+      \Opt{--bootramdisk} N 
+      \Opt{--networkboot} N
+\end{enumerate}
+
+\section{Requirements}
+%%%%%%%%%%%%%%%%%%%%%%
+\begin{description}\setlength{\itemsep}{0cm}
+\item[Perl] The \Prog{kernel\_picker} script requires Perl version 
+     $>=$ 5.5.
+\item[Initrd::Generic.pm] In order to extract the kernel version number
+     string from the \Arg{boot\_kernel}, \Prog{kernel\_picker} requires the
+     \File{Initrd} package.  This is usually found in the
+     \File{/usr/lib/systemconfig} directory and is part of the
+     \File{systemconfigurator} RPM package.
+\end{description}
+
+\section{Version}
+%%%%%%%%%%%%%%%%%
+Version: \Version\ of \Date.
+
+\section{Author}
+%%%%%%%%%%%%%%%%
+\noindent
+Terry Fleury                      \\
+Email: \Email{tfleury@ncsa.uiuc.edu} 
+\LatexManEnd
+
+\end{document}

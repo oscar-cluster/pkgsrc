@@ -1,0 +1,223 @@
+'\" t
+.\" Manual page created with latex2man on Tue Nov  4 17:04:07 CST 2003
+.\" NOTE: This file is generated, DO NOT EDIT.
+.de Vb
+.ft CW
+.nf
+..
+.de Ve
+.ft R
+
+.fi
+..
+.TH "KERNEL\\_PICKER" "1" "2003/09/03" "OSCAR Tools " "OSCAR Tools "
+.SH NAME
+
+.PP
+kernel_picker
+is a Perl script which allows the user to install 
+a given kernel into an OSCAR image different from the one which is 
+installed by default. 
+.PP
+.SH SYNOPSIS
+
+.PP
+kernel_picker
+[\fB\-\-oscarimage \fP[\fIimage_name\fP]]
+[\fB\-\-bootkernel \fP\fIboot_kernel\fP]
+[\fB\-\-bootlabel \fP\fIboot_label\fP]
+[\fB\-\-bootramdisk \fP[\fIY/n\fP]]
+[\fB\-\-networkboot \fP[\fIY/n\fP]]
+[\fB\-\-kernelversion \fP\fIversion_number\fP]
+[\fB\-\-modulespath \fP\fImodules_path\fP]
+[\fB\-\-systemmap \fP\fIsystem_map\fP]
+[\fB\-\-version\fP]
+[\fB\-\-help\fP]
+.PP
+.SH DESCRIPTION
+
+kernel_picker
+allows you to substitute a given kernel into your 
+OSCAR (SIS) image prior to building your nodes. If executed with no 
+command line options, you will be prompted for all required 
+information. You can also specify command line options as shown 
+below. Any necessary information that you do not give via an option 
+will cause the program to prompt you for that information. 
+.PP
+The program assumes that the optional OSCAR image files you wish to 
+use reside in a subdirectory in the 
+/var/lib/systemimager/images
+directory. By default, the 
+original OSCAR image is in a subdirectory named oscarimage\&.
+.PP
+.SH OPTIONS
+
+.TP
+[\fB\-\-oscarimage \fP[\fIimage_name\fP]]
+ The name of the OSCAR image 
+directory. If you use this option but do not specify 
+\fIimage_name\fP,
+the default directory \&'oscarimage\&'
+will be 
+used. 
+.TP
+[\fB\-\-autoselectimage\fP]
+ In the event that there are two or more 
+OSCAR image directories but you do not want to have to specify one via 
+the \&'\-\-oscarimage\&' option (e.g. when you want to call 
+kernel_picker
+from another program), use this option. (The 
+first OSCAR image directory, alphabetcially ignoring case, will be 
+used.) Otherwise, you will be presented with a list of OSCAR image 
+directories and be asked to choose one to use. 
+.TP
+[\fB\-\-bootkernel \fP\fIboot_kernel\fP]
+ The full path specifier of the 
+kernel to use at boot time. This kernel file will be copied to the 
+system\&'s boot directory. Also, systemconfig.conf\&'s
+PATH option 
+will be set approriately. 
+.TP
+[\fB\-\-bootlabel \fP\fIboot_label\fP]
+ The label for the kernel to use at 
+boot time. This value is set as the LABEL option in the 
+systemconfig.conf
+file. If you provide the \fIboot_kernel\fP
+but do not provide the \fIkernel_label\fP,
+the \fIkernel_label\fP
+defaults to the file name specified by the \fIboot_kernel\fP
+(without 
+any leading path information). 
+.TP
+[\fB\-\-bootramdisk \fP[\fIY/n\fP]]
+ Whether or not to configure a ram disk 
+for booting. This value is set as the CONFIGRD option in the 
+systemconfig.conf
+file. If you do not specify Y or N, it 
+defaults to YES. 
+.TP
+[\fB\-\-networkboot \fP[\fIY/n\fP]]
+ Whether or not to use the specified 
+\fIboot_kernel\fP
+for network booting the nodes during the build 
+process. If so, the kernel gets copied to \&'/tftpboot\&'\&.
+If you 
+do not specify Y or N, it defaults to YES. 
+.TP
+[\fB\-\-kernelversion \fP\fIversion_number\fP]
+ If your boot kernel uses 
+loadable modules, you must provide the full version number/name of the 
+kernel. This is the value output by the Unix command 
+\&'uname \-r\&'\&.
+.TP
+[\fB\-\-modulespath \fP\fImodules_path\fP]
+ If your boot kernel uses 
+loadable modules, you must profide the source directory containing the 
+/lib/modules/version_number
+directory tree. There is no 
+need to prepend /lib/modules/version_number
+to this 
+option (but it doesn\&'t hurt if you do). 
+.TP
+[\fB\-\-systemmap \fP\fIsystem_map\fP]
+ If your boot kernel uses loadable 
+modules, you may optionally provide the full path specifier of the 
+System.map
+file to use by depmod. Enter the full path/file name 
+of the source file. This file will be copied to the boot directory. 
+.TP
+[\fB\-\-version\fP]
+ Prints out the version string of the program and 
+then quits. 
+.TP
+[\fB\-\-help\fP]
+ Prints out a help message and then quits. 
+.PP
+.SH GENERAL REMARKS
+
+.TP
+1.
+kernel_picker does not modify any configuration on the host
+machine. 
+.TP
+2.
+When you run the program without any command line options, you will be 
+prompted for all required information. If you use any command line 
+options, the program will assume that you know what you are doing and 
+prompt you ONLY for information which is required for correct 
+execution. For example, if you specify the \fB\-\-bootlabel\fP
+but not 
+any of the options required for loadable modules 
+(\fB\-\-kernelversion\fP,
+\fB\-\-modulespath\fP,
+and \fB\-\-systemmap\fP),
+the program will assume that your kernel does not require loadable 
+modules and will not prompt you for any of those options. 
+.TP
+3.
+All of the required information is gathered prior to acutally running 
+any commands. So you can abort execution before the end and no files 
+will be modified/copied. 
+.TP
+4.
+Many of the questions have a default value indicated by bracketed text 
+at the end of the question. If this value is okay, simply hit 
+<ENTER> to accept it. For most of the questions, the default 
+value is probably what you want. 
+.TP
+5.
+If there is only one subdirectory in the 
+/var/lib/systemimager/images
+directory, it will be used as the 
+\fB\-\-oscarimage\fP\&.
+.TP
+6.
+When you enter the \fIboot_kernel\fP, it will be scanned for a
+version number string. If found, this will be used as the default 
+values for the \fIkernel_label\fP
+and \fIversion_number\fP\&.
+You can 
+override this by entering your own label and version. 
+.TP
+7.
+If you want to run the program from the command line and not be 
+prompted for any information, you should invoke the program as 
+follows: 
+.PP
+kernel_picker
+\fB\-\-bootkernel\fP\fI boot_kernel\fP
+\fB\-\-bootramdisk\fP
+N 
+\fB\-\-networkboot\fP
+N 
+.PP
+.SH REQUIREMENTS
+
+.TP
+Perl 
+The kernel_picker
+script requires Perl version 
+>=5.5. 
+.TP
+Initrd::Generic.pm 
+In order to extract the kernel version number 
+string from the \fIboot_kernel\fP,
+kernel_picker
+requires the 
+Initrd
+package. This is usually found in the 
+/usr/lib/systemconfig
+directory and is part of the 
+systemconfigurator
+RPM package. 
+.PP
+.SH VERSION
+
+Version: 1.4 of 2003/09/03\&.
+.PP
+.SH AUTHOR
+
+Terry Fleury 
+.br 
+Email: \fBtfleury@ncsa.uiuc.edu\fP
+.\" NOTE: This file is generated, DO NOT EDIT.
