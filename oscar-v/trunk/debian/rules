@@ -55,8 +55,8 @@ install: build
 	dh_clean -k 
 	dh_installdirs
 
-	# Add here commands to install the package into debian/oscarv.
-	$(MAKE) install DESTDIR=$(CURDIR)/debian/oscarv
+	# Add here commands to install the package into debian/oscar-v.
+	$(MAKE) install DESTDIR=$(CURDIR)/debian/oscar-v
 
 
 # Build architecture-independent files here.

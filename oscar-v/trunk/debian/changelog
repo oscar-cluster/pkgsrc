@@ -1,10 +1,10 @@
-oscarv (1.0.0-2) hardy; urgency=low
+oscar-v (1.0.0-2) hardy; urgency=low
 
   * renamed oscarv to oscar-v so package name match svn and oscar-package build process.
 
  -- Olivier LAHAYE <olivier.lahaye@cea.fr>  Mon, 22 Apr 2013 10:48:09 +0100
 
-oscarv (1.0.0-1) hardy; urgency=low
+oscar-v (1.0.0-1) hardy; urgency=low
 
   * New upstream version.
 
