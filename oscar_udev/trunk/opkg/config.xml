@@ -15,7 +15,7 @@
   </authors>
   <serverDeps>
     <requires>
-      <pkg>oscarv</pkg>
+      <pkg>oscar-v</pkg>
     </requires>
   </serverDeps>
   <clientDeps/>
