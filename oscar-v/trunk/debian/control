@@ -1,11 +1,11 @@
-Source: oscarv
+Source: oscar-v
 Section: oscar
 Priority: optional
 Maintainer   : Geoffroy Vallee <valleegr@ornl.gov>
 Build-Depends: debhelper (>= 4.0.0)
 Standards-Version: 3.7.2
 
-Package: oscarv
+Package: oscar-v
 Architecture: all
 Depends: ${shlibs:Depends}, ${misc:Depends}, liboscar, v2m
 Description: OSCAR extension to support system-level virtualization.
