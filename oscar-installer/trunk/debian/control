@@ -1,0 +1,20 @@
+Source: oscar-installer
+Maintainer: Geoffroy Vallée <valleegr@ornl.gov>
+Section: misc
+Priority: optional
+Standards-Version: __VERSION__
+Build-Depends: debhelper (>=8)
+
+Package: oscar-installer
+Architecture: all
+Depends: ${shlibs:Depends}, ${misc:Depends}, perl (>=5.5)
+Description: A tool to ease the OSCAR installation.
+ oscar-installer is a tool that installs OSCAR in a transparent manner. Two 
+ different modes are available: online (the current machine has internet access 
+ and while be used as the OSCAR headnode), and offline (the current machine is 
+ only used to download OSCAR, OSCAR will be installed on another machine).
+ By default, the online mode is used (i.e., if no option is specified, the online
+ mode is used).
+ The identifier of the target linux distribution for the headnode must be 
+ specified. In order to get the list of supported Linux distributions, just type
+ "oscar-installer".
