@@ -11,7 +11,7 @@
 # Preamble Section
 ########################################################################
 Summary: A Perl script to substitute a kernel into an OSCAR (SIS) image.
-Name: kernel_picker
+Name: kernel-picker
 Version: __VERSION__
 Release: 3
 License: GPL
@@ -23,6 +23,7 @@ Packager: Terry Fleury <tfleury@ncsa.uiuc.edu>
 Autoreq: 0
 Requires: perl >= 5.5, systemconfigurator >= 2.0
 Provides: kernel_picker
+Obsoletes: kernel_picker
 buildarch: noarch
 
 %description
@@ -72,6 +73,10 @@ install -m 644 %{version}.%{release} $RPM_BUILD_ROOT/opt/modules/oscar-modulefil
 /opt/modules/oscar-modulefiles/kernel_picker/%{version}.%{release}
 
 %changelog
+* Mon Apr 22 2013 Olivier Lahaye <olivier.lahaye@cea.Fr>
+- Renamed kernel_picker to kernel-picker si package name is the same for deb and rpm distros.
+  This helps a lot for oscar-packager integration.
+
 * Mon Feb  4 2013 Olivier Lahaye <olivier.lahaye@cea.Fr>
 - Fix #install trying to install in system dirs instead of $RPM_BUILD_ROOT
 

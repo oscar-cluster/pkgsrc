@@ -1,7 +1,7 @@
 DESTDIR=
 PKGDEST=
 VERSION=1.4.1
-NAME=kernel_picker
+NAME=kernel-picker
 PKG=$(NAME)-$(VERSION)
 
 include ./Config.mk
