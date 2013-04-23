@@ -198,12 +198,16 @@ fi
 %files -n jobmonarch-jobmond
 %doc jobmond/examples
 %config %{_sysconfdir}/jobmond.conf
+%{_sysconfdir}/sysconfig/jobmond
+%{_initrddir}/jobmond
 %{_sbindir}/jobmond.py
 %{_sbindir}/jobmond
 
 %files -n jobmonarch-jobarchived
 %doc jobarchived/examples
 %config %{_sysconfdir}/jobarchived.conf
+%{_sysconfdir}/sysconfig/jobarchived
+%{_initrddir}/jobarchived
 %dir %{_datadir}/jobarchived
 %{_sbindir}/jobarchived.py
 %{_sbindir}/jobarchived
@@ -382,6 +386,7 @@ fi
 
 %changelog
 * Tue Apr 23 2013 Olivier Lahaye <olivier.lahaye@free.fr> 1.0-2
+- Package missing files (/etc/sysconfig/{job{mond,archived}} and /etc/init.d scripts)
 - Fix Requires:
   - Added missing python-psycopg2 require in jobarchived
   - Removed pyPgSQL require (replaced by psycopg2)
