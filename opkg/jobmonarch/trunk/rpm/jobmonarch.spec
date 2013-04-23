@@ -9,7 +9,7 @@ Summary: Tools and addons to Ganglia to monitor and archive batch job info
 Name: jobmonarch
 Version: 1.0
 URL: https://oss.trac.surfsara.nl/jobmonarch
-Release: 1%{?dist}
+Release: 2%{?dist}
 License: GPL
 Packager: Olivier Lahaye <olivier.lahaye@cea.fr>
 Group: Applications/Base
@@ -48,12 +48,11 @@ This package is the meta package that for installation of all jobmonarche compon
 
 %package -n jobmonarch-jobarchived
 Summary: jobarchived is the archiving daemon for jobmonarch.
-Requires: python >= 2.5
-Requires: pbs_python
 Requires: postgresql >= 8.1.22
 Requires: postgresql-server >= 8.1.22
-Requires: pyPgSQL >= 2.5.1
+Requires: python >= 2.5
 Requires: python-rrdtool
+Requires: python-psycopg2
 
 %description -n jobmonarch-jobarchived
 jobmonach-jobarchived is the Job Archiving Daemon. It listens to Ganglia's
@@ -66,10 +65,7 @@ view all it's statistics.
 Summary: jobmond is the job monitoring daemon for jobmonarch.
 Requires: python >= 2.5
 Requires: pbs_python
-Requires: postgresql >= 8.1.22
-Requires: postgresql-server >= 8.1.22
-Requires: pyPgSQL >= 2.5.1
-Requires: python-rrdtool
+# Requires: lsf_python
 
 %description -n jobmonarch-jobmond
 jobmonarch-jobmond is the job monitoring daemon that gathers PBS/Torque/SGE
@@ -385,6 +381,12 @@ fi
 
 
 %changelog
+* Tue Apr 23 2013 Olivier Lahaye <olivier.lahaye@free.fr> 1.0-2
+- Fix Requires:
+  - Added missing python-psycopg2 require in jobarchived
+  - Removed pyPgSQL require (replaced by psycopg2)
+  - Removed useless requires: pbs_python from jobarchived
+  - Removed useless requires: python-rrdtools from jobmond
 * Mon Apr 22 2013 Olivier Lahaye <olivier.lahaye@free.fr> 1.0-1
 - Major rewrite of the spec file (sub packages)
 - Final upstream release.
