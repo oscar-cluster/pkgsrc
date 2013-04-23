@@ -12,13 +12,13 @@
 #
 Summary: Ganglia Distributed Monitoring System
 Name: ganglia
-Version: 3.1.7
+Version: 3.5.7
 URL: http://ganglia.info/
 Release: 1
 License: BSD
 Vendor: Ganglia Development Team <ganglia-developers@lists.sourceforge.net>
 Group: System Environment/Base
-Source: %{name}-3.1.7.tar.gz
+Source: %{name}-3.5.7.tar.gz
 Buildroot: %{_tmppath}/%{name}-%{version}-buildroot
 BuildRequires: libpng-devel, libart_lgpl-devel, gcc-c++, python-devel, libconfuse-devel, pcre-devel
 %if 0%{?suse_version}
