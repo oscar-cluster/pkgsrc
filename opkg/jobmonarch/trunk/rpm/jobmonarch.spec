@@ -77,7 +77,7 @@ batch statistics on jobs/nodes and submits them into Ganglia's XML stream.
 
 %package -n jobmonarch-webfrontend
 Summary: webfrontend is the ganglia webfrontend for jobmonarch.
-Requires: ganglia-gmetad >= 3.5.7 ganglia-web >= 3.5.7
+Requires: ganglia-gmetad >= 3.5.0 ganglia-web >= 3.5.7
 Requires: jobmonarch-jobmond = 1.0
 
 %description -n jobmonarch-webfrontend
