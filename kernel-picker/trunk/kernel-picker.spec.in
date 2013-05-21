@@ -16,7 +16,7 @@ Version: __VERSION__
 Release: 3
 License: GPL
 Group: Applications/System
-Source: kernel_picker-%{version}.tar.gz
+Source: kernel-picker-%{version}.tar.gz
 URL: http://oscar.openclustergroup.org
 Vendor: NCSA
 Packager: Terry Fleury <tfleury@ncsa.uiuc.edu>
