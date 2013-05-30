@@ -1,0 +1,48 @@
+2.5.9:
+- Updated the log output do dispay the content of arrays in human readable
+format instead of "ARRAY(0x1234567)" (more usefull in a log file)
+- Fix a typo creating a problem in NIS environments (Patch from Nikolay Khokhlov).
+- Automatically detect the source directory on RPM based systems (patch from
+O. Lahaye).
+- Update the spec file so it works on Scientific Linux 6.0 (patch from O. 
+Lahaye).
+- Remove the redundant sync-files log files. (dikim)
+
+2.5.8:
+- [Ticket #286] Make sure we do not use getent in a NIS environment.
+
+2.5.7:
+- Improve error handling.
+
+2.5.6:
+- Fix typos introduced in previous version.
+
+2.5.5:
+- Clean up the code.
+- Avoid useless warnings.
+
+2.5.4:
+- Improve output.
+- [Ticket #565] Actually synchronize files on compute nodes.
+
+2.5.3:
+- Fix the Debian copyright.
+
+2.5.2:
+- Correctly deal with the creation of directories both in the images and for
+the templates.
+
+2.5.1:
+- Automatically create a log file.
+- Fix the creation of the /opt/sunc-files/tmp/etc directory.
+- Better execption handling.
+
+2.5.0:
+- Switch to the new SIS database backend.
+- Add a image-only option.
+- Clean-up the code to make it easier to maintain.
+- Add templates for Debian based systems.
+- The distro detection is now based on OS_Detect.
+- Add a man page for sync-files.
+- Add a template for modprobe.conf.
+- Add a uninstall target to the Makefile.
