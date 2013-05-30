@@ -1,4 +1,4 @@
-2.5.9 (not yet released):
+2.5.9:
 - Updated the log output do dispay the content of arrays in human readable
 format instead of "ARRAY(0x1234567)" (more usefull in a log file)
 - Fix a typo creating a problem in NIS environments (Patch from Nikolay Khokhlov).
