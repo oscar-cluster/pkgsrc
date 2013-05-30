@@ -1,0 +1,167 @@
+oda (1.4.17-1) precise; urgency=low
+
+  * New upstream version.
+
+ -- Olivier Lahaye <olivier.lahaye@cea.fr>  Thu, 30 May 2013 15:57:48 +0100
+
+oda (1.4.16-2) precise; urgency=low
+
+  * Make sure we apply a patch to etc/oscar_table.sql on Ubuntu precise, otherwise we end up with a syntax not compatible with the mysql version.
+
+ -- Geoffroy Vallee <valleegr@ornl.gov>  Fri, 21 Dec 2012 18:28:08 -0500
+
+oda (1.4.16-1) precise; urgency=low
+
+  * New upstream version.
+
+ -- Geoffroy Vallee <valleegr@ornl.gov>  Wed, 19 Dec 2012 13:35:48 -0500
+
+oda (1.4.15-1) lucid; urgency=low
+
+  * New upstream version
+
+ -- Geoffroy Vallee <valleegr@ornl.gov>  Tue, 08 Feb 2011 13:17:17 -0500
+
+oda (1.4.14-1) lucid; urgency=low
+
+  * New upstream version
+
+ -- Geoffroy Vallee <valleegr@ornl.gov>  Sat, 21 Aug 2010 17:54:36 -0400
+
+oda (1.4.13-1) hardy; urgency=low
+
+  * New upstream version
+
+ -- Geoffroy Vallee <valleegr@ornl.gov>  Mon, 07 Dec 2009 12:44:50 -0500
+
+oda (1.4.12-1) hardy; urgency=low
+
+  * New upstream version
+
+ -- Geoffroy Vallee <valleegr@ornl.gov>  Fri, 04 Dec 2009 18:50:05 -0500
+
+oda (1.4.11-1) hardy; urgency=low
+
+  * New upstream version.
+
+ -- Geoffroy Vallee <valleegr@ornl.gov>  Mon, 30 Nov 2009 15:44:56 -0500
+
+oda (1.4.10-1) hardy; urgency=low
+
+  * New upstream version.
+
+ -- Geoffroy Vallee <valleegr@ornl.gov>  Tue, 24 Nov 2009 00:42:21 -0500
+
+oda (1.4.9-1) hardy; urgency=low
+
+  * New upstream version.
+
+ -- Geoffroy Vallee <valleegr@ornl.gov>  Tue, 10 Nov 2009 23:51:11 -0500
+
+oda (1.4.8-1) karmic; urgency=low
+
+  * New upstream version.
+
+ -- Geoffroy Vallee <valleegr@ornl.gov>  Fri, 30 Oct 2009 11:28:44 -0400
+
+oda (1.4.7-1) hardy; urgency=low
+
+  * New upstream version.
+
+ -- Geoffroy Vallee <valleegr@ornl.gov>  Thu, 08 Oct 2009 12:40:25 -0400
+
+oda (1.4.6-1) hardy; urgency=low
+
+  * New upstream version.
+
+ -- Geoffroy Vallee <valleegr@ornl.gov>  Fri, 25 Sep 2009 02:44:25 -0400
+
+oda (1.4.5-1) hardy; urgency=low
+
+  * New upstream version.
+
+ -- Geoffroy Vallee <valleegr@ornl.gov>  Wed, 06 May 2009 20:07:00 -0400
+
+oda (1.4.4-1) hardy; urgency=low
+
+  * New upstream version.
+
+ -- Geoffroy Vallee <valleegr@ornl.gov>  Thu, 23 Apr 2009 20:46:24 -0400
+
+oda (1.4.3-1) hardy; urgency=low
+
+  * New upstream version.
+
+ -- Geoffroy Vallee <valleegr@ornl.gov>  Mon, 23 Mar 2009 12:25:19 -0400
+
+oda (1.4.2-1) hardy; urgency=low
+
+  * New upstream version.
+
+ -- Geoffroy Vallee <valleegr@ornl.gov>  Wed, 18 Mar 2009 13:26:53 -0400
+
+oda (1.4.1-1) hardy; urgency=low
+
+  * New upstream version.
+
+ -- Geoffroy Vallee <valleegr@ornl.gov>  Thu, 26 Feb 2009 23:55:08 -0500
+
+oda (1.4-1) intrepid; urgency=low
+
+  * New upstream version.
+
+ -- Geoffroy Vallee <valleegr@ornl.gov>  Mon, 09 Feb 2009 19:21:00 -0500
+
+oda (1.3.5-1) hardy; urgency=low
+
+  * New upstream version.
+
+ -- Geoffroy Vallee <valleegr@ornl.gov>  Tue, 03 Feb 2009 10:14:35 -0500
+
+oda (1.3.4-1) hardy; urgency=low
+
+  * New upstream version.
+
+ -- Geoffroy Vallee <valleegr@ornl.gov>  Tue, 20 Jan 2009 00:23:54 -0500
+
+oda (1.3.3-1) hardy; urgency=low
+
+  * New upstream version.
+
+ -- Geoffroy Vallee <valleegr@ornl.gov>  Thu, 15 Jan 2009 11:09:52 -0500
+
+oda (1.3.2-1) hardy; urgency=low
+
+  * New upstream version.
+
+ -- Geoffroy Vallee <valleegr@ornl.gov>  Thu, 11 Dec 2008 16:14:09 -0500
+
+oda (1.3.1-1) hardy; urgency=low
+
+  * New upstream version.
+
+ -- Geoffroy Vallee <valleegr@ornl.gov>  Thu, 11 Dec 2008 00:06:28 -0500
+
+oda (1.3-1) hardy; urgency=low
+
+  * New upstream version. 
+
+ -- Geoffroy Vallee <valleegr@ornl.gov>  Tue, 23 Sep 2008 20:04:22 -0400
+
+oda (1.2-1) gutsy; urgency=low
+
+  * New upstream version.
+
+ -- Geoffroy Vallee <valleegr@ornl.gov>  Thu, 21 Aug 2008 13:55:10 -0400
+
+oda (1.1-1) stable; urgency=low
+
+  * New upstream version.
+
+ -- Geoffroy Vallee <valleegr@ornl.gov>  Wed, 13 Aug 2008 12:56:09 +0000
+
+oda (1.0-1) stable; urgency=low
+
+  * New upstream version.
+
+ -- Geoffroy Vallee <valleegr@ornl.gov>  Sun, 10 Aug 2008 18:31:40 -0500

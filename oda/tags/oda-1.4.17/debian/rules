@@ -1,0 +1,109 @@
+#!/usr/bin/make -f
+# -*- makefile -*-
+# Sample debian/rules that uses debhelper.
+# This file was originally written by Joey Hess and Craig Small.
+# As a special exception, when this file is copied by dh-make into a
+# dh-make output file, you may use that output file without restriction.
+# This special exception was added by Craig Small in version 0.37 of dh-make.
+
+# Uncomment this to turn on verbose mode.
+export DH_VERBOSE=1
+
+# The version of mysql-server is used to know if patches must
+# be applied or not. This is clearly not a nice solution but it does
+# the job
+MYSQL_VERSION := $(shell apt-cache show mysql-server | grep Version: | tail -1 | sed 's/Version: //' | sed 's/\(-..\).*//g' | cut -f1 -d.)
+MYSQL_GT_5 := $(shell [ $(MYSQL_VERSION) -ge 5 ] && echo true)
+
+CFLAGS = -Wall -g
+
+ifneq (,$(findstring noopt,$(DEB_BUILD_OPTIONS)))
+	CFLAGS += -O0
+else
+	CFLAGS += -O2
+endif
+
+configure: configure-stamp
+configure-stamp:
+	dh_testdir
+	# Add here commands to configure the package.
+
+	touch configure-stamp
+
+
+build: build-stamp
+
+build-stamp: configure-stamp 
+	dh_testdir
+
+	# Add here commands to compile the package.
+	$(MAKE)
+	#docbook-to-man debian/oda.sgml > oda.1
+
+	touch build-stamp
+
+clean:
+	dh_testdir
+	dh_testroot
+	rm -f build-stamp configure-stamp
+
+	# Add here commands to clean up after the build process.
+	-$(MAKE) clean
+
+	dh_clean 
+
+install: build
+	dh_testdir
+	dh_testroot
+	dh_clean -k 
+	dh_installdirs
+
+	# Add here commands to install the package into debian/oda.
+	$(MAKE) install DESTDIR=$(CURDIR)/debian/oda
+
+	 # Applying some patches on the installed files
+	@echo "Patching the source code (mysql version is $(MYSQL_VERSION))";
+	@if [ $(MYSQL_GT_5) != "true" ]; then \
+		echo "Patching oscar_table.sql..."; \
+		# This patch is for some old version of mysql \
+		cd $(CURDIR)/debian/oda/$(DESTDIR)/usr/share/oscar/prereqs/oda; echo "$(CURDIR)/debian/oda/$(DESTDIR)/usr/share/oscar/prereqs/oda"; patch -p0 < $(CURDIR)/patches/oscar_table.patch; \
+	fi
+
+
+# Build architecture-independent files here.
+binary-indep: build install
+# We have nothing to do by default.
+
+# Build architecture-dependent files here.
+binary-arch: build install
+	dh_testdir
+	dh_testroot
+	dh_installchangelogs 
+	dh_installdocs
+	dh_installexamples
+#	dh_install
+#	dh_installmenu
+#	dh_installdebconf	
+#	dh_installlogrotate
+#	dh_installemacsen
+#	dh_installpam
+#	dh_installmime
+#	dh_installinit
+#	dh_installcron
+#	dh_installinfo
+	dh_installman
+	dh_link
+	dh_strip
+	dh_compress
+	dh_fixperms
+#	dh_perl
+#	dh_python
+#	dh_makeshlibs
+	dh_installdeb
+	dh_shlibdeps
+	dh_gencontrol
+	dh_md5sums
+	dh_builddeb
+
+binary: binary-indep binary-arch
+.PHONY: build clean binary-indep binary-arch binary install configure

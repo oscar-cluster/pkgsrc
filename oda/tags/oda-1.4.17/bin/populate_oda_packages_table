@@ -1,0 +1,334 @@
+#!/usr/bin/perl
+
+#   This program is free software; you can redistribute it and/or modify
+#   it under the terms of the GNU General Public License as published by
+#   the Free Software Foundation; either version 2 of the License, or
+#   (at your option) any later version.
+ 
+#   This program is distributed in the hope that it will be useful,
+#   but WITHOUT ANY WARRANTY; without even the implied warranty of
+#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#   GNU General Public License for more details.
+ 
+#   You should have received a copy of the GNU General Public License
+#   along with this program; if not, write to the Free Software
+#   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+#
+# Inspired by the package_config_xmls_to_database script which was splitted
+# up into prepare_oda and this script.
+#
+# Copyright (c) 2007 Erich Focht <efocht@hpce.nec.com>
+#                    All rights reserved.
+#
+# $Id$
+#
+
+use strict;
+use Getopt::Long;
+use lib "$ENV{OSCAR_HOME}/lib", "$ENV{OSCAR_HOME}/lib/OSCAR";
+use OSCAR::Database;
+use OSCAR::Database_generic;
+use OSCAR::oda;
+use OSCAR::PackagePath;
+use OSCAR::OpkgDB;
+use Data::Dumper;
+use Carp;
+
+my @error_strings = ();
+my %table_fields_hash = ();
+my %options = ( debug => 0 );
+
+if ( (exists $ENV{OSCAR_VERBOSE} && $ENV{OSCAR_VERBOSE} == 10) 
+    || $ENV{OSCAR_DB_VERBOSE} || $ENV{OSCAR_DB_DEBUG}){
+    $options{debug} = 1;
+}
+
+# configure command line options parsing
+Getopt::Long::Configure("ignore_case"); # ignore case
+Getopt::Long::Configure("bundling");    # allow -a -b or -ab
+Getopt::Long::Configure("auto_abbrev"); # allow abbreviated input
+
+# parse command line options
+GetOptions( \%options,
+            'debug!',
+            'help', )
+    || usage(1);
+
+print "[$0]:\n====> after GetOptions ARGV=<@ARGV>\n" if $options{debug};
+
+usage (0) if $options{help};
+
+my ($os, $distro_string);
+
+#
+# The argument passed on the command line is interpreted as distro string.
+# If it is wrong, no opkgs will be detected, so don't worry. We can't
+# reverse-lookup compat_distros, anyway, as they correspond to multiple
+# distros.
+#
+if ($ARGV[0]) {
+    $distro_string = $ARGV[0];
+    #
+    # we MUST detect it's OS, it is needed later
+    #
+    my %pools = &list_distro_pools();
+    for my $p (keys(%pools)) {
+	my $tos = $pools{$p}{os};
+	next if !$tos;
+	if (&os_cdistro_path($tos) eq $distro_string) {
+	    $os = $tos;
+	    last;
+	}
+    }
+    if (!$os) {
+        print "\nCould not detect distro $distro_string among\n".
+              "configured distro pools!\n";
+        usage(1);
+    }
+    print "Populating Packages table for distribution: istro_string\n";
+}
+
+print "Detecting local distro...\n";
+if (!$os) {
+    $os = &distro_detect_or_die();
+    $distro_string = &os_distro_string($os);
+}
+
+if (!OSCAR::Utils::is_a_valid_string ($distro_string)) {
+    die "ERROR: Impossible to get the distro ID";
+}
+
+print "Connecting to ODA...\n";
+if (!OSCAR::oda::oda_connect( \%options, \@error_strings)) {
+    warn shift @error_strings while @error_strings;
+    die "[$0]:\n====> cannot connect to the OSCAR database";
+}
+
+my %table_fields_hash = OSCAR::Database::translate_fields ("Packages");
+# my %fields = ();
+# if ((scalar keys %table_fields_hash) == 0) {
+#     OSCAR::oda::list_fields(\%options,"Packages",\%fields,\@error_strings);
+#     my %packages_hash = %fields;
+#     foreach my $field (keys %packages_hash) {
+#         # Work around for many databases: __group and __class are reserved 
+#         # tokens
+#         if ($field eq "__group") { $field = "group"; }
+#         if ($field eq "__class") { $field = "class"; }
+#         $packages_hash{$field} = 1;
+#     }
+#     $table_fields_hash{"Packages"} = \%packages_hash;
+# }
+
+#
+# All packages are candidates for deletion. Add them to a hash.
+#
+print "Creating the list of packages to delete...\n";
+my %opkg_to_be_deleted = ();
+my @opkgs = ();
+&get_packages(\@opkgs, \%options, \@error_strings, distro => $distro_string);
+foreach my $opkg_ref (@opkgs){
+    my $name = $$opkg_ref{package};
+    $opkg_to_be_deleted{$name} = $$opkg_ref{version};
+}
+
+#
+# Get info on all opkgs available in the passed OS repositories
+#
+print "Getting info on all opkgs available in the passed OS repositories...\n";
+
+my %o;
+require OSCAR::RepositoryManager;
+my $orm = OSCAR::RepositoryManager->new(distro => $distro_string);
+if (!defined $orm) {
+    die "ERROR: Impossible to create a RepositoryManager object";
+}
+
+print "\n[INFO] Querying for available OSCAR packages. That may take a while, ".
+      "please be patient...\n\n";
+my $search;
+# They query to get available OPKGs is different on RPM and Deb based systems
+# TODO: make an abstaction for that!
+my $search;
+if ($os->{pkg} eq "deb") {
+    $search = "^opkg-.*-server";
+} elsif ($os->{pkg} eq "rpm") {
+    $search = "opkg-*-server";
+}
+my ($rc, @list_opkgs) = $orm->search_opkgs ($search);
+# We get the list of binary package for the server side, we change the name of
+# the OPKGs we found to fall back on the API side. This is needed in order to
+# get the good description associated with the OPKG
+for (my $i=0; $i < scalar (@list_opkgs); $i++) {
+    $list_opkgs[$i] =~ s/-server//;
+}
+OSCAR::Utils::print_array (@list_opkgs);
+
+print "\n[INFO] Querying details for all OPKGs we found...\n\n";
+# TODO: the code to find available OPKGs should be in OpkgDB
+foreach my $opkg (@list_opkgs) {
+    my ($rc, %output) = $orm->show_opkg ($opkg);
+    # Now that we have the details, we clean up the name of the OPKG, we go from
+    # something like "opkg-oda-server" to oda
+    my $opkg_data = $output{$opkg};
+    $opkg =~ s/opkg-//;
+    $$opkg_data{'package'} = $opkg;
+    $$opkg_data{'distro'} = $distro_string;
+    $o{$opkg} = $opkg_data;
+}
+OSCAR::Utils::print_hash ("", "OPKGs data:", \%o);
+
+print "\n[$0]:\n<<<<<===========================".
+    " Populating the Packages records starts\n"
+    if $options{debug};
+
+#
+# The loop over the detected opkgs.
+#
+foreach my $package (sort(keys(%o))) {
+
+    my $pkg_version;
+
+    # remove package from deletion candidates list
+    # but remember the version they had
+    if ($opkg_to_be_deleted{$package}) {
+        $pkg_version = $opkg_to_be_deleted{$package};
+        delete $opkg_to_be_deleted{$package};
+    }
+
+    print "\n[$0]:\nPACKAGE : <<<<<<<<<<<<< $package >>>>>>>>>>>>>".
+          " : Packages Table\n" if $options{debug};
+
+    my %opkg = %{$o{$package}};
+
+    my $package_id = &is_installed($package, $pkg_version);
+    if ($package_id) {
+        &delete_packages_related_table($package, \%options, \@error_strings);
+        &update_packages(\%opkg, "Packages", $package_id, \%table_fields_hash,
+                         \%options, \@error_strings);
+    } else {
+        # Insert into "Packages" table
+        &insert_opkgs(\%opkg);
+    }
+}
+
+print "\n[$0]:\n===========================>>>>> ".
+    "Populating the Packages records is finished\n"
+    if $options{debug};
+
+# Delete the packages to be deleted, i.e. those which we didn't find
+# in the current scan of the repositories.
+# This needs to clean the tables related to Packages too.
+foreach my $pkg (keys %opkg_to_be_deleted){
+    if ($opkg_to_be_deleted{$pkg}){
+	    my $version = $opkg_to_be_deleted{$pkg};
+	    &delete_packages_related_table($pkg,
+		                               \%options,
+				                       \@error_strings,
+				                       $version);
+	    my %sel = (package => $pkg, distro => $distro_string,
+		           version => $version );
+        &delete_package(\%options, \@error_strings, %sel);
+    }
+}
+
+OSCAR::oda::oda_disconnect( \%options, undef );
+exit 0;
+
+##########################################################################
+### Internal Functions
+##########################################################################
+
+sub is_installed {
+    my ($package, $version) = @_;
+
+    print "[$0]:\n====> in is_installed".
+	" Checking to see if Packages table has been already populated\n"
+        if $options{debug};
+    my @results;
+    my %scope = ( package => $package, distro => $distro_string );
+    $scope{version} = $version if ($version);
+    OSCAR::Database::get_packages(\@results,
+                                  \%options,
+                                  \@error_strings,
+                                  %scope);
+    my $res = pop @results;
+    return $res->{id};                    
+}
+
+sub delete_packages_related_table {
+    my ($package,$options_ref,$error_ref) = @_;
+    my $where = "";
+
+    my @list_of_tables = ("Packages_servicelists",
+                          "Packages_switcher");
+    foreach my $table_name (@list_of_tables){
+	$where = "WHERE package='$package'";
+        &delete_table($options_ref, $table_name, $where ,$error_ref);
+    }
+}
+
+
+
+sub usage {
+    my ( $exit_status, @error_strings ) = @_;
+    my $progname = $0;
+    print <<USAGE;
+
+This program populates the Packages table with information retrieved
+from the reachable repositories for a particular distro-version-arch
+combination. Without an argument it queries the repositories
+corresponding to the machine the program runs on.
+
+An argument of the form DISTRO-VERSION-ARCHITECTURE is used to update
+the Packages table with info from repositories different from the
+current node's (for example in a heterogeneous cluster). The argument
+contains "compatible" distro information, i.e. the directory names in
+/tftpboot/oscar, not those in /tftpboot/distro! The passed argument is
+verified against the configured distro pools. If you have no distro
+pool configured corresponding to this distro, the command won't work.
+
+Options:
+  --help            prints out usage information then exits
+  --[no]verbose     turns on[off] verbose output, default is off
+
+Usage:
+    $progname [options] [distro-version-architecture]
+
+USAGE
+    if ( @error_strings ) {
+	print "\n";
+	warn shift @error_strings while @error_strings;
+    }
+    exit $exit_status;
+}
+
+__END__
+
+=head1 NAME
+
+This script is part of the OSCAR software (http://oscar.openclustergroup.org/).
+This program populates the Packages table with information retrieved from the reachable repositories for a particular distro-version-arch combination. Without an argument it queries the repositories corresponding to the machine the program runs on.
+
+=head1 SYNOPSIS
+
+populate_oda_packages_table <OPTIONS>
+
+=head1 OPTIONS
+
+=over 2
+
+=item help  Prints out usage information then exists.
+
+=item --[no]verbose     Turns on[off] verbose output, default is off
+
+=back
+
+=head1 AUTHOR
+
+=item Erich Focht <efocht@hpce.nec.com>
+
+=head1 SEE ALSO
+
+perl(1)
+
+=cut
