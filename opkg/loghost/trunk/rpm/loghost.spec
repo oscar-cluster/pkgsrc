@@ -1,12 +1,12 @@
 Name: loghost
 Summary: loghost configurator
 Version: 1.0
-Release: 1
+Release: 2
 Packager: Jeremy Enos <jenos@ncsa.uiuc.edu>
 License: GPL
 Group: Applications/System
 #Requires: sh-utils
-Requires: init-scripts
+Requires: initscripts sysklogd
 BuildArch: noarch
 Summary: Configures server to accept remote syslog entries
 Group: Applications/System
