@@ -1,8 +1,15 @@
+sync-files (2.5.9-2) lucid; urgency=low
+
+  * Fixed oscar-utils requirements so it can install with
+    oscar-utils-6.1.2~svn versions
+
+ -- Olivier Lahaye <olivier.lahaye@cea.fr>  Mon, 17 Jun 2013 11:11:11 +0200
+
 sync-files (2.5.9-1) lucid; urgency=low
 
   * New upstream version.
 
- -- Olivier Lahaye <olivier.lahaye@cea.fr>  Thu, 30 May 2013 16:31:51 +0100
+ -- Olivier Lahaye <olivier.lahaye@cea.fr>  Thu, 30 May 2013 16:31:51 +0200
 
 sync-files (2.5.8-1) lucid; urgency=low
 
