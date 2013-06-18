@@ -1359,7 +1359,7 @@ print "Executing: $cmd\n" if $verbose;
 $err = system($cmd);
 $err = $err >> 8;
 if ($err) {
-    die("ERROR: Impossible to execute \"$cmd\" ($err, $@)");
+    die("ERROR: Command execution failed: \"$cmd\" (retcode=$err, $@)");
 }
 
 
