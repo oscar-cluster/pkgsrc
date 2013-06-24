@@ -1350,7 +1350,7 @@ new_aptlist ();
 
 # update Packages cache. Note that we turn off all output (including stderr),
 # we are only interested by the return code.
-my $cmd = "/usr/bin/apt-get update";
+my $cmd = "/usr/bin/apt-get --allow-unauthenticated update";
 $cmd = $cmd . " 1>/dev/null 2>/dev/null" if (!$verbose);
 if ($installroot) {
     $cmd = "chroot $installroot $cmd";
