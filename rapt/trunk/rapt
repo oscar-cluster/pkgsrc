@@ -1382,7 +1382,7 @@ my $cmd;
 if ($ARGV[0] eq "search" || $ARGV[0] eq "show") {
     $cmd = "aptitude ";
 } else {
-    $cmd = "apt-get ";
+    $cmd = "apt-get --allow-unauthenticated ";
 }
 for (my $i=0; $i<scalar (@ARGV); $i++) {
     if ($ARGV[$i] eq "*") {
