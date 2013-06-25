@@ -1,9 +1,9 @@
 # $Id$
 Summary: Wrapper to apt-get for clusters
 Name: rapt
-Version: 2.8.10
+Version: 2.8.11
 Vendor: NEC HPCE
-Release: 2
+Release: 1
 License: GPL
 Packager: Erich Focht <efocht@hpce.nec.com>
 Source: %{name}-%{version}.tar.gz
@@ -46,6 +46,8 @@ rm -rf $RPM_BUILD_ROOT
 %{_mandir}/man8/rapt*
 
 %changelog
+* Tue Jun 25 2013 Olivier Lahaye <olivier.lahaye@cea.fr> - 2.8.11-1
+- New upstream version (see ChangeLog file for more details).
 * Thu Dec 20 2012 Olivier Lahaye <olivier.lahaye@cea.fr> - 2.8.10-2
 - Updated Requirements so it works on fedora-17.
 * Thu Dec 20 2012 Geoffroy Vallee - 2.8.10-1

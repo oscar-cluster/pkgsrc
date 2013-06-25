@@ -1,3 +1,11 @@
+rapt-2.8.11:
+- Fix a critical bug in repo management. If --installroot / was used
+(oscar-config does this), rapt was trying to debbootstrap / thinking it was
+an image. then, it was failing, trying to access local repo thru
+http://127.0.0.1/repo/tftpboot/... just as if it was running and a chrooted
+image).
+- Fix a missleading error message.
+
 rapt-2.8.10:
 - Do not require the dependency to OSCAR::ImageMgt except when really required
 (dynamic versus static load of the Perl module).
