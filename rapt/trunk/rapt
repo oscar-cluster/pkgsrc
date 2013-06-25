@@ -1058,7 +1058,7 @@ sub detect_codename {
     }
 
     # what are we targetting?
-    if (!$installroot) {
+    if (!$installroot || ($installroot eq "/")) {
         # local node
         $codename = &detect_codename_dir();
     } else {
@@ -1316,7 +1316,7 @@ $SIG{INT} = \&cleanup;
 ##############################
 
 # if command is "install" into empty image: debootstrap first
-if ($installroot) {
+if ($installroot && ($installroot ne "/")) {
     if ((scalar(grep /^install$/, @ARGV) == 1) && &img_needs_bootstrap) {
         if (!defined $distro) {
             if (debootstrap($installroot, @repos)) {
@@ -1352,7 +1352,7 @@ new_aptlist ();
 # we are only interested by the return code.
 my $cmd = "/usr/bin/apt-get --allow-unauthenticated update";
 $cmd = $cmd . " 1>/dev/null 2>/dev/null" if (!$verbose);
-if ($installroot) {
+if ($installroot && ($installroot ne "/")) {
     $cmd = "chroot $installroot $cmd";
 }
 print "Executing: $cmd\n" if $verbose;
@@ -1364,7 +1364,7 @@ if ($err) {
 
 
 # mount /proc into image if needed
-if ($installroot) {
+if ($installroot && ($installroot ne "/")) {
     if (!&img_has_proc) {
 	&img_mount_proc;
     }
@@ -1373,7 +1373,7 @@ if ($installroot) {
 &shutup_debconf($installroot);
 
 # disable start-stop-daemon
-if ($installroot) {
+if ($installroot && ($installroot ne "/")) {
     &install_fake_start_stop_daemon($installroot);
 }
 
@@ -1395,7 +1395,7 @@ for (my $i=0; $i<scalar (@ARGV); $i++) {
     }
 }
 
-if ($installroot) {
+if ($installroot && ($installroot ne "/")) {
     $cmd = "chroot $installroot $cmd";
 }
 
@@ -1409,7 +1409,7 @@ print "Executing: $cmd\n" if ($verbose);
 $err = system($cmd);
 
 # umount /proc into image if needed
-if ($installroot) {
+if ($installroot && ($installroot ne "/")) {
     &img_umount_proc;
 }
 
@@ -1417,7 +1417,7 @@ if ($installroot) {
 &openup_debconf($installroot);
 
 # enable start-stop-daemon
-if ($installroot) {
+if ($installroot && ($installroot ne "/")) {
     &uninstall_fake_start_stop_daemon($installroot);
 }
 
