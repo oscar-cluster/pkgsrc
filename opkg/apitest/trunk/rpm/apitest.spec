@@ -2,10 +2,10 @@
 %define version 1.0.0
 %define libvers 1.0
 %define release 12.3
-%define _unpackaged_files_terminate_build 0
+#define _unpackaged_files_terminate_build 0
 
-%{expand:%%define py_ver %(python -V 2>&1| awk '{print $2}')}
-%{expand:%%define py_libver %(python -V 2>&1| awk '{print $2}'|cut -d. -f1-2)}
+#{expand:%%define py_ver %(python -V 2>&1| awk '{print $2}')}
+#{expand:%%define py_libver %(python -V 2>&1| awk '{print $2}'|cut -d. -f1-2)}
 
 Summary: A test driver application. 
 Name: %{name}
@@ -44,28 +44,25 @@ A test driver application.
 
 %build
 echo "==========[ BUILD ]===================================="
-echo "python%{py_libver}"
+echo "python%{python_version}"
 echo "buildroot=%{buildroot}"
-%define sitepackages %{_prefix}/%{_lib}/python%{py_libver}/site-packages
+#define sitepackages %{_prefix}/%{_lib}/python%{py_libver}/site-packages
 #python%{py_libver} setup.py build
 
 
 %install
 echo "==========[ INSTALL ]=================================="
 echo %{buildroot}
-%define doc_prefix /usr/share/doc/apitest
-python%{py_libver} setup.py install --no-compile --prefix=%{buildroot}/usr/ --install-lib=%{buildroot}%{sitepackages}
+#define doc_prefix /usr/share/doc/apitest
+%{__python} setup.py install --no-compile --prefix=%{buildroot}%{_prefix}/ --install-lib=%{buildroot}%{python_sitelib}
 ###--install-data=%{buildroot}/%{doc_prefix}
 
 
 %files
 %defattr(-,root,root)
-%dir /usr/%{_lib}/python%{py_libver}/site-packages/libapitest
-/usr/%{_lib}/python%{py_libver}/site-packages/libapitest/*
-%dir %{doc_prefix}
-%{doc_prefix}/*
-%dir /usr/bin
-/usr/bin/*
+%{python_sitelib}/*
+%{_docdir}/*
+%{_bindir}/*
 
 
 %clean
@@ -73,6 +70,9 @@ echo "cleaning $RPM_BUILD_ROOT"
 rm -rf $RPM_BUILD_ROOT
 
 %changelog
+* Wed Oct 02 2013    Olivier Lahaye <olivier.lahaye@cea.fr>
+- Removed %dir files directives when they point to system dirs (conflict with filesystem package).
+
 * Fri May 04 2012    Olivier Lahaye <olivier.lahaye@cea.fr>
 - Made BuildRequires: python-elementtree conditional (included in python >= 2.6)
 
