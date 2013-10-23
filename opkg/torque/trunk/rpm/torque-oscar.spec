@@ -183,8 +183,8 @@ License: OpenPBS and TORQUEv1.1
 Group: System Environment/Daemons
 URL: http://www.clusterresources.com/products/torque/
 BuildRoot: %{_tmppath}/%{name}-%{version}-buildroot
-Provides: pbs
-Provides: torque
+Provides: pbs = %{version}-%{release}
+Provides: torque = %{version}-%{release}
 BuildRequires:  desktop-file-utils
 BuildRequires:  ed
 BuildRequires:  bison
@@ -692,8 +692,8 @@ Requires:             %{name}-libs = %{?epoch:%{epoch}:}%{version}-%{release}
 Requires(posttrans):  chkconfig
 Requires(preun):      chkconfig
 Requires:             munge
-Provides:             pbs-client
-Provides:             torque-client
+Provides:             pbs-client = %{version}-%{release}
+Provides:             torque-client = %{version}-%{release}
 #AutoReqProv: no
 
 %description client
@@ -1040,8 +1040,8 @@ A simple PAM module to authorize users on PBS MOM nodes with a running job.
 Group:                Documentation
 Summary:              Documentation files for TORQUE
 Requires:             %{name} = %{?epoch:%{epoch}:}%{version}-%{release}
-Provides:             pbs-docs
-Provides:             torque-docs
+Provides:             pbs-docs = %{version}-%{release}
+Provides:             torque-docs = %{version}-%{release}
 %if 0%{?fedora} >= 10 || 0%{?rhel} >= 6
 BuildArch:            noarch
 %endif
