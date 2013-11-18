@@ -28,6 +28,9 @@ BEGIN {
     }
 }
 
+use OSCAR::SystemServices;
+use OSCAR::SystemServicesDefs;
+
 sub new {
     my $invocant = shift;
     my $class = ref($invocant) || $invocant;
@@ -135,14 +138,8 @@ sub add_nic_to_bridge ($$$$) {
     # Then we parse the options to see if we need to do something else
     my %opts = %{$options};
     if (exists $opts{'dhcp_restart'} && $opts{'dhcp_restart'} eq "yes") {
-        # We need to restart the dhcp server
-        # TODO: we really need to have a nice abstraction for the management
-        #       of system services in order to hide differences between Linux
-        #       distros.
-        $cmd = "/etc/init.d/dhcp3-server restart";
-        if (system $cmd) {
-            carp "ERROR: Impossible to execute $cmd";
-            return -1;
+        !system_service(DHCP(),RESTART())
+            or (carp "ERROR: Couldn't restart dhcp service.\n", return -1); 
         }
     }
 }
