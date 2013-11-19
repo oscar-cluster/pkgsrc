@@ -31,6 +31,9 @@ use strict;
 use OSCAR::Logger;
 use OSCAR::Utils;
 use OSCAR::FileUtils;
+use OSCAR::SystemServices;
+use OSCAR::SystemServicesDefs;
+use OSCAR::OCA::OS_Settings;
 # use OSCAR::MAC;
 # use SIS::DB;
 # use SIS::Client;
@@ -451,9 +454,9 @@ sub copy_v2m_config_file_to_hostos {
 # Duplicated code (from scripts/update_live_macs)
 sub rebuild_dhcp_conf {
     my $net_interface = shift;
-
-    #   find default gateway in /etc/dhcpd.conf
-    open IN, "/etc/dhcpd.conf" or die "Could not open /etc/dhcpd.conf!";
+    my $dhcp_conf = OSCAR::OCA::OS_Settings::getitem(DHCP()."_configfile");
+    #   find default gateway in DHCP_server config file 
+    open IN, "$dhcp_conf" or die "Could not open $dhcp_conf!";
     my ($gwip, $netmask);
     while (<IN>) {
         next if (/^\s*\#/);
@@ -468,11 +471,15 @@ sub rebuild_dhcp_conf {
     }
     close (IN);
     if (!defined($gwip) || !defined($netmask)) {
-        die "Could not determine gateway IP for dhcpd.conf and/or netmask!";
+        die "Could not determine gateway IP for $dhcp_conf and/or netmask!";
     }
 
-    system("mkdhcpconf -o /etc/dhcpd.conf --interface=$net_interface --gateway=$gwip");
-    system("/etc/init.d/dhcpd restart");
+    # OL: FIXME: Need to test return codes.
+    system("mkdhcpconf -o $dhcp_conf --interface=$net_interface --gateway=$gwip");
+
+    # Restart the DHCP service.
+    !system_service(DHCP(),RESTART())
+        or (print "ERROR: Couldn't restart dhcp service.\n", return -1);
 }
 
 sub boot_vm {
