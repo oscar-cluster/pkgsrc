@@ -2,7 +2,7 @@
 %define name torque-oscar
 %define version 4.1.7
 
-%define release 1
+%define release 2
 
 # The following options are supported:
 #   --with server_name=hostname
@@ -368,6 +368,13 @@ done
 
 # remove libtool droppings
 %{__rm} -f $RPM_BUILD_ROOT/%{_lib}/security/pam_pbssimpleauth.{a,la}
+
+# recreate pbs_environment.
+cat > pbs_environment <<EOF
+PATH=%{torquebindir}:%{torquesbindir}:/bin:/usr/bin
+LANG=C
+LC_ALL=C
+EOF
 
 # Relocate configuration files.
 mkdir -p %{buildroot}%{_sysconfdir}/torque
@@ -1080,6 +1087,9 @@ is used to set the corresponding PATH and MANPATH.
 %endif
 
 %changelog
+* Tue Nov 26 2013 Olivier Lahaye <olivier.lahaye1@free.fr> 4.1.7-2
+- Update pbs_environment so it includes torquebindir and torquesbindir.
+
 * Tue Oct 23 2013 Olivier Lahaye <olivier.lahaye1@free.fr> 4.1.7-1
 - Final release of upstream version 4.1.7.
 
