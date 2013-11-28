@@ -69,7 +69,7 @@ echo "cleaning $RPM_BUILD_ROOT"
 rm -rf $RPM_BUILD_ROOT
 
 %changelog
-* Thu nov 28 2013    Olivier Lahaye <olivier.lahaye@cea.fr>
+* Thu Nov 28 2013    Olivier Lahaye <olivier.lahaye@cea.fr>
 - New upstream version that fix ElementTreee on python > 2.6 (included in xml.etree)
 - spec cleanup (removed unused libvers variable)
 
