@@ -1,7 +1,6 @@
 %define name apitest
-%define version 1.0.0
-%define libvers 1.0
-%define release 12.3
+%define version 1.0.1
+%define release 1
 #define _unpackaged_files_terminate_build 0
 
 #{expand:%%define py_ver %(python -V 2>&1| awk '{print $2}')}
@@ -70,6 +69,10 @@ echo "cleaning $RPM_BUILD_ROOT"
 rm -rf $RPM_BUILD_ROOT
 
 %changelog
+* Thu nov 28 2013    Olivier Lahaye <olivier.lahaye@cea.fr>
+- New upstream version that fix ElementTreee on python > 2.6 (included in xml.etree)
+- spec cleanup (removed unused libvers variable)
+
 * Wed Oct 02 2013    Olivier Lahaye <olivier.lahaye@cea.fr>
 - Removed %dir files directives when they point to system dirs (conflict with filesystem package).
 
