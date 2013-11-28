@@ -1,5 +1,5 @@
 %define name apitest
-%define version 1.0.1
+%define version 1.0.2
 %define release 1
 #define _unpackaged_files_terminate_build 0
 
@@ -21,13 +21,13 @@ BuildArch: noarch
 Requires: python-twisted >= 1.3
 BuildRequires: python-twisted >= 1.3
 
-%if 0%(echo %{?python_version}|tr '.' '0') < 206
-Requires: python-elementtree
-BuildRequires: python-elementtree
-%endif
+#%if 0%(echo %{?python_version}|tr '.' '0') < 206
+#Requires: python-elementtree
+#BuildRequires: python-elementtree
+#%endif
 
-Requires: python >= 2.2
-BuildRequires: python >= 2.2
+Requires: python >= 2.6
+BuildRequires: python >= 2.6
 
 
 %description
@@ -69,6 +69,10 @@ echo "cleaning $RPM_BUILD_ROOT"
 rm -rf $RPM_BUILD_ROOT
 
 %changelog
+* Thu Nov 28 2013    Olivier Lahaye <olivier.lahaye@cea.fr>
+- New upstream version that fix deprecated md5 module warning.
+- Now requires python >= 2.6 (apitest-1.0.1+ doesn't work anymore with old python-elementtreee-1.2.6)
+
 * Thu Nov 28 2013    Olivier Lahaye <olivier.lahaye@cea.fr>
 - New upstream version that fix ElementTreee on python > 2.6 (included in xml.etree)
 - spec cleanup (removed unused libvers variable)
