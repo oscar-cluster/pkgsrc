@@ -224,8 +224,11 @@ if ($repoquery) {
 
 } else {
 
+    # Number of repos
+    my $n_repos = scalar(@repos);
     # run yum command
     $cmd = "/usr/bin/yum -c $name";
+    $cmd = "/usr/bin/yum" if $n_repos == 1;
     if (($verbose > 2) && ($verbose <= 10)) {
         $cmd .= " -d $verbose -e 2";
     }
@@ -315,6 +318,8 @@ if ($repoquery) {
              # This allows to have dependancies like the ones in BuildRequires:
              # e.g. /usr/lib/libcrypt.a 
              $search_cmd="LC_ALL=C yum -c $name provides $pkg";
+             $search_cmd="LC_ALL=C yum provides $pkg" if $n_repos == 1;
+
              print "Executing: $search_cmd\n" if ($verbose > 5);
              open (YUM_PROVIDES_PIPE, "$search_cmd |");
              while(<YUM_PROVIDES_PIPE>) {
