@@ -7,7 +7,7 @@ Summary: Wrapper to yum for clusters
 Name: yume
 Version: 2.8.12
 Vendor: Open Source Cluster Group
-Release: 1
+Release: 2
 License: GPL
 Packager: Geoffroy Vallee <valleegr@ornl.gov>
 Source: %{name}-%{version}.tar.gz
@@ -63,6 +63,10 @@ rm -rf $RPM_BUILD_ROOT
 %{_mandir}/man1/ptty_try*
 
 %changelog
+* Thu Nov 28 2013 DongInn Kim <dikim@cs.indiana.edu> 2.8.12-2
+- new upstream version (see ChangeLog for more details).
+- Update the spec file to increase the release number so that
+  the new yume is picked up.
 * Thu May 30 2013 Olivier Lahaye <olivier.lahaye@cea.fr> 2.8.12-1
 - new upstream version (see ChangeLog for more details).
 - Updated the requirement for distro-query: => oscar-utils
