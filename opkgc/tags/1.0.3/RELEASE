@@ -1,0 +1,9 @@
+To release a new version of OPKGC, the following is required:
+* Update the ChangeLog file.
+* Update the version in AC_INIT in configure.ac.
+* Update the version in src/opkgc.
+* Update the spec file and the Debian changelog.
+* Create a new tarball using "./autogen.sh && ./configure && make dist".
+* Create new binary packages:
+    - for RPM: based on your build environment run "rpmbuild -tb opkgc-<version>.tar.gz"
+    - for Debian: run "dpkg-buildpackage -rfakeroot -us -uc"
