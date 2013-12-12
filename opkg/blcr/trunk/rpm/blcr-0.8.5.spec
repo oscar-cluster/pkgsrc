@@ -1,6 +1,6 @@
 Name: blcr
 Version: 0.8.5
-Release: 1
+Release: 3%{?dist}
 Summary: Berkeley Lab Checkpoint/Restart for Linux
 Url: http://ftg.lbl.gov/checkpoint
 
@@ -151,8 +151,35 @@ make
 rm -Rf ${RPM_BUILD_ROOT}
 
 %install
+if [ "$RPM_BUILD_ROOT" != "/" ]; then
+        rm -rf $RPM_BUILD_ROOT
+fi
+
+# Installs sources for DKMS build
+mkdir -p $RPM_BUILD_ROOT/%{_usrsrc}
+mkdir -p $RPM_BUILD_ROOT/%{_datarootdir}/%{name}
+
+# Sources for dkms
+( cd %{buildroot}%{_usrsrc}/ &&\
+ tar xpf %{SOURCE0} &&\
+ mv %{name}-%{version} %{name}-%{version}-%{release} )
+
+# Configuration file for dkms
+%{__cat} > %{buildroot}%{_usrsrc}/%{name}-%{version}-%{release}/dkms.conf << 'EOF'
+PACKAGE_NAME=%{name}
+PACKAGE_VERSION=%{version}-%{release}
+MAKE[0]="./configure --with-components=modules && make"
+BUILT_MODULE_NAME[0]=blcr
+BUILT_MODULE_LOCATION[0]=cr_module/kbuild
+BUILT_MODULE_NAME[1]=blcr_imports
+BUILT_MODULE_LOCATION[1]=blcr_imports/kbuild
+DEST_MODULE_LOCATION[0]=/extra
+DEST_MODULE_LOCATION[1]=/extra
+AUTOINSTALL="YES"
+CLEAN="make clean"
+EOF
+
 cd builddir
-rm -Rf ${RPM_BUILD_ROOT}
 make install-strip DESTDIR=${RPM_BUILD_ROOT}
 # Ensure man pages are gzipped, regardless of brp-compress
 if [ -n "${RPM_BUILD_ROOT}" -a "${RPM_BUILD_ROOT}" != "/" ]; then
@@ -304,6 +331,38 @@ You must also install the %{name}-libs package.
 %endif
 
 #
+# Kernel dkms module as a separate package
+#
+%package dkms
+Group: System Environment/Kernel
+Summary: DKMS Kernel modules for Berkeley Lab Checkpoint/Restart for Linux
+Provides: %{name}-modules = %{version}-%{release}
+Requires: %{name} = %{version}
+Requires: dkms
+Conflicts: %{name}-%{modsubpkg}
+buildarch: noarch
+
+%description dkms
+Kernel modules for Berkeley Lab Checkpoint/Restart for Linux (BLCR)
+These kernel modules are built dynamicaly when needed using dkms
+
+%post dkms
+dkms add     -m %{name} -v %{version}-%{release} --rpm_safe_upgrade &&
+dkms build   -m %{name} -v %{version}-%{release} --rpm_safe_upgrade &&
+dkms install -m %{name} -v %{version}-%{release} --rpm_safe_upgrade --force
+true
+
+%preun dkms
+dkms remove -m %{name} -v %{version}-%{release} --rpm_safe_upgrade --all
+true
+
+%files dkms
+%defattr(-,root,root)
+%dir %{_datarootdir}/%{name}
+%{_usrsrc}/%{name}-%{version}-%{release}
+
+
+#
 # Kernel modules as a separate package
 #
 %package %{modsubpkg}
@@ -311,6 +370,7 @@ Group: System Environment/Kernel
 Summary: Kernel modules for Berkeley Lab Checkpoint/Restart for Linux
 Provides: %{name}-modules = %{version}-%{release}
 Requires: %{name} = %{version}
+Conflicts: %{name}-dkms
 # DON'T require since many clusters are built w/ non-RPM kernels:
 # Requires: kernel = %{kernel}
 
