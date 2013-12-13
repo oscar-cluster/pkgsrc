@@ -1,0 +1,11 @@
+oscar-packager (1.1.1-1) quantal; urgency=low
+
+  * New upstream version.
+
+ -- Olivier LAHAYE <olivier.lahaye@cea.fr>  Fri, 13 Dec 2013 21:59:45 +0100
+
+oscar-packager (1.1.0-1) quantal; urgency=low
+
+  * Initial packaging.
+
+ -- Olivier LAHAYE <olivier.lahaye@cea.fr>  Sun, 23 Apr 2013 15:33:28 +0100

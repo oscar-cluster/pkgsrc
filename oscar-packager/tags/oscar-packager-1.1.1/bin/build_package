@@ -1,0 +1,335 @@
+#!/usr/bin/perl
+#
+
+# Copyright (c) 2008-2009 Oak Ridge National Laboratory
+#                         Geoffroy Vallee <valleegr@ornl.gov>
+#                         All rights reserved
+
+# This a generic script we use to package third-party software (RPM or Deb
+# packages).
+
+use strict;
+use Getopt::Long;
+use OSCAR::Defs;
+use OSCAR::FileUtils;
+use OSCAR::Logger;
+use OSCAR::Packager;
+use OSCAR::Utils;
+use Cwd;
+use File::Basename;
+use File::Path;
+use Carp;
+
+my ($type, $output, $url, $verbose, $pkg);
+use vars qw($log_file);
+
+# Getopt::Long::Configure("pass_through");
+GetOptions(
+            "type=s"            => \$type,
+            "output=s"          => \$output,
+            "url=s"             => \$url,
+            "package-name=s"    => \$pkg,
+            "verbose"           => \$verbose,
+          );
+
+
+# Return: 0 if success, -1 else.
+sub build_deb_pkgs ($$$) {
+    my ($output, $filename, $basename) = @_;
+
+    # Create temporary build tree
+    if (mkpath("/tmp/debbuild")) {
+        carp "ERROR: Impossible to create temporary build path /tmp/debbuild";
+        return -1;
+    }
+
+    # We untar the tarball
+    my $cmd = "cd /tmp/debbuild; tar xzf $filename";
+    OSCAR::Logger::oscar_log_subsection ("Untaring $output/$filename ($cmd)...");
+    if (system($cmd)) {
+        carp "ERROR: Impossible to execute $cmd";
+        return -1;
+    }
+    
+    my $dir = "/tmp/debbuild/$basename";
+    if (! -d $dir) {
+        carp "ERROR: Directory $dir does not exist";
+        return -1;
+    }
+
+    my $cmd = "cp -rf debian $dir";
+    OSCAR::Logger::oscar_log_subsection ("Copying Debian scripts ($cmd)...");
+    if (system ($cmd)) {
+        carp "ERROR: Impossible to execute $cmd";
+        return -1;
+    }
+
+    $cmd = "cd $dir && dpkg-buildpackage -b -rfakeroot -us -uc";
+    OSCAR::Logger::oscar_log_subsection ("Creating the Debian package ($cmd)...");
+    if (system ($cmd)) {
+        carp "ERROR: Impossible to execute $cmd";
+        return -1;
+    }
+	# OL: At this point, we have the deb package in $output (current directory) and a
+	# non cleaned build tree for the package. We should do some cleanup.
+
+    # OL: FIXME. Use file::Copy to do that (be carfeull to force override).
+    $cmd = "mv -f /tmp/debbuild/*.deb $output";
+    if (system ($cmd)) {
+        carp "ERROR: Impossible to execute $cmd";
+        return -1;
+    }
+
+    # Clean up build tree.
+    if(rmtree("/tmp/debbuild")) {
+        carp "ERROR: Cannot clean temporary build tree: /tmp/debbuild";
+        return -1;
+    }
+    return 0;
+}
+
+sub copy_files ($$) {
+    my ($files, $output) = @_;
+
+    if (!defined($files)) {
+        carp "ERROR: Invalid list of files";
+        return -1;
+    }
+
+    if (! -d $output) {
+        carp "ERROR: $output does not exist";
+        return -1;
+    }
+
+    my $cmd;
+    foreach my $file (@$files) {
+        $cmd = "cp -f $file $output";
+        OSCAR::Logger::oscar_log_subsection ("Executing: $cmd");
+        if (system ($cmd)) {
+            carp "ERROR: Impossible to execute $cmd";
+            return -1;
+        }
+    }
+
+    return 0;
+}
+
+# Prepare everything for the creation of a RPM, and then actually create the RPM:
+#   - copy the source file into the appropriate rpm directory (if needed),
+#   - copy the available patches into the appropriate rpm directory.
+#   - find the spec file(s) (mandatory),
+#   - create the RPM.
+#
+# Return: 0 if success, -1 else.
+sub build_rpm_pkgs ($$$) {
+    my ($pkg, $output, $filename) = @_;
+
+    # Where do we need need to copy the source file for the creation of the RPMs?
+    my $source_dir = `/bin/rpm --eval %{_sourcedir}`;
+    chomp ($source_dir);
+    if (!-d $source_dir) {
+        carp "ERROR: Impossible to detect where to copy source for the ".
+             "RPMs ($source_dir)";
+        return -1;
+    }
+
+    #
+    # Do we have any patches to use?
+    #
+    my @patch_files = glob ("rpm/$pkg/*");
+    OSCAR::Logger::oscar_log_subsection ("Copying the following patch files: "
+        .join (",", @patch_files));
+    if (scalar(@patch_files) > 0) {
+        copy_files (\@patch_files, $source_dir);
+    }
+
+    #
+    # Then we find the spec file.
+    #
+    my @spec_files = glob ("rpm/$pkg*.spec");
+    OSCAR::Logger::oscar_log_subsection ("Found the following spec files: "
+        .join (",", @spec_files));
+
+    #
+    # Finally, for each spec file (a package may have several of them), we
+    # create the RPM.
+    #
+    my $cmd;
+    my @rpms;
+	my $rpmdir = `rpm --eval '%_rpmdir'`; # required as it is not initialised when parsing a spec file.
+	chomp($rpmdir);
+	my $query_spec_cmd = "rpmspec -q";
+
+	# rpmspec is the replacement of rpm -q --specfile. Fallback to old method
+	# if rpmspec not yet available. (assuming that rpmspec is always located at /usr/bin)
+	$query_spec_cmd = "rpm -q --specfile " if ( ! -x '/usr/bin/rpmspec') ;
+
+    foreach my $spec (@spec_files) {
+        $cmd = "rpmbuild -bb $spec";
+	# OL: FIXME? Warning, no target specified: either it's a binary pkg or the BuildArch: is forced in the spec.
+        OSCAR::Logger::oscar_log_subsection ("Executing: $cmd");
+        if (system ($cmd)) {
+            carp "ERROR: Impossible to execute $cmd";
+            return -1;
+        }
+		# Copy resulting rpms to $output.
+		# OL: FIXME? Warning, no target specified.....Same as above FIXME.
+		OSCAR::Logger::oscar_log_subsection ("Copying Resulting RPMS to $output");
+		@rpms = `$query_spec_cmd $spec --qf "$rpmdir/%{arch}/%{name}-%{version}-%{release}.%{arch}.rpm "`;
+        if (scalar (@rpms) > 0) {
+            # OL: FIXME: Sometimes we move, sometimes, we copy, this should be unified.
+            copy_files (\@rpms, $output);
+        }
+    }
+    return 0;
+}
+
+# Return: 0 if success, -1 else.
+sub prepare_packaging ($$$) {
+    my ($pkg, $output, $log_file) = @_;
+
+    # We create a log file specific to oscar-packager
+    $log_file = "/var/log/oscar/build_package_$pkg.log";
+    OSCAR::Logger::init_log_file ($log_file);
+    OSCAR::Logger::oscar_log_section ("Creating binary package for $pkg");
+
+    my @dirs = glob ("$output/*$pkg*");
+    my $dir;
+    foreach my $d (@dirs) {
+        if (-d $d) {
+            # Doing some clean-up
+            File::Path::rmtree ("$d");
+        }
+    }
+
+    return 0;
+}
+
+###############################################################################
+#
+# Beginning of the operations
+#
+###############################################################################
+
+if (!OSCAR::Utils::is_a_valid_string ($type)
+    || !OSCAR::Utils::is_a_valid_string ($output)
+    || !OSCAR::Utils::is_a_valid_string ($pkg)) {
+    die "ERROR: Invalid parameter(s)";
+}
+
+if (!OSCAR::Utils::is_a_valid_string ($url)) {
+    warn ("[WARN] No source code associated to the package");
+}
+
+# Now we correctly set OSCAR_VERBOSE to be sure we get all the output wee want
+my $initial_verbose = $ENV{OSCAR_VERBOSE};
+if ($verbose) {
+    $ENV{OSCAR_VERBOSE} = 5;
+}
+
+if (prepare_packaging ($pkg, $output, $log_file)) {
+    die "ERROR: Impossible to get the source code ($pkg, $url)";
+}
+
+my ($filename, $basename);
+if (OSCAR::Utils::is_a_valid_string ($url)) {
+    $filename = File::Basename::basename ($url);
+    # gv: we currently assume that we are dealing with tarballs
+    $basename = File::Basename::basename($url, ".tar.gz");
+} else {
+    $filename = undef;
+    $basename = undef;
+}
+
+# As parameter, the user must specify "rpm" or "deb" to know which binary
+# package format should be used.
+my $package_type = $type;
+
+if (!OSCAR::Utils::is_a_valid_string ($package_type)
+    || ($package_type ne "rpm" && $package_type ne "deb")) {
+    die "ERROR: you must specify \"rpm\" or \"deb\", so we can know what ".
+        "kind of binary packages you want to create";
+}
+
+OSCAR::Logger::oscar_log_subsection ("Creation $package_type packages...");
+
+# If we need a source file, we download it. But remember that we may use binary
+# packages to setup the system only, therefore a source file is not mandatory.
+if (OSCAR::Utils::is_a_valid_string ($url)) {
+
+    my $dest;
+    if ($package_type eq "deb") {
+        $dest = "/tmp/debbuild";
+    } elsif ($package_type eq "rpm") {
+	$dest = `/bin/rpm --eval %{_sourcedir}` if ($package_type eq "rpm");
+	chomp($dest);
+    } else {
+        die "ERROR: Unknown package type ($package_type)"
+    }
+
+    OSCAR::FileUtils::download_file ($url,
+                                     $dest,
+                                     "wget",
+                                     OSCAR::Defs::NO_OVERWRITE());
+}
+
+# We install potential needed dependencies (based on the build.cfg file)
+my $pwd = cwd();
+if (OSCAR::Packager::prepare_prereqs ($pwd, $output)) {
+    die "ERROR: Impossible to manage prereqs for the creation of ".
+        "the binary package";
+}
+
+
+if ($package_type eq "deb") {
+    build_deb_pkgs ($output, $filename, $basename);
+} elsif ($package_type eq "rpm") {
+    build_rpm_pkgs ($pkg, $output, $filename);
+} else {
+    die "ERROR: Unknown package type ($package_type)"
+}
+
+# Before to exit, we restore the initial OSCAR_VERBOSE value
+if (defined $initial_verbose) {
+    $ENV{OSCAR_VERBOSE} = $initial_verbose;
+}
+
+exit 0;
+
+__END__
+
+=head1 NAME
+
+build_package, a script that abstract the creation of binary packages (e.g.,
+RPMs or .debs). For that, the script can download the source file, prepare some
+directories for packaging, set the system for packaging, and then actually
+create the packages.
+
+=head1 SYNOPSIS
+
+build_package OPTIONS
+
+=head1 OPTIONS
+
+Recognized options include:
+
+=over 8
+
+=item --type
+
+=item --output
+
+=item --url
+
+=item --package-name
+
+=item --verbose
+
+
+=back
+
+=head1 AUTHOR
+
+Geoffroy Vallee, Oak Ridge National Laboratory <valleegr at ornl dot gov>
+
+=cut

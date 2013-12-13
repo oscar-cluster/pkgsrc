@@ -1,0 +1,78 @@
+Summary:        OSCAR Packaging helpers.
+Name:           oscar-packager
+Version:        __VERSION__
+Release:        1
+Vendor:         Open Cluster Group <http://OSCAR.OpenClusterGroup.org/>
+Distribution:   OSCAR
+Packager:       Olivier Lahaye <olivier.lahaye@cea.fr>
+License:        GPL
+Group:          Development/Libraries
+Source:         %{name}-%{version}.tar.gz
+BuildRoot:      %{_localstatedir}/tmp/%{name}-root
+BuildArch:      noarch
+AutoReqProv:    no
+Requires:       wget, oscar-base-lib > 6.1.2r9859, rpm-build, subversion
+Requires:       packman, opkgc
+Requires:       oscar-base-scripts
+
+%description
+Set of scripts and Perl modules for the automatic packaging of the OSCAR.
+
+%prep
+%setup
+
+%install
+%__make install DESTDIR=$RPM_BUILD_ROOT
+
+%files
+%defattr(-,root,root)
+%{_bindir}/*
+%{perl_vendorlib}/*
+%{_mandir}/*
+%{_sysconfdir}/oscar/%{name}/*
+
+%changelog
+* Fri Dec 13 2013 Olivier Lahaye <olivier.lahaye@cea.fr> 1.1.1-1
+- New upstream version. See chanlog for more info.
+* Fri Dec 13 2013 Olivier Lahaye <olivier.lahaye@cea.fr> 1.1.0-2
+- Added dep on oscar-base-scripts as it needs that
+  oscar-config --setup-distro is run in order to work.
+* Mon Mar 25 2013 Olivier Lahaye <olivier.lahaye@cea.fr> 1.1.0-1
+- spec version updated from Makefile using VERSION file.
+- New upstream release with at least the following features:
+- More intelligent building process for the oscar packages and opkgs.
+- Upgraded:
+  - c3 to 5.1.3 (new version) in core_unstable.cfg
+  - torque to 4.1.4
+  - ganglia to 3.5.7 (web) and 3.5.0 (daemons)
+  - jobmonarch to 1.0 (final release)
+- Added packages in the build structure
+  - systemimager + bittorent + flamethrower
+  - systemconfigurator
+  - systeminstaller-oscar
+  - oscar-packager
+  - opkgc
+  - pvm
+  - network-configurator
+  - loghost
+  - oscar-v
+  - oscar-installer
+  - oscar-nat
+  - system-update
+  - jobmonarch + pyPgSQL + pbs_python
+  - blcr
+- More packages supported under debian.
+See ChangeLog for more informations.
+
+* Wed Nov 14 2012 Olivier Lahaye <olivier.lahaye@cea.fr> 1.0.1-2
+- used __make macro instead of make. makeinstall macro is useless here.
+- used macros for paths.
+
+* Tue May 31 2011 Olivier Lahaye <olivier.lahaye@cea.fr> 1.0.1-1
+- new upstream version (see ChangeLog for more details).
+- moved "make install" into install section to avoid RPM_BUILD_ROOT being erased
+  after install.
+- removed empty build section
+
+* Fri Jan 02 2009 Geoffroy Vallee <valleegr@ornl.gov> 1.0-1
+- new upstream version (see ChangeLog for more details).

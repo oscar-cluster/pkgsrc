@@ -1,0 +1,49 @@
+= RPM Based System =
+
+In order to use oscar-packager, you will need to install the following 
+components from sources:
+- oscar-base: http://svn.oscar.openclustergroup.org/svn/oscar/trunk
+- packman: http://svn.oscar.openclustergroup.org/svn/oscar/pkgsrc/packman/trunk
+- yume: http://svn.oscar.openclustergroup.org/svn/oscar/pkgsrc/yume/trunk
+
+For each of those components, please check the repository out ("svn co <url>",
+where 'url' is the URL we just gave for each component, and then run the "sudo
+make install" from the top directory of the source code.
+
+OPKGC, the OSCAR package compiler, is also required. Please install opkgc by
+creating the RPM is installing the RPM, otherwise you may encounter technical
+difficulties.
+
+You will also need to install createrepo and perl-AppConfig (yum -y install
+createrepo perl-AppConfig).
+
+Also remember to setup your distribution with oscar-config (the --setup-distro
+option, for more details, please refer to the oscar-config man page).
+Furthermore, if the oscar configuration file does not exist
+(/etc/oscar/oscar.conf), please create one (you can use the "oscar-config
+--generate-config-file command for that).
+
+= Debian Based System =
+
+In order to use oscar-packager, you will need to install the following
+components from sources:
+- oscar-base: http://svn.oscar.openclustergroup.org/svn/oscar/trunk
+- packman: http://svn.oscar.openclustergroup.org/svn/oscar/pkgsrc/packman/trunk
+- rapt: http://svn.oscar.openclustergroup.org/svn/oscar/pkgsrc/rapt/trunk
+
+For each of those components, please check the repository out ("svn co <url>",
+where 'url' is the URL we just gave for each component, and then run the "sudo
+make install" from the top directory of the source code.
+
+You will also need to install the following debian packages:
+libappconfig-perl fakeroot dpkg-dev debhelper build-essential
+
+OPKGC, the OSCAR package compiler, is also required. Please install opkgc by
+creating the RPM is installing the RPM, otherwise you may encounter technical
+difficulties.
+
+Also remember to setup your distribution with oscar-config (the --setup-distro
+option, for more details, please refer to the oscar-config man page). 
+Furthermore, if the oscar configuration file does not exist 
+(/etc/oscar/oscar.conf), please create one (you can use the "oscar-config
+--generate-config-file command for that).
