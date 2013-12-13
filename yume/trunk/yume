@@ -317,8 +317,8 @@ if ($repoquery) {
              # at least one package providing this feature.
              # This allows to have dependancies like the ones in BuildRequires:
              # e.g. /usr/lib/libcrypt.a 
-             $search_cmd="LC_ALL=C yum -c $name provides $pkg";
-             $search_cmd="LC_ALL=C yum provides $pkg" if $n_repos == 1;
+             $search_cmd="LC_ALL=C yum -c $name provides '$pkg'";
+             $search_cmd="LC_ALL=C yum provides '$pkg'" if $n_repos == 1;
 
              print "Executing: $search_cmd\n" if ($verbose > 5);
              open (YUM_PROVIDES_PIPE, "$search_cmd |");
@@ -348,6 +348,7 @@ if ($repoquery) {
         help();
     }
 
+    @yumargs = map { "'$_'" } @yumargs;
     $cmd .= " ".join(" ",@yumargs);
     print "Executing: $cmd\n" if ($verbose);
 

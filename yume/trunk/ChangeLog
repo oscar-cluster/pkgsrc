@@ -1,3 +1,6 @@
+yume-2.8.13:
+- Added the possibility to install generic provides like 'perl(Pod::Man)'
+  => yume install 'perl(Pod::Man)' 'glibc-devel(x86-32)'
 yume-2.8.12:
 - Added the possibility to install, update, remove a "feature".
   A feature can be: a package name, a file (with absolute path), a "provide".
