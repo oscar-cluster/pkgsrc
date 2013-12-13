@@ -1,0 +1,121 @@
+yume-2.8.13:
+- Added the possibility to install generic provides like 'perl(Pod::Man)'
+  => yume install 'perl(Pod::Man)' 'glibc-devel(x86-32)'
+yume-2.8.12:
+- Added the possibility to install, update, remove a "feature".
+  A feature can be: a package name, a file (with absolute path), a "provide".
+- Added a requirement for oscar-utils (/usr/bin/distro-query needed even on nodes)
+- Updated the spec file and Makefile so it ptty_try.1 is generated and
+packaged
+- Fixed distro-query parsing for repo autodetection
+- Use on_oscar_master() in distro_repo to detect we are on master node.
+- Suggest repoquery if the rpm version supporting the "suggest" tag is 
+installed (patch from Olivier Lahaye).
+- Automatically detect the source directory for RPM based system (patch from
+O. Lahaye).
+
+yume-2.8.11:
+- [Ticket #575] Fix a problem with the return code for some errors.
+
+yume-2.8.10:
+- Include the support for i586 RPMs.
+
+yume-2.8.9:
+- Finer grain management of output.
+
+yume-2.8.8:
+- Fix various issues when OSCAR is installed directly on the system.
+
+yume-2.8.7:
+- Update the package architecture detection mechanism.
+
+yume-2.8.6:
+- Make the seach and info options really work (previously we had no output).
+- Correctly check if packages are available before installation.
+- Add the detection of the architecture of only repositories.
+- Correctly run on Debian based systems.
+- Correctly detect package architecture.
+- Add a debug option to get even more output.
+
+yume-2.8.5:
+- Remove uneeded debugging messages.
+- Modify the Makefile so we can choose the directory to save sources when
+creating RPMs.
+- Modify the Makefile so we can choose the directory where the binary packages
+are stored.
+- Enable the creation of unsigned Debian packages by setting the
+UNSIGNED_OSCAR_PKG environment variable.
+
+yume-2.8.4:
+- Fix a bug when checking if a package is available before installation.
+- Improve the management of the verbose mode, we can really use the verbose
+option or the env variable, and have the same behavior.
+- Fix a problem in the return code catching in ptty_try.
+
+yume-2.8.3:
+- Extend ptty_try so we can catch the return code of executed commands and
+return it back to the user (therefore PackMan can catch errors). Contribution
+to close [Ticket #509].
+- Extend yume so we can catch errors from yum. Contribution to close [Ticket
+#509].
+- Add a framework for unit tests + some basic unit tests.
+- [Ticket #452] Yume now returns an error code when we try to install a
+package that is not available.
+
+yume-2.8.2:
+- add a "deb" target to the Makefile (needed by oscar-packager).
+- fix the "make dist" command.
+
+yume-2.8.1:
+- improve the man page (by adding examples).
+- slightly improve the Makefile.
+- add a separate ChangeLog file that could be used both with RPM and Debian
+packages
+
+yume-2.8:
+- added master recognition for failover case (heartbeat version).
+
+yume-2.7:
+- fix a bad handling of the return code.
+- added repoadd, repodel, repolist repository manipulation funtionality for
+OSCAR headnodes.
+
+yume-2.6:
+- certain yum versions are too chatty, fixed version detection
+
+yume-2.5:
+- fixed repoquery for newer yum versions
+
+yume-2.3:
+- Improved scalability by dealing with timeouts when calling distro-query
+- More detailed errors
+
+yume-2.2:
+- fixed problem with yume invocation on SUSE clients
+- suse_bootstrap support for installing into empty suse images
+- including yum-repoquery and removing dependency of yum-utils.
+- added rpm groups support (e.g. yume install @eclipse)
+- added repoquery support (--repoquery)
+- moved ptty_try log file to /tmp, cleaning it up at interruption
+- added mirror:http://mirrorlist_url/ option handling
+- significantly improved functionality of yume-opkg
+- limit architectures of installed packages (if not specified), this should
+avoid installing all compatible architectures of a package on a x86_64. Detects
+arch from name of repository.
+- added env variable YUME_VERBOSE
+- added debugging output
+- added correct return codes when subcommands fail
+- removed need for "--" to separate yum arguments
+- changed exported repository URL path to /repo/$repopath
+- added default repository detection for OSCAR clusters.
+
+yume-0.3:
+- added ptty_try (otherwise no progress bar in systeminstaller)
+
+yume-0.2:
+- chop trailing "/" from repo paths, otherwise getting trouble with basename
+
+yume-0.1:
+- added yume-opkg
+- added rpmlists for rhel4 i386 and x86_64 to /usr/share/yume
+
