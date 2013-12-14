@@ -4,14 +4,14 @@ PKGDEST=
 NAME:=sc3
 LIBS := Subcluster.pm
 SCRIPTS := scexec scrpm scpush
-
+LIBDIR  ?= $(shell perl -V:vendorlib | sed s/vendorlib=\'// | sed s/\'\;//)
 
 all:
 
 install:
-	install -d -o root -g root -m 755 $(DESTDIR)/usr/lib/systeminstaller/HPCL
+	install -d -o root -g root -m 755 $(DESTDIR)/$(LIBDIR)/HPCL
 	install -d -o root -g root -m 755 $(DESTDIR)/usr/bin
-	install -o root -g root -m 644 ${LIBS} $(DESTDIR)/usr/lib/systeminstaller/HPCL
+	install -o root -g root -m 644 ${LIBS} $(DESTDIR)/$(LIBDIR)/HPCL
 	install -o root -g root -m 755 ${SCRIPTS} $(DESTDIR)/usr/bin
 
 dist: clean

@@ -1,7 +1,7 @@
 # $Id$
 Summary: Subcluster command and control tools
 Name: sc3
-Version: 1.2.3
+Version: 1.2.4
 Vendor: NEC HPCE
 Release: 1
 License: GPL
@@ -12,7 +12,7 @@ BuildArch: noarch
 BuildRoot: %{_tmppath}/%{name}
 Requires: c3 >= 5.0.1
 Requires: systeminstaller
-AutoReqProv: no
+#AutoReqProv: no
 
 %description 
 
@@ -39,10 +39,10 @@ rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(-,root,root)
-/usr/bin/scexec
-/usr/bin/scrpm
-/usr/bin/scpush
-/usr/lib/systeminstaller/HPCL
+%{_bindir}/scexec
+%{_bindir}/scrpm
+%{_bindir}/scpush
+%{perl_vendorlib}/HPCL
 
 %changelog
 * Thu Mar 12 2009 Geoffroy Vallee <valleegr@ornl.gov> 1.2.3-1
