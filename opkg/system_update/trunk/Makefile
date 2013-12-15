@@ -37,6 +37,7 @@ dist: clean
 	@rm -f /tmp/$(PKG).tar.gz
 
 rpm: dist
+	sed -i -e "s/Version:        .*/Version:        $(VERSION)/g" system-update.spec
 	cp $(PKG).tar.gz $(shell rpm --eval '%_sourcedir')
 	rpmbuild -bb ./$(NAME).spec
 	@if [ -n "$(PKGDEST)" ]; then \
