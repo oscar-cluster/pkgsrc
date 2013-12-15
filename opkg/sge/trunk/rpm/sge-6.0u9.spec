@@ -111,7 +111,6 @@ Requires: %{name} = %{version}-%{release}
 Group: Applications/System
 BuildPreReq: rpm >= 3.0.5
 Requires: modules-oscar >= 3.1 /bin/sed
-AutoReqProv: no
 %endif
 
 %description

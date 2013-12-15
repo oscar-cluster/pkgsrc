@@ -2,7 +2,7 @@
 Summary:        OSCAR udev configuration tool.
 Name:           oscar-udev
 Version:        1.0
-Release:        1
+Release:        3
 Vendor:         Open Cluster Group <http://OSCAR.OpenClusterGroup.org/>
 Distribution:   OSCAR
 Packager:       Geoffroy Vallee <valleegr@ornl.gov>
@@ -11,7 +11,6 @@ Group:          Development/Libraries
 Source:         %{name}.tar.gz
 BuildRoot:      %{_localstatedir}/tmp/%{name}-root
 BuildArch:      noarch
-AutoReqProv: 	no
 
 %description
 Set of scripts and Perl modules for the management of udev within an OSCAR cluster.
@@ -24,9 +23,13 @@ make install DESTDIR=$RPM_BUILD_ROOT
 
 %files
 %defattr(-,root,root)
-%{perl_vendorlib}/*
+%{perl_vendorlib}/OSCAR/*
 
 %changelog
+* Sun Dec 15 2013 Olivier Lahaye <olivier.lahaye@cea.fr> 1.0-3
+- Removed AutoReqProv: no
+- Avoid owning %{perl_vendorlib}/OSCAR
+
 * Mon Feb  4 2013 Olivier Lahaye <olivier.lahaye@cea.fr> 1.0-2
 - Use rpm macros for paths.
 

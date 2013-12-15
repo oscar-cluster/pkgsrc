@@ -1,7 +1,7 @@
 Summary:        Script that helps at setting up the network.
 Name:           network-configurator
 Version:        1.0.0
-Release:        2
+Release:        3
 Vendor:         Open Cluster Group <http://OSCAR.OpenClusterGroup.org/>
 Distribution:   OSCAR
 Packager:       Geoffroy Vallee <valleegr@ornl.gov>
@@ -10,7 +10,6 @@ Group:          Development/Libraries
 Source:         %{name}.tar.gz
 BuildRoot:      %{_localstatedir}/tmp/%{name}-root
 BuildArch:      noarch
-AutoReqProv: 	no
 
 %description
 Script that helps at setting up the network with various configurations, e.g., bridges management.
@@ -24,10 +23,14 @@ Script that helps at setting up the network with various configurations, e.g., b
 %files
 %defattr(-,root,root)
 %{_bindir}/*
-%{perl_vendorlib}/*
+%{perl_vendorlib}/OSCAR/*
 %{_mandir}/*
 
 %changelog
+* Sun Dec 13 2013 Olivier Lahaye <olivier.lahaye@cea.fr> 1.0.0-3
+- Removed AutoReqProv: no so we have automatic deps
+- Avoid owning %{perl_vendorlib}/OSCAR dir (owned by oscar-base-lib)
+
 * Mon Feb  4 2013 Olivier Lahaye <olivier.lahaye@cea.fr> 1.0.0-2
 - Use rpm standard macro locations.
 

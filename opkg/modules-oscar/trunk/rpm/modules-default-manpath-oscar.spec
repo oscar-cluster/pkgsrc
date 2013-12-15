@@ -32,13 +32,12 @@
 Summary: Modules default manpath package
 Name: modules-default-manpath-oscar
 Version: 1.0.1
-Release: 1
+Release: 2
 License: BSD
 Group: Applications/Environment
 Source0: modules-default-manpath-oscar-1.0.1.tar.gz
 BuildRoot: %{_tmppath}/%{name}-%{version}-root
 Packager: Open Cluster Group / OSCAR working group
-AutoReqProv: no
 Requires: modules-oscar
 Requires: %__cp %__mkdir %__chmod %__cat
 
@@ -114,6 +113,9 @@ unset destdir
 #
 #############################################################################
 %changelog
+* Sun Dec 15 2013 Olivier Lahaye <olivier.lahaye@cea.fr>
+- Re-enabled automatic dependancy generator.
+
 * Mon Mar 14 2005 Jeff Squyres <jsquyres@lam-mpi.org>
 - Only examine /etc/man.config if it exists
 

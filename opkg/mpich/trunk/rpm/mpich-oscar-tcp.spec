@@ -63,7 +63,6 @@ Group: Applications/cluster
 Obsoletes: %{base}
 #BuildRequires: /usr/bin/symlinks
 Requires: rpm >= 3.0.5
-AutoReqProv: no
 Requires: glibc
 
 %description
@@ -78,7 +77,6 @@ Summary: Portable Implementation of MPI OSCAR-specific modulefile
 Group: Applications/cluster
 BuildPreReq: rpm >= 3.0.5
 Requires: rpm >= 3.0.5
-AutoReqProv: no
 Requires: modules-oscar
 Requires: switcher
 Requires: %{prefix}/bin
@@ -245,6 +243,8 @@ fi
 #==============================================================
 
 %changelog
+* Sun Dec 15 2013 Olivier Lahaye <olivier.lahaye@cea.fr> 3.0.5-2
+- Re-enabled automatic dependancy generator.
 * Fri Sep 23 2005 Erich Focht
 - added back part of the %post scriptlet
 * Tue Sep 20 2005 Erich Focht

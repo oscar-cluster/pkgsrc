@@ -103,7 +103,7 @@
 Summary: OSCAR-specific LAM/MPI programming environment
 Name: %{lam_name}
 Version: 7.1.4
-Release: 2%{?dist}
+Release: 3%{?dist}
 Vendor: LAM/MPI Team
 License: BSD
 Group: Development/Libraries
@@ -116,7 +116,6 @@ Requires: %__rm %__make %__mkdir %__sed %__mv %__chmod
 Provides: mpi
 Requires: %{requires} blcr-libs
 BuildRequires: rsh %{requires} blcr-devel
-AutoReqProv: no
 
 %description 
 This RPM is created specifically for the OSCAR distribution.  The main
@@ -319,6 +318,9 @@ fi
 #
 #############################################################################
 %changelog
+* Sun Dec 13 2013 Olivier Lahaye <olivier.lahaye1@free.fr> 7.1.4-3
+- Re-enabled automatic dependancy generator.
+
 * Fri May 21 2010 Olivier Lahaye <olivier.lahaye1@free.fr> 7.1.4-2
 - Patch for x86_64 blcr (Berkley Checkpoint/Restart) support
 

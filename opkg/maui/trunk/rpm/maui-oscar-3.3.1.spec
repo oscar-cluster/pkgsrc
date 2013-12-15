@@ -35,7 +35,7 @@
 Summary: OSCARified Maui Scheduler
 Name: %{name}
 Version: %{version}
-Release: 3%{?dist}
+Release: 4%{?dist}
 Packager: Bernard Li <bli@bcgsc.ca>
 URL: http://www.clusterresources.com/pages/products/maui-cluster-scheduler.php
 Source0: maui-%{version}.tar.gz
@@ -49,7 +49,6 @@ Obsoletes: maui
 BuildRequires: rpm >= 3.0.5
 BuildRequires: %{torque_name}-client %{torque_name}-server %{torque_name}
 Requires: %{torque_name}-client %{torque_name}-server %{torque_name}
-AutoReqProv: no
 Requires: glibc >= 2.2.4
 BuildRoot: %{_tmppath}/%{name}-buildroot
 
@@ -155,6 +154,9 @@ fi
 #==============================================================
 
 %changelog
+* Sun Dec 15 2013 Olivier Lahaye <olivier.lahaye@cea.fr> 3.3.1-4
+- Re-enabled automatic dependancy generator.
+- Rebuilt with torque 4.1.7 stable.
 * Tue Dec 11 2012 Olivier Lahaye 3.3.1-3
 - Rebuild with torque-4.1.4.snap.201211201307
 - Use LDFLAGS to ease libtorque.so link.

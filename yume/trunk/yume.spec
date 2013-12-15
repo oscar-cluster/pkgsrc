@@ -7,7 +7,7 @@ Summary: Wrapper to yum for clusters
 Name: yume
 Version: 2.8.13
 Vendor: Open Source Cluster Group
-Release: 1
+Release: 2
 License: GPL
 Packager: Geoffroy Vallee <valleegr@ornl.gov>
 Source: %{name}-%{version}.tar.gz
@@ -20,7 +20,6 @@ Requires: oscar-utils >= 6.1.2
 Requires: perl-IO-Tty
 # actually "createrepo" is also needed, but only on the master node,
 # so don't add it to the requires. (opkg-yume-server handles this Requires:)
-AutoReqProv: no
 # If rpm version >= 4.6, then Suggests yum-utils (need for repoquery)
 %if %has_rpm_suggests
 Suggests: yum-utils
@@ -63,6 +62,8 @@ rm -rf $RPM_BUILD_ROOT
 %{_mandir}/man1/ptty_try*
 
 %changelog
+* Fri Dec 15 2013 Olivier Lahaye <olivier.lahaye1@free.fr> 2.8.13-2
+- Removed AutoReqProv: no
 * Fri Dec 13 2013 Olivier Lahaye <olivier.lahaye1@free.fr> 2.8.13-1
 - new upstream version (see ChangeLog for more details).
 - Update the spec file to increase the release number so that

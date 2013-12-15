@@ -3,7 +3,7 @@ Summary: Manage next network boot action for a cluster
 Name: netbootmgr
 Version: 1.7
 Vendor: NEC HPCE
-Release: 2
+Release: 3
 License: GPL
 Packager: Erich Focht <efocht@hpce.nec.com>
 Source: %{name}-%{version}.tar.gz
@@ -12,7 +12,6 @@ BuildArch: noarch
 BuildRoot: %{_tmppath}/%{name}
 BuildRequires: perl-Qt
 Requires: perl-Qt
-AutoReqProv: no
 
 %description 
 Netbootmgr provides a GUI interface for managing the next boot action for
@@ -76,6 +75,8 @@ if [ $1 -eq 0 ]; then
 fi
 
 %changelog
+* Sun Dec 15 2013 Olivier Lahaye 1.7-3
+- Re-enabled automatic dependancy generator.
 * Fri Feb  8 2013 Olivier Lahaye 1.7-2
 - Fixed perl Qt path (puic path)
 * Fri Apr 13 2007 Erich Focht 1.7-1

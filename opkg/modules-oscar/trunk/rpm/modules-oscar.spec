@@ -34,7 +34,7 @@
 Summary: Modules package
 Name: modules-oscar
 Version: %{main_version}c
-Release: 3
+Release: 4
 License: GPL
 Group: Applications/Environment
 Source0: modules-oscar-1.0.5.tar.gz
@@ -44,7 +44,6 @@ Source3: Modules-Paper.doc
 Patch0: modules-3.2.9_bashrc.patch
 URL: http://modules.sourceforge.net/
 Packager: Open Cluster Group / OSCAR working group
-AutoReqProv: no
 BuildRequires: tcl-devel
 Requires: tcl
 Requires: %__mv %__rm %__cp %__cat %__mkdir %__chmod %__grep %__make
@@ -409,6 +408,9 @@ fi
 #
 #############################################################################
 %changelog
+* Fri Dec 15 2013 Olivier Lahaye <olivier.lahaye@cea.fr> 3.2.9c-4
+- Re-enabled automatic dependancy generator.
+
 * Fri Nov 23 2012 Olivier Lahaye <olivier.lahaye@cea.fr> 3.2.9c-3
 - Clean buildroot in prep so install stage doesn't fail if a previous build had occured.
 
