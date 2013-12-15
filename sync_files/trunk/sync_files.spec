@@ -6,7 +6,7 @@
 Summary: OSCARized File Synchronization System
 Name: sync-files
 Version: 2.5.9
-Release: 1
+Release: 2
 Distribution: OSCAR
 Packager: Geoffroy Vallee <valleegr@ornl.gov>
 URL: http://oscar.sourceforge.net/
@@ -15,7 +15,6 @@ Source: sync-files.tar.gz
 License: GPL
 Group: System
 BuildPreReq: rpm >= 3.0.5
-AutoReq: 0
 Requires: c3 >= 5.0
 Requires: /usr/bin/md5sum
 Requires: /bin/sh 
@@ -32,7 +31,6 @@ Obsoletes: sync-users-oscar
 Prefix:	   %{install_dir}
 BuildRoot: %{_localstatedir}/tmp/%{name}-root
 BuildArch: noarch
-AutoReqProv:	no
 
 #==============================================================
 
@@ -68,11 +66,13 @@ mv /etc/crontab.preun /etc/crontab
 %config %{install_dir}/etc/sync_files.conf
 %dir %{install_dir}/tmp
 %{install_dir}/templates/*
-/usr/local/man/man1/sync_files.1
+%{_mandir}/man1/sync_files.1*
 
 #==============================================================
 
 %changelog
+* Sun Dec 15 2013 Olivier Lahaye <olivier.lahaye@cea.fr> 2.5.9-2
+- Re-enabled automatic deps generator.
 * Thu May 30 2013 Olivier Lahaye <olivier.lahaye@cea.fr> 2.5.9-1
 - Added Requires: oscar-utils (/usr/bin/distro-query)
 - New upstream version.

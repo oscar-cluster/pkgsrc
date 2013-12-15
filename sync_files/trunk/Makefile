@@ -7,8 +7,8 @@ DISTROS := mdv rhel suse debian
 SCRIPTS := sync_files
 
 man:
-	install -d -m 0755 $(DESTDIR)/usr/local/man/man1/
-	for bin in ${SCRIPTS} ; do ( pod2man --section=1 $$bin $(DESTDIR)/usr/local/man/man1/$$bin.1 ) ; done
+	install -d -m 0755 $(DESTDIR)/usr/share/man/man1/
+	for bin in ${SCRIPTS} ; do ( pod2man --section=1 $$bin $(DESTDIR)/usr/share/man/man1/$$bin.1 ) ; done
 
 all:
 

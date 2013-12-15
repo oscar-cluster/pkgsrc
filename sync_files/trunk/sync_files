@@ -32,7 +32,6 @@ use Getopt::Long;
 use AppConfig::File;
 use File::Copy;
 use File::Basename;
-use lib "/usr/lib/systeminstaller";
 use SIS::NewDB;
 use SIS::Image;
 use Carp;
