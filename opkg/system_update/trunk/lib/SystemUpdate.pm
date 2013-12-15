@@ -64,9 +64,9 @@ sub get_list_local_binary_packages ($) {
     my $pm;
     require OSCAR::PackMan;
     if ($os->{pkg} eq "deb") {
-        $pm = PackMan::DEB->new;
+        $pm = OSCAR::PackMan::DEB->new;
     } elsif ($os->{pkg} eq "rpm") {
-        $pm = PackMan::RPM->new;
+        $pm = OSCAR::PackMan::RPM->new;
     } else {
         carp "ERROR: Unknown binary package format (".$os->{pkg}.")";
         return -1;

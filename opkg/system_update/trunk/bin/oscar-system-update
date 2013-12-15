@@ -84,9 +84,9 @@ sub do_system_update {
     require OSCAR::PackMan;
     require OSCAR::PackManDefs;
     if ($os->{pkg} eq "deb") {
-        $pm = PackMan::DEB->new;
+        $pm = OSCAR::PackMan::DEB->new;
     } elsif ($os->{pkg} eq "rpm") {
-        $pm = PackMan::RPM->new;
+        $pm = OSCAR::PackMan::RPM->new;
     } else {
         carp "ERROR: Unknown binary package format (".$os->{pkg}.")";
         return -1;
