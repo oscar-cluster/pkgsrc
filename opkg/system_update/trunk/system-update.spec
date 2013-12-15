@@ -1,6 +1,6 @@
 Summary:        OSCAR System Updater
 Name:           system-update
-Version:        1.0.0
+Version:        1.0.1
 Release:        1
 Vendor:         Open Cluster Group <http://OSCAR.OpenClusterGroup.org/>
 Distribution:   OSCAR
@@ -10,9 +10,9 @@ Group:          Development/Libraries
 Source:         %{name}-%{version}.tar.gz
 BuildRoot:      %{_localstatedir}/tmp/%{name}-root
 BuildArch:      noarch
-AutoReqProv:    no
+#AutoReqProv:    no
 Requires:       oscar-base-lib >= 6.0.5
-Requires:       packman >= 3.2.0
+Requires:       packman >= 3.2.2
 Requires:       diff
 
 %description
@@ -35,6 +35,11 @@ Set of scripts and Perl modules for the update of OSCAR compute nodes.
 %{_defaultdocdir}/%{name}/templates
 
 %changelog
+* Sun Dec 15 2013 Olivier Lahaye <olivier.lahaye@cea.fr> 1.0.1-1
+- New version that match packman 3.2.2
+- Updated packman min version
+- Removed AutoReqProv:no so we have correct deps.
+
 * Thu Apr 04 2012 Olivier Lahaye <olivier.lahaye@cea.fr> 1.0.0-2
 - Updated spec file using macros.
 - Now tarball name includes version.

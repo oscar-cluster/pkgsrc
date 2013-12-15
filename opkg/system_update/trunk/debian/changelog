@@ -1,3 +1,10 @@
+system-update (1.0.1-1) stable; urgency=low
+
+  * New version (adapt to new packman 3.2.2)
+  * updated requirements.
+
+ -- Geoffroy Vallee <valleegr@ornl.gov>  Fri, 18 Jun 2010 14:56:40 -0500
+
 system-update (1.0.0-1) stable; urgency=low
 
   * New upstream version.
