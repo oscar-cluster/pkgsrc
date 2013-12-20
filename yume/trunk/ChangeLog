@@ -1,3 +1,5 @@
+yume-2.8.14:
+- use plugins=1 so official repos are used in redhat-el systems.
 yume-2.8.13:
 - Added the possibility to install generic provides like 'perl(Pod::Man)'
   => yume install 'perl(Pod::Man)' 'glibc-devel(x86-32)'

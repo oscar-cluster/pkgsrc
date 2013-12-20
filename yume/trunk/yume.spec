@@ -5,9 +5,9 @@
 
 Summary: Wrapper to yum for clusters
 Name: yume
-Version: 2.8.13
+Version: 2.8.14
 Vendor: Open Source Cluster Group
-Release: 2
+Release: 1
 License: GPL
 Packager: Geoffroy Vallee <valleegr@ornl.gov>
 Source: %{name}-%{version}.tar.gz
@@ -62,6 +62,8 @@ rm -rf $RPM_BUILD_ROOT
 %{_mandir}/man1/ptty_try*
 
 %changelog
+* Fri Dec 20 2013 Olivier Lahaye <olivier.lahaye1@free.fr> 2.8.14-1
+- Add support for redhat-el by using plugins=1 in yum tmp config file.
 * Fri Dec 15 2013 Olivier Lahaye <olivier.lahaye1@free.fr> 2.8.13-2
 - Removed AutoReqProv: no
 * Fri Dec 13 2013 Olivier Lahaye <olivier.lahaye1@free.fr> 2.8.13-1

@@ -150,6 +150,7 @@ retries=20
 obsoletes=1
 reposdir=
 gpgcheck=0
+plugins=1
 EOF
 
 # chop trailing slashes from repository names
