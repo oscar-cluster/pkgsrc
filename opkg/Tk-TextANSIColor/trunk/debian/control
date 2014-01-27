@@ -1,0 +1,29 @@
+Source: libtk-textansicolor-perl
+Section: perl
+Priority: optional
+Maintainer: Olivier LAHAYE <olivier.lahaye@cea.fr>
+Build-Depends: debhelper (>= 8),
+ perl
+Standards-Version: 3.9.2
+Homepage: http://search.cpan.org/dist/Tk-TextANSIColor/
+
+Package: libtk-textansicolor-perl
+Architecture: all
+Depends: ${misc:Depends}, ${perl:Depends}
+Description: Tk::Text widget with support for ANSI color escape codes
+ This widget extends the capabilities of the standard Tk::Text widget by
+ adding support for ANSI color escape codes. When these escape codes are
+ detected they are replaced by equivalent tags.
+ .
+ This widget was developed to solve the problem associated with driving a
+ scrolling status display on a GUI as well as a status display going to an
+ Xterm without having to know whether an xterm or Tk window is receiving the
+ status information. Mainly used in conjunction with a tied filehandle:
+ .
+ $text = $MW->TextANSIColor->pack;
+ .
+ tie *TEXT, "Tk::TextANSIColor", $text;
+ .
+ $info = colored("Some information\n", 'red');
+ .
+ This description was automagically extracted from the module by dh-make-perl.
