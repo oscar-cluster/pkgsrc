@@ -9,8 +9,8 @@
 Summary: OSCARified User Synchronization System
 Name: %{name}
 Version: %{version}
-Release: 2
-BuildArchitectures: noarch
+Release: 1
+BuildArch: noarch
 Packager: Jason Brechin <brechin@ncsa.uiuc.edu>
 URL: http://oscar.sourceforge.net/
 Source: ssh-oscar.tar.gz
@@ -56,7 +56,7 @@ compute nodes.
 #==============================================================
 
 %changelog
-* Wed Jan 29 2013 Olivier Lahaye <olivier.lahaye@cea.fr> 1.3.1-2
+* Wed Jan 29 2013 Olivier Lahaye <olivier.lahaye@cea.fr> 1.3.2-1
 - Removed obsolete PreReqs.
 - Fixed typo in description.
 
