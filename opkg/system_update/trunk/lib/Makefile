@@ -1,6 +1,5 @@
 DESTDIR=
 PKGDEST=
-SOURCEDIR=/usr/src/redhat/SOURCES
 PKG=
 
 include ../Config.mk
