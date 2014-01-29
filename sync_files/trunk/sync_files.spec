@@ -14,7 +14,6 @@ Source: sync-files.tar.gz
 
 License: GPL
 Group: System
-BuildPreReq: rpm >= 3.0.5
 Requires: c3 >= 5.0
 Requires: /usr/bin/md5sum
 Requires: /bin/sh 
