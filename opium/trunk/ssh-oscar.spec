@@ -2,29 +2,28 @@
 %define name ssh-oscar
 
 # Version of package
-%define version 1.3.1
+%define version 1.3.2
 
 #==============================================================
 
 Summary: OSCARified User Synchronization System
 Name: %{name}
 Version: %{version}
-Release: 1
+Release: 2
 BuildArchitectures: noarch
 Packager: Jason Brechin <brechin@ncsa.uiuc.edu>
 URL: http://oscar.sourceforge.net/
-Source0: ssh-oscar.tar.gz
+Source: ssh-oscar.tar.gz
 
 License: GPL
 Group: System
-BuildPreReq: rpm >= 3.0.5
 Requires: rpm >= 3.0.5, oscar-base-lib
 Conflicts: sync-users-oscar
 #==============================================================
 
 %description
 The OSCAR User Synchronization System keeps the users and groups
-synchronizaed from the the central OSCAR server out to the OSCAR
+synchronized from the the central OSCAR server out to the OSCAR
 compute nodes.
 
 #==============================================================
@@ -57,6 +56,10 @@ compute nodes.
 #==============================================================
 
 %changelog
+* Wed Jan 29 2013 Olivier Lahaye <olivier.lahaye@cea.fr> 1.3.1-2
+- Removed obsolete PreReqs.
+- Fixed typo in description.
+
 * Fri Sep 25 2009 Geoffroy Vallee <valleegr@ornl.gov> 1.3.1-1
 - New upstream version (see ChangeLog for more details).
 

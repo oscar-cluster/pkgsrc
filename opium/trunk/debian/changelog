@@ -1,3 +1,9 @@
+ssh-oscar (1.3.2-1) hardy; urgency=low
+
+  * New upstream version.
+
+/bin/bash: q : commande introuvable
+
 ssh-oscar (1.3.1-1) hardy; urgency=low
 
   * New upstream version.

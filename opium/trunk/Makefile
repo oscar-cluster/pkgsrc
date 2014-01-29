@@ -1,6 +1,6 @@
 DESTDIR=
 PKGDEST=
-MANDIR=/usr/local/man/man1
+MANDIR=/usr/share/man/man1
 PKG=ssh-oscar
 
 MANPAGES := ssh-oscar
@@ -23,15 +23,15 @@ install: clean doc
 deb:
 	cp -f postinst debian/
 	@if [ -n "$$UNSIGNED_OSCAR_PKG" ]; then \
-        echo "dpkg-buildpackage -rfakeroot -us -uc"; \
-        dpkg-buildpackage -rfakeroot -us -uc; \
-    else \
-        echo "dpkg-buildpackage -rfakeroot"; \
-        dpkg-buildpackage -rfakeroot; \
-    fi
+		echo "dpkg-buildpackage -rfakeroot -us -uc"; \
+		dpkg-buildpackage -rfakeroot -us -uc; \
+	else \
+		echo "dpkg-buildpackage -rfakeroot"; \
+		dpkg-buildpackage -rfakeroot; \
+	fi
 	@if [ -n "$(PKGDEST)" ]; then \
-        mv ../$(PKG)*.deb $(PKGDEST); \
-    fi
+		mv ../$(PKG)*.deb $(PKGDEST); \
+	fi
 
 clean:
 	for dir in ${SUBDIRS} ; do ( cd $$dir ; ${MAKE} clean ) ; done
@@ -52,8 +52,7 @@ dist: clean
 	rm -f /tmp/$(PKG).tar.gz
 
 rpm: dist
-	cp $(PKG).tar.gz `rpm --eval '%_sourcedir'`
-	rpmbuild -bb ./$(PKG).spec
+	rpmbuild -tb ./$(PKG).tar.gz
 	@if [ -n "$(PKGDEST)" ]; then \
-        mv `rpm --eval '%{_topdir}'`/RPMS/noarch/$(PKG)-*.noarch.rpm $(PKGDEST); \
-    fi
+		mv `rpm --eval '%{_topdir}'`/RPMS/noarch/$(PKG)-*.noarch.rpm $(PKGDEST); \
+	fi
