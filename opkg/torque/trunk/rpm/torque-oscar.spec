@@ -2,7 +2,7 @@
 %define name torque-oscar
 %define version 4.1.7
 
-%define release 2
+%define release 3
 
 # The following options are supported:
 #   --with server_name=hostname
@@ -183,6 +183,7 @@ License: OpenPBS and TORQUEv1.1
 Group: System Environment/Daemons
 URL: http://www.clusterresources.com/products/torque/
 BuildRoot: %{_tmppath}/%{name}-%{version}-buildroot
+Obsoletes: torque < 4.1.0
 Provides: pbs = %{version}-%{release}
 Provides: torque = %{version}-%{release}
 BuildRequires:  desktop-file-utils
@@ -508,6 +509,7 @@ fi
 Group: System Environment/Daemons
 Summary: Simple fifo scheduler for TORQUE
 Requires: %{name}-libs = %{?epoch:%{epoch}:}%{version}-%{release}
+Obsoletes: torque-scheduler < 4.1.0
 Provides: pbs-scheduler = %{version}-%{release}
 Provides: torque-scheduler = %{version}-%{release}
 Requires(post):  chkconfig
@@ -549,6 +551,7 @@ This package holds the fifo C scheduler.
 Group:             System Environment/Daemons
 Summary:           The main part of TORQUE
 Requires:          %{name} = %{?epoch:%{epoch}:}%{version}-%{release}
+Obsoletes:         torque-server < 4.1.0
 Provides:          pbs-server = %{version}-%{release}
 Provides:          torque-server = %{version}-%{release}
 %if ! %{use_scp}
@@ -586,7 +589,9 @@ This package holds the server.
 Group:             System Environment/Daemons
 Summary:           Run time files for the drmaa interface
 Requires:          %{name}-libs = %{version}-%{release}
+Obsoletes:         torque-drmaa < 4.1.0
 Provides:          drmaa
+Provides:          torque-drmaa = %{version}-%{release}
 
 %description drmaa
 %shared_description
@@ -605,7 +610,9 @@ Group:             System Environment/Daemons
 Summary:           Development files for the drmaa interface.
 Requires:          %{name}-drmaa = %{version}-%{release}
 Requires:          %{name}-devel = %{version}-%{release}
+Obsoletes:         torque-drmaa-devel < 4.1.0
 Provides:          dramm-devel
+Provides:          torque-drmaa-devel = %{version}-%{release}
 
 %description drmaa-devel
 %shared_description
@@ -647,6 +654,7 @@ DRMAA is "Distributed Resource Management Application API"
 Group:          System Environment/Daemons
 Summary:        Node execution daemon for TORQUE
 Requires:       %{name}-libs = %{?epoch:%{epoch}:}%{version}-%{release}
+Obsoletes:      torque-mom < 4.1.0
 Provides:       pbs-mom = %{version}-%{release}
 Provides:       torque-mom = %{version}-%{release}
 %if ! %{use_scp}
@@ -699,6 +707,7 @@ Requires:             %{name}-libs = %{?epoch:%{epoch}:}%{version}-%{release}
 Requires(posttrans):  chkconfig
 Requires(preun):      chkconfig
 Requires:             munge
+Obsoletes:            torque-client < 4.1.0
 Provides:             pbs-client = %{version}-%{release}
 Provides:             torque-client = %{version}-%{release}
 #AutoReqProv: no
@@ -815,6 +824,8 @@ This package holds the command-line client programs.
 Group:                Applications/System
 Summary:              Graphical clients for TORQUE
 Requires:             %{name}-client = %{?epoch:%{epoch}:}%{version}-%{release}
+Obsoletes:            torque-gui < 4.1.0
+Provides:             torque-gui = %{version}-%{release}
 Provides:             xpbs xpbsmon
 #AutoReqProv: no
 
@@ -842,7 +853,7 @@ This package holds the graphical clients.
 Summary:      Run-time libs for programs which will use the %{name} library
 Group:        Development/Libraries
 Requires:     torque = %{version}-%{release}
-Obsoletes:    libtorque  < 2.4.8-2
+Obsoletes:    libtorque  < 4.1.0
 Provides:     libtorque = %{version}-%{release}
 Requires:     munge
 
@@ -893,7 +904,7 @@ This package installs and configures a minimal localhost-only batch queue system
 Summary:     Development tools for programs which will use the %{name} library.
 Group:       Development/Libraries
 Requires:    %{name}-libs = %{?epoch:%{epoch}:}%{version}-%{release}
-Obsoletes:   libtorque-devel < 2.4.8-2
+Obsoletes:   libtorque-devel < 4.1.0
 Provides:    lib%{name}-devel = %{version}-%{release}
 Provides:    libtorque-devel = %{version}-%{release}
 #AutoReqProv: no
@@ -1047,6 +1058,7 @@ A simple PAM module to authorize users on PBS MOM nodes with a running job.
 Group:                Documentation
 Summary:              Documentation files for TORQUE
 Requires:             %{name} = %{?epoch:%{epoch}:}%{version}-%{release}
+Obsoletes:            torque-docs < 4.1.0
 Provides:             pbs-docs = %{version}-%{release}
 Provides:             torque-docs = %{version}-%{release}
 %if 0%{?fedora} >= 10 || 0%{?rhel} >= 6
@@ -1087,6 +1099,10 @@ is used to set the corresponding PATH and MANPATH.
 %endif
 
 %changelog
+* Mon Feb 17 2014 Olivier Lahaye <olivier.lahaye1@free.fr> 4.1.7-3
+- Obsoletes *torque* < 4.1.0 to make sure we do not install our server
+  with old torquelibs for example.
+
 * Tue Nov 26 2013 Olivier Lahaye <olivier.lahaye1@free.fr> 4.1.7-2
 - Update pbs_environment so it includes torquebindir and torquesbindir.
 
