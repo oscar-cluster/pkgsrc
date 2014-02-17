@@ -854,7 +854,9 @@ Summary:      Run-time libs for programs which will use the %{name} library
 Group:        Development/Libraries
 Requires:     torque = %{version}-%{release}
 Obsoletes:    libtorque  < 4.1.0
+Obsoletes:    torque-libs  < 4.1.0
 Provides:     libtorque = %{version}-%{release}
+Provides:     torque-libs = %{version}-%{release}
 Requires:     munge
 
 %description libs
