@@ -382,8 +382,10 @@ mkdir -p %{buildroot}%{_sysconfdir}/torque
 pushd %{buildroot}%{torquehomedir}
 mv pbs_environment %{buildroot}%{_sysconfdir}/torque
 mv server_name %{buildroot}%{_sysconfdir}/torque
+mv server_priv/nodes %{buildroot}%{_sysconfdir}/torque
 ln -s %{_sysconfdir}/torque/pbs_environment .
 ln -s %{_sysconfdir}/torque/server_name .
+ln -s %{_sysconfdir}/torque/nodes server_priv/
 popd
 
 # Relocate mom_logs to /var/log
@@ -575,6 +577,7 @@ This package holds the server.
 %dir %{_var}/log/torque/server_logs
 %{torquehomedir}/server_logs
 %{torquehomedir}/server_priv
+%config(noreplace) %{_sysconfdir}/torque/nodes
 %{torquemandir}/man8/pbs_server.8*
 
 %post server
@@ -1104,6 +1107,11 @@ is used to set the corresponding PATH and MANPATH.
 %endif
 
 %changelog
+* Mon Mar 10 2014 Olivier Lahaye <olivier.lahaye1@free.fr> 4.1.7-4
+- Fix alternative for qsub.
+- Added pbsdsh alternative.
+- Set /etc/torque/nodes as configuration file. add a link in server_priv.
+
 * Mon Feb 17 2014 Olivier Lahaye <olivier.lahaye1@free.fr> 4.1.7-3
 - Obsoletes *torque* < 4.1.0 to make sure we do not install our server
   with old torquelibs for example.
