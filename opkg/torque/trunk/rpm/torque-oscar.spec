@@ -807,9 +807,9 @@ This package holds the command-line client programs.
         --slave %{_bindir}/qstat qstat %{torquebindir}/qstat-torque \
         --slave %{_mandir}/man1/qstat.1.gz qstat-man \
                 %{torquemandir}/man1/qstat-torque.1.gz \
-        --slave %{_bindir}/pbsdsh pbsdsh %{torquebindir}/pbsdsh \
+        --slave %{_bindir}/pbsdsh pbsdsh %{torquebindir}/pbsdsh-torque \
         --slave %{_mandir}/man1/pbsdsh.1.gz pbsdsh-man \
-                %{torquemandir}/man1/pbsdsh.1.gz
+                %{torquemandir}/man1/pbsdsh-torque.1.gz
 
 %post client
 /sbin/ldconfig
