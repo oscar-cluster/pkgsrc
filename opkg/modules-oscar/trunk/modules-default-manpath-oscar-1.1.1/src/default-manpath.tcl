@@ -17,29 +17,30 @@
 
 proc ModulesHelp { } {
   puts stderr "\tThis module adds in the default MANPATH entries"
-  puts stderr "\tto the $MANPATH environment variable from /etc/man.config."
+  puts stderr "\tto the $MANPATH environment variable from /etc/man_db.conf."
 }
 
 module-whatis   "Add default entries to the MANPATH environment variable"
 
 # Read in /etc/man.config, find all MANPATH entires
 
-if { [file exists /etc/man.config] } {
-  set manconfig [open "|egrep ^MANPATH /etc/man.config" "r"]
-  while { [eof $manconfig] == 0 } {
-    gets $manconfig line
-    set words [split $line]
-
-    # To be blunt, I didn't have the time or inclination to figure out the
-    # right TCL syntax to get the regexp right, above -- all I got was
-    # "starting the line with MANPATH", but there's still a few items
-    # in /etc/man.config that can start with MANPATH, but not *be* MANPATH
-    # (e.g., "MANPATH_MAP").  So just double check here that we got
-    # MANPATH, and not anything else.
-
-    if { [lindex $words 0] == "MANPATH" } {
-      append-path MANPATH [lindex $words 1]
-    }
-  }
-  close $manconfig
+# Backup current MANPATH and unset MANPATH
+set MANPATH_BACKUP ""
+if [info exists ::env(MANPATH) ] {
+    set MANPATH_BACKUP ::$env(MANPATH)
+    unset ::env(MANPATH)
 }
+
+# Get the default MANPATH using manpath command.
+set system_path [exec /usr/bin/manpath -q]
+
+# Restore MANPATH
+set ::env(MANPATH) $MANPATH_BACKUP
+
+# Append default MANPATH.
+foreach path [split $system_path :] {
+	if {[string length $path] > 0} {
+		append-path MANPATH $path
+	}
+}
+

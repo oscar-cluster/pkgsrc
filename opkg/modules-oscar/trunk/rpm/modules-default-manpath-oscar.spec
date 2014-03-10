@@ -31,8 +31,8 @@
 
 Summary: Modules default manpath package
 Name: modules-default-manpath-oscar
-Version: 1.0.1
-Release: 2
+Version: 1.1.1
+Release: 1
 License: BSD
 Group: Applications/Environment
 Source0: modules-default-manpath-oscar-1.0.1.tar.gz
@@ -56,11 +56,11 @@ them to the MANPATH environment variable.
 #
 #############################################################################
 %prep
-%setup -q -n modules-default-manpath-oscar-1.0.1
+%setup -q -n modules-default-manpath-oscar-1.1.1
 
 # Otherwise, this directory shows up on security reports
 
-chmod -R o-w $RPM_BUILD_DIR/modules-default-manpath-oscar-1.0.1
+chmod -R o-w $RPM_BUILD_DIR/modules-default-manpath-oscar-1.1.1
 
 
 #############################################################################
@@ -86,11 +86,11 @@ destdir="$RPM_BUILD_ROOT/%{_moddir}"
 %__mkdir_p "$destdir"
 %__chmod 0755 "$destdir"
 
-srcdir="$RPM_BUILD_DIR/modules-default-manpath-oscar-1.0.1"
-%__cp "$srcdir/src/default-manpath.tcl" "$destdir/1.0.1"
+srcdir="$RPM_BUILD_DIR/modules-default-manpath-oscar-%{version}"
+%__cp "$srcdir/src/default-manpath.tcl" "$destdir/%{version}"
 %__cat > "$destdir/.version" << EOF
 #%Module
-set ModulesVersion 1.0.1
+set ModulesVersion %{version}
 EOF
 unset destdir
 
@@ -113,11 +113,14 @@ unset destdir
 #
 #############################################################################
 %changelog
-* Sun Dec 15 2013 Olivier Lahaye <olivier.lahaye@cea.fr>
+* Mon Mar 10 2014 Olivier Lahaye <olivier.lahaye@cea.fr> 1.1.1-1
+- New version.
+
+* Sun Dec 15 2013 Olivier Lahaye <olivier.lahaye@cea.fr> 1.0.1-2
 - Re-enabled automatic dependancy generator.
 
-* Mon Mar 14 2005 Jeff Squyres <jsquyres@lam-mpi.org>
+* Mon Mar 14 2005 Jeff Squyres <jsquyres@lam-mpi.org> 1.0.1-1
 - Only examine /etc/man.config if it exists
 
-* Mon Feb 28 2005 Jeff Squyres <jsquyres@lam-mpi.org>
+* Mon Feb 28 2005 Jeff Squyres <jsquyres@lam-mpi.org> 1.0.0-1
 - First version
