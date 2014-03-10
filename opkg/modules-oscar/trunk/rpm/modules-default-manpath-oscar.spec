@@ -35,7 +35,7 @@ Version: 1.1.1
 Release: 1
 License: BSD
 Group: Applications/Environment
-Source0: modules-default-manpath-oscar-1.0.1.tar.gz
+Source0: modules-default-manpath-oscar-%{version}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-%{version}-root
 Packager: Open Cluster Group / OSCAR working group
 Requires: modules-oscar
@@ -56,11 +56,11 @@ them to the MANPATH environment variable.
 #
 #############################################################################
 %prep
-%setup -q -n modules-default-manpath-oscar-1.1.1
+%setup -q -n modules-default-manpath-oscar-%{version}
 
 # Otherwise, this directory shows up on security reports
 
-chmod -R o-w $RPM_BUILD_DIR/modules-default-manpath-oscar-1.1.1
+chmod -R o-w $RPM_BUILD_DIR/modules-default-manpath-oscar-%{version}
 
 
 #############################################################################
