@@ -2,7 +2,7 @@
 %define name torque-oscar
 %define version 4.1.7
 
-%define release 3
+%define release 4
 
 # The following options are supported:
 #   --with server_name=hostname
@@ -359,7 +359,7 @@ install -p -m0644 xpbs.png xpbsmon.png %{buildroot}%{_datadir}/pixmaps
 %endif
 
 # alternatives stuff
-for bin in qalter qdel qhold qrls qselect qstat qsub
+for bin in qalter qdel qhold qrls qselect qstat qsub pbsdsh
 do
     mv %{buildroot}%{torquebindir}/$bin \
        %{buildroot}%{torquebindir}/${bin}-torque
@@ -722,7 +722,7 @@ This package holds the command-line client programs.
 %{torquebindir}/chk_tree
 %{torquebindir}/hostn
 %{torquebindir}/nqs2pbs
-%{torquebindir}/pbsdsh
+%{torquebindir}/pbsdsh-torque
 %{torquebindir}/pbsnodes
 %{torquebindir}/printjob
 %{torquebindir}/printserverdb
@@ -736,7 +736,6 @@ This package holds the command-line client programs.
 %{torquebindir}/pbs_tclsh
 %endif
 %{torquemandir}/man1/nqs2pbs.1*
-%{torquemandir}/man1/pbsdsh.1*
 %{torquemandir}/man1/qchkpt.1*
 %{torquemandir}/man1/qmgr.1*
 %{torquemandir}/man1/qmove.1*
@@ -784,9 +783,10 @@ This package holds the command-line client programs.
 %{torquemandir}/man1/qrls-torque.1*
 %{torquemandir}/man1/qselect-torque.1*
 %{torquemandir}/man1/qstat-torque.1*
+%{torquemandir}/man1/pbsdsh-torque.1*
 
 %posttrans client
-/usr/sbin/alternatives --install %{_bindir}/qsub qsub %{_bindir}/qsub-torque 10 \
+/usr/sbin/alternatives --install %{_bindir}/qsub qsub %{torquebindir}/qsub-torque 10 \
         --slave %{_mandir}/man1/qsub.1.gz qsub-man \
                 %{torquemandir}/man1/qsub-torque.1.gz \
         --slave %{_bindir}/qalter qalter %{torquebindir}/qalter-torque \
@@ -806,7 +806,10 @@ This package holds the command-line client programs.
                 %{torquemandir}/man1/qselect-torque.1.gz \
         --slave %{_bindir}/qstat qstat %{torquebindir}/qstat-torque \
         --slave %{_mandir}/man1/qstat.1.gz qstat-man \
-                %{torquemandir}/man1/qstat-torque.1.gz
+                %{torquemandir}/man1/qstat-torque.1.gz \
+        --slave %{_bindir}/pbsdsh pbsdsh %{torquebindir}/pbsdsh \
+        --slave %{_mandir}/man1/pbsdsh.1.gz pbsdsh-man \
+                %{torquemandir}/man1/pbsdsh.1.gz
 
 %post client
 /sbin/ldconfig
