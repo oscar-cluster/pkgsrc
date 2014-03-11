@@ -18,7 +18,7 @@
 %define _moddir opt/modules
 %define _profiledir /etc/profile.d
 %define _modrpmfilelist /etc/%{name}-%{version}-rpmfiles
-%define main_version 3.2.9
+%define main_version 3.3.a
 
 # Added to get around RPM 4.2 debugging additions (starting in RH 8.0)
 #%define debug_package %{nil}
@@ -33,8 +33,8 @@
 
 Summary: Modules package
 Name: modules-oscar
-Version: %{main_version}c
-Release: 4
+Version: %{main_version}
+Release: 1
 License: GPL
 Group: Applications/Environment
 Source0: modules-oscar-1.0.5.tar.gz
@@ -408,6 +408,9 @@ fi
 #
 #############################################################################
 %changelog
+* Tue Mar 11 2014 Olivier Lahaye <olivier.lahaye@cea.fr> 3.3.a-1
+- New upstream version.
+
 * Fri Dec 15 2013 Olivier Lahaye <olivier.lahaye@cea.fr> 3.2.9c-4
 - Re-enabled automatic dependancy generator.
 
