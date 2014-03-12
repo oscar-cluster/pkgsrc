@@ -1,0 +1,15 @@
+diff --git a/configure.ac b/configure.ac
+index 97fe810..9d83d0b 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -99,6 +99,7 @@ dnl ---------------------------------------------------------------------------
+ dnl Set PREFIX and related based on WANTS_VERSIONING
+ dnl ---------------------------------------------------------------------------
+ AC_SUBST(PREFIX)dnl
++AC_SUBST(DEFAULTPATH)dnl
+ AC_SUBST(BASEPREFIX)dnl
+ DEFAULTPATH=default
+ dnl PREFIX: Usually equivalent to /usr/local/Modules[/version_number]])dnl
+diff --git a/gitlog2changelog.py b/gitlog2changelog.py
+old mode 100644
+new mode 100755

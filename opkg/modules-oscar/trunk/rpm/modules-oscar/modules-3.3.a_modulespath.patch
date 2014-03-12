@@ -1,0 +1,13 @@
+diff --git a/init/.modulespath.in b/init/.modulespath.in
+index c60f66f..d28ca35 100644
+--- a/init/.modulespath.in
++++ b/init/.modulespath.in
+@@ -14,7 +14,7 @@
+ #     limited by the maximum variable size of your shell.
+ #
+ @VERSIONING@@VERSIONPATH@				# location of version files
+-@VERSIONING@@BASEPREFIX@/$MODULE_VERSION/modulefiles	# Module pkg modulefiles (if versioning)
++@VERSIONING@@BASEPREFIX@/$MODULE_VERSION/share/modulefiles	# Module pkg modulefiles (if versioning)
+ @NOTVERSIONING@@datarootdir@/modulefiles	# Module pkg modulefiles (if no versioning)
+ @MODULEPATH@				# General module files
+ #@BASEPREFIX@/your_contribs		# Edit for your requirements

@@ -41,7 +41,9 @@ Source0: modules-oscar-1.0.5.tar.gz
 Source1: modules-%{version}.tar.bz2
 Source2: Modules-Paper.pdf
 Source3: Modules-Paper.doc
-Patch0: modules-3.2.9_bashrc.patch
+Patch0: modules-3.3.a_Modules_fix.patch
+Patch1: modules-3.3.a_configure_ac.patch
+Patch2: modules-3.3.a_modulespath.patch
 URL: http://modules.sourceforge.net/
 Packager: Open Cluster Group / OSCAR working group
 BuildRequires: tcl-devel
@@ -81,7 +83,10 @@ cd ..
 cp %SOURCE2 ./doc/
 cp %SOURCE3 ./doc/
 
-%patch0
+%patch0 -p1
+%patch1 -p1
+%patch2 -p1
+
 # Otherwise, this directory shows up on security reports
 
 chmod -R o-w $RPM_BUILD_DIR/modules-oscar-1.0.5
@@ -133,8 +138,9 @@ make
 %__make install DESTDIR=%{buildroot}
 
 # Set the default symlink, which is used in modules...
-%__mkdir_p %{buildroot}/%{_moddir}/Modules
-(cd %{buildroot}; %__ln_s /%{_moddir}/Modules/%{main_version} %{_moddir}/Modules/default)
+#%__mkdir_p %{buildroot}/%{_moddir}/Modules
+#(cd %{buildroot}; %__ln_s /%{_moddir}/Modules/%{main_version} %{_moddir}/Modules/default)
+(cd %{buildroot}; %__ln_s /%{_moddir}/%{main_version} %{_moddir}/default)
 
 # Make the directory where people are supposed to install their own config files...
 %__mkdir_p %{buildroot}/%{_moddir}/modulefiles
@@ -211,21 +217,7 @@ unset destdir
 file=ed-commands.txt
 
 # First, bash.  
-
-%__cat > $file <<EOF
-/INSERT-PROFILE-MODULES-HERE
-d
--
-. r etc/global/profile.modules
-/INSERT-BASHRC-HERE
-d
--
-. r etc/global/bashrc
-w
-q
-EOF
-ed $srcdir/src/00-modules.sh < ed-commands.txt
-%__rm -f $file
+# OL: Nothing to do, 00-modules.sh is now generic.
 
 # Copy the resulting file to %{_profiledir}.
 

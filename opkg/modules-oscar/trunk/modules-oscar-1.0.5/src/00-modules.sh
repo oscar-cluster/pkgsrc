@@ -1,12 +1,14 @@
 #
 # Copyright (c) 2002 The Trustees of Indiana University.  
 #                    All rights reserved.
+# Copyright (c) 2014 CEA Commissariat a l'Energie Atomique.
+#                    All rights reserved.
 #
 # This file is part of the modules-oscar software package.  For
 # license information, see the LICENSE file in the top-level directory
 # of the modules-oscar source distribution.
 #
-# $Id: 00-modules.sh,v 1.3 2002/10/27 12:24:07 jsquyres Exp $
+# $Id: 00-modules.sh,v 2.0 2014/03/12 10:51:51 olahaye74 Exp $
 #
 
 # Because of weirdness, this file may get sourced more than once.  Add
@@ -41,50 +43,26 @@ if test "$MODULE_OSCAR" = ""; then
 	unset MODULE_VERSION MODULEPATH LOADEDMODULES MODULESHOME \
 	    _LMFILES_ MODULE_VERSION_STACK MODULE_VERSION _MODULESBEGINENV_
     fi
-    export MODULE_SHELL=sh
 
-    # NOTE: Because the RH 7.x /etc/bashrc sucks, the csh init file
-    # corresponding to this one actually lives in /etc/profile.d.  This
-    # file is not in /etc/profile.d and is instead sourced directly from
-    # /etc/bashrc (otherwise things like "rsh somehost who" will fail use
-    # the user has module commands in their $HOME/.bashrc).
-
+    # Init environment modules
     if test "$MODULE_VERSION" = ""; then
-# -- BEGIN -- Modules distribution file: etc/global/profile.modules
-# INSERT-PROFILE-MODULES-HERE
-# -- END -- Modules distribution file: etc/global/profile.modules
+        shell=`/bin/basename \`/bin/ps -p $$ -ocomm=\``
+        if [ -f /usr/share/Modules/init/$shell ]
+        then
+            . /usr/share/Modules/init/$shell
+        else
+            . /usr/share/Modules/init/sh
+        fi
 
-	# -- BEGIN -- Modules distribution snipit: etc/global/profile
-	#--------------------------------------------------------------------#
-	# set this if bash exists on your system and to use it
-	# instead of sh - so per-process dot files will be sourced.
-	#--------------------------------------------------------------------#
-    
-	ENV=$HOME/.bashrc
-	export ENV
-	# -- END -- Modules distribution snipit: etc/global/profile
     fi
+    #----------------------------------------------------------------------#
+    # set this if $shell exists on your system and to use it
+    # instead of sh - so per-process dot files will be sourced.
+    #----------------------------------------------------------------------#
 
-    # For #!/bin/bash scripts, $0 will be set to the name of the script
-    # (RTFM: bash man page) instead of some form of the word "bash".  This
-    # screws up the logic that will be included below, because it expects
-    # $0 to be some form of "sh", "ksh", or "bash".  If it's not, nothing
-    # Bad happens, but modules are effectively misconfigured because the
-    # modules subroutine will use an empty value for $modules_shell.
-    #
-    # So this is a total hack -- pre-initialize modules_shell to be "sh".
-    # If $0 is set properly, then this value will be overriden.  If it's
-    # not, then we'll use "sh" settings.  This isn't Right, but I can't
-    # figure out any other way to do it.  :-( (I should note that this is
-    # not quite as evil as it sounds because the profile.modules (above)
-    # essentially makes this same assumption.  Also note that this is
-    # *only* done for sh-like shells, not csh-like shells.)
-    
-    modules_shell=sh
-
-# -- BEGIN -- Modules distribution file: etc/global/bashrc
-# INSERT-BASHRC-HERE
-# -- END -- Modules distribution file: etc/global/bashrc
+    if test "$shell" !="sh"; then
+        sh() { $shell "$@"; }
+    fi
 
     # Now load all the OSCAR modules
 

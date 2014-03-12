@@ -1,0 +1,81 @@
+diff --git a/etc/add.modules.in b/etc/add.modules.in
+index 196cf1d..349024f 100755
+--- a/etc/add.modules.in
++++ b/etc/add.modules.in
+@@ -144,7 +144,7 @@ case "\$0" in
+        -zsh|zsh|*/zsh)	modules_shell=zsh ;;
+     -bash|bash|*/bash)	modules_shell=bash ;;
+ esac
+-@VERSIONING@module() { eval \`@BASEPREFIX@/Modules/\$MODULE_VERSION/bin/modulecmd \$modules_shell \$*\`; }
++@VERSIONING@module() { eval \`@BASEPREFIX@/\$MODULE_VERSION/bin/modulecmd \$modules_shell \$*\`; }
+ @NOTVERSIONING@module() { eval \`@bindir@/modulecmd \$modules_shell \$*\`; }
+ !
+ 				elif [ x$3 = xcsh ]
+diff --git a/etc/global/bashrc.in b/etc/global/bashrc.in
+index eab5691..2bf8ad7 100644
+--- a/etc/global/bashrc.in
++++ b/etc/global/bashrc.in
+@@ -11,7 +11,7 @@ case "$0" in
+        -zsh|zsh|*/zsh)	modules_shell=zsh ;;
+     -bash|bash|*/bash)	modules_shell=bash ;;
+ esac
+-@VERSIONING@eval "module() { eval \`@BASEPREFIX@/Modules\$MODULE_VERSION/bin/modulecmd $modules_shell \$*\`; }"
++@VERSIONING@eval "module() { eval \`@BASEPREFIX@/\$MODULE_VERSION/bin/modulecmd $modules_shell \$*\`; }"
+ @NOTVERSIONING@eval "module() { eval \`@bindir@/modulecmd $modules_shell \$*\`; }"
+ 
+ unset modules_shell
+diff --git a/etc/global/csh.cshrc.in b/etc/global/csh.cshrc.in
+index b3e94ff..1b22796 100644
+--- a/etc/global/csh.cshrc.in
++++ b/etc/global/csh.cshrc.in
+@@ -10,7 +10,7 @@ else
+ 	set modules_shell="csh"
+ endif
+ 
+-@VERSIONING@alias module 'eval `@BASEPREFIX@/Modules/$MODULE_VERSION/bin/modulecmd '$modules_shell '\!*`'
++@VERSIONING@alias module 'eval `@BASEPREFIX@/$MODULE_VERSION/bin/modulecmd '$modules_shell '\!*`'
+ @NOTVERSIONING@alias module 'eval `@bindir@/modulecmd '$modules_shell '\!*`'
+ 
+ unset modules_shell
+diff --git a/etc/skel/.cshrc.in b/etc/skel/.cshrc.in
+index d8582b0..14d7fd6 100644
+--- a/etc/skel/.cshrc.in
++++ b/etc/skel/.cshrc.in
+@@ -4,7 +4,7 @@ if ($?tcsh) then
+ else
+         set modules_shell="csh"
+ endif
+-@VERSIONING@alias module 'eval `@BASEPREFIX@/Modules/$MODULE_VERSION/bin/modulecmd '$modules_shell '\!*`'
++@VERSIONING@alias module 'eval `@BASEPREFIX@/$MODULE_VERSION/bin/modulecmd '$modules_shell '\!*`'
+ @NOTVERSIONING@alias module 'eval `@bindir@/modulecmd '$modules_shell '\!*`'
+ 
+ if (! $?prompt) exit			#exit if not interactive
+diff --git a/etc/skel/.kshenv.in b/etc/skel/.kshenv.in
+index 330de6d..5f1965a 100644
+--- a/etc/skel/.kshenv.in
++++ b/etc/skel/.kshenv.in
+@@ -4,7 +4,7 @@ case "$0" in
+        -ksh|ksh|*/ksh)	modules_shell=ksh ;;
+     -bash|bash|*/bash)	modules_shell=bash ;;
+ esac
+-@VERSIONING@eval "module() { eval `@BASEPREFIX@/Modules/\$MODULE_VERSION/bin/modulecmd $modules_shell $*`; }"
++@VERSIONING@eval "module() { eval `@BASEPREFIX@/\$MODULE_VERSION/bin/modulecmd $modules_shell $*`; }"
+ @NOTVERSIONING@eval "module() { eval `@bindir@/modulecmd $modules_shell $*`; }"
+ 
+ unset modules_shell
+diff --git a/gitlog2changelog.py b/gitlog2changelog.py
+old mode 100644
+new mode 100755
+diff --git a/init/ruby.rb.in b/init/ruby.rb.in
+index 0087d51..c62c266 100644
+--- a/init/ruby.rb.in
++++ b/init/ruby.rb.in
+@@ -22,7 +22,7 @@ class ENVModule
+     else
+       args = args.join(" ")
+     end
+-@VERSIONING@    exec_prefix = "@BASEPREFIX@/Modules/#{ENV['MODULE_VERSION']}"
++@VERSIONING@    exec_prefix = "@BASEPREFIX@/#{ENV['MODULE_VERSION']}"
+ @VERSIONING@    eval  `#{exec_prefix}/bin/modulecmd ruby #{args}`
+ 
+ @NOTVERSIONING@    exec_prefix = "@bindir@"
