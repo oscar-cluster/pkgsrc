@@ -1,0 +1,226 @@
+diff --git a/ModuleCmd_Avail.c b/ModuleCmd_Avail.c
+index f2fc334..7919bf6 100644
+--- a/ModuleCmd_Avail.c
++++ b/ModuleCmd_Avail.c
+@@ -208,7 +208,7 @@ int ModuleCmd_Avail(
+ 		 **/
+ 				g_specified_module = *argv;
+ 
+-				dirname = ModulePath;
++				dirname = uvec_vector(ModulePathVec);
+ 				while (dirname && *dirname) {
+ 		    /**
+ 		     **  Print the category
+@@ -224,7 +224,7 @@ int ModuleCmd_Avail(
+ 	 **  directory and print its contents.
+ 	 **/
+ 		} else {
+-			dirname = ModulePath;
++			dirname = uvec_vector(ModulePathVec);
+ 			while (dirname && *dirname) {
+ 				if (check_dir(*dirname))
+ 					print_dir(interp, *dirname, NULL);
+@@ -969,7 +969,7 @@ void print_aligned_files(
+ 	     **/
+ 			if (!path) {
+ 				size_t          pathlen, maxPrefixLength = 0;
+-				char          **dirname = ModulePath;
++				char          **dirname = uvec_vector(ModulePathVec);
+ 		    /**
+ 		     ** try to find the longest prefix from the module path
+ 		     **/
+diff --git a/ModuleCmd_Whatis.c b/ModuleCmd_Whatis.c
+index 1c4218f..1e7aaf7 100644
+--- a/ModuleCmd_Whatis.c
++++ b/ModuleCmd_Whatis.c
+@@ -178,7 +178,7 @@ int ModuleCmd_Whatis(
+ 	/**
+ 	 **  Scan all the files
+ 	 **/
+-		dirname = ModulePath;
++		dirname = uvec_vector(ModulePathVec);
+ 		while (dirname && *dirname) {
+ 			if (!check_dir(*dirname))
+ 				continue;
+@@ -232,7 +232,7 @@ int ModuleCmd_Apropos(
+ 	int argc,
+ 	char *argv[]
+ ) {
+-	char          **dirname,	/** modulepath dir		     **/
++	char          **dirname,	/** Vector of MODULEPATHS	     **/
+ 	               *c;
+ 	int             i;
+     /**
+@@ -250,7 +250,7 @@ int ModuleCmd_Apropos(
+ 	if (!uvec_number(ModulePathVec))
+ 		goto success0;
+ 
+-	dirname = ModulePath;
++	dirname = uvec_vector(ModulePathVec);
+ 	while (dirname && *dirname) {
+ 		if (!check_dir(*dirname))
+ 			continue;
+diff --git a/cmdConflict.c b/cmdConflict.c
+index 4e29d1a..8381cb3 100644
+--- a/cmdConflict.c
++++ b/cmdConflict.c
+@@ -200,7 +200,6 @@ unwind0:
+  **					this function is called in order to  **
+  **					control everything		     **
+  **			ModulePathVec	MODULEPATHS uvec		     **
+- **			ModulePath	Vector of MODULEPATHS		     **
+  ** 									     **
+  ** ************************************************************************ **
+  ++++*/
+@@ -214,6 +213,7 @@ int cmdConflict(
+ 	uvec           *modulelist;	/** List of modules		     **/
+ 	int             i, j,		/** Loop counters		     **/
+ 	                numpaths, nummodules;
++	char          **dirname;        /** Vector of MODULEPATHS            **/
+ 					/** Size of the according arrays     **/
+     /**
+      **  Whatis mode
+@@ -257,9 +257,10 @@ int cmdConflict(
+     /**
+      **  Now check/display all passed modules ...
+      **/
++        dirname = uvec_vector(ModulePathVec);
+ 	for (i = 1; i < objc && Tcl_GetString(objv[i]); i++) {
+ 		for (j = 0; j < numpaths; j++) {
+-			modulelist = SortedDirList(ModulePath[j],
++			modulelist = SortedDirList(dirname[j],
+ 				   Tcl_GetString(objv[i]), &nummodules);
+ 			if (!modulelist)
+ 				continue; /** no list to browse		     **/
+@@ -271,7 +272,7 @@ int cmdConflict(
+ 	     **  Actually checking for conflicts is done here
+ 	     **/
+ 			if (TCL_ERROR ==
+-			    checkConflict(interp, ModulePath[j],
++			    checkConflict(interp, dirname[j],
+ 					  uvec_vector(modulelist), nummodules))
+ 				if (OK != ErrorLogger(ERR_CONFLICT, LOC,
+ 				g_current_module, error_module, NULL)) {
+@@ -314,7 +315,6 @@ unwind0:
+  **					this function is called in order to  **
+  **					control everything		     **
+  **			ModulePathVec	MODULEPATHS uvec		     **
+- **			ModulePath	Vector of MODULEPATHS		     **
+  ** 									     **
+  ** ************************************************************************ **
+  ++++*/
+@@ -332,6 +332,7 @@ int cmdPrereq(
+ 	int             i, j, k, numpaths, nummodules, listcnt = 0,
+ 	    Result = TCL_OK;
+ 	char            buffer[MOD_BUFSIZE];
++        char          **dirname;                /** Vector of MODULEPATHS **/
+ 
+     /** 
+      **  Parameter check. Usage is 'prereq <module> [<module> ...]'
+@@ -382,9 +383,10 @@ int cmdPrereq(
+      **  Check/Display all passed modules
+      **/
+ 	notloaded_flag = Tcl_GetString(objv[1]);
++        dirname = uvec_vector(ModulePathVec);
+ 	for (i = 1; i < objc && Tcl_GetString(objv[i]) && notloaded_flag; i++) {
+ 		for (j = 0; j < numpaths && notloaded_flag; j++) {
+-			modulelist = SortedDirList(ModulePath[j],
++			modulelist = SortedDirList(dirname[j],
+ 				Tcl_GetString(objv[i]), &nummodules);
+ 			if (modulelist && !uvec_number(modulelist)) {
+ 				FreeList(&modulelist);
+diff --git a/cmdIsLoaded.c b/cmdIsLoaded.c
+index 4d997cb..3bf751b 100644
+--- a/cmdIsLoaded.c
++++ b/cmdIsLoaded.c
+@@ -84,7 +84,6 @@ static	char	module_name[] = __FILE__;
+  **					this function is called in order to  **
+  **					control everything		     **
+  **			ModulePathVec	MODULEPATHS uvec		     **
+- **			ModulePath	Vector of MODULEPATHS		     **
+  ** 									     **
+  ** ************************************************************************ **
+  ++++*/
+@@ -100,6 +99,7 @@ int cmdIsLoaded(
+ 	int             i, j, k,		/** Loop counters            **/
+ 	                numpaths, nummodules;
+ 					/** Size of the according arrays     **/
++	char          **dirname;                /** Vector of MODULEPATHS    **/
+     /** 
+      **  Parameter check. Usage is 'is-loaded <module> [<module> ...]'
+      **/
+@@ -126,9 +126,10 @@ int cmdIsLoaded(
+      **  Check/Display all passed modules
+      **/
+ 	notloaded_flag = Tcl_GetString(objv[1]);
++        dirname = uvec_vector(ModulePathVec);
+ 	for (i = 1; i < objc && Tcl_GetString(objv[i]) && notloaded_flag; i++) {
+ 		for (j = 0; j < numpaths && notloaded_flag; j++) {
+-			if (!(modulelist = SortedDirList( ModulePath[j],
++			if (!(modulelist = SortedDirList( dirname[j],
+ 				   Tcl_GetString(objv[i]),&nummodules)))
+ 				continue;
+ 	    /**
+diff --git a/locate_module.c b/locate_module.c
+index 54e7411..7ac4562 100644
+--- a/locate_module.c
++++ b/locate_module.c
+@@ -202,7 +202,7 @@ int Locate_ModuleFile(
+ 	 **  Split up the MODULEPATH values into multiple directories
+ 	 **/
+ 		numpaths = uvec_number(ModulePathVec);
+-		pathlist = ModulePath;
++		pathlist = uvec_vector(ModulePathVec);
+ 	/**
+ 	 **  Check each directory to see if it contains the module
+ 	 **/
+diff --git a/main.c b/main.c
+index 73b4bf3..5da64d7 100644
+--- a/main.c
++++ b/main.c
+@@ -70,8 +70,7 @@ char	em_default[]	= N_("default");
+ /** ************************************************************************ **/
+ 
+ uvec	 *ModulePathVec;		/** MODULEPATH uvec object	     **/
+-char	**ModulePath,			/** vector of the above		     **/
+-	 *g_current_module = NULL,	/** The module which is handled by   **/
++char	 *g_current_module = NULL,	/** The module which is handled by   **/
+ 					/** the current command		     **/
+ 	 *g_specified_module = NULL,	/** The module that was specified    **/
+ 					/** on the command line		     **/
+@@ -228,12 +227,7 @@ int main(
+     /**
+      **  Initialization. 
+      **/
+-	if (!(ModulePathVec = ModulePathList())) {
+-		ModulePath = NULL;
+-		/* goto unwind0; */
+-	} else {
+-		ModulePath = uvec_vector(ModulePathVec);
+-	}
++	ModulePathVec = ModulePathList();
+ 
+     /**
+      **  Check the command line syntax. There will be no return from the
+@@ -340,7 +334,8 @@ int main(
+ unwind2:
+ 	null_free((void *)&rc_name);
+ unwind1:
+-	FreeList(&ModulePathVec);
++	if(ModulePathVec)
++		FreeList(&ModulePathVec);
+ unwind0:
+ 	/* and error occurred of some type */
+ 	g_retval = (g_retval ? g_retval : 1);
+diff --git a/modules_def.h b/modules_def.h
+index ae8ae9f..8beee65 100644
+--- a/modules_def.h
++++ b/modules_def.h
+@@ -476,7 +476,6 @@ extern char	em_default[];
+ extern	char	**environ;
+ 
+ extern	uvec	 *ModulePathVec;
+-extern	char	**ModulePath;
+ extern	char	 *version_string;
+ extern	char	 *date_string;
+ extern	char	 *g_current_module;

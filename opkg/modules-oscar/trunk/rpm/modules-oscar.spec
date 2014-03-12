@@ -34,7 +34,7 @@
 Summary: Modules package
 Name: modules-oscar
 Version: %{main_version}
-Release: 1
+Release: 2
 License: GPL
 Group: Applications/Environment
 Source0: modules-oscar-1.0.5.tar.gz
@@ -44,6 +44,7 @@ Source3: Modules-Paper.doc
 Patch0: modules-3.3.a_Modules_fix.patch
 Patch1: modules-3.3.a_configure_ac.patch
 Patch2: modules-3.3.a_modulespath.patch
+Patch3: modules_3.3.a_ModulePath.patch
 URL: http://modules.sourceforge.net/
 Packager: Open Cluster Group / OSCAR working group
 BuildRequires: tcl-devel
@@ -86,6 +87,7 @@ cp %SOURCE3 ./doc/
 %patch0 -p1
 %patch1 -p1
 %patch2 -p1
+%patch3 -p1
 
 # Otherwise, this directory shows up on security reports
 
@@ -400,6 +402,9 @@ fi
 #
 #############################################################################
 %changelog
+* Tue Mar 12 2014 Olivier Lahaye <olivier.lahaye@cea.fr> 3.3.a-2
+- Bugfix release.
+
 * Tue Mar 11 2014 Olivier Lahaye <olivier.lahaye@cea.fr> 3.3.a-1
 - New upstream version.
 
