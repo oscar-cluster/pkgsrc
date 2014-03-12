@@ -216,8 +216,8 @@ unset destdir
 
 file=ed-commands.txt
 
-# First, bash.  
-# OL: Nothing to do, 00-modules.sh is now generic.
+# First, bash: Fix init scripts PATH.
+sed -i -e 's|@MODDIR@|%{_moddir}|g' $srcdir/src/00-modules.sh
 
 # Copy the resulting file to %{_profiledir}.
 

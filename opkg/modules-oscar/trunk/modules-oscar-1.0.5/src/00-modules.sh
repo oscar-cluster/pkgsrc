@@ -47,11 +47,11 @@ if test "$MODULE_OSCAR" = ""; then
     # Init environment modules
     if test "$MODULE_VERSION" = ""; then
         shell=`/bin/basename \`/bin/ps -p $$ -ocomm=\``
-        if [ -f /usr/share/Modules/init/$shell ]
+        if [ -f @MODDIR@/default/init/$shell ]
         then
-            . /usr/share/Modules/init/$shell
+            . @MODDIR@/default/init/$shell
         else
-            . /usr/share/Modules/init/sh
+            . @MODDIR@/default/init/sh
         fi
 
     fi
@@ -60,7 +60,7 @@ if test "$MODULE_OSCAR" = ""; then
     # instead of sh - so per-process dot files will be sourced.
     #----------------------------------------------------------------------#
 
-    if test "$shell" !="sh"; then
+    if test "$shell" != "sh"; then
         sh() { $shell "$@"; }
     fi
 
