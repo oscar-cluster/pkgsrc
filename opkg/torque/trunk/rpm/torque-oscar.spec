@@ -2,7 +2,7 @@
 %define name torque-oscar
 %define version 4.1.7
 
-%define release 4
+%define release 5
 
 # The following options are supported:
 #   --with server_name=hostname
@@ -821,7 +821,7 @@ This package holds the command-line client programs.
 %preun client
 [ $1 = 0 ] || exit 0
 /sbin/ldconfig
-/usr/sbin/alternatives --remove qsub %{_bindir}/qsub-torque
+/usr/sbin/alternatives --remove qsub %{torquebindir}/qsub-torque
 /sbin/chkconfig --del trqauthd
 
 
@@ -1107,6 +1107,9 @@ is used to set the corresponding PATH and MANPATH.
 %endif
 
 %changelog
+* Thu Mar 13 2014 Olivier Lahaye <olivier.lahaye1@free.fr> 4.1.7-5
+- Fix client postun alternative (bad path).
+
 * Mon Mar 10 2014 Olivier Lahaye <olivier.lahaye1@free.fr> 4.1.7-4
 - Fix alternative for qsub.
 - Added pbsdsh alternative.
