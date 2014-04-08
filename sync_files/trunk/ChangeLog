@@ -1,3 +1,7 @@
+2.5.10:
+- Now use /etc/cron.d/sync_files for crontab.
+- Fix Use of qw(...) as parentheses is deprecated at line 157.
+
 2.5.9:
 - Updated the log output do dispay the content of arrays in human readable
 format instead of "ARRAY(0x1234567)" (more usefull in a log file)

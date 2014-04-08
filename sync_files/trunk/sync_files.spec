@@ -5,8 +5,8 @@
 
 Summary: OSCARized File Synchronization System
 Name: sync-files
-Version: 2.5.9
-Release: 2
+Version: 2.5.10
+Release: 1
 Distribution: OSCAR
 Packager: Geoffroy Vallee <valleegr@ornl.gov>
 URL: http://oscar.sourceforge.net/
@@ -53,6 +53,9 @@ forced update (/opt/sync_files/bin/sync_files --force).
 #==============================================================
 
 %preun
+%__rm -f /etc/cron.d/sync_files
+
+# Handle old crontabs.
 grep -ve '%{install_dir}/bin/sync_files' /etc/crontab > /etc/crontab.preun
 mv /etc/crontab.preun /etc/crontab
 
@@ -70,6 +73,9 @@ mv /etc/crontab.preun /etc/crontab
 #==============================================================
 
 %changelog
+* Tue Apr  8 2014 Olivier Lahaye <olivier.lahaye@cea.fr> 2.5.10-1
+- New version (uses /etc/cron.d/sync_files).
+  Updated preun accordingly.
 * Sun Dec 15 2013 Olivier Lahaye <olivier.lahaye@cea.fr> 2.5.9-2
 - Re-enabled automatic deps generator.
 * Thu May 30 2013 Olivier Lahaye <olivier.lahaye@cea.fr> 2.5.9-1

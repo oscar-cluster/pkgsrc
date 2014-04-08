@@ -51,7 +51,7 @@ my $force;
 my $verbose   = 0;
 my $crononly  = 0;
 my $directory = '/var/lib/systemimager/images';
-my $crontab   = '/etc/crontab';
+my $crontab   = '/etc/cron.d/sync_files';
 my $crondelay = 15;
 my $cronmodify= 1;
 my $checksums = '/opt/sync_files/etc/checksums';
@@ -153,8 +153,8 @@ sub getconfig () {
         $config->define("usec3!",  { DEFAULT => 1 });
         $config->define("scphost=s@");
         $config->file($configfile);
-        foreach my $var qw(syncfile checksums crondelay crontab cronmodify 
-            getent usec3 scphost) {
+        foreach my $var (qw(syncfile checksums crondelay crontab cronmodify 
+            getent usec3 scphost)) {
             my $var_cleartext="";
             my $var_ref=$config->get($var);
             if (defined($var_ref) ) {
@@ -204,6 +204,13 @@ sub cronupdate () {
     my $sync_bin = "/opt/sync_files/bin/sync_files";
     $cronline = "*/$crondelay * * * * root env USER=root $sync_bin".
                 " >/dev/null 2>&1";
+
+    # If /etc/crond.d/sync_files doesn't exists, create it.
+    if (! -f $crontab) {
+        open CRONTAB, '>', $crontab and close CRONTAB
+            or die "ERROR: Can't create $crontab.\n";
+    }
+
     open(CRONTABIN, "$crontab") or (carp "ERROR: Couldn't read $crontab! $!\n",
                                     return 0);
     @crontabin = <CRONTABIN>;
