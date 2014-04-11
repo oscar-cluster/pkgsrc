@@ -243,15 +243,16 @@ Recognized options are:
 
 =item --get-local-config
 
-Get the local config.
+Get the list of the installed binary packages on the local system.
 
 =item --get-images-config
 
-Get the image config
+Get the list of all images with associated nodes.
 
 =item --update
 
-Does an update
+Does an update. Reads /tmp/image_package_list.txt and installs missing packages.
+Can be run chrooted in an image.
 
 =item --help
 
@@ -263,7 +264,7 @@ Displays syntax.
 
 =over 8
 
-=item Update this doc
+=item More detailed doc. Need to ad some usage examples.
 
 =back
 
@@ -274,7 +275,6 @@ Geoffroy R. Vallee <valleegr@ornl.gov>
 =head1 SEE ALSO
 
 L<oscar(1)>
-
 
 =cut
 
