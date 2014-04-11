@@ -40,7 +40,7 @@ Set of scripts and Perl modules for the update of OSCAR compute nodes.
 - Updated packman min version
 - Removed AutoReqProv:no so we have correct deps.
 
-* Thu Apr 04 2012 Olivier Lahaye <olivier.lahaye@cea.fr> 1.0.0-2
+* Wed Apr 04 2012 Olivier Lahaye <olivier.lahaye@cea.fr> 1.0.0-2
 - Updated spec file using macros.
 - Now tarball name includes version.
 
