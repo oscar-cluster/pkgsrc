@@ -216,3 +216,65 @@ if ($update) {
     do_system_update();
     exit (0);
 }
+
+__END__
+
+=head1 NAME
+
+oscar-system-update, a command line tool for managing system updates.
+
+=head1 SYNOPSIS
+
+oscar-system-update OPTIONS
+
+=head1 DESCRIPTION
+
+oscar-system-update is a command line tool for managing system updates.
+
+=head1 SYNTAX
+
+oscar-system-update [options]
+
+=head1 OPTIONS
+
+Recognized options are:
+
+=over 8
+
+=item --get-local-config
+
+Get the local config.
+
+=item --get-images-config
+
+Get the image config
+
+=item --update
+
+Does an update
+
+=item --help
+
+Displays syntax.
+
+=back
+
+=head1 TODO
+
+=over 8
+
+=item Update this doc
+
+=back
+
+=head1 AUTHOR
+
+Geoffroy R. Vallee <valleegr@ornl.gov>
+
+=head1 SEE ALSO
+
+L<oscar(1)>
+
+
+=cut
+
