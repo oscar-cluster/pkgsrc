@@ -1,8 +1,8 @@
 # comment out snap if building a real release
 %define name torque-oscar
-%define version 4.1.7
+%define version 4.2.7
 
-%define release 5
+%define release 1
 
 # The following options are supported:
 #   --with server_name=hostname
@@ -249,7 +249,7 @@ Obsoletes: torque-oscar-gui
 %endif
 
 # add LSB info + fixes various bugs in pbs_server
-Patch0:         torque-4.1.1-initdserver.patch
+Patch0:         torque-4.2.7-initdserver.patch
 Patch1:         torque-4.1.1-initdsched.patch
 Patch2:         torque-4.1.1-initdmom.patch
 Patch3:         torque-4.1.1-initdtrqauthd.patch
@@ -684,7 +684,7 @@ This package holds the execute daemon required on every node.
 %attr(4755 root root) %{_sbindir}/pbs_rcp
 %endif
 %dir %{torquehomedir}
-%dir %{torquehomedir}/mom_logs
+%{torquehomedir}/mom_logs
 %dir %{torquehomedir}/mom_priv
 %dir %{torquehomedir}/undelivered
 %dir %{torquehomedir}/checkpoint
@@ -942,13 +942,15 @@ necessary for developing programs which will use %{name}.
 %{torqueincdir}/issue_request.h
 %{torqueincdir}/ji_mutex.h
 %{torqueincdir}/job_func.h
+%{torqueincdir}/job_recov.h
 %{torqueincdir}/job_route.h
-%{torqueincdir}/lib_dis.h
 %{torqueincdir}/lib_ifl.h
 %{torqueincdir}/lib_mom.h
 %{torqueincdir}/lib_net.h
+%{torqueincdir}/lib_utils.h
 %{torqueincdir}/libcmds.h
 %{torqueincdir}/license_pbs.h
+%{torqueincdir}/log.h
 %{torqueincdir}/log_event.h
 %{torqueincdir}/mom_comm.h
 %{torqueincdir}/mom_job_func.h
@@ -959,6 +961,7 @@ necessary for developing programs which will use %{name}.
 %{torqueincdir}/node_manager.h
 %{torqueincdir}/pbs_cmds.h
 %{torqueincdir}/pbs_constants.h
+%{torqueincdir}/pbs_job.h
 %{torqueincdir}/pbs_log.h
 %{torqueincdir}/pbsd_init.h
 %{torqueincdir}/pbsd_main.h
@@ -973,7 +976,6 @@ necessary for developing programs which will use %{name}.
 %{torqueincdir}/req_delete.h
 %{torqueincdir}/req_deletearray.h
 %{torqueincdir}/req_getcred.h
-%{torqueincdir}/req_gpuctrl.h
 %{torqueincdir}/req_holdarray.h
 %{torqueincdir}/req_holdjob.h
 %{torqueincdir}/req_jobobit.h
@@ -997,7 +999,6 @@ necessary for developing programs which will use %{name}.
 %{torqueincdir}/svr_func.h
 %{torqueincdir}/svr_jobfunc.h
 %{torqueincdir}/svr_movejob.h
-%{torqueincdir}/svr_task.h
 %{torqueincdir}/tcp.h
 %{torqueincdir}/trq_auth_daemon.h
 %{torqueincdir}/u_hash_map_structs.h
@@ -1035,7 +1036,6 @@ necessary for developing programs which will use %{name}.
 %{torquemandir}/man3/pbs_checkpointjob.3*
 %{torquemandir}/man3/pbs_fbserver.3*
 %{torquemandir}/man3/pbs_get_server_list.3*
-%{torquemandir}/man3/rpp.3*
 %{torquemandir}/man3/tm.3*
 %{torquemandir}/man3/pbs_gpumode.3*
 %{torquemandir}/man3/pbs_gpureset.3*
@@ -1107,6 +1107,11 @@ is used to set the corresponding PATH and MANPATH.
 %endif
 
 %changelog
+* Wed Apr 30 2014 Olivier Lahaye <olivier.lahaye@cea.fr> 4.2.7-1
+- New upstream release.
+- Updated server init.d script (updated patch).
+- Updated file section (%%{torquehomedir}/mom_logs is a link, not a dir)
+
 * Thu Mar 13 2014 Olivier Lahaye <olivier.lahaye1@free.fr> 4.1.7-5
 - Fix client postun alternative (bad path).
 
@@ -1122,7 +1127,7 @@ is used to set the corresponding PATH and MANPATH.
 * Tue Nov 26 2013 Olivier Lahaye <olivier.lahaye1@free.fr> 4.1.7-2
 - Update pbs_environment so it includes torquebindir and torquesbindir.
 
-* Tue Oct 23 2013 Olivier Lahaye <olivier.lahaye1@free.fr> 4.1.7-1
+* Wed Oct 23 2013 Olivier Lahaye <olivier.lahaye1@free.fr> 4.1.7-1
 - Final release of upstream version 4.1.7.
 
 * Tue Apr 02 2013 Olivier Lahaye <olivier.lahaye1@free.fr> 4.1.5.1-1
