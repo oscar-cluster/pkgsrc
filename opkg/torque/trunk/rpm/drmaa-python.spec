@@ -5,13 +5,13 @@
 
 Summary: Python bindings for DRMAA libraries
 Name: drmaa-python
-Version: 0.5
+Version: 0.7.6
 URL: http://www.drmaa.org
-Release: 2 
-License: GPL
+Release: 1
+License: free
 Group: Applications/Base
 Source: drmaa-%{version}.tar.gz
-BuildArch:      noarch
+BuildArch: noarch
 # Libdrmaa.so.0 is provided either by oscar-SGE or by torque-drmaa from EPEL
 %if "%{host_arch}" == "x86_64"
 Requires: libdrmaa.so.0()(64bit)
@@ -36,6 +36,11 @@ submission and control of jobs to one or more Distributed Resource Management (D
 ##
 %build
 %{__python} setup.py build
+# Generate man
+(cd docs; make man)
+# fix man section.
+sed -i -e 's/"DRMAAPYTHON" "1"/"DRMAAPYTHON" "3"/g' docs/_build/man/drmaapython.1
+mv docs/_build/man/drmaapython.1 docs/_build/man/drmaapython.3
 
 ##
 ## INSTALL
@@ -44,6 +49,8 @@ submission and control of jobs to one or more Distributed Resource Management (D
 %{__python} setup.py install \
         --optimize=2 \
         --root=$RPM_BUILD_ROOT
+%__mkdir_p $RPM_BUILD_ROOT%{_mandir}/man3
+install -m 644 docs/_build/man/drmaapython.3 $RPM_BUILD_ROOT%{_mandir}/man3/
 
 ##
 ## CLEAN
@@ -52,12 +59,19 @@ submission and control of jobs to one or more Distributed Resource Management (D
 %__rm -rf $RPM_BUILD_ROOT
 
 %files
-%dir %{python_sitelib}/drmaa-0.5-py%{python_version}.egg-info
-%{python_sitelib}/drmaa-0.5-py%{python_version}.egg-info/*
+#dir %{python_sitelib}/drmaa-0.5-py%{python_version}.egg-info
+#{python_sitelib}/drmaa-0.5-py%{python_version}.egg-info/*
+%doc README.rst license.txt
 %dir %{python_sitelib}/drmaa
 %{python_sitelib}/drmaa/*
+%{_mandir}/man3/*
 
 %changelog
+* Mon May 12 2014 Olivier Lahaye <olivier.lahaye@cea.fr> 0.7.6-1
+- New upstream version.
+- Added man
+- Added docs
+
 * Thu Mar 28 2013 Olivier Lahaye <olivier.lahaye@cea.fr> 0.5-2
 - Fix libdrmaa.so arch dependancy using %%__isa_bits
 - Fix egg-info path (avoid hardcoding python version)
