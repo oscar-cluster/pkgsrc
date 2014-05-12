@@ -61,7 +61,7 @@ install -m 644 docs/_build/man/drmaapython.3 $RPM_BUILD_ROOT%{_mandir}/man3/
 %files
 #dir %{python_sitelib}/drmaa-0.5-py%{python_version}.egg-info
 #{python_sitelib}/drmaa-0.5-py%{python_version}.egg-info/*
-%doc README.rst license.txt
+%doc README.rst license.txt examples/
 %dir %{python_sitelib}/drmaa
 %{python_sitelib}/drmaa/*
 %{_mandir}/man3/*
@@ -69,8 +69,9 @@ install -m 644 docs/_build/man/drmaapython.3 $RPM_BUILD_ROOT%{_mandir}/man3/
 %changelog
 * Mon May 12 2014 Olivier Lahaye <olivier.lahaye@cea.fr> 0.7.6-1
 - New upstream version.
-- Added man
-- Added docs
+- Added man.
+- Added docs.
+- Added examples.
 
 * Thu Mar 28 2013 Olivier Lahaye <olivier.lahaye@cea.fr> 0.5-2
 - Fix libdrmaa.so arch dependancy using %%__isa_bits
