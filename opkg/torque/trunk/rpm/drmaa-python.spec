@@ -86,6 +86,6 @@ install -m 644 docs/_build/man/drmaapython.3 $RPM_BUILD_ROOT%{_mandir}/man3/
 * Tue Mar 02 2010 Olivier Lahaye <olivier.lahaye@cea.fr> 0.4b1
 - New upstream release.
 
-* Tue Jun 16 2006 Babu Sundaram <babu@cs.uh.edu> 0.2
+* Fri Jun 16 2006 Babu Sundaram <babu@cs.uh.edu> 0.2
 - Prepare first rpm for DRMAA Python interface 0.2
 
