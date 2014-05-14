@@ -18,6 +18,9 @@ Requires: libdrmaa.so.0()(64bit)
 %else
 Requires: libdrmaa.so.0()(32bit)
 %endif
+%if 0%{?fedora} > 10 || 0%{?rhel} > 6
+Requires: python-sphinx >= 1.1
+%endif
 
 
 %description
@@ -36,11 +39,14 @@ submission and control of jobs to one or more Distributed Resource Management (D
 ##
 %build
 %{__python} setup.py build
+
+%if 0%{?fedora} > 10 || 0%{?rhel} > 6
 # Generate man
 (cd docs; make man)
 # fix man section.
 sed -i -e 's/"DRMAAPYTHON" "1"/"DRMAAPYTHON" "3"/g' docs/_build/man/drmaapython.1
 mv docs/_build/man/drmaapython.1 docs/_build/man/drmaapython.3
+%endif
 
 ##
 ## INSTALL
@@ -49,8 +55,10 @@ mv docs/_build/man/drmaapython.1 docs/_build/man/drmaapython.3
 %{__python} setup.py install \
         --optimize=2 \
         --root=$RPM_BUILD_ROOT
+%if 0%{?fedora} > 10 || 0%{?rhel} > 6
 %__mkdir_p $RPM_BUILD_ROOT%{_mandir}/man3
 install -m 644 docs/_build/man/drmaapython.3 $RPM_BUILD_ROOT%{_mandir}/man3/
+%endif
 
 ##
 ## CLEAN
@@ -64,9 +72,14 @@ install -m 644 docs/_build/man/drmaapython.3 $RPM_BUILD_ROOT%{_mandir}/man3/
 %doc README.rst license.txt examples/
 %dir %{python_sitelib}/drmaa
 %{python_sitelib}/drmaa/*
+%if 0%{?fedora} > 10 || 0%{?rhel} > 6
 %{_mandir}/man3/*
+%endif
 
 %changelog
+* Wed May 14 2014 Olivier Lahaye <olivier.lahaye@cea.fr> 0.7.6-2
+- Disabled man building on rhel6 (too old python-phinx that lack mathjax extension)
+
 * Mon May 12 2014 Olivier Lahaye <olivier.lahaye@cea.fr> 0.7.6-1
 - New upstream version.
 - Added man.
