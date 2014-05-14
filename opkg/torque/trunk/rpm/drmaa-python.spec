@@ -7,7 +7,7 @@ Summary: Python bindings for DRMAA libraries
 Name: drmaa-python
 Version: 0.7.6
 URL: http://www.drmaa.org
-Release: 1
+Release: 2
 License: free
 Group: Applications/Base
 Source: drmaa-%{version}.tar.gz
