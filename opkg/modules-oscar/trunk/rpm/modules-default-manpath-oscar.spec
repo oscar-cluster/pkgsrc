@@ -31,7 +31,7 @@
 
 Summary: Modules default manpath package
 Name: modules-default-manpath-oscar
-Version: 1.1.1
+Version: 1.2.1
 Release: 1
 License: BSD
 Group: Applications/Environment
@@ -119,6 +119,9 @@ unset destdir
 #
 #############################################################################
 %changelog
+* Fri Jun  6 2014 Olivier Lahaye <olivier.lahaye@cea.fr> 1.2.1-1
+- New version. (fixes manpath -q on old distros like rhel6)
+
 * Mon Mar 10 2014 Olivier Lahaye <olivier.lahaye@cea.fr> 1.1.1-1
 - New version.
 
