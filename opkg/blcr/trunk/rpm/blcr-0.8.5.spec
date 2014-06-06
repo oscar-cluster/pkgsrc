@@ -155,7 +155,7 @@ if [ "$RPM_BUILD_ROOT" != "/" ]; then
         rm -rf $RPM_BUILD_ROOT
 fi
 
-# Installs sources for DKMS build
+# Installs sources for DKMS build
 mkdir -p $RPM_BUILD_ROOT/%{_usrsrc}
 mkdir -p $RPM_BUILD_ROOT/%{_datarootdir}/%{name}
 
