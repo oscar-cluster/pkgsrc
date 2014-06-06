@@ -86,12 +86,13 @@ destdir="$RPM_BUILD_ROOT/%{_moddir}"
 %__mkdir_p "$destdir"
 %__chmod 0755 "$destdir"
 
-# manpath -q option supported only since V2.5.2.
+# manpath -q option supported only since V2.5.2.
 # if -q option not supported, do not use it.
-if ! manpath -q >/dev/null 2>&1
-then
-    sed -i -e 's/manpath -q/manpath/g' $srcdir/src/default-manpath.tcl
-fi
+#if ! manpath -q >/dev/null 2>&1
+#then
+#    sed -i -e 's/manpath -q/manpath/g' $srcdir/src/default-manpath.tcl
+#fi
+
 srcdir="$RPM_BUILD_DIR/modules-default-manpath-oscar-%{version}"
 %__cp "$srcdir/src/default-manpath.tcl" "$destdir/%{version}"
 %__cat > "$destdir/.version" << EOF
