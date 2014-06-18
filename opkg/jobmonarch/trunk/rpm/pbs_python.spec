@@ -3,7 +3,7 @@
 ### Abstract ###
 
 Name: pbs_python
-Version: 4.3.5
+Version: 4.4.0
 Release: 1%{?dist}
 License: See LICENSE
 Group: Development/Libraries
@@ -30,11 +30,17 @@ This package contains the pbs python module.
 if test -d /opt/pbs/bin
 then
 	export PATH=/opt/pbs/bin:$PATH
+        export PBS_PYTHON_INCLUDEDIR=/opt/pbs/include
 fi
 %configure
 %{__python} setup.py build
 
 %install
+if test -d /opt/pbs/bin
+then
+	export PATH=/opt/pbs/bin:$PATH
+        export PBS_PYTHON_INCLUDEDIR=/opt/pbs/include
+fi
 %{__python} ./setup.py install --prefix $RPM_BUILD_ROOT%{_prefix} ;
 
 %clean
@@ -48,13 +54,15 @@ rm -rf $RPM_BUILD_ROOT
 %{python_sitearch}/pbs/*
 
 %changelog
+* Wed Jun 18 2014 Olivier Lahaye <olivier.lahaye@cea.fr>
+- New upstream version 4.4.0 (supports torque >= 4.2)
 * Wed Mar 13 2013 Olivier Lahaye <olivier.lahaye@cea.fr>
 - New upstream version 4.3.5
 * Wed Mar 13 2013 Olivier Lahaye <olivier.lahaye@cea.fr>
 - Fixed %{python_sitearch}/pbs package ownership
-* Fri May 11 2011 Olivier Lahaye <olivier.lahaye@cea.fr>
+* Wed May 11 2011 Olivier Lahaye <olivier.lahaye@cea.fr>
 - Updates for new version 4.3.3
-* Tue Mar 24 2010 Ramon Bastiaans <ramon.bastiaans@sara.nl>
+* Wed Mar 24 2010 Ramon Bastiaans <ramon.bastiaans@sara.nl>
 - Updates for new version
 * Tue Oct 06 2009 Ramon Bastiaans <ramon.bastiaans@sara.nl>
 - Fixed tmppath, %setup sourcedir
