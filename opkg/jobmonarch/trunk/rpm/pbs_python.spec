@@ -8,7 +8,7 @@ Release: 1%{?dist}
 License: See LICENSE
 Group: Development/Libraries
 Summary: This package contains the PBS python module.
-URL: https://subtrac.sara.nl/oss/pbs_python
+URL: https://oss.trac.surfsara.nl/pbs_python
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root
 Source: ftp://ftp.sara.nl/pub/outgoing/%{name}-%{version}.tar.gz 
 
