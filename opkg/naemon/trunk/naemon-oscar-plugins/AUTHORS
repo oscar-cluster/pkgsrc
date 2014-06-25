@@ -1,0 +1,9 @@
+
+Here are the respective authors of plugins packaged in naemon-oscar-plugins.
+These scripts have been collected from http://exchange.nagios.org
+
+check_pbsmom:    Wayne Mallett <Wayne.Mallett@jcu.edu.au>
+check_pbssched:  Wayne Mallett <Wayne.Mallett@jcu.edu.au>
+check_pbsserver: Wayne Mallett <Wayne.Mallett@jcu.edu.au>
+check_port.pl:   Jim Sander <jim.sander@jdsmedia.net>
+
