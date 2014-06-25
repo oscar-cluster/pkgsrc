@@ -7,7 +7,7 @@ License: GPL
 URL: http://exchange.nagios.org
 Group: Applications/System
 BuildArch: noarch
-Source: naemon-oscar-plugins-1.0.tar.bz2
+Source: naemon-oscar-plugins.tar.bz2
 
 %define naemon_plugin_dir %{_libdir}/nagios/plugins
 
@@ -15,7 +15,7 @@ Source: naemon-oscar-plugins-1.0.tar.bz2
 Collection of naemon plugins required for OSCAR Monitoring.
 
 %prep
-%setup
+%setup -q -n %{name}
 
 %install
 %{__mkdir_p} %{buildroot}%{_libdir}/nagios/plugins/
