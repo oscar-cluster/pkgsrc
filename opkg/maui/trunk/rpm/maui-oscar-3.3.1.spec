@@ -160,7 +160,7 @@ fi
 * Tue Dec 11 2012 Olivier Lahaye 3.3.1-3
 - Rebuild with torque-4.1.4.snap.201211201307
 - Use LDFLAGS to ease libtorque.so link.
-* Thu Nov 15 2011 Olivier Lahaye 3.3.1-2
+* Tue Nov 15 2011 Olivier Lahaye 3.3.1-2
 - Fix build with torque-4.1.3
 - Spec cleanup.
 - Fixed %preun when upgrading
@@ -206,7 +206,7 @@ fi
 * Wed Mar 05 2003 Jason Brechin <brechin@ncsa.uiuc.edu>
 - Updated to 3.2.5p2 and added an expect script to do configure
 
-* Wed Jul 25 2002 Jeremy Enos <jenos@ncsa.uiuc.edu>
+* Wed Sep 25 2002 Jeremy Enos <jenos@ncsa.uiuc.edu>
 - Changed maui.cfg so NODEACCESSPOLICY is DEDICATED.
 
 * Thu Jul 25 2002 Jason Brechin <brechin@ncsa.uiuc.edu>
