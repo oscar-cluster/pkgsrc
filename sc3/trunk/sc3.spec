@@ -3,7 +3,7 @@ Summary: Subcluster command and control tools
 Name: sc3
 Version: 1.2.4
 Vendor: NEC HPCE
-Release: 1
+Release: 1%{?dist}
 License: GPL
 Packager: Erich Focht <efocht@hpce.nec.com>
 Source: sc3.tar.gz

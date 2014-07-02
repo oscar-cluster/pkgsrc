@@ -7,7 +7,7 @@ Summary: Wrapper to yum for clusters
 Name: yume
 Version: 2.8.14
 Vendor: Open Source Cluster Group
-Release: 1
+Release: 1%{?dist}
 License: GPL
 Packager: Geoffroy Vallee <valleegr@ornl.gov>
 Source: %{name}-%{version}.tar.gz

@@ -6,7 +6,7 @@
 Summary: The Cbench infrastructure
 Name: Cbench
 Version: 1.3.1
-Release: 1
+Release: 1%{?dist}
 Group: Development
 License: GPL
 Source0:cbench_hpcc.tar.gz

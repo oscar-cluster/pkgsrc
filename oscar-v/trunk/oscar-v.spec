@@ -1,7 +1,7 @@
 Summary:        OSCAR extension to support system-level virtualization.
 Name:           oscar-v
 Version:        1.0
-Release:        1
+Release:        1%{?dist}
 Vendor:         Open Cluster Group <http://OSCAR.OpenClusterGroup.org/>
 Distribution:   OSCAR
 Packager:       Olivier Lahaye <olivier.lahaye@cea.fr>

@@ -14,7 +14,7 @@
 Summary:		A tool to ease the OSCAR installation.
 Name:      		oscar-installer
 Version:   		__VERSION__
-Release:   		1
+Release:   		1%{?dist}
 Vendor:			Open Cluster Group <http://OSCAR.OpenClusterGroup.org/>
 Distribution:		OSCAR
 Packager:		Geoffroy Vallee <valleegr@ornl.gov>

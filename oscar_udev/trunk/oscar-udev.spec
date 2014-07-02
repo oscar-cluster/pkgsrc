@@ -2,7 +2,7 @@
 Summary:        OSCAR udev configuration tool.
 Name:           oscar-udev
 Version:        1.0
-Release:        3
+Release:        3%{?dist}
 Vendor:         Open Cluster Group <http://OSCAR.OpenClusterGroup.org/>
 Distribution:   OSCAR
 Packager:       Geoffroy Vallee <valleegr@ornl.gov>

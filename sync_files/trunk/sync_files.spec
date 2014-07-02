@@ -6,7 +6,7 @@
 Summary: OSCARized File Synchronization System
 Name: sync-files
 Version: 2.5.10
-Release: 1
+Release: 1%{?dist}
 Distribution: OSCAR
 Packager: Geoffroy Vallee <valleegr@ornl.gov>
 URL: http://oscar.sourceforge.net/

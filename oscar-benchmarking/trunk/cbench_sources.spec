@@ -6,7 +6,7 @@
 Summary: The Cbench sources
 Name: cbench-sources
 Version: 1.2.2
-Release: 1
+Release: 1%{?dist}
 Group: Development
 License: GPL
 Source: cbench-%{version}.tar.gz

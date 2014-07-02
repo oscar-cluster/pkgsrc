@@ -3,7 +3,7 @@ Summary: Wrapper to apt-get for clusters
 Name: rapt
 Version: 2.8.11
 Vendor: NEC HPCE
-Release: 2
+Release: 2%{?dist}
 License: GPL
 Packager: Erich Focht <efocht@hpce.nec.com>
 Source: %{name}-%{version}.tar.gz
