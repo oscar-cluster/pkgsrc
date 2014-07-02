@@ -1,7 +1,7 @@
 Summary:        Script that helps at setting up the network.
 Name:           network-configurator
 Version:        1.0.0
-Release:        3
+Release:        3%{?dist}
 Vendor:         Open Cluster Group <http://OSCAR.OpenClusterGroup.org/>
 Distribution:   OSCAR
 Packager:       Geoffroy Vallee <valleegr@ornl.gov>

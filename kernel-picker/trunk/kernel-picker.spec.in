@@ -13,7 +13,7 @@
 Summary: A Perl script to substitute a kernel into an OSCAR (SIS) image.
 Name: kernel-picker
 Version: __VERSION__
-Release: 3
+Release: 3%{?dist}
 License: GPL
 Group: Applications/System
 Source: kernel-picker-%{version}.tar.gz
