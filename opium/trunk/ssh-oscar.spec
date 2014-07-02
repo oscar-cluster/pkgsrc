@@ -56,7 +56,7 @@ compute nodes.
 #==============================================================
 
 %changelog
-* Wed Jan 29 2013 Olivier Lahaye <olivier.lahaye@cea.fr> 1.3.2-1
+* Tue Jan 29 2013 Olivier Lahaye <olivier.lahaye@cea.fr> 1.3.2-1
 - Removed obsolete PreReqs.
 - Fixed typo in description.
 

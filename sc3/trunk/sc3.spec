@@ -59,5 +59,5 @@ rm -rf $RPM_BUILD_ROOT
 - reduced limit for scalable setup to 16
 * Wed Dec 29 2004 Erich Focht
 - changed location of module to /usr/lib/systeminstaller/HPCL
-* Fri Dec 23 2004 Erich Focht
+* Thu Dec 23 2004 Erich Focht
 - initial RPM

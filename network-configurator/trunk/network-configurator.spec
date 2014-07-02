@@ -27,7 +27,7 @@ Script that helps at setting up the network with various configurations, e.g., b
 %{_mandir}/*
 
 %changelog
-* Sun Dec 13 2013 Olivier Lahaye <olivier.lahaye@cea.fr> 1.0.0-3
+* Fri Dec 13 2013 Olivier Lahaye <olivier.lahaye@cea.fr> 1.0.0-3
 - Removed AutoReqProv: no so we have automatic deps
 - Avoid owning %{perl_vendorlib}/OSCAR dir (owned by oscar-base-lib)
 

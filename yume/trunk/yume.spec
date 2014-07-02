@@ -64,7 +64,7 @@ rm -rf $RPM_BUILD_ROOT
 %changelog
 * Fri Dec 20 2013 Olivier Lahaye <olivier.lahaye1@free.fr> 2.8.14-1
 - Add support for redhat-el by using plugins=1 in yum tmp config file.
-* Fri Dec 15 2013 Olivier Lahaye <olivier.lahaye1@free.fr> 2.8.13-2
+* Sun Dec 15 2013 Olivier Lahaye <olivier.lahaye1@free.fr> 2.8.13-2
 - Removed AutoReqProv: no
 * Fri Dec 13 2013 Olivier Lahaye <olivier.lahaye1@free.fr> 2.8.13-1
 - new upstream version (see ChangeLog for more details).
@@ -95,7 +95,7 @@ rm -rf $RPM_BUILD_ROOT
 - new upstream version (see ChangeLog for more details).
 * Tue Feb 10 2009 Geoffroy Vallee <valleegr@ornl.gov> 2.8.5-1
 - new upstream version (see ChangeLog for more details).
-* Wed Jan 22 2009 Geoffroy Vallee <valleegr@ornl.gov> 2.8.4-1
+* Thu Jan 22 2009 Geoffroy Vallee <valleegr@ornl.gov> 2.8.4-1
 - new upstream version (see ChangeLog for more details).
 * Mon Jan 19 2009 Geoffroy Vallee <valleegr@ornl.gov> 2.8.3-1
 - new upstream version (see ChangeLog for more details).
@@ -115,7 +115,7 @@ rm -rf $RPM_BUILD_ROOT
 - Improved scalability by dealing with timeouts when calling distro-query
 - More detailed errors
 - version: 2.3-1
-* Wed Aug 10 2006 Erich Focht
+* Thu Aug 10 2006 Erich Focht
 - fixed problem with yume invocation on SUSE clients
 * Wed Jun 21 2006 Erich Focht
 - suse_bootstrap support for installing into empty suse images

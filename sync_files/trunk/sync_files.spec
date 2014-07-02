@@ -97,11 +97,11 @@ mv /etc/crontab.preun /etc/crontab
 - New upstream version.
 * Thu Jul 09 2009 Geoffroy Vallee <valleegr@ornl.gov> 2.5.1-1
 - New upstream version.
-* Thu Jul 06 2009 Geoffroy Vallee <valleegr@ornl.gov> 2.5.0-1
+* Mon Jul 06 2009 Geoffroy Vallee <valleegr@ornl.gov> 2.5.0-1
 - New upstream version.
 * Thu Jun 25 2009 Geoffroy Vallee <valleegr@ornl.gov> 2.4.1-1
 - New upstream version.
-* Tue Oct 25 2006 Erich Focht
+* Wed Oct 25 2006 Erich Focht
 - added filter for image specific templates
 - added options for filter-only
 - moved templates to templates/distro/*
