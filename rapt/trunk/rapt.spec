@@ -63,7 +63,7 @@ rm -rf $RPM_BUILD_ROOT
 - New upstream version (see ChangeLog file for more details).
 * Tue Feb 10 2009 Geoffroy Vallee - 2.8.4-1
 - New upstream version (see ChangeLog file for more details).
-* Wed Sep 30 2008 Geoffroy Vallee - 2.8.2-1
+* Tue Sep 30 2008 Geoffroy Vallee - 2.8.2-1
 - New upstream version (see ChangeLog file for more details).
 * Fri Sep 26 2008 Geoffroy Vallee - 2.8.1-1
 - New upstream version (see ChangeLog file for more details).
@@ -73,7 +73,7 @@ rm -rf $RPM_BUILD_ROOT
 - New upstream version (see ChangeLog file for more details).
 * Fri Aug 01 2008 Geoffroy Vallee - 2.6-1
 - New upstream version (see ChangeLog file for more details).
-* Mon Jul 30 2008 Geoffroy Vallee - 2.5-1
+* Wed Jul 30 2008 Geoffroy Vallee - 2.5-1
 - New upstream version (see ChangeLog file for more details).
 * Mon Jul 28 2008 Geoffroy Vallee - 2.4-1
 - New upstream version (see ChangeLog file for more details).
