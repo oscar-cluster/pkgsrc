@@ -2,23 +2,23 @@
 %define name torque-oscar
 %define version 4.2.7
 
-%define release 1
+%define release 2%{?dist}
 
 # The following options are supported:
-#   --with server_name=hostname
-#   --with homedir=directory
-#   --with libdir=directory
-#   --with includedir=directory
-#   --with prefix=directory
-#   --with[out] scp
-#   --with[out] syslog
-#   --with[out] rpp
-#   --with[out] drmaa
-#   --with[out] blcr
-#   --with[out] nvidia_gpus
-#   --with[out] use_munge
-#   --with[out] gui
-#   --with[out] tcl
+#   --define 'server_name <hostname>' # default: oscar_server
+#   --define 'homedir <directory>'    # default: %{_localstatedir}/lib/torque
+#   --define 'libdir <directory>'     #
+#   --define 'includedir <directory<' #
+#   --define 'prefix <directory>'     #
+#   --with[out] scp                   # default: 1
+#   --with[out] syslog                # default: 1
+#   --with[out] rpp                   # default: 1
+#   --with[out] drmaa                 # default: 1
+#   --with[out] blcr                  # default: 1
+#   --with[out] nvidia_gpus           # default: 1
+#   --with[out] use_munge             # default: 1
+#   --with[out] gui                   # default: 1
+#   --with[out] tcl                   # default: 1
 # Note that prefix overrides homedir, libdir, and includedir
 
 
@@ -28,23 +28,33 @@
 # Let's force the issue with the non-sensical "localhost".
 #
 # Note that "localhost" doesn't actually work.  You must either define the
-# correct hostname here, pass '--with server_name=foo' to rpmbuild, or be sure
+# correct hostname here, pass --define 'server_name=foo' to rpmbuild, or be sure
 # that $PBS_SERVER_HOME/server_name contains the correct hostname.
-# OSCAR name set below %define server_name localhost
+# OSCAR name set below to localhost
+
+# Handle default values for user definable values. (--define)
+%{!?server_name: %define server_name localhost}
+%{!?torquehomedir: %define torquehomedir %{_localstatedir}/lib/torque}
+%{?libdir: %define _libdir %{libdir}}
+%{?includedir: %define _includedir %{includedir}}
+%{!?torqueprefix: %define torqueprefix /opt/pbs}
 
 # change as you wish
-%define use_syslog 1
 %define use_scp 1
+%define use_syslog 1
 %define use_rpp 1
-%define use_tcl 1
 %define use_drmaa 1
 %define use_blcr 1
 %define use_nvidia_gpus 1
 %define use_munge 1
 %define build_gui 1
+%define use_tcl 1
 
-# these are non-defaults, but fit better into most RPM-based systems
-%global torquehomedir %{_localstatedir}/lib/torque
+#%{?_with_server_name:%define server_name %(set -- %{_with_server_name}; echo $1 | grep -v with | sed 's/=//')}
+#%{?_with_homedir:%define torquehomedir %(set -- %{_with_homedir}; echo $1 | grep -v with | sed 's/=//')}
+#%{?_with_libdir:%define _libdir %(set -- %{_with_libdir}; echo $1 | grep -v with | sed 's/=//')}
+#%{?_with_includedir:%define _includedir %(set -- %{_with_includedir}; echo $1 | grep -v with | sed 's/=//')}
+#%{?_with_prefix:%define torqueprefix %(set -- %{_with_prefix}; echo $1 | grep -v with | sed 's/=//')}
 
 %define debug_package %{nil}
 
@@ -62,7 +72,7 @@
 # Name of file that contains the default server for clients to use
 %define server_name_file server_name
 # Default server name
-%define server_name pbs_oscar
+#define server_name pbs_oscar
 
 # where to install initscripts
 %if ! %{?_initrddir:1}0
@@ -91,12 +101,6 @@
 %{?_with_nvidia_gpus: %define use_nvidia_gpus 1}
 %{?_with_munge: %define use_munge 1}
 %{?_with_gui: %define %define build_gui 1}
-
-%{?_with_server_name:%define server_name %(set -- %{_with_server_name}; echo $1 | grep -v with | sed 's/=//')}
-%{?_with_homedir:%define torquehomedir %(set -- %{_with_homedir}; echo $1 | grep -v with | sed 's/=//')}
-%{?_with_libdir:%define _libdir %(set -- %{_with_libdir}; echo $1 | grep -v with | sed 's/=//')}
-%{?_with_includedir:%define _includedir %(set -- %{_with_includedir}; echo $1 | grep -v with | sed 's/=//')}
-%{?_with_prefix:%define torqueprefix %(set -- %{_with_prefix}; echo $1 | grep -v with | sed 's/=//')}
 
 # did we find any --without options?
 %{?_without_syslog: %define use_syslog 0}
@@ -1107,6 +1111,11 @@ is used to set the corresponding PATH and MANPATH.
 %endif
 
 %changelog
+* Thu Jul 03 2014 Olivier Lahaye <olivier.lahaye@cea.fr> 4.2.7-2
+- Port from --with path=value to --define 'path value' so it builds on
+  fc-18+ and rhel-7+
+- Added %{?dist} optional dist tag.
+
 * Wed Apr 30 2014 Olivier Lahaye <olivier.lahaye@cea.fr> 4.2.7-1
 - New upstream release.
 - Updated server init.d script (updated patch).
