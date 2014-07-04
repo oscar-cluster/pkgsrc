@@ -142,7 +142,6 @@ sub getHostDB {
     my $hostdb = $config{hostdb};
     if ($hostdb eq "SIS") {
         # read host data from SIS database
-	eval 'use lib "/usr/lib/systeminstaller"';
 	eval 'use SIS::Client';
 	eval 'use SIS::Adapter';
 	eval 'use SIS::Image';

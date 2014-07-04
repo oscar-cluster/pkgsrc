@@ -541,11 +541,8 @@
     <tabstop>quitPushButton</tabstop>
   </tabstops>
   <includes>
-    <include location="local">use Qt::attributes qw(processTimer);</include>
-    <include location="local">use lib &quot;/usr/share/netbootmgr&quot;;</include>
-    <include location="local">use netbootlib;</include>
-    <include location="local">my $netbootlib=&quot;netbootlib&quot;;</include>
-    <include location="local">use sureDialog;</include>
+    <include location="local">netbootlib</include>
+    <include location="local">Ui_SureDialog</include>
   </includes>
   <connections>
     <connection>

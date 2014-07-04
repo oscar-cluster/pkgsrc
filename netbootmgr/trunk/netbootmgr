@@ -24,7 +24,7 @@
 use strict;
 use utf8;
 use QtCore4;
-use netBootMgr;
+use Ui_NetBootMgr;
 
 my $a = Qt::Application(\@ARGV);
 my $w = netBootMgr;

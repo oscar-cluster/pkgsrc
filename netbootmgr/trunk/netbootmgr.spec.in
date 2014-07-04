@@ -28,8 +28,8 @@ files.
 
 %build
 # currently the puic path is hardcoded
-/usr/bin/puic4 -o netBootMgr.pm netbootmgr.ui
-/usr/bin/puic4 -o sureDialog.pm suredialog.ui
+/usr/bin/puic4 -o Ui_NetBootMgr.pm netbootmgr.ui
+/usr/bin/puic4 -o Ui_SureDialog.pm suredialog.ui
 
 %install
 
