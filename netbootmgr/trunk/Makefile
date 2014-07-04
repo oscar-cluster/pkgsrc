@@ -15,7 +15,7 @@ clean:
 	@rm -f sureDialog.pm netBootMgr.pm
 	@rm -f *~
 	@rm -f $(NAME).spec
-	@rm -f debian/files
+	@rm -f debian/files debian/changelog
 	@rm -rf debian/netbootmgr
 	@rm -f $(PKG).tar.bz2
 
@@ -26,13 +26,13 @@ dist: clean
 	@cd /tmp/$(PKG); rm -rf `find . -name ".svn"`
 	@sed -e 's/__VERSION__/$(VERSION)/g' $(NAME).spec.in > $(NAME).spec
 	@sed -e 's/__VERSION__/$(VERSION)/g' debian/changelog.in > debian/changelog
-	@cd /tmp; tar czf $(PKG).tar.gz $(PKG)
-	@cp -f /tmp/$(PKG).tar.gz .
+	@cd /tmp; tar cjf $(PKG).tar.bz2 $(PKG)
+	@cp -f /tmp/$(PKG).tar.bz2 .
 	@rm -rf /tmp/$(PKG)/
-	@rm -f /tmp/$(PKG).tar.gz
+	@rm -f /tmp/$(PKG).tar.bz2
 
 rpm: dist
-	@cp $(PKG).tar.gz `rpm --eval '%_sourcedir'`
+	@cp $(PKG).tar.bz2 `rpm --eval '%_sourcedir'`
 	@rpmbuild -bb --target noarch ./$(NAME).spec
 	@if [ -n "$(PKGDEST)" ]; then \
 		RPMDIR=$(shell rpm --eval '%{_rpmdir}') ;\
