@@ -1,0 +1,42 @@
+#!/usr/bin/perl
+#
+# $Id$
+#
+# Read node status from the output of "pbsnodes".
+#
+# Copyright (c) 2006 Erich Focht <efocht@hpce.nec.com>
+#
+
+use strict;
+
+$ENV{LC_ALL} = "C";
+my %status;
+
+my $cmd = "pbsnodes";
+my $check = `which $cmd 2>/dev/null`;
+chomp $check;
+if (!$check) {
+    die "Could not locate $cmd!";
+}
+open IN, "$check |" or die "Could not run $cmd: $!";
+my $host;
+while (my $line=<IN>) {
+    if ($line =~ /^(\S+)$/) {
+	# this is a host line
+	$host = $1;
+    } elsif ($line =~ /^\s*$/) {
+	$host = "";
+    } elsif ($line =~ /^\s+([^=\s]+) = (.*)$/) {
+	my $key = $1;
+	# we're just interested in the state
+	next if ($key ne "state");
+	my $value = $2;
+	$status{$host}{$key} = $value;
+    }
+}
+close IN;
+
+for my $h (sort keys %status) {
+    print "$h: $status{$h}{state}\n";
+}
+exit 0;

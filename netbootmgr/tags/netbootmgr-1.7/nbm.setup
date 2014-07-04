@@ -1,0 +1,44 @@
+#!/bin/bash
+
+# primitive configuration setup
+
+CFILE=/etc/netbootmgr.conf
+
+# Backup current conf file
+cp $CFILE ${CFILE}_`date +%y%m%d%H%M`
+
+cat >$CFILE <<EOI
+# refresh interval in seconds
+#REFRESH 10
+
+# host database: either SIS or a file
+#HOSTDB SIS
+
+# tftp root directory
+#TFTPROOT /tftpboot
+
+# next boot action menu items
+EOI
+
+# Default boot option:
+echo "MENU default:__default__" >>$CFILE
+echo "The default boot will usually lead to the reinstallation of the node."
+
+# localboot (for ia32 a,d x86_64, only)
+[ -f /tftpboot/localboot ] || cp /usr/share/netbootmgr/localboot /tftpboot
+echo "MENU localboot:localboot" >>$CFILE
+
+# memtest (for ia32 and x86_64, only)
+[ -f /tftpboot/memtest86+-1.26 ] || cp /usr/share/netbootmgr/memtest86+-1.26 /tftpboot
+echo "MENU memtest86+:memtest86" >>$CFILE
+
+# master boot kernel
+
+
+# Add install kernels provided by systemimager
+for parch in `ls -1 /usr/share/systemimager/boot`; do
+   arch=`basename $parch`
+
+
+done 
+

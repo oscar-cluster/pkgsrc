@@ -1,0 +1,96 @@
+#!/usr/bin/perl
+#
+# $Id: netbootmgr-status 6116 2007-02-13 13:21:29Z focht $
+#
+# Aggregate status information from several sources to one string.
+# Arguments are hosts we want to check.
+#
+# Copyright (c) 2006 Erich Focht <efocht@hpce.nec.com>
+#
+
+use strict;
+use Data::Dumper;
+use Getopt::Long;
+
+$ENV{LC_ALL} = "C";
+
+my $verbose;
+GetOptions( 'verbose|v!' => \$verbose,
+	    );
+
+my @hosts = @ARGV;
+exit 0 if (!scalar @hosts);
+
+my %status;
+for my $h (@hosts) {
+    if (exists $status{$h}) {
+	print STDERR "WARNING: Duplicate host in arguments: $h\n";
+    }
+    $status{$h} = "";
+}
+
+my @checks = ( { "ganglia" => { "cmd" => "gangread --all", 
+				"match" => '^(\S+) (ALIVE|DEAD)',}
+		 },
+	       { "si"      => { "cmd" => "si_status",
+				"match" => '^(\S+): (\S+)',}
+		 },
+	       );
+
+chomp(my $haspbs = `which pbsnodes 2>/dev/null`);
+if ($haspbs) {
+    push @checks, { "pbs"     => { "cmd" => "pbs_status",
+				   "match" => '^(\S+): (.*)',} };
+}
+
+for my $c (@checks) {
+    my $name = (keys(%{$c}))[0];
+    my $cmd = $c->{$name}->{cmd};
+    my $match = $c->{$name}->{match};
+
+    print "$name : $cmd : $match\n" if $verbose;
+
+    # run command and collect output
+    open CMD, "$cmd |" or
+	do {
+	    print STDERR "Could not run command $cmd: $!\n";
+	    next;
+	};
+    while (my $line = <CMD>) {
+	chomp $line;
+	print "> $line\n" if $verbose;
+	if ($line =~ m/$match/) {
+	    my $host = $1;
+	    my $value = $2;
+	    print STDERR "matched: $host $value\n" if $verbose;
+	    if (exists $status{$host}) {
+		&add_status($host, $name, $value);
+	    } else {
+		# try hostname without domain
+		my $shost = $host;
+		$shost =~ s/\..*$//g;
+		if (exists $status{$shost}) {
+		    &add_status($shost, $name, $value);
+		}
+	    }
+	}
+    }
+    close CMD;
+}
+
+for my $h (@hosts) {
+    print "$h: $status{$h}\n";
+}
+
+exit 0;
+
+#################################################
+
+sub add_status {
+    my ($host, $name, $value) = @_;
+    if ($status{$host} eq "") {
+	$status{$host} = "$name=$value";
+    } else {
+	$status{$host} .= ",$name=$value";
+    }
+}

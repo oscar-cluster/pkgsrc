@@ -1,0 +1,169 @@
+#!/usr/bin/perl
+
+#   This program is free software; you can redistribute it and/or modify
+#   it under the terms of the GNU General Public License as published by
+#   the Free Software Foundation; either version 2 of the License, or
+#   (at your option) any later version.
+#
+#   This program is distributed in the hope that it will be useful,
+#   but WITHOUT ANY WARRANTY; without even the implied warranty of
+#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#   GNU General Public License for more details.
+#
+#   You should have received a copy of the GNU General Public License
+#   along with this program; if not, write to the Free Software
+#   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
+#
+# Copyright (c) Erich Focht <efocht@hpce.nec.com>
+#               All rights reserved
+#
+# $Id: netbootmgr-cmd 6252 2007-04-13 12:06:10Z focht $
+
+use strict;
+use Getopt::Long;
+use lib "/usr/share/netbootmgr";
+use netbootlib;
+
+use Data::Dumper;
+
+
+sub usage {
+
+    print <<'EOF';
+
+Manipulate the PXE or elilo configuration files and control what nodes should
+do at the next network boot. If the cluster nodes are configured to allways
+network boot this allows to easilly control their installation or booting
+with particular kernels remotely. The configuration file /etc/netbootmgr.conf
+must be available and properly configured!
+
+Usage:
+    netbootmgr-cmd [--status] [--actions] [--nba=<next_boot_action>] \
+	           [--delete] [--all | [host ...] ]
+
+    --status       : print status info
+    --actions      : list configured next boot actions
+    --nba=<action> : set next boot action to the selected one
+    --delete       : delete the NBA symlink or file corresponding to the hosts
+    --help         : print this help message
+    --all          : select all hosts for the --nba or --delete actions
+    --verbose      : verbose output
+
+    host ...       : list of hosts for which the --nba or --delete option apply
+
+Usage examples:
+    netbootmgr-cmd --nba=install node1 node2 node3
+        Set the nodes 1-3 to install on next boot.
+
+    netbootmgr-cmd --status
+        List the status of all nodes.
+
+Written and (c) by Erich Focht @ NEC HPCE. Use at your own risk!
+
+EOF
+    exit 0;
+}
+
+my ($status, $actions, $nba, $delete, $all, $verbose);
+
+GetOptions(
+	   "help|h"    => \&usage,
+           "status"    => \$status,
+           "actions"   => \$actions,
+	   "delete"    => \$delete,
+           "nba=s"     => \$nba,
+	   "all"       => \$all,
+	   "verbose"   => \$verbose,
+           ) || &usage();
+
+my @hosts = @ARGV;
+
+if ($verbose) {
+    $netbootlib::verbose = 1;
+}
+
+# read the netbootmgr config
+&readConfig();
+&getHostDB();
+
+if ($delete) {
+    $nba = $netbootlib::config{nba}{default_action};
+}
+
+if ($nba) {
+    if (!&validate_nba($nba)) {
+	print "Invalid nba parameter \"$nba\", please check the valid actions!\n";
+	exit 1;
+    }
+    if (!scalar(@hosts) && !$all) {
+	print "No hosts passed as arguments!\n";
+	exit 2;
+    }
+
+    # do the work
+    @hosts = &validate_hosts();
+    &setAction($nba, \@hosts);
+}
+
+if ($actions) {
+    printf "%16s %50s\n","Action","Symlink to";
+    my $def = $netbootlib::config{nba}{default_action};
+    for my $a (keys(%{$netbootlib::config{nba}})) {
+	my $link = $netbootlib::config{nba}{$a};
+	if ($a ne "default_action") {
+	    if ($link ne "__default__") {
+		printf "%-16s %50s\n",$a,"/tftpboot/$link";
+	    } else {
+		printf "%-16s %50s\n",$a,"default (no symlink)";
+	    }
+	}
+    }
+}
+
+if ($status) {
+    &read_host_action();
+    &read_host_status();
+    if (!scalar(@hosts)) {
+	@hosts = keys(%netbootlib::hosts);
+    }
+    #       1234567890123456789012345678901234
+    printf "Host         NBA            Status\n";
+    for my $h (@hosts) {
+	my $nba = $netbootlib::hosts{$h}->{nba};
+	if ($nba eq "default_action") {
+	    $nba = $netbootlib::config{nba}{default_action};
+	}
+	my $stat = $netbootlib::hosts{$h}->{stat};
+	printf("%-12s %-14s %s\n", $h, $nba, $stat);
+    }
+}
+
+#print Dumper(%netbootlib::config);
+#print Dumper(%netbootlib::hosts);
+
+exit 0;
+
+
+sub validate_nba {
+    my ($nba) = @_;
+    for my $a (keys(%{$netbootlib::config{nba}})) {
+	if ($nba eq $a) {
+	    return $nba;
+	}
+    }
+    return "";
+}
+
+sub validate_hosts {
+    my @valid_hosts;
+    if ($all) {
+	@hosts = keys(%netbootlib::hosts);
+    }
+    for my $h (@hosts) {
+	if (exists($netbootlib::hosts{$h})) {
+	    push @valid_hosts, $h;
+	}
+    }
+    return @valid_hosts;;
+}
+

@@ -1,0 +1,59 @@
+#!/usr/bin/perl
+#
+# $Id: si_status 5969 2006-12-11 16:55:23Z focht $
+#
+# Copyright (c) 2006 Erich Focht <efocht@hpce.nec.com>
+#
+
+use strict;
+use XML::Simple;
+use Fcntl ':flock';
+
+
+# Define lock files.
+my $lock_file = "/var/lock/systemimager/db.si_monitor.lock";
+my $dbfile = "/var/lib/systemimager/clients.xml";
+
+# exit if files not found
+exit 1 if (!-f $lock_file || !-f $dbfile);
+
+# Open and read lock the database.
+open(LOCK, ">", "$lock_file") or
+    die "error: cannot open lock file \"$lock_file\"!\n";
+flock(LOCK, LOCK_SH);
+
+my $xml = XMLin($dbfile, KeyAttr => {client => 'host'}, ForceArray => 1);
+
+# Close and unlock database.
+flock(LOCK, LOCK_UN);
+close(LOCK);
+
+# print the translated status one line per host
+for my $h (sort keys %{$xml->{client}}) {
+    print "$h: ".&status($xml->{client}->{$h}->{status})."\n";
+}
+exit 0;
+
+sub status {
+    my ($s) = @_;
+    my $r;
+    if ($s < 0) {
+	$r = "error";
+    } elsif (($s > 0) && ($s < 100)) {
+	$r = "installing";
+    } elsif ($s == 100) {
+	$r = "imaged";
+    } elsif ($s == 101) {
+	$r = "finalizing";
+    } elsif ($s == 102) {
+	$r = "rebooted";
+    } elsif ($s == 103) {
+	$r = "beeping";
+    } elsif ($s == 104) {
+	$r = "rebooting";
+    } elsif ($s == 105) {
+	$r = "shutdown";
+    } else {
+	$r = "unknown";
+    }
+}

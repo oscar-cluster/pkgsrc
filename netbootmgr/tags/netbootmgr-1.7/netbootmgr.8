@@ -1,0 +1,190 @@
+.PU
+.TH netbootmgr 8 local
+.SH NAME
+netbootmgr \- managing network booted nodes
+.SH SYNOPSIS
+.B netbootmgr [OPTIONS]
+.br
+.SH DESCRIPTION
+
+Netbootmgr provides a GUI interface for managing the next boot action for
+network booted hosts. It does so by using the capabilities of pxelinux or
+elilo.efi to load an IP specific configuration file from the network.
+Netbootmgr creates/deletes symbolic links pointing to predefined
+pxelinux/elilo config files.
+
+A network booting node which is able to boot through PXE (for example x86 and
+x86_64 machines) will typically get an IP address from the DHCP server, load
+and start the pxelinux.0 binary. Then it will attempt to load a configuration
+file for pxelinux through tftp from the subdirectory pxelinux.cfg
+(i.e. /tftpboot/pxelinux.cfg). The configuration file name tried first is
+the own IP address written in upper case hexadecimal,
+e.g. 192.0.2.91 -> C000025B. If the file is not found, it will remove the last
+hex digit and try again (i.e. C000025, C00002, C0000, C000, C00, C0, C), and
+finally try loading the config file named "default".
+
+On ia64 systems booting with elilo.efi the configuration file is searched in
+/tftpboot/ and the file names tried will be: C000025B.conf, C000025.conf, ...,
+and finally the default file: elilo.conf.
+
+Netbootmgr provides a simple and configurable GUI for creating and deleting
+the hexadecimal IP configuration files. They are symbolically linked to
+predefined configuration files, thus allowing one to control what each network
+booted node will do at the next boot.
+
+Netbootmgr is currently not switching between next boot actions automatically!
+If you want to switch automatically a node from "Install" to "Boot" mode (such
+that it doesn't end up in an endless install loop), use something like the
+si_netbootmond which comes with systemimager and is integrated in OSCAR. It
+can automatically switch installed hosts to "localboot" mode. For enabling
+this behavior: turn on the service systemimager-server-netbootmond and check
+that "NET_BOOT_DEFAULT = local" in /etc/systemimager/systemimager.conf.
+
+
+.SH OPTIONS
+
+When called with no options the netbootmgr perl-Qt based GUI will start up.
+
+
+.SH EXAMPLES
+
+The configuration is located in /etc/netbootmgr.conf. It is parsed line by
+line. A line should begin with one of the keywords: REFRESH, HOSTDB, TFTPROOT,
+MENU or STATUS (written in uppercase letters!). Lines beginning with # are
+ignored.
+
+A configuration file example:
+
+.nf
+# refresh interval in seconds
+REFRESH 10
+# host database: either SIS or a file
+HOSTDB SIS
+# tftp root directory
+TFTPROOT /tftpboot
+# next boot action menu entries
+MENU Install:__default__
+MENU LocalBoot:localboot
+MENU Kernel-x:kernel-x
+MENU Memtest:memtest86
+# status update executable
+STATUS /usr/bin/netbootmgr-status
+.fi
+
+
+The keywords in the configuration file are:
+
+.TP
+.B REFRESH <seconds>
+the refresh rate for checking the node status and the links to
+boot options. Set to 10s in the example (this is the default value).
+
+.TP
+.B HOSTDB <SIS|path_to_file>
+specifies the method for getting the list of managed hosts. SIS means: read
+hosts information (name, architecture, IP address of boot interface) from the
+SIS (SystemImagerSuite) database. This is the default value and should be used
+on OSCAR clusters. Alternatively an absolute path to a file can be specified
+(when SIS is not in use). This file consists of lines containing hostname,
+architecture and IP address, separated by spaces. For example:
+
+.nf
+alph1 i686 192.168.224.22
+alph2 i686 192.168.224.23
+gamm3 ia64 192.168.224.204
+.fi
+
+.TP
+.B TFTPROOT <tftp_root_path>
+root path of the tftp daemon. The default is /tftpboot. pxelinux and elilo.efi
+configuration files with different boot options must be located in this
+directory.
+
+.TP
+.B MENU label:bootconfig
+define menu entry in the next boot action menu. Label will be the text
+appearing in the menu, bootconfig is the pxelinux or elilo.efi configuration
+file corresponding to this boot label. The special bootconfig file name
+.RB __default__
+is reserved for the default boot action, i.e. the one for which no symbolic
+link to the node's hexadecimal address will be generated. In OSCAR the
+__default__ entry will lead to the re-installation of the node.
+
+.TP
+.B STATUS path_to_status_executable
+The status_executable provides information on the status of the managed
+nodes. The program must accept a list of hostnames on the command line and
+return the status in multiple output lines in the format:
+.nf
+    hostname: status_string
+.fi
+
+
+.SH POWER CONTROL
+Since version 1.6 netbootmgr tries to detect the availability and
+functionality of the cpower cluster power tool. If the cpower tool is
+installed and configured and its status call returns reasonable information,
+the GUI will provide a drop down menu offering options to control the power of
+the nodes: power them on/off, switch their ID LED on and off (if possible).
+
+The power status is not linked to the normal netbootmgr status update. The
+power status query can block for a long time if some of the nodes have
+connectivity problems. Therefore the update of the power status column is only
+done explicitely for the selected nodes to which the cpower status command was
+invoked.
+
+
+.SH COMMAND LINE INTERFACE
+A command line interface to manipulate the PXE/elilo network boot
+configuration files is implemented in netbootmgr-cmd.
+
+Usage:
+.B netbootmgr-cmd 
+[
+.I options
+] [ host ... ]
+
+The options are:
+.TP
+--status
+print status info
+.TP
+--actions
+list configured next boot actions
+.TP
+--nba=<action>
+set next boot action to the selected one
+.TP
+--delete
+delete the NBA symlink or file corresponding to the hosts
+.TP
+--all
+select all hosts for the --nba or --delete actions
+.TP
+--verbose
+enable verbose output
+
+.TP
+host ...
+list of hosts for which the --nba or --delete option applies.
+
+.PP
+netbootmgr-cmd does not provide an interface for controlling the cluster
+nodes' power. The command line interface for that is the cpower program.
+
+
+.SH FILES
+/etc/netbootmgr.conf, /usr/share/netbootmgr/*.
+
+
+.SH "SEE ALSO"
+systemimager, systemimager-server-netbootmond, ...
+
+
+.SH BUGS
+None ;-) But use it at your own risk.
+
+.SH AUTHOR
+Erich Focht, NEC HPCE, email: efocht@hpce.nec.com
+.br
+Document $Id: netbootmgr.8 6254 2007-04-13 12:08:09Z focht $
