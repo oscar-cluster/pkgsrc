@@ -1,627 +1,537 @@
-<!DOCTYPE UI><UI version="3.3" stdsetdef="1">
-<class>netBootMgr</class>
-<author>Erich Focht</author>
-<widget class="QDialog">
-    <property name="name">
-        <cstring>netBootMgr</cstring>
-    </property>
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0" stdsetdef="1">
+  <author>Erich Focht</author>
+  <comment></comment>
+  <exportmacro></exportmacro>
+  <class>netBootMgr</class>
+  <widget class="QDialog" name="netBootMgr">
     <property name="geometry">
-        <rect>
-            <x>0</x>
-            <y>0</y>
-            <width>670</width>
-            <height>331</height>
-        </rect>
+      <rect>
+        <x>0</x>
+        <y>0</y>
+        <width>670</width>
+        <height>331</height>
+      </rect>
     </property>
     <property name="sizePolicy">
-        <sizepolicy>
-            <hsizetype>3</hsizetype>
-            <vsizetype>5</vsizetype>
-            <horstretch>80</horstretch>
-            <verstretch>0</verstretch>
-        </sizepolicy>
+      <sizepolicy>
+        <hsizetype>3</hsizetype>
+        <vsizetype>5</vsizetype>
+        <horstretch>80</horstretch>
+        <verstretch>0</verstretch>
+      </sizepolicy>
     </property>
     <property name="baseSize">
-        <size>
-            <width>900</width>
-            <height>600</height>
-        </size>
+      <size>
+        <width>900</width>
+        <height>600</height>
+      </size>
     </property>
-    <property name="caption">
-        <string>Network Boot Manager</string>
+    <property name="windowTitle">
+      <string>Network Boot Manager</string>
     </property>
     <property name="focusPolicy">
-        <enum>ClickFocus</enum>
+      <enum>Qt::ClickFocus</enum>
     </property>
     <property name="sizeGripEnabled">
-        <bool>true</bool>
+      <bool>true</bool>
     </property>
-    <hbox>
-        <property name="name">
-            <cstring>unnamed</cstring>
-        </property>
-        <widget class="QListView">
-            <column>
-                <property name="text">
-                    <string>Hostname</string>
-                </property>
-                <property name="clickable">
-                    <bool>true</bool>
-                </property>
-                <property name="resizable">
-                    <bool>true</bool>
-                </property>
-            </column>
-            <column>
-                <property name="text">
-                    <string>Arch</string>
-                </property>
-                <property name="clickable">
-                    <bool>true</bool>
-                </property>
-                <property name="resizable">
-                    <bool>true</bool>
-                </property>
-            </column>
-            <column>
-                <property name="text">
-                    <string>IP Address</string>
-                </property>
-                <property name="clickable">
-                    <bool>true</bool>
-                </property>
-                <property name="resizable">
-                    <bool>true</bool>
-                </property>
-            </column>
-            <column>
-                <property name="text">
+    <layout class="QHBoxLayout">
+      <item>
+        <widget class="Q3ListView" name="tabqListView">
+          <property name="minimumSize">
+            <size>
+              <width>376</width>
+              <height>306</height>
+            </size>
+          </property>
+          <property name="margin">
+            <number>0</number>
+          </property>
+          <property name="resizePolicy">
+            <enum>Q3ScrollView::Manual</enum>
+          </property>
+          <property name="selectionMode">
+            <enum>Q3ListView::Extended</enum>
+          </property>
+          <property name="allColumnsShowFocus">
+            <bool>true</bool>
+          </property>
+          <property name="resizeMode">
+            <enum>Q3ListView::NoColumn</enum>
+          </property>
+          <column>
+            <property name="text">
+              <string>Hostname</string>
+            </property>
+            <property name="clickable">
+              <bool>true</bool>
+            </property>
+            <property name="resizable">
+              <bool>true</bool>
+            </property>
+          </column>
+          <column>
+            <property name="text">
+              <string>Arch</string>
+            </property>
+            <property name="clickable">
+              <bool>true</bool>
+            </property>
+            <property name="resizable">
+              <bool>true</bool>
+            </property>
+          </column>
+          <column>
+            <property name="text">
+              <string>IP Address</string>
+            </property>
+            <property name="clickable">
+              <bool>true</bool>
+            </property>
+            <property name="resizable">
+              <bool>true</bool>
+            </property>
+          </column>
+          <column>
+            <property name="text">
+              <string>Next boot action</string>
+            </property>
+            <property name="clickable">
+              <bool>true</bool>
+            </property>
+            <property name="resizable">
+              <bool>true</bool>
+            </property>
+          </column>
+          <column>
+            <property name="text">
+              <string>Status</string>
+            </property>
+            <property name="clickable">
+              <bool>true</bool>
+            </property>
+            <property name="resizable">
+              <bool>true</bool>
+            </property>
+          </column>
+          <column>
+            <property name="text">
+              <string>Power</string>
+            </property>
+            <property name="clickable">
+              <bool>true</bool>
+            </property>
+            <property name="resizable">
+              <bool>true</bool>
+            </property>
+          </column>
+          <item>
+            <property name="text">
+              <string>host01</string>
+            </property>
+            <property name="text">
+              <string>x86_64</string>
+            </property>
+            <property name="text">
+              <string>192.168.224.21</string>
+            </property>
+            <property name="text">
+              <string>localboot</string>
+            </property>
+            <property name="text">
+              <string>ganglia=ALIVE,si=rebooted</string>
+            </property>
+            <property name="text">
+              <string>off</string>
+            </property>
+            <property name="pixmap">
+              <pixmap/>
+            </property>
+            <property name="pixmap">
+              <pixmap/>
+            </property>
+            <property name="pixmap">
+              <pixmap/>
+            </property>
+            <property name="pixmap">
+              <pixmap/>
+            </property>
+            <property name="pixmap">
+              <pixmap/>
+            </property>
+            <property name="pixmap">
+              <pixmap/>
+            </property>
+          </item>
+          <item>
+            <property name="text">
+              <string>host02</string>
+            </property>
+            <property name="text">
+              <string>i686</string>
+            </property>
+            <property name="text">
+              <string>192.168.224.22</string>
+            </property>
+            <property name="text">
+              <string>install</string>
+            </property>
+            <property name="text">
+              <string>up</string>
+            </property>
+            <property name="text">
+              <string>on</string>
+            </property>
+            <property name="pixmap">
+              <pixmap/>
+            </property>
+            <property name="pixmap">
+              <pixmap/>
+            </property>
+            <property name="pixmap">
+              <pixmap/>
+            </property>
+            <property name="pixmap">
+              <pixmap/>
+            </property>
+            <property name="pixmap">
+              <pixmap/>
+            </property>
+            <property name="pixmap">
+              <pixmap/>
+            </property>
+          </item>
+        </widget>
+      </item>
+      <item>
+        <layout class="QVBoxLayout">
+          <property name="margin">
+            <number>2</number>
+          </property>
+          <property name="spacing">
+            <number>2</number>
+          </property>
+          <item>
+            <layout class="QVBoxLayout">
+              <property name="margin">
+                <number>2</number>
+              </property>
+              <property name="spacing">
+                <number>2</number>
+              </property>
+              <item>
+                <widget class="QLabel" name="actionTextLabel">
+                  <property name="font">
+                    <font>
+                      <pointsize>11</pointsize>
+                    </font>
+                  </property>
+                  <property name="frameShape">
+                    <enum>QFrame::Panel</enum>
+                  </property>
+                  <property name="frameShadow">
+                    <enum>QFrame::Sunken</enum>
+                  </property>
+                  <property name="text">
                     <string>Next boot action</string>
-                </property>
-                <property name="clickable">
-                    <bool>true</bool>
-                </property>
-                <property name="resizable">
-                    <bool>true</bool>
-                </property>
-            </column>
-            <column>
-                <property name="text">
-                    <string>Status</string>
-                </property>
-                <property name="clickable">
-                    <bool>true</bool>
-                </property>
-                <property name="resizable">
-                    <bool>true</bool>
-                </property>
-            </column>
-            <column>
-                <property name="text">
-                    <string>Power</string>
-                </property>
-                <property name="clickable">
-                    <bool>true</bool>
-                </property>
-                <property name="resizable">
-                    <bool>true</bool>
-                </property>
-            </column>
-        <item>
-            <property name="text">
-                <string>host01</string>
-            </property>
-            <property name="text">
-                <string>x86_64</string>
-            </property>
-            <property name="text">
-                <string>192.168.224.21</string>
-            </property>
-            <property name="text">
-                <string>localboot</string>
-            </property>
-            <property name="text">
-                <string>ganglia=ALIVE,si=rebooted</string>
-            </property>
-            <property name="text">
-                <string>off</string>
-            </property>
-            <property name="pixmap">
-                <pixmap></pixmap>
-            </property>
-            <property name="pixmap">
-                <pixmap></pixmap>
-            </property>
-            <property name="pixmap">
-                <pixmap></pixmap>
-            </property>
-            <property name="pixmap">
-                <pixmap></pixmap>
-            </property>
-            <property name="pixmap">
-                <pixmap></pixmap>
-            </property>
-            <property name="pixmap">
-                <pixmap></pixmap>
-            </property>
-        </item>
-        <item>
-            <property name="text">
-                <string>host02</string>
-            </property>
-            <property name="text">
-                <string>i686</string>
-            </property>
-            <property name="text">
-                <string>192.168.224.22</string>
-            </property>
-            <property name="text">
-                <string>install</string>
-            </property>
-            <property name="text">
-                <string>up</string>
-            </property>
-            <property name="text">
-                <string>on</string>
-            </property>
-            <property name="pixmap">
-                <pixmap></pixmap>
-            </property>
-            <property name="pixmap">
-                <pixmap></pixmap>
-            </property>
-            <property name="pixmap">
-                <pixmap></pixmap>
-            </property>
-            <property name="pixmap">
-                <pixmap></pixmap>
-            </property>
-            <property name="pixmap">
-                <pixmap></pixmap>
-            </property>
-            <property name="pixmap">
-                <pixmap></pixmap>
-            </property>
-        </item>
-            <property name="name">
-                <cstring>tabqListView</cstring>
-            </property>
-            <property name="minimumSize">
+                  </property>
+                  <property name="buddy" stdset="0">
+                    <cstring>actionComboBox</cstring>
+                  </property>
+                  <property name="wordWrap">
+                    <bool>false</bool>
+                  </property>
+                </widget>
+              </item>
+              <item>
+                <widget class="QComboBox" name="actionComboBox">
+                  <item>
+                    <property name="text">
+                      <string>Install</string>
+                    </property>
+                  </item>
+                  <item>
+                    <property name="text">
+                      <string>NetBoot</string>
+                    </property>
+                  </item>
+                  <item>
+                    <property name="text">
+                      <string>LocalBoot</string>
+                    </property>
+                  </item>
+                </widget>
+              </item>
+              <item>
+                <widget class="QPushButton" name="applyPushButton">
+                  <property name="font">
+                    <font>
+                      <pointsize>12</pointsize>
+                    </font>
+                  </property>
+                  <property name="text">
+                    <string>&amp;Set</string>
+                  </property>
+                  <property name="shortcut">
+                    <string>Alt+S</string>
+                  </property>
+                </widget>
+              </item>
+            </layout>
+          </item>
+          <item>
+            <spacer name="spacer6">
+              <property name="sizeHint">
                 <size>
-                    <width>376</width>
-                    <height>306</height>
+                  <width>20</width>
+                  <height>16</height>
                 </size>
-            </property>
-            <property name="margin">
-                <number>0</number>
-            </property>
-            <property name="resizePolicy">
-                <enum>Manual</enum>
-            </property>
-            <property name="selectionMode">
-                <enum>Extended</enum>
-            </property>
-            <property name="allColumnsShowFocus">
-                <bool>true</bool>
-            </property>
-            <property name="resizeMode">
-                <enum>NoColumn</enum>
-            </property>
-            <property name="fullWidth" stdset="0">
-                <bool>true</bool>
-            </property>
-        </widget>
-        <widget class="QLayoutWidget">
-            <property name="name">
-                <cstring>layout16</cstring>
-            </property>
-            <vbox>
-                <property name="name">
-                    <cstring>unnamed</cstring>
-                </property>
-                <property name="margin">
+              </property>
+              <property name="sizeType">
+                <enum>QSizePolicy::Expanding</enum>
+              </property>
+              <property name="orientation">
+                <enum>Qt::Vertical</enum>
+              </property>
+            </spacer>
+          </item>
+          <item>
+            <layout class="QHBoxLayout">
+              <property name="margin">
+                <number>2</number>
+              </property>
+              <property name="spacing">
+                <number>2</number>
+              </property>
+              <item>
+                <widget class="QLabel" name="selectTextLabel">
+                  <property name="font">
+                    <font>
+                      <pointsize>11</pointsize>
+                    </font>
+                  </property>
+                  <property name="frameShape">
+                    <enum>QFrame::Panel</enum>
+                  </property>
+                  <property name="frameShadow">
+                    <enum>QFrame::Sunken</enum>
+                  </property>
+                  <property name="text">
+                    <string>Selection</string>
+                  </property>
+                  <property name="buddy" stdset="0">
+                    <cstring>selallPushButton</cstring>
+                  </property>
+                  <property name="wordWrap">
+                    <bool>false</bool>
+                  </property>
+                </widget>
+              </item>
+              <item>
+                <layout class="QVBoxLayout">
+                  <property name="margin">
                     <number>2</number>
-                </property>
-                <property name="spacing">
-                    <number>2</number>
-                </property>
-                <widget class="QLayoutWidget">
-                    <property name="name">
-                        <cstring>layout3</cstring>
-                    </property>
-                    <vbox>
-                        <property name="name">
-                            <cstring>unnamed</cstring>
-                        </property>
-                        <property name="margin">
-                            <number>2</number>
-                        </property>
-                        <property name="spacing">
-                            <number>2</number>
-                        </property>
-                        <widget class="QLabel">
-                            <property name="name">
-                                <cstring>actionTextLabel</cstring>
-                            </property>
-                            <property name="font">
-                                <font>
-                                    <pointsize>11</pointsize>
-                                </font>
-                            </property>
-                            <property name="frameShape">
-                                <enum>Panel</enum>
-                            </property>
-                            <property name="frameShadow">
-                                <enum>Sunken</enum>
-                            </property>
-                            <property name="text">
-                                <string>Next boot action</string>
-                            </property>
-                            <property name="buddy" stdset="0">
-                                <cstring>actionComboBox</cstring>
-                            </property>
-                        </widget>
-                        <widget class="QComboBox">
-                            <item>
-                                <property name="text">
-                                    <string>Install</string>
-                                </property>
-                            </item>
-                            <item>
-                                <property name="text">
-                                    <string>NetBoot</string>
-                                </property>
-                            </item>
-                            <item>
-                                <property name="text">
-                                    <string>LocalBoot</string>
-                                </property>
-                            </item>
-                            <property name="name">
-                                <cstring>actionComboBox</cstring>
-                            </property>
-                        </widget>
-                        <widget class="QPushButton">
-                            <property name="name">
-                                <cstring>applyPushButton</cstring>
-                            </property>
-                            <property name="font">
-                                <font>
-                                    <pointsize>12</pointsize>
-                                </font>
-                            </property>
-                            <property name="text">
-                                <string>&amp;Set</string>
-                            </property>
-                            <property name="accel">
-                                <string>Alt+S</string>
-                            </property>
-                        </widget>
-                    </vbox>
+                  </property>
+                  <property name="spacing">
+                    <number>1</number>
+                  </property>
+                  <item>
+                    <widget class="QPushButton" name="selinvPushButton">
+                      <property name="font">
+                        <font>
+                          <pointsize>8</pointsize>
+                        </font>
+                      </property>
+                      <property name="text">
+                        <string>&amp;invert</string>
+                      </property>
+                      <property name="shortcut">
+                        <string>Alt+I</string>
+                      </property>
+                    </widget>
+                  </item>
+                  <item>
+                    <widget class="QPushButton" name="clearPushButton">
+                      <property name="font">
+                        <font>
+                          <pointsize>8</pointsize>
+                        </font>
+                      </property>
+                      <property name="text">
+                        <string>&amp;clear</string>
+                      </property>
+                      <property name="shortcut">
+                        <string>Alt+C</string>
+                      </property>
+                    </widget>
+                  </item>
+                  <item>
+                    <widget class="QPushButton" name="selallPushButton">
+                      <property name="font">
+                        <font>
+                          <pointsize>8</pointsize>
+                        </font>
+                      </property>
+                      <property name="text">
+                        <string>&amp;all</string>
+                      </property>
+                      <property name="shortcut">
+                        <string>Alt+A</string>
+                      </property>
+                    </widget>
+                  </item>
+                </layout>
+              </item>
+            </layout>
+          </item>
+          <item>
+            <spacer name="spacer7_2">
+              <property name="sizeHint">
+                <size>
+                  <width>20</width>
+                  <height>20</height>
+                </size>
+              </property>
+              <property name="sizeType">
+                <enum>QSizePolicy::Expanding</enum>
+              </property>
+              <property name="orientation">
+                <enum>Qt::Vertical</enum>
+              </property>
+            </spacer>
+          </item>
+          <item>
+            <layout class="QVBoxLayout">
+              <property name="margin">
+                <number>2</number>
+              </property>
+              <property name="spacing">
+                <number>2</number>
+              </property>
+              <item>
+                <widget class="QLabel" name="powerTextLabe">
+                  <property name="font">
+                    <font>
+                      <pointsize>11</pointsize>
+                    </font>
+                  </property>
+                  <property name="frameShape">
+                    <enum>QFrame::Panel</enum>
+                  </property>
+                  <property name="frameShadow">
+                    <enum>QFrame::Sunken</enum>
+                  </property>
+                  <property name="text">
+                    <string>Power control</string>
+                  </property>
+                  <property name="buddy" stdset="0">
+                    <cstring>actionComboBox</cstring>
+                  </property>
+                  <property name="wordWrap">
+                    <bool>false</bool>
+                  </property>
                 </widget>
-                <spacer>
-                    <property name="name">
-                        <cstring>spacer6</cstring>
+              </item>
+              <item>
+                <widget class="QComboBox" name="powerComboBox">
+                  <item>
+                    <property name="text">
+                      <string>no action</string>
                     </property>
-                    <property name="orientation">
-                        <enum>Vertical</enum>
+                  </item>
+                  <item>
+                    <property name="text">
+                      <string>Status</string>
                     </property>
-                    <property name="sizeType">
-                        <enum>Expanding</enum>
+                  </item>
+                  <item>
+                    <property name="text">
+                      <string>Power On</string>
                     </property>
-                    <property name="sizeHint">
-                        <size>
-                            <width>20</width>
-                            <height>16</height>
-                        </size>
+                  </item>
+                  <item>
+                    <property name="text">
+                      <string>Power Off</string>
                     </property>
-                </spacer>
-                <widget class="QLayoutWidget">
-                    <property name="name">
-                        <cstring>layout8</cstring>
+                  </item>
+                  <item>
+                    <property name="text">
+                      <string>ID LED on</string>
                     </property>
-                    <hbox>
-                        <property name="name">
-                            <cstring>unnamed</cstring>
-                        </property>
-                        <property name="margin">
-                            <number>2</number>
-                        </property>
-                        <property name="spacing">
-                            <number>2</number>
-                        </property>
-                        <widget class="QLabel">
-                            <property name="name">
-                                <cstring>selectTextLabel</cstring>
-                            </property>
-                            <property name="font">
-                                <font>
-                                    <pointsize>11</pointsize>
-                                </font>
-                            </property>
-                            <property name="frameShape">
-                                <enum>Panel</enum>
-                            </property>
-                            <property name="frameShadow">
-                                <enum>Sunken</enum>
-                            </property>
-                            <property name="text">
-                                <string>Selection</string>
-                            </property>
-                            <property name="buddy" stdset="0">
-                                <cstring>selallPushButton</cstring>
-                            </property>
-                        </widget>
-                        <widget class="QLayoutWidget">
-                            <property name="name">
-                                <cstring>layout5</cstring>
-                            </property>
-                            <vbox>
-                                <property name="name">
-                                    <cstring>unnamed</cstring>
-                                </property>
-                                <property name="margin">
-                                    <number>2</number>
-                                </property>
-                                <property name="spacing">
-                                    <number>1</number>
-                                </property>
-                                <widget class="QPushButton">
-                                    <property name="name">
-                                        <cstring>selinvPushButton</cstring>
-                                    </property>
-                                    <property name="font">
-                                        <font>
-                                            <pointsize>8</pointsize>
-                                        </font>
-                                    </property>
-                                    <property name="text">
-                                        <string>&amp;invert</string>
-                                    </property>
-                                    <property name="accel">
-                                        <string>Alt+I</string>
-                                    </property>
-                                </widget>
-                                <widget class="QPushButton">
-                                    <property name="name">
-                                        <cstring>clearPushButton</cstring>
-                                    </property>
-                                    <property name="font">
-                                        <font>
-                                            <pointsize>8</pointsize>
-                                        </font>
-                                    </property>
-                                    <property name="text">
-                                        <string>&amp;clear</string>
-                                    </property>
-                                    <property name="accel">
-                                        <string>Alt+C</string>
-                                    </property>
-                                </widget>
-                                <widget class="QPushButton">
-                                    <property name="name">
-                                        <cstring>selallPushButton</cstring>
-                                    </property>
-                                    <property name="font">
-                                        <font>
-                                            <pointsize>8</pointsize>
-                                        </font>
-                                    </property>
-                                    <property name="text">
-                                        <string>&amp;all</string>
-                                    </property>
-                                    <property name="accel">
-                                        <string>Alt+A</string>
-                                    </property>
-                                </widget>
-                            </vbox>
-                        </widget>
-                    </hbox>
+                  </item>
+                  <item>
+                    <property name="text">
+                      <string>ID LED off</string>
+                    </property>
+                  </item>
                 </widget>
-                <spacer>
-                    <property name="name">
-                        <cstring>spacer7_2</cstring>
-                    </property>
-                    <property name="orientation">
-                        <enum>Vertical</enum>
-                    </property>
-                    <property name="sizeType">
-                        <enum>Expanding</enum>
-                    </property>
-                    <property name="sizeHint">
-                        <size>
-                            <width>20</width>
-                            <height>20</height>
-                        </size>
-                    </property>
-                </spacer>
-                <widget class="QLayoutWidget">
-                    <property name="name">
-                        <cstring>layout3_2</cstring>
-                    </property>
-                    <vbox>
-                        <property name="name">
-                            <cstring>unnamed</cstring>
-                        </property>
-                        <property name="margin">
-                            <number>2</number>
-                        </property>
-                        <property name="spacing">
-                            <number>2</number>
-                        </property>
-                        <widget class="QLabel">
-                            <property name="name">
-                                <cstring>powerTextLabe</cstring>
-                            </property>
-                            <property name="font">
-                                <font>
-                                    <pointsize>11</pointsize>
-                                </font>
-                            </property>
-                            <property name="frameShape">
-                                <enum>Panel</enum>
-                            </property>
-                            <property name="frameShadow">
-                                <enum>Sunken</enum>
-                            </property>
-                            <property name="text">
-                                <string>Power control</string>
-                            </property>
-                            <property name="buddy" stdset="0">
-                                <cstring>actionComboBox</cstring>
-                            </property>
-                        </widget>
-                        <widget class="QComboBox">
-                            <item>
-                                <property name="text">
-                                    <string>no action</string>
-                                </property>
-                            </item>
-                            <item>
-                                <property name="text">
-                                    <string>Status</string>
-                                </property>
-                            </item>
-                            <item>
-                                <property name="text">
-                                    <string>Power On</string>
-                                </property>
-                            </item>
-                            <item>
-                                <property name="text">
-                                    <string>Power Off</string>
-                                </property>
-                            </item>
-                            <item>
-                                <property name="text">
-                                    <string>ID LED on</string>
-                                </property>
-                            </item>
-                            <item>
-                                <property name="text">
-                                    <string>ID LED off</string>
-                                </property>
-                            </item>
-                            <property name="name">
-                                <cstring>powerComboBox</cstring>
-                            </property>
-                        </widget>
-                    </vbox>
+              </item>
+            </layout>
+          </item>
+          <item>
+            <spacer name="spacer7">
+              <property name="sizeHint">
+                <size>
+                  <width>20</width>
+                  <height>16</height>
+                </size>
+              </property>
+              <property name="sizeType">
+                <enum>QSizePolicy::Expanding</enum>
+              </property>
+              <property name="orientation">
+                <enum>Qt::Vertical</enum>
+              </property>
+            </spacer>
+          </item>
+          <item>
+            <layout class="QVBoxLayout">
+              <property name="margin">
+                <number>2</number>
+              </property>
+              <property name="spacing">
+                <number>2</number>
+              </property>
+              <item>
+                <widget class="QPushButton" name="refreshPushButton">
+                  <property name="font">
+                    <font>
+                      <pointsize>12</pointsize>
+                    </font>
+                  </property>
+                  <property name="text">
+                    <string>&amp;Refresh</string>
+                  </property>
+                  <property name="shortcut">
+                    <string>Alt+R</string>
+                  </property>
                 </widget>
-                <spacer>
-                    <property name="name">
-                        <cstring>spacer7</cstring>
-                    </property>
-                    <property name="orientation">
-                        <enum>Vertical</enum>
-                    </property>
-                    <property name="sizeType">
-                        <enum>Expanding</enum>
-                    </property>
-                    <property name="sizeHint">
-                        <size>
-                            <width>20</width>
-                            <height>16</height>
-                        </size>
-                    </property>
-                </spacer>
-                <widget class="QLayoutWidget">
-                    <property name="name">
-                        <cstring>layout5</cstring>
-                    </property>
-                    <vbox>
-                        <property name="name">
-                            <cstring>unnamed</cstring>
-                        </property>
-                        <property name="margin">
-                            <number>2</number>
-                        </property>
-                        <property name="spacing">
-                            <number>2</number>
-                        </property>
-                        <widget class="QPushButton">
-                            <property name="name">
-                                <cstring>refreshPushButton</cstring>
-                            </property>
-                            <property name="font">
-                                <font>
-                                    <pointsize>12</pointsize>
-                                </font>
-                            </property>
-                            <property name="text">
-                                <string>&amp;Refresh</string>
-                            </property>
-                            <property name="accel">
-                                <string>Alt+R</string>
-                            </property>
-                        </widget>
-                        <widget class="QPushButton">
-                            <property name="name">
-                                <cstring>quitPushButton</cstring>
-                            </property>
-                            <property name="font">
-                                <font>
-                                    <pointsize>12</pointsize>
-                                </font>
-                            </property>
-                            <property name="text">
-                                <string>&amp;Quit</string>
-                            </property>
-                            <property name="accel">
-                                <string>Alt+Q</string>
-                            </property>
-                        </widget>
-                    </vbox>
+              </item>
+              <item>
+                <widget class="QPushButton" name="quitPushButton">
+                  <property name="font">
+                    <font>
+                      <pointsize>12</pointsize>
+                    </font>
+                  </property>
+                  <property name="text">
+                    <string>&amp;Quit</string>
+                  </property>
+                  <property name="shortcut">
+                    <string>Alt+Q</string>
+                  </property>
                 </widget>
-            </vbox>
-        </widget>
-    </hbox>
-</widget>
-<connections>
-    <connection>
-        <sender>quitPushButton</sender>
-        <signal>clicked()</signal>
-        <receiver>netBootMgr</receiver>
-        <slot>close()</slot>
-    </connection>
-    <connection>
-        <sender>refreshPushButton</sender>
-        <signal>clicked()</signal>
-        <receiver>netBootMgr</receiver>
-        <slot>refresh()</slot>
-    </connection>
-    <connection>
-        <sender>selallPushButton</sender>
-        <signal>clicked()</signal>
-        <receiver>netBootMgr</receiver>
-        <slot>selectAll()</slot>
-    </connection>
-    <connection>
-        <sender>clearPushButton</sender>
-        <signal>clicked()</signal>
-        <receiver>netBootMgr</receiver>
-        <slot>clearSelected()</slot>
-    </connection>
-    <connection>
-        <sender>selinvPushButton</sender>
-        <signal>clicked()</signal>
-        <receiver>tabqListView</receiver>
-        <slot>invertSelection()</slot>
-    </connection>
-    <connection>
-        <sender>applyPushButton</sender>
-        <signal>clicked()</signal>
-        <receiver>netBootMgr</receiver>
-        <slot>setAction()</slot>
-    </connection>
-    <connection>
-        <sender>powerComboBox</sender>
-        <signal>activated(const QString&amp;)</signal>
-        <receiver>netBootMgr</receiver>
-        <slot>powerAction()</slot>
-    </connection>
-</connections>
-<tabstops>
+              </item>
+            </layout>
+          </item>
+        </layout>
+      </item>
+    </layout>
+  </widget>
+  <layoutdefault spacing="6" margin="11"/>
+  <pixmapfunction>qPixmapFromMimeSource</pixmapfunction>
+  <tabstops>
     <tabstop>tabqListView</tabstop>
     <tabstop>actionComboBox</tabstop>
     <tabstop>applyPushButton</tabstop>
@@ -629,33 +539,56 @@
     <tabstop>selinvPushButton</tabstop>
     <tabstop>refreshPushButton</tabstop>
     <tabstop>quitPushButton</tabstop>
-</tabstops>
-<includes>
-    <include location="local" impldecl="in declaration">use Qt::attributes qw(processTimer);</include>
-    <include location="local" impldecl="in declaration">use lib "/usr/share/netbootmgr";</include>
-    <include location="local" impldecl="in declaration">use netbootlib;</include>
-    <include location="local" impldecl="in declaration">my $netbootlib="netbootlib";</include>
-    <include location="local" impldecl="in declaration">use sureDialog;</include>
-    <include location="local" impldecl="in implementation">netbootmgr.ui.h</include>
-</includes>
-<slots>
-    <slot>readNBAConfig()</slot>
-    <slot>selectAll()</slot>
-    <slot access="private">clearSelected()</slot>
-    <slot>setAction()</slot>
-    <slot>buildHostDB()</slot>
-    <slot>fillHostTab()</slot>
-    <slot>updateHostTab()</slot>
-    <slot>readHostAction()</slot>
-    <slot>refresh()</slot>
-    <slot>powerAction()</slot>
-    <slot>applyPower()</slot>
-</slots>
-<functions>
-    <function>init()</function>
-    <function access="private" returnType="QString *">listSelected()</function>
-    <function access="private" returnType="QInt">hasCPower()</function>
-</functions>
-<pixmapinproject/>
-<layoutdefaults spacing="6" margin="11"/>
-</UI>
+  </tabstops>
+  <includes>
+    <include location="local">use Qt::attributes qw(processTimer);</include>
+    <include location="local">use lib &quot;/usr/share/netbootmgr&quot;;</include>
+    <include location="local">use netbootlib;</include>
+    <include location="local">my $netbootlib=&quot;netbootlib&quot;;</include>
+    <include location="local">use sureDialog;</include>
+  </includes>
+  <connections>
+    <connection>
+      <sender>quitPushButton</sender>
+      <signal>clicked()</signal>
+      <receiver>netBootMgr</receiver>
+      <slot>close()</slot>
+    </connection>
+    <connection>
+      <sender>refreshPushButton</sender>
+      <signal>clicked()</signal>
+      <receiver>netBootMgr</receiver>
+      <slot>refresh()</slot>
+    </connection>
+    <connection>
+      <sender>selallPushButton</sender>
+      <signal>clicked()</signal>
+      <receiver>netBootMgr</receiver>
+      <slot>selectAll()</slot>
+    </connection>
+    <connection>
+      <sender>clearPushButton</sender>
+      <signal>clicked()</signal>
+      <receiver>netBootMgr</receiver>
+      <slot>clearSelected()</slot>
+    </connection>
+    <connection>
+      <sender>selinvPushButton</sender>
+      <signal>clicked()</signal>
+      <receiver>tabqListView</receiver>
+      <slot>invertSelection()</slot>
+    </connection>
+    <connection>
+      <sender>applyPushButton</sender>
+      <signal>clicked()</signal>
+      <receiver>netBootMgr</receiver>
+      <slot>setAction()</slot>
+    </connection>
+    <connection>
+      <sender>powerComboBox</sender>
+      <signal>activated(QString)</signal>
+      <receiver>netBootMgr</receiver>
+      <slot>powerAction()</slot>
+    </connection>
+  </connections>
+</ui>

@@ -23,8 +23,7 @@
 
 use strict;
 use utf8;
-use Qt;
-use lib "/usr/share/netbootmgr";
+use QtCore4;
 use netBootMgr;
 
 my $a = Qt::Application(\@ARGV);

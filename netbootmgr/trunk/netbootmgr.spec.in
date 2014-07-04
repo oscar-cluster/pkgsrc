@@ -1,9 +1,9 @@
 # $Id: netbootmgr.spec 6252 2007-04-13 12:06:10Z focht $
 Summary: Manage next network boot action for a cluster
 Name: netbootmgr
-Version: 1.7
+Version: __VERSION__
 Vendor: NEC HPCE
-Release: 1
+Release: 1%{?dist}
 License: GPL
 Packager: Erich Focht <efocht@hpce.nec.com>
 Source: %{name}-%{version}.tar.gz
@@ -12,7 +12,8 @@ BuildArch: noarch
 BuildRoot: %{_tmppath}/%{name}
 BuildRequires: perl-Qt
 Requires: perl-Qt
-AutoReqProv: no
+Requires: memtest86+
+#AutoReqProv: no
 
 %description 
 Netbootmgr provides a GUI interface for managing the next boot action for
@@ -27,22 +28,26 @@ files.
 
 %build
 # currently the puic path is hardcoded
-/opt/perl-Qt/bin/puic -o netBootMgr.pm netbootmgr.ui
-/opt/perl-Qt/bin/puic -o sureDialog.pm suredialog.ui
+/usr/bin/puic4 -o netBootMgr.pm netbootmgr.ui
+/usr/bin/puic4 -o sureDialog.pm suredialog.ui
 
 %install
 
-for dir in /usr/bin /usr/share/%{name} /etc %{_mandir}/man8 ; do
+for dir in %{_bindir} %{_datarootdir}/%{name} %{_sysconfdir} %{_mandir}/man8 ; do
     install -d -o root -g root -m 755 $RPM_BUILD_ROOT$dir
 done
 for file in netbootmgr netbootmgr-status/* netbootmgr-cmd ; do
     base=`basename $file`
-    install -o root -g root -m 755 $file $RPM_BUILD_ROOT/usr/bin/$base
+    install -o root -g root -m 755 $file $RPM_BUILD_ROOT%{_bindir}/$base
 done
-for file in *.pm localboot kernel-x memtest86 memtest86+-1.65.bin hostdb.test ; do
-    install -o root -g root -m 755 $file $RPM_BUILD_ROOT/usr/share/%{name}
+for file in *.pm; do
+    install -o root -g root -m 755 $file %{perl_vendorlib}
 done
-install -o root -g root -m 755 netbootmgr.conf $RPM_BUILD_ROOT/etc
+
+for file in localboot kernel-x memtest86 hostdb.test ; do
+    install -o root -g root -m 755 $file $RPM_BUILD_ROOT%{_datarootdir}/%{name}
+done
+install -o root -g root -m 755 netbootmgr.conf $RPM_BUILD_ROOT%{_sysconfdir}
 install -o root -g root -m 644 netbootmgr.8 $RPM_BUILD_ROOT%{_mandir}/man8
 
 %clean
@@ -50,9 +55,10 @@ rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(-,root,root)
-/usr/bin/*
-/usr/share/%{name}/*
-%config(noreplace) /etc/netbootmgr.conf
+%doc README LICENSE-GPL2 ChangeLog AUTHORS
+%{_bindir}/*
+%{_datarootdir}/%{name}/*
+%{perl_vendorlib}/*
 %{_mandir}/man8/netbootmgr.*
 
 %post
@@ -76,6 +82,10 @@ if [ $1 -eq 0 ]; then
 fi
 
 %changelog
+* Fri Jul  5 2014 Olivier Lahaye 1.8-2
+- Reworked the spec file.
+* Fri Jul  5 2014 DongInn Kim 1.8-1
+- Port to perl-Qt (Qt4)
 * Fri Apr 13 2007 Erich Focht 1.7-1
 - added verbose variable for netbootlib
 - added netbootmgr-cmd as command line interface for netbootmgr functionality
