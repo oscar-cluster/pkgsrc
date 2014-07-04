@@ -1,0 +1,243 @@
+#!/usr/bin/perl
+#
+# Read a pre-parsed Ganglia metrics XML file or the XML port of a gmond
+# and parse it to reasonable output.
+#
+#   This program is free software; you can redistribute it and/or modify
+#   it under the terms of the GNU General Public License as published by
+#   the Free Software Foundation; either version 2 of the License, or
+#   (at your option) any later version.
+#
+#   This program is distributed in the hope that it will be useful,
+#   but WITHOUT ANY WARRANTY; without even the implied warranty of
+#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#   GNU General Public License for more details.
+#
+#   You should have received a copy of the GNU General Public License
+#   along with this program; if not, write to the Free Software
+#   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+#
+# Copyright (c) 2006 Erich Focht
+#
+# $Id: gangread 5969 2006-12-11 16:55:23Z focht $
+
+use strict;
+use Data::Dumper;
+use Getopt::Long;
+use IO::Socket;
+use XML::Simple;
+use Sys::Syslog qw( :DEFAULT setlogsock);
+
+my $progname = $0;
+$progname =~ s:^.*/::g;
+
+# set default option values
+my ($host, $metric, $file, $cluster, $all);
+my ($gmetad_host, $gmetad_port, $verbose, $debug, $listmetrics, $listcluster);
+
+# parse command line options
+GetOptions( 'all|a'         => \$all,
+	    'host|h=s'      => \$host,
+            'metric|m=s'    => \$metric,
+            'file|f=s'      => \$file,
+            'cluster=s'     => \$cluster,
+            'listmetrics|L' => \$listmetrics,
+            'listcluster|C' => \$listcluster,
+            'ghost=s'       => \$gmetad_host,
+            'gport=i'       => \$gmetad_port,
+            'verbose|v!'    => \$verbose,
+	    'debug'         => \$debug,
+	    'help|h'        => sub { &usage(0); },
+	    )
+    || &usage(3);
+
+if ($all && !$host) {
+    $host = ".*";
+    $cluster = "";
+}
+if (!$host && !$cluster && !$listmetrics && !$listcluster) {
+    &usage(1);
+}
+
+sub usage {
+    my ( $exit_status, @error_strings ) = @_;
+    print <<USAGE;
+Display ganglia metrics information. 
+
+Usage: $progname OPTIONS 
+
+OPTIONS:
+   --ghost GHOST      : Query ganglia host GHOST. Default is oscar_server.
+   --gport GPORT      : Use specified port for query. Default is 8649.
+   --host|-h NAME     : Display info for specified host.
+   --metric|-m MET    : Metric to be displayed.
+   --listmetrics|-L   : List available metrics.
+   --cluster|-c NAME  : Get info only from nodes of specified cluster.
+   --listcluster|-C   : List available clusters.
+   --file|-f XML_FILE : Read metrics from specified file instead of the
+                        ganglia port.
+   --verbose          : Verbose output.
+
+USAGE
+    if ( @error_strings ) {
+        print "\n";
+        warn shift @error_strings while @error_strings;
+    }
+    exit $exit_status;
+}
+
+sub cleanup {
+    
+}
+
+sub bailout {
+    my ($msg) = @_;
+    cleanup();
+    print "$msg\n";
+    exit 2;
+}
+
+
+$gmetad_port = 8649 if (!$gmetad_port);
+$gmetad_host = "oscar_server" if (!$gmetad_host);
+#$cluster  = "NECcluster" if (!$cluster);
+
+my $fh;
+if ($file) {
+    $fh = IO::File->new($file, "r");
+} else {
+    $fh = IO::Socket::INET->new( PeerAddr => $gmetad_host,
+				 PeerPort => $gmetad_port,
+				 Proto    => "tcp",
+				 Type     => SOCK_STREAM,
+				 ) or bailout "Failed to connect: $!";
+}
+
+my $x = XMLin($fh, KeyAttr => {HOST    => 'NAME',
+			       METRIC  => 'NAME',
+			       CLUSTER => 'NAME',
+			       GRID    => 'NAME',
+			   },
+	      ForceArray => 1);
+
+print Dumper($x) if ($debug);
+
+if ($listcluster) {
+    my %xclust;
+    if (&match_tag(\%xclust, $x, "CLUSTER", ".*")) {
+	print "Available Clusters:\n";
+	map { print "$_\n"; } keys %xclust;
+    }
+    exit 0;
+}
+
+if ($cluster) {
+    # restrict search to subtree for specified cluster
+    $x = &search_tag($x, "CLUSTER", $cluster);
+}
+
+my %xhosts;
+if (&match_tag(\%xhosts, $x, "HOST", $host)) {
+    for my $name (keys %xhosts) {
+	my $y = $xhosts{$name};
+	&print_host($name, $y);
+    }
+}
+
+exit 0;
+# ---------------------------------------------
+
+sub print_host {
+    my ($name, $y) = @_;
+    return if (!$y);
+    print "$name \n".Dumper($y) if ($verbose);
+    if ($metric) {
+	#
+	# Print requested host metric
+	#
+	my $z = &search_tag($y, "METRIC", $metric);
+	if ($z) {
+	    my $val  = $z->{VAL};
+	    my $unit = $z->{UNITS};
+	    my $tn   = $z->{TN};
+	    my $tmax = $z->{TMAX};
+	    my $status = "FRESH";
+	    if ($tn > 2 * $tmax) {
+		$status = "OLD";
+	    }
+	    print "$name $status $metric=$val $unit\n";
+	}
+    } elsif($listmetrics) {
+	print "$name metrics: ".join(" ",keys(%{$y->{METRIC}}))."\n";
+    } else {
+	# only print heartbeat info
+	my $reported = $y->{REPORTED};
+	my $tn = $y->{TN};
+	my $tmax = $y->{TMAX};
+	my $status = "ALIVE";
+	if ($tn > (2 * $tmax)) {
+	    $status = "DEAD";
+	}
+	print "$name $status\n";
+    }
+}
+
+#
+# In a hash array (passed as pointer) search for a hash key named "tag"
+# with the value "value". "value" can be a hash key, itself.
+#
+sub search_tag {
+    my ($x, $tag, $value) = @_;
+    print "search_tag: $x $tag $value\n" if $verbose;
+    # descend the tree and locate the "tag"
+    return 0 if (ref($x) ne "HASH");
+    if (exists $x->{$tag}) {
+	if (ref($x->{$tag}) eq "HASH") {
+	    if (exists $x->{$tag}->{$value}) {
+		return $x->{$tag}->{$value};
+	    }
+	}
+	return 0;
+    } else {
+	for my $key (keys %{$x}) {
+	    my $res = &search_tag($x->{$key}, $tag, $value);
+	    if ($res) {
+		return $res;
+	    }
+	}
+    }
+    return 0;
+}
+
+#
+# Match tag values and put matches into a hash array ($tgt).
+# Returns zero if no match found, nonzero otherwise.
+#
+sub match_tag {
+    my ($tgt, $x, $tag, $match) = @_;
+    my $res = 0;
+
+    print "match_tag: $x $tag $match\n" if $verbose;
+    # descend the tree and locate the "tag"
+    return 0 if (ref($x) ne "HASH");
+    if (exists $x->{$tag}) {
+	if (ref($x->{$tag}) eq "HASH") {
+	    my @keys = keys %{$x->{$tag}};
+	    my @m = grep /^($match|$match\..*)$/, @keys;
+	    for my $t (@m) {
+		if (ref($x->{$tag}->{$t}) eq "HASH") {
+		    $tgt->{$t} = $x->{$tag}->{$t};
+		    $res++;
+		}
+	    }
+	}
+	# no tag expected to be found below this, so return
+	return $res;
+    } else {
+	for my $key (keys %{$x}) {
+	    $res += &match_tag($tgt, $x->{$key}, $tag, $match);
+	}
+    }
+    return $res;
+}
+
