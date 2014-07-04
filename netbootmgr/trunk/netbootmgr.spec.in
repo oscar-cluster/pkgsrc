@@ -33,22 +33,22 @@ files.
 
 %install
 
-for dir in %{_bindir} %{_datarootdir}/%{name} %{_sysconfdir} %{_mandir}/man8 ; do
-    install -d -o root -g root -m 755 $RPM_BUILD_ROOT$dir
+for dir in %{_bindir} %{_datarootdir}/%{name} %{_sysconfdir} %{_mandir}/man8 %{perl_vendorlib}; do
+    install -d -m 755 $RPM_BUILD_ROOT$dir
 done
 for file in netbootmgr netbootmgr-status/* netbootmgr-cmd ; do
     base=`basename $file`
-    install -o root -g root -m 755 $file $RPM_BUILD_ROOT%{_bindir}/$base
+    install -m 755 $file $RPM_BUILD_ROOT%{_bindir}/$base
 done
 for file in *.pm; do
-    install -o root -g root -m 755 $file %{perl_vendorlib}
+    install -m 755 $file $RPM_BUILD_ROOT%{perl_vendorlib}
 done
 
 for file in localboot kernel-x memtest86 hostdb.test ; do
-    install -o root -g root -m 755 $file $RPM_BUILD_ROOT%{_datarootdir}/%{name}
+    install -m 755 $file $RPM_BUILD_ROOT%{_datarootdir}/%{name}
 done
-install -o root -g root -m 755 netbootmgr.conf $RPM_BUILD_ROOT%{_sysconfdir}
-install -o root -g root -m 644 netbootmgr.8 $RPM_BUILD_ROOT%{_mandir}/man8
+install -m 755 netbootmgr.conf $RPM_BUILD_ROOT%{_sysconfdir}
+install -m 644 netbootmgr.8 $RPM_BUILD_ROOT%{_mandir}/man8
 
 %clean
 rm -rf $RPM_BUILD_ROOT
@@ -56,6 +56,7 @@ rm -rf $RPM_BUILD_ROOT
 %files
 %defattr(-,root,root)
 %doc README LICENSE-GPL2 ChangeLog AUTHORS
+%config(noreplace) %{_sysconfdir}/netbootmgr.conf
 %{_bindir}/*
 %{_datarootdir}/%{name}/*
 %{perl_vendorlib}/*
@@ -82,9 +83,9 @@ if [ $1 -eq 0 ]; then
 fi
 
 %changelog
-* Fri Jul  5 2014 Olivier Lahaye 1.8-2
+* Fri Jul  4 2014 Olivier Lahaye 1.8-2
 - Reworked the spec file.
-* Fri Jul  5 2014 DongInn Kim 1.8-1
+* Fri Jul  4 2014 DongInn Kim 1.8-1
 - Port to perl-Qt (Qt4)
 * Fri Apr 13 2007 Erich Focht 1.7-1
 - added verbose variable for netbootlib
