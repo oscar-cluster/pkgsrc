@@ -1,0 +1,12 @@
+
+netbootmgr (__VERSION__-1) hardy; urgency=low
+
+  * Build by oscar-packager.
+
+ -- Olivier Lahaye <olivier.lahaye@cea.fr>  Fri, 04 Jul 2014 16:52:14 +0200
+
+netbootmgr (1.8-1) hardy; urgency=low
+
+  * Initial packaging.
+
+ -- Olivier Lahaye <olivier.lahaye@cea.fr>  Fri, 04 Jul 2014 16:52:14 +0200

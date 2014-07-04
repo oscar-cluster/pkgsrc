@@ -1,0 +1,16 @@
+This package was debianized by Olivier Lahaye <olivier.lahaye@cea.fr> on
+Fri, 04 Jul 2014 16:55:27 +0200.
+
+Upstream Author:
+
+    Eric Fotch
+
+Copyright:
+
+    Copyright (c) by Eric Fotch. All rights reserved.
+
+The Debian packaging is (C) 2014, Olivier Lahaye <olivier.lahaye@cea.fr> and
+is licensed under the GPL, see `/usr/share/common-licenses/GPL'.
+
+# Please also look if there are files or directories which have a
+# different copyright/license attached and list them here.

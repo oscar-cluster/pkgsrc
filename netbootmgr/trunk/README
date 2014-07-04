@@ -1,0 +1,5 @@
+Netbootmgr provides a GUI interface for managing the next boot action for
+network booted hosts. It does so by using pxelinux' or elilo.efi's capability
+to load an IP specific configuration file from the network. Netbootmgr
+creates/deletes symbolic links pointing to predefined pxelinux/elilo config
+files.
