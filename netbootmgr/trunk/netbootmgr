@@ -24,10 +24,10 @@
 use strict;
 use utf8;
 use QtCore4;
-use Ui_NetBootMgr;
+use NetBootMgr;
 
 my $a = Qt::Application(\@ARGV);
-my $w = netBootMgr;
+my $w = NetBootMgr();
 
 $a->setMainWidget($w);
 $w->show;

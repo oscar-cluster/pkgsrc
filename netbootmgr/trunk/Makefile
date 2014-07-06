@@ -5,11 +5,11 @@ PKG=$(NAME)-$(VERSION)
 
 all: netbootmgr netBootMgr.pm sureDialog.pm
 
-netBootMgr.pm: netbootmgr.ui.h
-	puic -o netBootMgr.pm netbootmgr.ui
+Ui_NetBootMgr.pm: netbootmgr.ui.h
+	puic4 -o Ui_NetBootMgr.pm netbootmgr.ui
 
-sureDialog.pm: suredialog.ui.h
-	puic -o sureDialog.pm suredialog.ui
+Ui_SureDialog.pm: suredialog.ui.h
+	puic4 -o Ui_SureDialog.pm suredialog.ui
 
 clean:
 	@rm -f sureDialog.pm netBootMgr.pm
@@ -18,6 +18,7 @@ clean:
 	@rm -f debian/files debian/changelog
 	@rm -rf debian/netbootmgr
 	@rm -f $(PKG).tar.bz2
+	@rm -f Ui_*.pm
 
 dist: clean
 	@rm -rf /tmp/$(PKG)
