@@ -3,7 +3,7 @@ Summary: Manage next network boot action for a cluster
 Name: netbootmgr
 Version: __VERSION__
 Vendor: NEC HPCE
-Release: 1%{?dist}
+Release: 2%{?dist}
 License: GPL
 Packager: Erich Focht <efocht@hpce.nec.com>
 Source: %{name}-%{version}.tar.bz2
