@@ -4,39 +4,27 @@ use strict;
 use warnings;
 use QtCore4;
 use QtGui4;
-use QtCore4::isa qw( Qt::Widget );
+use QtCore4::isa qw( Qt::Dialog );
 
-# [0]
 use Ui_SureDialog;
-# [0]
+use NetBootMgr;
 
-# [1]
-#use QtCore4::slots
-#    on_inputSpinBox1_valueChanged => ['int'],
-#    on_inputSpinBox2_valueChanged => ['int'];
-
-# [1]
-
-# [0]
 sub NEW {
     my ( $class, $parent ) = @_;
-    $class->SUPER::NEW($parent);
-    this->{ui} = Ui_SureDialog->setupUi(this);
+    $class->SUPER::NEW($parent); # Create a Qt::Dialog
+    this->{ui} = Ui_SureDialog->setupUi(this); # Fill the above.
+
+    init();
+
 }
-# [0]
 
-# [1]
-#sub on_inputSpinBox1_valueChanged {
-#    my ( $value ) = @_;
-#    this->{ui}->outputWidget()->setText( $value + this->{ui}->inputSpinBox2->value() );
-#}
-# [1]
-
-# [2]
-#sub on_inputSpinBox2_valueChanged {
-#    my ( $value ) = @_;
-#    this->{ui}->outputWidget()->setText( $value + this->{ui}->inputSpinBox1->value() );
-#}
-# [2]
+sub init
+{
+    my $parent = Qt::Object::parent(this);
+    my $a = $NetBootMgr::sure_text;
+    this->textLabel1()->setText($a);
+    Qt::Object::connect(this->sureYesButton(), SIGNAL 'clicked()', $parent, SLOT 'applyPower()');
+    this->show();
+}
 
 1;

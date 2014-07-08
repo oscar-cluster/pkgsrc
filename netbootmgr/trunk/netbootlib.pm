@@ -128,7 +128,7 @@ sub setAction {
 	    if (!$?) {
 		$hosts{$h}->{nba} = $action;
 	    } else {
-		print STDERR "Some eror occured while trying to set symbolic link for $file\n";
+		print STDERR "Some error occured while trying to set symbolic link for $file\n";
 		$hosts{$h}->{nba} = "unknown";
 	    }
 	} else {

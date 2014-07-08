@@ -18,18 +18,24 @@
 #
 # $Id$
 #
-# (C)opyright Erich Focht <efocht@hpce.nec.com>
+# (C)opyright      Erich Focht <efocht@hpce.nec.com> (Original author)
+# (C)opyright 2014 Olivier Lahaye <olivier.lahaye@cea.fr> (Qt4 fixed version)
 
 
 use strict;
 use utf8;
 use QtCore4;
+use QtGui4;
+
 use NetBootMgr;
 
-my $a = Qt::Application(\@ARGV);
-my $w = NetBootMgr();
+sub main () {
+    my $app = Qt::Application(\@ARGV);
+    my $window = NetBootMgr();
 
-$a->setMainWidget($w);
-$w->show;
+#    $app->setMainWidget($window);
+    $window->show();
+    exit $app->exec();
+}
 
-exit $a->exec;
+main();
