@@ -1,15 +1,40 @@
 DESTDIR=
-VERSION=$(shell cat VERSION)
 NAME=netbootmgr
+VERSION=$(shell cat VERSION)
+MANDIR=/usr/share/man
+DATAROOTDIR=/usr/share
+PERL_VENDORLIB=$(shell perl -V:installvendorlib|cut -d"'" -f2)
 PKG=$(NAME)-$(VERSION)
 
-all: netbootmgr netBootMgr.pm sureDialog.pm
+all: Ui_NetBootMgr.pm Ui_SureDialog.pm
 
 Ui_NetBootMgr.pm: netbootmgr.ui.h
 	puic4 -o Ui_NetBootMgr.pm netbootmgr.ui
 
 Ui_SureDialog.pm: suredialog.ui.h
 	puic4 -o Ui_SureDialog.pm suredialog.ui
+
+install: all
+	# Install paths creation.
+	@for DIR in /etc /usr/bin $(PERL_VENDORLIB) $(MANDIR)/man8 $(DATAROOTDIR)/$(NAME); do \
+		install -d -m 755 $(DESTDIR)$${DIR}/; \
+	done
+	# Perl lib files install.
+	@for FILE in *.pm; do \
+		install -m 755 $${FILE} $(DESTDIR)$(PERL_VENDORLIB)/; \
+	done
+	# netbootmgr commands install.
+	@for FILE in netbootmgr netbootmgr-status/* netbootmgr-cmd; do \
+		install -m 755 $${FILE} $(DESTDIR)/usr/bin/; \
+	done
+	# PXE config files install.
+	@for FILE in localboot kernel-x memtest86 hostdb.test; do \
+		install -m 644 $${FILE} $(DESTDIR)$(DATAROOTDIR)/$(NAME)/; \
+	done
+	# config file install.
+	@install -m 755 netbootmgr.conf $(DESTDIR)/etc/
+	# Man file install.
+	@install -m 644 netbootmgr.8 $(DESTDIR)$(MANDIR)/man8/
 
 clean:
 	@rm -f sureDialog.pm netBootMgr.pm

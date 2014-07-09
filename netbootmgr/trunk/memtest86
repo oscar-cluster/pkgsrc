@@ -1,7 +1,7 @@
 DEFAULT memtest
 
 LABEL memtest
-KERNEL memtest86+-1.65.bin
+KERNEL memtest86+
 PROMPT 1
 TIMEOUT 10
 
