@@ -48,13 +48,13 @@ clean:
 	@rm -f $(PKG).tar.bz2
 	@rm -f Ui_*.pm
 
-dist: clean
+dist: clean debian/changelog
 	@rm -rf /tmp/$(PKG)
 	@mkdir -p /tmp/$(PKG)
 	@cp -rf * /tmp/$(PKG)
 	@cd /tmp/$(PKG); rm -rf `find . -name ".svn"`
+	@cd /tmp/$(PKG); rm -f build.cfg
 	@sed -e 's/__VERSION__/$(VERSION)/g' $(NAME).spec.in > $(NAME).spec
-	@sed -e 's/__VERSION__/$(VERSION)/g' debian/changelog.in > debian/changelog
 	@cd /tmp; tar cjf $(PKG).tar.bz2 $(PKG)
 	@cp -f /tmp/$(PKG).tar.bz2 .
 	@rm -rf /tmp/$(PKG)/
