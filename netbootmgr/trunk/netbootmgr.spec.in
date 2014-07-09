@@ -3,14 +3,14 @@ Summary: Manage next network boot action for a cluster
 Name: netbootmgr
 Version: __VERSION__
 Vendor: NEC HPCE
-Release: 2%{?dist}
+Release: 3%{?dist}
 License: GPL
 Packager: Erich Focht <efocht@hpce.nec.com>
 Source: %{name}-%{version}.tar.bz2
 Group: System Environment/Tools
 BuildArch: noarch
 BuildRoot: %{_tmppath}/%{name}
-BuildRequires: perl-Qt
+BuildRequires: perl-Qt-devel
 Requires: perl-Qt
 Requires: memtest86+
 #AutoReqProv: no
@@ -72,8 +72,11 @@ if [ $1 -eq 0 ]; then
 fi
 
 %changelog
+* Fri Jul  9 2014 Olivier Lahaye 1.8-3
+- Now use "make and make install".
+- Now BuildRequires perl-Qt-devel for puic4 ui compiler.
 * Fri Jul  4 2014 Olivier Lahaye 1.8-2
-- Reworked the spec file. Now use "make and make install".
+- Reworked the spec file.
 * Fri Jul  4 2014 DongInn Kim 1.8-1
 - Port to perl-Qt (Qt4)
 * Fri Apr 13 2007 Erich Focht 1.7-1

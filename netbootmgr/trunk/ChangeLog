@@ -1,6 +1,9 @@
 Version 1.8 (Fri Jul 04 2014)
-    * Reworked spec file (Olivier Lahaye)
-    * Migrated to Qt4 (DongInn Kim)
+    * Full port to Qt4 (SureDialog.pm and NetBootMgr.pm)
+    * initial debian packaging
+    * Updated Makefile so now it can do the install.
+    * Reworked spec file and added perl-Qt-devel for puic4 (Olivier Lahaye)
+    * 1st work for Qt4 migration (DongInn Kim)
     * now use external memtest86 binary
 
 Version 1.7 (Tue Feb 13 2007)
