@@ -7,8 +7,9 @@ Standards-Version: 3.7.2
 
 Package: netbootmgr
 Architecture: all
-Depends: ${shlibs:Depends}, ${misc:Depends}
-Description: netbootmgr
+Depends: ${shlibs:Depends}, ${misc:Depends}, libperlqt4
+Suggests: memtest86+
+Description: Manage next network boot action for a cluster
  Netbootmgr provides a GUI interface for managing the next boot action for
  network booted hosts. It does so by using pxelinux' or elilo.efi's capability
  to load an IP specific configuration file from the network. Netbootmgr

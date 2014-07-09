@@ -1,7 +1,7 @@
 
 netbootmgr (__VERSION__-1) hardy; urgency=low
 
-  * Build by oscar-packager.
+  * Built by oscar-packager.
 
  -- Olivier Lahaye <olivier.lahaye@cea.fr>  Fri, 04 Jul 2014 16:52:14 +0200
 

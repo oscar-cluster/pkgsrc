@@ -3,11 +3,11 @@ Fri, 04 Jul 2014 16:55:27 +0200.
 
 Upstream Author:
 
-    Eric Fotch
+    Erich Focht <efocht@hpce.nec.com>
 
 Copyright:
 
-    Copyright (c) by Eric Fotch. All rights reserved.
+    Copyright (c) by Eric Focht. All rights reserved.
 
 The Debian packaging is (C) 2014, Olivier Lahaye <olivier.lahaye@cea.fr> and
 is licensed under the GPL, see `/usr/share/common-licenses/GPL'.

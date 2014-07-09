@@ -6,7 +6,7 @@ DATAROOTDIR=/usr/share
 PERL_VENDORLIB=$(shell perl -V:installvendorlib|cut -d"'" -f2)
 PKG=$(NAME)-$(VERSION)
 
-all: Ui_NetBootMgr.pm Ui_SureDialog.pm
+all: Ui_NetBootMgr.pm Ui_SureDialog.pm debian/changelog
 
 Ui_NetBootMgr.pm: netbootmgr.ui.h
 	puic4 -o Ui_NetBootMgr.pm netbootmgr.ui
@@ -14,34 +14,37 @@ Ui_NetBootMgr.pm: netbootmgr.ui.h
 Ui_SureDialog.pm: suredialog.ui.h
 	puic4 -o Ui_SureDialog.pm suredialog.ui
 
+debian/changelog: debian/changelog.in
+	@sed -e 's/__VERSION__/$(VERSION)/g' debian/changelog.in > debian/changelog
+
 install: all
-	# Install paths creation.
+	@# Install paths creation.
 	@for DIR in /etc /usr/bin $(PERL_VENDORLIB) $(MANDIR)/man8 $(DATAROOTDIR)/$(NAME); do \
 		install -d -m 755 $(DESTDIR)$${DIR}/; \
 	done
-	# Perl lib files install.
+	@# Perl lib files install.
 	@for FILE in *.pm; do \
 		install -m 755 $${FILE} $(DESTDIR)$(PERL_VENDORLIB)/; \
 	done
-	# netbootmgr commands install.
+	@# netbootmgr commands install.
 	@for FILE in netbootmgr netbootmgr-status/* netbootmgr-cmd; do \
 		install -m 755 $${FILE} $(DESTDIR)/usr/bin/; \
 	done
-	# PXE config files install.
+	@# PXE config files install.
 	@for FILE in localboot kernel-x memtest86 hostdb.test; do \
 		install -m 644 $${FILE} $(DESTDIR)$(DATAROOTDIR)/$(NAME)/; \
 	done
-	# config file install.
+	@# config file install.
 	@install -m 755 netbootmgr.conf $(DESTDIR)/etc/
-	# Man file install.
+	@# Man file install.
 	@install -m 644 netbootmgr.8 $(DESTDIR)$(MANDIR)/man8/
 
 clean:
 	@rm -f sureDialog.pm netBootMgr.pm
 	@rm -f *~
 	@rm -f $(NAME).spec
-	@rm -f debian/files debian/changelog
-	@rm -rf debian/netbootmgr
+	@rm -f debian/files debian/changelog debian/netbootmgr.debhelper.log
+	@rm -rf debian/$(NAME)
 	@rm -f $(PKG).tar.bz2
 	@rm -f Ui_*.pm
 
@@ -74,11 +77,10 @@ rpm: dist
 		done; \
 	fi
 
-deb:
-	@sed -e 's/__VERSION__/$(VERSION)/g' debian/changelog.in > debian/changelog
+deb: debian/changelog
 	@dpkg-buildpackage -rfakeroot -b -uc -us
 	@if [ -n "$(PKGDEST)" ]; then \
-		FILES=../oscar-packager*.deb ;\
+		FILES=../$(NAME)*.deb ;\
 		echo "Moving file(s) ($$FILES) to $(PKGDEST)"; \
 		for FILE in $$FILES; \
 		do \

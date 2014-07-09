@@ -1,3 +1,9 @@
-Eric Fotch:	Inital author until version 1.7
-DongInn Kim:	Port to Qt4
-Olivier Lahaye:	Package reworking and de-hardcoding variable stuffs like memtest version, ....
+Erich Focht <efocht@hpce.nec.com>:	- Inital author until version 1.7
+
+DongInn Kim <dikim@indiana.edu>:	- Initial work on port to Qt4
+
+Olivier Lahaye <olivier.lahaye@cea.fr>:	- Port to puic4 (Qt4)
+					- RPM Package reworking
+					- Debian packaging
+					- New Makefile
+					- De-hardcoding variable stuffs like memtest version
