@@ -1,0 +1,16 @@
+#!/bin/bash
+
+if [ -d /tftpboot ]; then
+   for f in localboot kernel-x memtest86; do
+      if [ ! -f /tftpboot/$f ]; then
+         cp -p /usr/share/netbootmgr/$f /tftpboot
+      fi
+   done
+   MEMTEST_BIN=$(MEMTEST=( /boot/memtest* ); echo ${MEMTEST[0]})
+   if test "$MEMTEST_BIN" != "/boot/memtest*"
+   then
+      ln -sf $MEMTEST_BIN /tftpboot/memtest86+
+   fi
+fi
+
+exit 0
