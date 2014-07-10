@@ -27,3 +27,43 @@ my $rc = OSCAR::NAT::generate_iptables_script ($nat_script, $extif);
 if ($rc != 0) {
     die ("Impossible to generate script $nat_script\n");
 }
+
+exit 0;
+
+__END__
+
+=encoding utf8
+
+=head1 NAME
+
+oscar-nat -- OSCAR NAT tables management scripts.
+
+=head1 SYNOPSIS
+
+oscar-nat eth0
+
+=head1 DESCRIPTION
+
+Set of scripts and Perl modules for the management of OSCAR nat tables.
+
+=head2 Syntax
+
+oscar-nat E<lt>ifaceE<gt>
+
+=head2 Options
+
+none
+
+=head1 AUTHOR
+
+=item Geoffroy Vallee <valleegr@ornl.gov> (Scripts)
+
+=item Olivier Lahaye <olivier.lahaye@cea.fr> (pod doc)
+
+=head1 SEE ALSO
+
+L<perl(1)>
+
+=cut
+
+
