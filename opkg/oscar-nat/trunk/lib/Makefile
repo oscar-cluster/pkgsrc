@@ -13,7 +13,7 @@ all:
 install:
 	install -d -m 0755 $(DESTDIR)$(LIBDIR)/OSCAR
 	for file in $(FILES) ; do \
-		install    -m 0755 $$file $(DESTDIR)$(LIBDIR)/OSCAR \
+		install    -m 0755 $$file $(DESTDIR)$(LIBDIR)/OSCAR ;\
 	done
 	for dir in $(SUBDIRS) ; do ( cd $$dir ; $(MAKE) install ) ; done
 

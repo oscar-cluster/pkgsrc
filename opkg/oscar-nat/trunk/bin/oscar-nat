@@ -56,9 +56,13 @@ none
 
 =head1 AUTHOR
 
+=over
+
 =item Geoffroy Vallee <valleegr@ornl.gov> (Scripts)
 
 =item Olivier Lahaye <olivier.lahaye@cea.fr> (pod doc)
+
+=back
 
 =head1 SEE ALSO
 
