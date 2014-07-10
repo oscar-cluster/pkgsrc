@@ -4,23 +4,23 @@ VERSION=$(shell cat VERSION)
 NAME=oscar-nat
 PKG=$(NAME)-$(VERSION)
 
-SUBDIRS := bin lib
+SUBDIRS = bin lib
 
 
 all:
-	for dir in ${SUBDIRS} ; do ( cd $$dir ; ${MAKE} all ) ; done
+	for dir in $(SUBDIRS) ; do ( cd $$dir ; $(MAKE) all ) ; done
 
 install:
-	for dir in ${SUBDIRS} ; do ( cd $$dir ; ${MAKE} install ) ; done
+	for dir in $(SUBDIRS) ; do ( cd $$dir ; $(MAKE) install ) ; done
 
 uninstall:
-	for dir in ${SUBDIRS} ; do ( cd $$dir ; ${MAKE} uninstall ) ; done
+	for dir in $(SUBDIRS) ; do ( cd $$dir ; $(MAKE) uninstall ) ; done
 
 clean:
 	@rm -f build-stamp configure-stamp
 	@rm -rf debian/$(NAME)* debian/files
 	@rm -f $(PKG).tar.gz
-	for dir in ${SUBDIRS} ; do ( cd $$dir ; ${MAKE} clean ) ; done
+	for dir in $(SUBDIRS) ; do ( cd $$dir ; ${MAKE} clean ) ; done
 
 dist: clean
 	@rm -rf /tmp/$(PKG)
