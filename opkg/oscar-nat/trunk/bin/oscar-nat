@@ -40,7 +40,7 @@ oscar-nat -- OSCAR NAT tables management scripts.
 
 =head1 SYNOPSIS
 
-oscar-nat eth0
+oscar-nat
 
 =head1 DESCRIPTION
 
@@ -48,7 +48,7 @@ Set of scripts and Perl modules for the management of OSCAR nat tables.
 
 =head2 Syntax
 
-oscar-nat E<lt>ifaceE<gt>
+oscar-nat
 
 =head2 Options
 
