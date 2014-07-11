@@ -3,8 +3,8 @@ DESTDIR=
 TOPDIR=..
 include $(TOPDIR)/Config.mk
 
-SCRIPTS := oscar-v
-SUBDIRS :=
+SCRIPTS = oscar-v
+SUBDIRS =
 
 doc:
 	install -d -m 0755 $(DESTDIR)/$(MANDIR)/man1/
