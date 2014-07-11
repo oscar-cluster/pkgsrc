@@ -34,7 +34,7 @@ if [info exists ::env(MANPATH) ] {
 # Get the default MANPATH using manpath command.
 #set system_path [exec /usr/bin/manpath -q]
 # OL => -q switch not available on old manpath commands.
-set system_path [exec /usr/bin/manpath i2> /dev/null]
+set system_path [exec /usr/bin/manpath 2> /dev/null]
 
 # Restore MANPATH
 set ::env(MANPATH) $MANPATH_BACKUP
