@@ -184,13 +184,15 @@ and 3) the actual deployment of the VMs.
 
 =head1 USAGE
 
-=over 8
+=over 4
 
 oscar-v OPTION
 
 =back
 
 OPTION can be:
+
+=over 4
 
 =item --add_image <image_name>
 
@@ -221,19 +223,17 @@ Linux distribution used for the VM (must be used when adding a virutal machine).
 
 Display this help.
 
+=back
+
 =head1 EXAMPLES
+
+=over 4
 
 =item Creation of the "my_vm" virtual machine:
 
-=over 8
-
 sudo oscar-v --add my_vm --distro ubuntu-7-i386
 
-=back
-
 =item Deployment of the "my_vm" virtual machine:
-
-=over 8
 
 sudo oscar-v --deploy my_vm --hostos localhost --techno KVM --mac 00:01:02:02:01:00 
 
@@ -241,4 +241,8 @@ sudo oscar-v --deploy my_vm --hostos localhost --techno KVM --mac 00:01:02:02:01
 
 =head1 AUTHOR
 
+=over 4
+
 =item Geoffroy Vallee, Oak Ridge National Laboratory
+
+=back
