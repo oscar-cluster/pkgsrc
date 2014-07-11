@@ -28,6 +28,11 @@
   </clientDeps>
 
   <changelog>
+    <versionEntry version="2.1.1-1.1">
+      <changelogEntry authorName="Olivier Lahaye" date="2014-07-11T15:25:17+02:00">
+        <item>Rebuild to avoid conflicts with new disttag in rpm distros</item>
+      </changelogEntry>
+    </versionEntry>
     <versionEntry version="2.1.1-1">
       <changelogEntry authorName="Jean Parpaillon" date="2007-08-30T11:12:06+02:00">
         <item>First version of Kerrighed for OSCAR with new API</item>
