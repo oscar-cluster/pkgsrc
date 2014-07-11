@@ -114,8 +114,11 @@ URL: http://www.lam-mpi.org/
 BuildRoot: %{_tmppath}/%{name}-%{version}-root
 Requires: %__rm %__make %__mkdir %__sed %__mv %__chmod
 Provides: mpi
+# blcr only supported on rhel6 and fc-17.
+%if 0%{?el6}%{?fc17}
 Requires: %{requires} blcr-libs
 BuildRequires: rsh %{requires} blcr-devel
+%endif
 
 %description 
 This RPM is created specifically for the OSCAR distribution.  The main
@@ -318,7 +321,10 @@ fi
 #
 #############################################################################
 %changelog
-* Sun Dec 13 2013 Olivier Lahaye <olivier.lahaye1@free.fr> 7.1.4-3
+* Fri Jul 11 2014 Olivier Lahaye <olivier.lahaye1@free.fr> 7.1.4-4
+- Only build for blcr on distros that supports it.
+
+* Fri Dec 13 2013 Olivier Lahaye <olivier.lahaye1@free.fr> 7.1.4-3
 - Re-enabled automatic dependancy generator.
 
 * Fri May 21 2010 Olivier Lahaye <olivier.lahaye1@free.fr> 7.1.4-2
@@ -391,7 +397,7 @@ fi
 * Wed Sep 24 2003 Jeff Squyres <jsquyres@lam-mpi.org>
 - Added explicit requires for gcc, gcc-c++, and gcc-g77.
 
-* Mon May 29 2003 Jeff Squyres <jsquyres@lam-mpi.org>
+* Thu May 29 2003 Jeff Squyres <jsquyres@lam-mpi.org>
 - Updated for LAM/MPI 7.0; added doc/*.pdf; removed some other
   (outdated) %doc files
 - Ensure extracted LAM source directory is not world-writeable;
@@ -408,7 +414,7 @@ fi
 - Removed the profile-d sub RPM because I'm tired of everyone copying
   the LAM .spec file and making profile-f sub RPMs.
 
-* Sun May 11 2002 Jeff Squyres <jsquyres@lam-mpi.org>
+* Sat May 11 2002 Jeff Squyres <jsquyres@lam-mpi.org>
 - Added Requires line for a bunch of basic unix utilities to ensure
   that LAM is not installed before things like cp, mv, etc.
 - Robust-ize the lam-module RPM so that it won't bail in %preun if
@@ -462,6 +468,6 @@ fi
 * Mon Jun 04 2001 Jeff Squyres <jsquyres@lam-mpi.org>
 - Adapted the standard LAM RPM spec file for OSCAR.
 
-* Mon Mar 17 2001 Brian William Barrett <bbarrett@lam-mpi.org>
+* Sat Mar 17 2001 Brian William Barrett <bbarrett@lam-mpi.org>
 - Borrowed SPEC file from Trond at RedHat.  Converted to be able to 
   make RPMs for all RPIs
