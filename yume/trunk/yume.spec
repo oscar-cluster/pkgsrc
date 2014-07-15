@@ -1,7 +1,7 @@
 # $Id$
 
 # Check if Suggests: tag can be sused.
-%define has_rpm_suggests %(rpm --help | grep "\-\-suggest" | wc -l)
+%define has_rpm_suggests %(rpm --help | grep -- "--suggest" | wc -l)
 
 Summary: Wrapper to yum for clusters
 Name: yume
