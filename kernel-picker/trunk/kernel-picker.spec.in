@@ -7,13 +7,14 @@
 # Version: $Id: kernel_picker.spec,v 1.5 2003/11/04 22:16:50 tfleury Exp $
 #
                                                                                 
+%define kernel_picker_release 3
 ########################################################################
 # Preamble Section
 ########################################################################
 Summary: A Perl script to substitute a kernel into an OSCAR (SIS) image.
 Name: kernel-picker
 Version: __VERSION__
-Release: 3%{?dist}
+Release: %{kernel_picker_release}%{?dist}
 License: GPL
 Group: Applications/System
 Source: kernel-picker-%{version}.tar.gz
@@ -53,7 +54,7 @@ install -m 644 kernel_picker.ps   $RPM_BUILD_ROOT/opt/kernel_picker/doc/kernel_p
 install -m 644 kernel_picker.pdf  $RPM_BUILD_ROOT/opt/kernel_picker/doc/kernel_picker.pdf
 install -m 644 kernel_picker.html $RPM_BUILD_ROOT/opt/kernel_picker/html/kernel_picker.html
 install -m 644 kernel_picker.1    $RPM_BUILD_ROOT/opt/kernel_picker/man/man1/kernel_picker.1
-install -m 644 %{version} $RPM_BUILD_ROOT/opt/modules/oscar-modulefiles/kernel_picker/%{version}
+install -m 644 %{version}.%{kernel_picker_release} $RPM_BUILD_ROOT/opt/modules/oscar-modulefiles/kernel_picker/%{version}.%{kernel_picker_release}
 
 %files 
 %dir /opt/kernel_picker
@@ -70,7 +71,7 @@ install -m 644 %{version} $RPM_BUILD_ROOT/opt/modules/oscar-modulefiles/kernel_p
 /opt/kernel_picker/doc/kernel_picker.pdf
 /opt/kernel_picker/html/kernel_picker.html
 /opt/kernel_picker/man/man1/kernel_picker.1
-/opt/modules/oscar-modulefiles/kernel_picker/%{version}.%{release}
+/opt/modules/oscar-modulefiles/kernel_picker/%{version}.%{kernel_picker_release}
 
 %changelog
 * Mon Apr 22 2013 Olivier Lahaye <olivier.lahaye@cea.Fr>
