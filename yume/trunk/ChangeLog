@@ -1,3 +1,5 @@
+yume-2.8.15:
+- Adapt to new oscarsamples filesystem hierarchy.
 yume-2.8.14:
 - use plugins=1 so official repos are used in redhat-el systems.
 yume-2.8.13:

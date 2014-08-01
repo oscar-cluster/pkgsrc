@@ -619,13 +619,13 @@ sub is_failover_mounted {
 }
 
 #
-# We're on an OSCAR master node if $OSCAR_HOME/oscarsamples/ is there.
+# We're on an OSCAR master node if $OSCAR_HOME/oscarsamples/pkglists is there.
 #
 # Return: 1 if the machine is the OSCAR headnode, 0 else.
 sub on_oscar_master {
-    return 1 if ($ENV{OSCAR_HOME} && -d $ENV{OSCAR_HOME}."/oscarsamples" 
+    return 1 if ($ENV{OSCAR_HOME} && -d $ENV{OSCAR_HOME}."/oscarsamples/pkglists" 
         && ((&is_ha_running && &is_failover_mounted) || !&is_ha_running));
-    return 1 if (-d "/usr/share/oscar/oscarsamples"
+    return 1 if (-d "/usr/share/oscar/oscarsamples/pkglists"
         && ((&is_ha_running && &is_failover_mounted) || !&is_ha_running));
 
     return 0;

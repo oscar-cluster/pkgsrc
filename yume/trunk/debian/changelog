@@ -1,5 +1,11 @@
 yume (2.8.14-1) karmic; urgency=low
 
+  * Adapt to new oscarsamples filesystem hierarchy.
+
+ -- Olivier Lahaye <olivier.lahaye@cea.fr>  Fri, 02 Aug 2014 20:25:28 +0100
+
+yume (2.8.14-1) karmic; urgency=low
+
   * New upstream version.
 
  -- Olivier Lahaye <olivier.lahaye@cea.fr>  Fri, 20 Dec 2013 20:10:24 +0100
