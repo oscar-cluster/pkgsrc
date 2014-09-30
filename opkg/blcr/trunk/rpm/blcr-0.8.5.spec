@@ -1,6 +1,6 @@
 Name: blcr
 Version: 0.8.5
-Release: 5%{?dist}
+Release: 6%{?dist}
 Summary: Berkeley Lab Checkpoint/Restart for Linux
 Url: http://ftg.lbl.gov/checkpoint
 
@@ -88,6 +88,7 @@ Url: http://ftg.lbl.gov/checkpoint
 Group: System Environment/Base
 License: GPLv2+
 Source: %{distname}.tar.gz
+Patch0: blcr-cr_rstrt_req.patch
 BuildRoot: %{_tmppath}/buildroot-%{name}-%{version}
 BuildRequires: perl sed
 BuildRequires: glibc-devel
@@ -135,6 +136,7 @@ matching your kernel version.
 %endif
 
 %setup -q -n %{distname}
+%patch0
 
 %build
 
@@ -448,8 +450,10 @@ This package includes tests for Berkeley Lab Checkpoint/Restart for Linux
 %endif
 
 %changelog
+* Tue Sep 30 2014 Olivier Lahaye <olivier.lahaye@cea.fr> 0.8.5-6
+- Added Paul Hargrove kernel module patch to avoid kernel panic.
 * Tue Sep 09 2014 Olivier Lahaye <olivier.lahaye@cea.fr> 0.8.5-5
-- Fixed dkms do not rebuild module when kernel is upgraded.
+- Fixed dkms did not rebuild module when kernel was upgraded.
 * Fri Dec 13 2013 Olivier Lahaye <olivier.lahaye@cea.fr> 0.8.5-4
 - Add missing deps.
 - Add 32bit deps if enable_multilib is set on 64bit system.
