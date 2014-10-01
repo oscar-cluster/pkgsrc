@@ -1,6 +1,6 @@
 Name: blcr
-Version: 0.8.5
-Release: 6%{?dist}
+Version: 0.8.6
+Release: 0.2%{?dist}
 Summary: Berkeley Lab Checkpoint/Restart for Linux
 Url: http://ftg.lbl.gov/checkpoint
 
@@ -41,7 +41,7 @@ Url: http://ftg.lbl.gov/checkpoint
 %define moduledir /lib/modules/%{kernel}/extra
 
 # Name of the unpacked source directory and stem of the tarball name
-%define distname %{name}-%{version}
+%define distname %{name}-%{version}_b2
 
 # Disable RedHat's automatic build of a debuginfo subpackage:
 %define debug_package %{nil}
@@ -88,7 +88,6 @@ Url: http://ftg.lbl.gov/checkpoint
 Group: System Environment/Base
 License: GPLv2+
 Source: %{distname}.tar.gz
-Patch0: blcr-cr_rstrt_req.patch
 BuildRoot: %{_tmppath}/buildroot-%{name}-%{version}
 BuildRequires: perl sed
 BuildRequires: glibc-devel
@@ -136,7 +135,6 @@ matching your kernel version.
 %endif
 
 %setup -q -n %{distname}
-%patch0
 
 %build
 
@@ -188,7 +186,7 @@ mkdir -p $RPM_BUILD_ROOT/%{_datarootdir}/%{name}
 # Sources for dkms
 ( cd %{buildroot}%{_usrsrc}/ &&\
  tar xpf %{SOURCE0} &&\
- mv %{name}-%{version} %{name}-%{version}-%{release} )
+ mv %{distname} %{name}-%{version}-%{release} )
 
 # Configuration file for dkms
 %{__cat} > %{buildroot}%{_usrsrc}/%{name}-%{version}-%{release}/dkms.conf << 'EOF'
@@ -450,6 +448,8 @@ This package includes tests for Berkeley Lab Checkpoint/Restart for Linux
 %endif
 
 %changelog
+* Tue Sep 30 2014 Olivier Lahaye <olivier.lahaye@cea.fr> 0.8.6-0.2
+- 0.8.6-beta2
 * Tue Sep 30 2014 Olivier Lahaye <olivier.lahaye@cea.fr> 0.8.5-6
 - Added Paul Hargrove kernel module patch to avoid kernel panic.
 * Tue Sep 09 2014 Olivier Lahaye <olivier.lahaye@cea.fr> 0.8.5-5
