@@ -1,6 +1,6 @@
 Name: blcr
 Version: 0.8.6
-Release: 0.2%{?dist}
+Release: 0.3%{?dist}
 Summary: Berkeley Lab Checkpoint/Restart for Linux
 Url: http://ftg.lbl.gov/checkpoint
 
@@ -41,7 +41,7 @@ Url: http://ftg.lbl.gov/checkpoint
 %define moduledir /lib/modules/%{kernel}/extra
 
 # Name of the unpacked source directory and stem of the tarball name
-%define distname %{name}-%{version}_b2
+%define distname %{name}-%{version}_b3
 
 # Disable RedHat's automatic build of a debuginfo subpackage:
 %define debug_package %{nil}
