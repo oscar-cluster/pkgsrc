@@ -1,8 +1,8 @@
 # comment out snap if building a real release
 %define name torque-oscar
-%define version 4.2.7
+%define version 4.2.9
 
-%define release 2%{?dist}
+%define release 1%{?dist}
 
 # The following options are supported:
 #   --define 'server_name <hostname>' # default: oscar_server
@@ -1111,6 +1111,9 @@ is used to set the corresponding PATH and MANPATH.
 %endif
 
 %changelog
+* Thu Oct 09 2014 Olivier Lahaye <olivier.lahaye@cea.fr> 4.2.9-1
+- New upstream version.
+
 * Thu Jul 03 2014 Olivier Lahaye <olivier.lahaye@cea.fr> 4.2.7-2
 - Port from --with path=value to --define 'path value' so it builds on
   fc-18+ and rhel-7+
