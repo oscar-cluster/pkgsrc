@@ -1,6 +1,6 @@
 Name: blcr
 Version: 0.8.6
-Release: 0.3%{?dist}
+Release: 0.4%{?dist}
 Summary: Berkeley Lab Checkpoint/Restart for Linux
 Url: http://ftg.lbl.gov/checkpoint
 
@@ -41,7 +41,7 @@ Url: http://ftg.lbl.gov/checkpoint
 %define moduledir /lib/modules/%{kernel}/extra
 
 # Name of the unpacked source directory and stem of the tarball name
-%define distname %{name}-%{version}_b3
+%define distname %{name}-%{version}_b4
 
 # Disable RedHat's automatic build of a debuginfo subpackage:
 %define debug_package %{nil}
@@ -448,8 +448,8 @@ This package includes tests for Berkeley Lab Checkpoint/Restart for Linux
 %endif
 
 %changelog
-* Tue Sep 30 2014 Olivier Lahaye <olivier.lahaye@cea.fr> 0.8.6-0.2
-- 0.8.6-beta2
+* Tue Oct 21 2014 Olivier Lahaye <olivier.lahaye@cea.fr> 0.8.6-0.4
+- 0.8.6-beta4
 * Tue Sep 30 2014 Olivier Lahaye <olivier.lahaye@cea.fr> 0.8.5-6
 - Added Paul Hargrove kernel module patch to avoid kernel panic.
 * Tue Sep 09 2014 Olivier Lahaye <olivier.lahaye@cea.fr> 0.8.5-5
