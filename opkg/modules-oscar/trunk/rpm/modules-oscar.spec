@@ -34,7 +34,7 @@
 Summary: Modules package
 Name: modules-oscar
 Version: %{main_version}
-Release: 2
+Release: 3
 License: GPL
 Group: Applications/Environment
 Source0: modules-oscar-1.0.5.tar.gz
@@ -49,7 +49,8 @@ URL: http://modules.sourceforge.net/
 Packager: Open Cluster Group / OSCAR working group
 BuildRequires: tcl-devel
 Requires: tcl
-Requires: %__mv %__rm %__cp %__cat %__mkdir %__chmod %__grep %__make
+Requires: coreutils grep make
+#Requires: %__mv %__rm %__cp %__cat %__mkdir %__chmod %__grep %__make
 Requires: /bin/ed
 Requires: /usr/bin/test
 
@@ -402,6 +403,10 @@ fi
 #
 #############################################################################
 %changelog
+* Fri Apr 24 2015 Olivier Lahaye <olivier.lahaye@cea.fr> 3.3.a-3
+- Updated Requires: use package names instead of commands path in
+  order to avoid upgrade issues.
+
 * Tue Mar 12 2014 Olivier Lahaye <olivier.lahaye@cea.fr> 3.3.a-2
 - Bugfix release.
 
