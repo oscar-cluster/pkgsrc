@@ -407,13 +407,13 @@ fi
 - Updated Requires: use package names instead of commands path in
   order to avoid upgrade issues.
 
-* Tue Mar 12 2014 Olivier Lahaye <olivier.lahaye@cea.fr> 3.3.a-2
+* Wed Mar 12 2014 Olivier Lahaye <olivier.lahaye@cea.fr> 3.3.a-2
 - Bugfix release.
 
 * Tue Mar 11 2014 Olivier Lahaye <olivier.lahaye@cea.fr> 3.3.a-1
 - New upstream version.
 
-* Fri Dec 15 2013 Olivier Lahaye <olivier.lahaye@cea.fr> 3.2.9c-4
+* Sun Dec 15 2013 Olivier Lahaye <olivier.lahaye@cea.fr> 3.2.9c-4
 - Re-enabled automatic dependancy generator.
 
 * Fri Nov 23 2012 Olivier Lahaye <olivier.lahaye@cea.fr> 3.2.9c-3
