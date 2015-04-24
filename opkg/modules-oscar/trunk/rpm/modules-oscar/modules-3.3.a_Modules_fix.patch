@@ -63,9 +63,6 @@ index 330de6d..5f1965a 100644
  @NOTVERSIONING@eval "module() { eval `@bindir@/modulecmd $modules_shell $*`; }"
  
  unset modules_shell
-diff --git a/gitlog2changelog.py b/gitlog2changelog.py
-old mode 100644
-new mode 100755
 diff --git a/init/ruby.rb.in b/init/ruby.rb.in
 index 0087d51..c62c266 100644
 --- a/init/ruby.rb.in
