@@ -10,6 +10,3 @@ index 97fe810..9d83d0b 100644
  AC_SUBST(BASEPREFIX)dnl
  DEFAULTPATH=default
  dnl PREFIX: Usually equivalent to /usr/local/Modules[/version_number]])dnl
-diff --git a/gitlog2changelog.py b/gitlog2changelog.py
-old mode 100644
-new mode 100755
