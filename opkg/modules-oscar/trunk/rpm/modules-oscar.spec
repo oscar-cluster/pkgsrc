@@ -115,7 +115,7 @@ chmod -R o-w $RPM_BUILD_DIR/modules-%{main_version}
 #CFLAGS="$RPM_OPT_FLAGS"
 #export CFLAGS
 
-./configure \
+CPPFLAGS="-DUSE_INTERP_ERRORLINE" ./configure \
 	--prefix=/%{_moddir} \
 	--with-module-path=/%{_moddir}/modulefiles \
 	--with-version-path=/%{_moddir}/version \
