@@ -5,7 +5,7 @@
 %define release 1%{?dist}
 
 # The following options are supported:
-#   --define 'server_name <hostname>' # default: oscar_server
+#   --define 'server_name <hostname>' # default: oscar-server
 #   --define 'homedir <directory>'    # default: %{_localstatedir}/lib/torque
 #   --define 'libdir <directory>'     #
 #   --define 'includedir <directory<' #

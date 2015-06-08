@@ -136,13 +136,13 @@ sub alive_gstat {
     if ($ENV{SC3_GMETAD_IP}) {
 	$gip = $ENV{SC3_GMETAD_IP};
     } else {
-	my ($d1, $d2, $d3, $d4, @a) = gethostbyname("oscar_server");
+	my ($d1, $d2, $d3, $d4, @a) = gethostbyname("oscar-server");
 	my $hname = `hostname`;
 	chomp $hname;
 	if (grep /^$hname$/, split(/ /,"$d1 $d2")) {
 	    $gip = "localhost";
 	} else {
-	    $gip = "oscar_server";
+	    $gip = "oscar-server";
 	}
     }
     # gmetad server port number can be passed in an environment variable

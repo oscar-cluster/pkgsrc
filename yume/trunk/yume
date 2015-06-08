@@ -658,14 +658,14 @@ sub get_default_repos {
             print "Unable to detect default repositories.\n";
         }
     } else {
-        my $master = gethostbyname("oscar_server");
+        my $master = gethostbyname("oscar-server");
         #
         # Is there a node called oscar_master? Then we're on a client node
         #
         if ($master) {
             my $node=`hostname`; chomp $node;
-            #my $cmd = "ssh oscar_server bash -l -c \\\"\\\$OSCAR_HOME/scripts/distro-query --node $node\\\"";
-            my $cmd = "ssh oscar_server bash -l -c \\\"/usr/bin/distro-query --node $node\\\"";
+            #my $cmd = "ssh oscar-server bash -l -c \\\"\\\$OSCAR_HOME/scripts/distro-query --node $node\\\"";
+            my $cmd = "ssh oscar-server bash -l -c \\\"/usr/bin/distro-query --node $node\\\"";
             print STDERR "Executing: $cmd\n" if ($verbose);
             my $attempts = 0;
           REMOTE_QUERY:

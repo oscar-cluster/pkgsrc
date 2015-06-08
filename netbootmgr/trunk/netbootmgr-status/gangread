@@ -67,7 +67,7 @@ Display ganglia metrics information.
 Usage: $progname OPTIONS 
 
 OPTIONS:
-   --ghost GHOST      : Query ganglia host GHOST. Default is oscar_server.
+   --ghost GHOST      : Query ganglia host GHOST. Default is oscar-server.
    --gport GPORT      : Use specified port for query. Default is 8649.
    --host|-h NAME     : Display info for specified host.
    --metric|-m MET    : Metric to be displayed.
@@ -99,7 +99,7 @@ sub bailout {
 
 
 $gmetad_port = 8649 if (!$gmetad_port);
-$gmetad_host = "oscar_server" if (!$gmetad_host);
+$gmetad_host = "oscar-server" if (!$gmetad_host);
 #$cluster  = "NECcluster" if (!$cluster);
 
 my $fh;
