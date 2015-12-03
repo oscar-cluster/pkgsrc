@@ -13,6 +13,7 @@ BuildRoot: %{_tmppath}/%{name}
 #Requires: apt
 Requires: dpkg-devel
 Requires: debootstrap
+Requires: dpkg-dev
 #Requires: deb
 
 %description 
