@@ -16,6 +16,7 @@ BuildArch: noarch
 BuildRoot: %{_tmppath}/%{name}
 Requires: yum >= 2.4.0
 Requires: oscar-utils >= 6.1.2
+Requires: which
 # perl-IO-Tty required by ptty_try which is used in tests.
 Requires: perl-IO-Tty
 # actually "createrepo" is also needed, but only on the master node,
