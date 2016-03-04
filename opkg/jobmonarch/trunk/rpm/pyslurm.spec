@@ -1,21 +1,22 @@
 # Don't need debuginfo RPM
 %define debug_package %{nil}
-%define rel 0.2
+%define rel 1
 
 Summary: Slurm Interface for Python
 Name: python-pyslurm
 #Name: python-slurm
-Version: 2.6.0
+Version: 15.08.2
 URL: http://www.gingergeeks.co.uk/pyslurm/index.html
 Release: %{rel}%{?dist}
 License: GPL
 Packager: Olivier LAHAYE <olivier.lahaye@cea.fr>
 Group: Development/Languages
-Source: pyslurm-%{version}-%{rel}.tar.gz
-#Source: %{name}-%{version}.tar.bz2
-#Patch0: pyslurm_build_26.patch
+#Source: pyslurm-%{version}-%{rel}.tar.gz
+Source: %{name}-%{version}.tar.bz2
+Patch0: pyslurm_build_150808.patch
+Patch1: pyslurm_sphinx_theme.patch
 BuildRoot: %{_tmppath}/%{name}
-BuildRequires: python-devel => 2.6 Cython >= 0.15 python-sphinx >= 1.1 slurm-devel >= 2.5.0
+BuildRequires: python-devel => 2.6 Cython >= 0.19 python-sphinx >= 1.1 slurm-devel >= 15.08.2
 
 #AutoReqProv: no
 
@@ -27,8 +28,10 @@ but can used on the smallest to the largest cluster.
 
 %prep
 #setup -q
-%setup -q -n pyslurm-%{version}-%{rel}
-#patch0 -p1
+#setup -q -n pyslurm-%{version}-%{rel}
+%setup -q -n pyslurm-%{version}
+%patch0 -p1
+%patch1 -p2
 
 %build
 %{__python} setup.py build --slurm=%{_prefix}
