@@ -46,14 +46,15 @@
 Summary: OSCAR-specific modulefile for run-time picking of an Open MPI installation to use
 Name: openmpi-switcher-modulefile
 Version: 1.6.3
-Release: 2%{?dist}
+Release: 4%{?dist}
 Vendor: Open MPI Team
 License: BSD
 Group: Development/Libraries
 Source: openmpi-switcher-modulefile.tcl
 URL: http://www.open-mpi.org/
 BuildRoot: %{_tmppath}/%{name}-%{version}-root
-Requires: %__rm %__mkdir %__sed %__mv %__chmod %__chown
+#Requires: %__rm %__mkdir %__sed %__mv %__chmod %__chown
+Requires: coreutils sed
 Requires: modules-oscar
 Requires: env-switcher
 BuildArch: noarch
@@ -225,6 +226,9 @@ fi
 #
 #############################################################################
 %changelog
+* Thu Jan 26 2016 Olivier Lahaye <olivier.lahaye@cea.fr>
+- Changes Requires for sed and coreutils.
+
 * Wed Feb 27 2013 Olivier Lahaye <olivier.lahaye@cea.fr>
 - Forced noarch build
 - Update the TCL file to detect libcr.so.0 (libcr.so does not exists)
