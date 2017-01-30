@@ -5,15 +5,15 @@
 Summary: Slurm Interface for Python
 Name: python-pyslurm
 #Name: python-slurm
-Version: 15.08.2
+Version: 15.08.8
 URL: http://www.gingergeeks.co.uk/pyslurm/index.html
 Release: %{rel}%{?dist}
 License: GPL
 Packager: Olivier LAHAYE <olivier.lahaye@cea.fr>
 Group: Development/Languages
 #Source: pyslurm-%{version}-%{rel}.tar.gz
-Source: %{name}-%{version}.tar.bz2
-Patch0: pyslurm_build_150808.patch
+Source: pyslurm-%{version}.tar.xz
+#Patch0: pyslurm_build_150808.patch
 Patch1: pyslurm_sphinx_theme.patch
 BuildRoot: %{_tmppath}/%{name}
 BuildRequires: python-devel => 2.6 Cython >= 0.19 python-sphinx >= 1.1 slurm-devel >= 15.08.2
@@ -30,7 +30,7 @@ but can used on the smallest to the largest cluster.
 #setup -q
 #setup -q -n pyslurm-%{version}-%{rel}
 %setup -q -n pyslurm-%{version}
-%patch0 -p1
+#patch0 -p1
 %patch1 -p2
 
 %build
