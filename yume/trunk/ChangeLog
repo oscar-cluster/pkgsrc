@@ -1,3 +1,6 @@
+yume-2.8.16:
+- Add preliminary support for dnf (yum replacement in newer fedora/rhel
+distros)
 yume-2.8.15:
 - Adapt to new oscarsamples filesystem hierarchy.
 yume-2.8.14:

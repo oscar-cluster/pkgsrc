@@ -52,6 +52,9 @@ my (@repos, @repoadd, @repodel, $repolist);
 my $prog = $0;
 my $debug;
 
+my $package_manager = "yum";
+$package_manager = "dnf" if ( -x "/usr/bin/dnf" );
+
 Getopt::Long::Configure("pass_through");
 GetOptions(
             "help"          => \&help_and_exit,
@@ -139,7 +142,7 @@ END {my $rc = $?; cleanup(); exit $rc};
 # create yum config file
 print $fh <<EOF;
 [main]
-cachedir=/var/cache/yum
+cachedir=/var/cache/$package_manager
 debuglevel=2
 logfile=/var/log/yume.log
 pkgpolicy=newest
@@ -177,21 +180,21 @@ close $fh;
 
 # print temporary config file if required
 if ($verbose) {
-    print STDERR "=== yum.conf file used ($name) ===\n";
+    print STDERR "=== $package_manager.conf file used ($name) ===\n";
     system("cat $name");
     print STDERR "==========================================\n";
 }
 
 # Updating meta-data for the target repos
 my ($cmd, $err);
-$cmd = "/usr/bin/yum -c $name makecache 1>/dev/null";
+$cmd = "/usr/bin/$package_manager -c $name makecache 1>/dev/null";
 print "Executing $cmd\n" if $verbose;
 if (system $cmd) {
     die "ERROR: Impossible to execute $cmd; Impossible to get repos meta-data";
 }
 
 # Array to store error messages catched during the execution of
-# the yum command.
+# the yum/dnf command.
 use vars qw ( @error_msgs @output);
 
 if ($repoquery) {
@@ -200,7 +203,7 @@ if ($repoquery) {
     my $rq = `which repoquery >/dev/null 2>&1`;
     if ($?) {
         # fall back to included yum-repoquery
-        my @yum_v = `yum --version`;
+        my @yum_v = `$package_manager --version`;
         my $yum_version;
         for (@yum_v) {
             next if (!/^\d.*/);
@@ -228,8 +231,8 @@ if ($repoquery) {
     # Number of repos
     my $n_repos = scalar(@repos);
     # run yum command
-    $cmd = "/usr/bin/yum -c $name";
-    $cmd = "/usr/bin/yum" if $n_repos == 1;
+    $cmd = "/usr/bin/$package_manager -c $name";
+    $cmd = "/usr/bin/$package_manager" if $n_repos == 1;
     if (($verbose > 2) && ($verbose <= 10)) {
         $cmd .= " -d $verbose -e 2";
     }
@@ -318,8 +321,8 @@ if ($repoquery) {
              # at least one package providing this feature.
              # This allows to have dependancies like the ones in BuildRequires:
              # e.g. /usr/lib/libcrypt.a 
-             $search_cmd="LC_ALL=C yum -c $name provides '$pkg'";
-             $search_cmd="LC_ALL=C yum provides '$pkg'" if $n_repos == 1;
+             $search_cmd="LC_ALL=C $package_manager -c $name provides '$pkg'";
+             $search_cmd="LC_ALL=C $package_manager provides '$pkg'" if $n_repos == 1;
 
              print "Executing: $search_cmd\n" if ($verbose > 5);
              open (YUM_PROVIDES_PIPE, "$search_cmd |");
@@ -554,16 +557,16 @@ EOF
 sub help {
     print "Usage: $0 OPTIONS [YUM_OPTIONS]\n";
     print "\n";
-    print "Call yum or repoquery with _only_ the repositories on the command line configured.\n";
+    print "Call yum/dnf or repoquery with _only_ the repositories on the command line configured.\n";
     print "OPTIONS can be:\n";
-    print " --repo URL    : repository which should be included in yum actions\n";
+    print " --repo URL    : repository which should be included in yum/dnf actions\n";
     print "                 (multiple --repo options are possible).\n";
     print " --export      : create httpd configuration for local repositories\n";
     print " --unexport    : delete httpd configuration for local repositories\n";
     print " --listexp     : list exported local repositories\n";
     print " --prepare     : generate repodata for local repositories\n";
     print " --help        : this help information\n";
-    print " --repoquery   : invoke repoquery command instead of yum\n";
+    print " --repoquery   : invoke repoquery command instead of yum/dnf\n";
     print " --repoadd URL : add URL to the OSCAR repository list for the\n";
     print "                 local node's distro/architecture.\n";
     print " --repodel URL : delete URL from the OSCAR repository list for\n";
@@ -571,7 +574,7 @@ sub help {
     print " --repolist    : list the OSCAR repository URLs\n";
     print " --verbose     : verbose output\n";
     print "\n";
-    print "YUM_OPTIONS are options to be passed to the yum or repoquery command.\n";
+    print "YUM_OPTIONS are options to be passed to the yum/dnf or repoquery command.\n";
     print "Setting the environment variable \$YUME_VERBOSE to a number\n";
     print "between 1 and 10 will generate verbose output like multiple\n";
     print "-v options.\n\n";

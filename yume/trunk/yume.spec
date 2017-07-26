@@ -5,7 +5,7 @@
 
 Summary: Wrapper to yum for clusters
 Name: yume
-Version: 2.8.15
+Version: 2.8.16
 Vendor: Open Source Cluster Group
 Release: 1%{?dist}
 License: GPL
@@ -63,6 +63,8 @@ rm -rf $RPM_BUILD_ROOT
 %{_mandir}/man1/ptty_try*
 
 %changelog
+* Fri Aug 01 2014 Olivier Lahaye <olivier.lahaye1@free.fr> 2.8.16-1
+- New version.
 * Fri Aug 01 2014 Olivier Lahaye <olivier.lahaye1@free.fr> 2.8.15-1
 - Adapt to new oscarsamples filesystem hierarchy.
 * Fri Dec 20 2013 Olivier Lahaye <olivier.lahaye1@free.fr> 2.8.14-1
