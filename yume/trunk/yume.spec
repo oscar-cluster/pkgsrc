@@ -14,7 +14,11 @@ Source: %{name}-%{version}.tar.gz
 Group: System Environment/Tools
 BuildArch: noarch
 BuildRoot: %{_tmppath}/%{name}
+%if %{?rhel}%{!?rhel:8} < 8
 Requires: yum >= 2.4.0
+%else
+Requires: dnf
+%endif
 Requires: oscar-utils >= 6.1.2
 Requires: which
 # perl-IO-Tty required by ptty_try which is used in tests.

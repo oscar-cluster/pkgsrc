@@ -1,3 +1,6 @@
+yume-2.8.17:
+- Fix "Calling POSIX::tmpnam() is deprecated".
+- Fix package manager requirement (yum or dnf depending on distro)
 yume-2.8.16:
 - Add preliminary support for dnf (yum replacement in newer fedora/rhel
 distros)
