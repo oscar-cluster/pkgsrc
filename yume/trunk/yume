@@ -36,8 +36,9 @@
 use strict;
 use Getopt::Long;
 use IO::File;
-use POSIX qw(tmpnam);
+#use POSIX qw(tmpnam);
 use File::Basename;
+use File::Temp;
 use Carp;
 
 use vars qw ( $archstr );
@@ -124,7 +125,7 @@ if (scalar(@repoadd) || scalar(@repodel) || $repolist) {
     if ($repolist) {
         &oscar_repocmd("repolist",);
     }
-    # OL: FIXME: SHould handle &oscar_repocmd return code
+    # OL: FIXME: Should handle &oscar_repocmd return code
     exit 0;
 }
 
@@ -133,7 +134,10 @@ if (scalar(@repoadd) || scalar(@repodel) || $repolist) {
 #####################################
 my @cleanfiles;
 # temporary file
-do {$name=tmpnam()} until $fh=IO::File->new($name,O_RDWR|O_CREAT|O_EXCL);
+$fh = File::Temp->new(TEMPLATE => $package_manager.'_XXXXX',
+                           DIR => '/tmp',
+                        SUFFIX => '.conf');
+$name = $fh->filename;
 push @cleanfiles, $name;
 
 # install exit handler which removes the temporary file
