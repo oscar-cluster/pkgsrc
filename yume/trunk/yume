@@ -155,7 +155,7 @@ tolerant=1
 exactarch=1
 retries=20
 obsoletes=1
-reposdir=
+reposdir=none
 gpgcheck=0
 plugins=1
 EOF
