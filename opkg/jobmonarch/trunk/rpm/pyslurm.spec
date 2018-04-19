@@ -5,7 +5,7 @@
 Summary: Slurm Interface for Python
 Name: python-pyslurm
 #Name: python-slurm
-Version: 17.02
+Version: 17.11.0.1
 URL: http://www.gingergeeks.co.uk/pyslurm/index.html
 Release: %{rel}%{?dist}
 License: GPL
