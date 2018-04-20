@@ -9,7 +9,8 @@ Packager: Olivier LAHAYE <olivier.lahaye@cea.fr>
 Group: Development/Languages
 Source: pyslurm-%{version}.tar.gz
 Patch0: pyslurm_sphinx_theme.patch
-Patch1: pyslurm_doc_version.patch
+Patch1: pyslurm_doc_no_python_github.patch
+#Patch2: pyslurm_doc_version.patch
 BuildRoot: %{_tmppath}/%{name}
 BuildRequires: python-devel => 2.7 Cython >= 0.19 python-sphinx >= 1.1 slurm-devel >= 17.11.5
 
@@ -23,6 +24,7 @@ but can used on the smallest to the largest cluster.
 %setup -q -n pyslurm-%{version}
 %patch0 -p1
 %patch1 -p1
+#patch2 -p1
 
 %build
 %{__python} setup.py build --slurm=%{_prefix}

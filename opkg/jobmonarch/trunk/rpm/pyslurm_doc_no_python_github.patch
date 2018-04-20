@@ -1,0 +1,10 @@
+--- pyslurm-17.11.0.7.old/doc/source/conf.py	2018-04-20 11:22:40.984128538 +0000
++++ pyslurm-17.11.0.7/doc/source/conf.py	2018-04-20 12:59:53.538606500 +0000
+@@ -33,7 +33,6 @@
+     'sphinx.ext.doctest',
+     'sphinx.ext.todo',
+     'sphinx.ext.intersphinx',
+-    'sphinx.ext.githubpages'
+ ]
+ 
+ # Add any paths that contain templates here, relative to this directory.
