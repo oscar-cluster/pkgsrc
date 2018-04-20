@@ -12,7 +12,7 @@ License: GPL
 Packager: Olivier LAHAYE <olivier.lahaye@cea.fr>
 Group: Development/Languages
 #Source: pyslurm-%{version}-%{rel}.tar.gz
-Source: pyslurm-%{version}.tar.xz
+Source: pyslurm-%{version}.tar.gz
 #Patch0: pyslurm_build_150808.patch
 Patch1: pyslurm_sphinx_theme.patch
 BuildRoot: %{_tmppath}/%{name}
