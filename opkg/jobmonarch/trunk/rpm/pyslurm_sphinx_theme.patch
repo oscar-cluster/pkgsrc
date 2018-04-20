@@ -1,6 +1,7 @@
---- ./pyslurm-15.08.2/doc/source/conf.py	2016-03-04 10:27:19.000000000 +0000
-+++ ./pyslurm-15.08.2.new/doc/source/conf.py	2016-03-04 12:28:16.991104728 +0000
-@@ -91,7 +91,7 @@
+diff -ru pyslurm-17.11.0.7.old/doc/source/conf.py pyslurm-17.11.0.7/doc/source/conf.py
+--- pyslurm-17.11.0.7.old/doc/source/conf.py	2018-04-20 11:22:40.984128538 +0000
++++ pyslurm-17.11.0.7/doc/source/conf.py	2018-04-20 11:41:36.514740469 +0000
+@@ -100,7 +100,7 @@
  
  # The theme to use for HTML and HTML Help pages.  See the documentation for
  # a list of builtin themes.
