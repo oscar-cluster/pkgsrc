@@ -1,7 +1,7 @@
 Summary: Slurm Interface for Python
 Name: python-pyslurm
 #Name: python-slurm
-Version: 17.11.0.7
+Version: 17.11.0.8
 URL: http://www.gingergeeks.co.uk/pyslurm/index.html
 Release: 1%{?dist}
 License: GPL
@@ -12,7 +12,7 @@ Patch0: pyslurm_sphinx_theme.patch
 Patch1: pyslurm_doc_no_python_github.patch
 #Patch2: pyslurm_doc_version.patch
 BuildRoot: %{_tmppath}/%{name}
-BuildRequires: python-devel => 2.7 Cython >= 0.19 python-sphinx >= 1.1 slurm-devel >= 17.11.5
+BuildRequires: python-devel => 2.7 Cython >= 0.19 python-sphinx >= 1.1 slurm-devel >= 17.11.6
 
 %description
 PySLURM is a Python/Cython extension module to the Simple Linux Unified
