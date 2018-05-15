@@ -7,9 +7,9 @@ Release: 1%{?dist}
 License: GPL
 Packager: Olivier LAHAYE <olivier.lahaye@cea.fr>
 Group: Development/Languages
-Source: pyslurm-%{version}.tar.gz
+Source: pyslurm-%{version}.tar.bz2
 Patch0: pyslurm_sphinx_theme.patch
-Patch1: pyslurm_doc_no_python_github.patch
+#Patch1: pyslurm_doc_no_python_github.patch
 #Patch2: pyslurm_doc_version.patch
 BuildRoot: %{_tmppath}/%{name}
 BuildRequires: python-devel => 2.7 Cython >= 0.19 python-sphinx >= 1.1 slurm-devel >= 17.11.6
@@ -23,12 +23,11 @@ but can used on the smallest to the largest cluster.
 %prep
 %setup -q -n pyslurm-%{version}
 %patch0 -p1
-%patch1 -p1
-#patch2 -p1
 
 %build
 %{__python} setup.py build --slurm=%{_prefix}
-(cd doc; make html; make man)
+sed -i -e '/sphinx.ext.githubpages/d' doc/source/conf.py
+(cd doc; PYTHONPATH=../build/lib.linux-x86_64-2.7/:/usr/lib/python2.7/site-packages/ make html; PYTHONPATH=../build/lib.linux-x86_64-2.7/:/usr/lib/python2.7/site-packages/ make man)
 
 %install
 rm -rf $RPM_BUILD_ROOT
